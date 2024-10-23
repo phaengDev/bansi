@@ -1,12 +1,13 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 function Header() {
+  const userName=localStorage.getItem('username')
   return (
     <div id="header" className="app-header">
 
       <div className="navbar-header bg-red text-white">
         <Link to={'/home'} className="navbar-brand text-white ">
-        <img src='./assets/img/logo/plc2.png' className="navbar-logo w-100 rounded-circle "></img> <span className='fw-bolder'> ບັນຊີ ລາຍຮັບລາຍຈ່າຍ </span>
+        <img src='./assets/img/logo/plc2.png' className="navbar-logo w-100 rounded-circle "></img> <span className='fw-bolder '> ບັນຊີ ລາຍຮັບລາຍຈ່າຍ </span>
         </Link>
         <button type="button" className="navbar-mobile-toggler " data-toggle="app-sidebar-mobile">
           <span className="icon-bar "></span>
@@ -91,7 +92,7 @@ function Header() {
           <a href="#" className="navbar-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
             <img src="../assets/img/user/user-13.jpg" alt />
             <span>
-              <span className="d-none d-md-inline">Adam Schwartz</span>
+              <span className="d-none d-md-inline">{userName}</span>
               <b className="caret"></b>
             </span>
           </a>

@@ -2,6 +2,8 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 function Navbar() {
+  const userName=localStorage.getItem('username');
+  const departName=localStorage.getItem('departName');
   return (
     <>
       <div id="sidebar" className="app-sidebar" data-bs-theme="dark">
@@ -16,12 +18,10 @@ function Navbar() {
                 </div>
                 <div className="menu-profile-info">
                   <div className="d-flex align-items-center">
-                    <div className="flex-grow-1">
-                      Sean Ngu
-                    </div>
+                    <div className="flex-grow-1 fs-bold"> {userName} </div>
                     <div className="menu-caret ms-auto"></div>
                   </div>
-                  <small>Frontend developer</small>
+                  <small>{departName}</small>
                 </div>
               </a>
             </div>
@@ -58,16 +58,34 @@ function Navbar() {
             <div className="menu-item has-sub">
               <a href="javascript:;" className="menu-link fs-15px fs-bold">
                 <div className="menu-icon">
-                <i class="fa-solid fa-sliders"></i></div>
+                <i class="fa-solid fa-sliders" /></div>
+                <div className="menu-text">ການຕັ້ງຄ່າບັນຊີ</div>
+                <div className="menu-caret"></div>
+              </a>
+              <div className="menu-submenu">
+                <div className="menu-item">
+                  <Link to={'/type'} className="menu-link"><div className="menu-text">ປະເພດບັນຊີ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/acount'} className="menu-link"><div className="menu-text">ບັນຊີເງິນຄັງ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/'} className="menu-link"><div className="menu-text">ເບີກເເງິນອອກຄັງ</div></Link>
+                </div>
+              </div>
+            </div>
+            <div className="menu-item has-sub">
+              <a href="javascript:;" className="menu-link fs-15px fs-bold">
+                <div className="menu-icon"><i class="fa-solid fa-gears" /></div>
                 <div className="menu-text">ການຕັ້ງຄ່າ</div>
                 <div className="menu-caret"></div>
               </a>
               <div className="menu-submenu">
                 <div className="menu-item">
-                  <a href="index.html" className="menu-link"><div className="menu-text">Dashboard v1</div></a>
+                  <Link to={'/staff'} className="menu-link"><div className="menu-text">ພະນັກງານ</div></Link>
                 </div>
                 <div className="menu-item">
-                  <a href="index_v2.html" className="menu-link"><div className="menu-text">Dashboard v2</div></a>
+                  <Link to={'/depart'} className="menu-link"><div className="menu-text">ຕັ້ງຄ່າພະແນກ</div></Link>
                 </div>
                 <div className="menu-item">
                   <a href="index_v3.html" className="menu-link"><div className="menu-text">Dashboard v3</div></a>
