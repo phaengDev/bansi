@@ -22,10 +22,11 @@ const [inputs,setInputs]=useState({
 })
 
     const handleChange=(name,value)=>{
-setInputs({
-    ...inputs,[name]:value
-})
+    setInputs({
+        ...inputs,[name]:value
+    })
     }
+
     useEffect(() => {
         if (data) {
             setInputs({
@@ -39,6 +40,20 @@ setInputs({
             });
         }
     }, [data]);
+    const decodedEmail = (email) => {
+        try {
+          return atob(email); // Decode using atob if it's Base64 encoded
+        } catch (error) {
+          return 'Invalid Email';
+        }
+      };
+      const encodedEmail = (email) => {
+        try {
+          return btoa(email); // Encode the email using btoa before saving
+        } catch (error) {
+          return ''; // Return an empty string if encoding fails
+        }
+      };
     return (
         <Modal open={open} onClose={handleClose}>
             <Modal.Header>
@@ -46,7 +61,7 @@ setInputs({
             </Modal.Header>
             <Modal.Body>
                 <div className="form-group mb-2">
-                    <label htmlFor="" className='form-label'>ຊື່ຜູ້ເຂົ້າໃຊ້ {inputs.userName}</label>
+                    <label htmlFor="" className='form-label'>ຊື່ຜູ້ເຂົ້າໃຊ້ </label>
                     <Input value={inputs.userName} onChange={(e) => handleChange('userName', e)} placeholder='ຊື່ຜູ້ເຂົ້າໃຊ້' />
                 </div>
                 <div className="form-group mb-2">
@@ -55,7 +70,7 @@ setInputs({
                         <InputGroup.Addon>
                             <i class="fa-solid fa-user-lock" />
                         </InputGroup.Addon>
-                        <Input value={inputs.userEmail} onChange={(e) => handleChange('userEmail', e)} placeholder='***@gmail.com' />
+                        <Input value={decodedEmail(inputs.userEmail)} onChange={(e) => handleChange('userEmail', encodedEmail(e))} placeholder='***@gmail.com' />
                     </InputGroup>
                 </div>
                 <div className="form-group mb-2">

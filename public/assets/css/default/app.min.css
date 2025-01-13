@@ -10,7 +10,7 @@
  */
 :root,
 [data-bs-theme="light"] {
-  --bs-default: #e9ecef;
+  --bs-default: #e9eeef;
   --bs-primary: #348fe2;
   --bs-secondary: #6c757d;
   --bs-success: #00acac;
@@ -2011,7 +2011,7 @@ progress {
 table > thead th{
   background-color: #0D92F4 !important;
   color:#ffffff !important;
-  font-size:medium;
+  font-size:14px !important;
   font-family: 'laos-bold';
 }
 
@@ -5757,7 +5757,7 @@ fieldset:disabled .btn {
 .badge {
   --bs-badge-padding-x: 0.65em;
   --bs-badge-padding-y: 0.35em;
-  --bs-badge-font-size: 0.75em;
+  --bs-badge-font-size: 0.85em;
   --bs-badge-font-weight: 600;
   --bs-badge-color: #ffffff;
   --bs-badge-border-radius: var(--bs-border-radius);
@@ -25471,6 +25471,28 @@ a:focus {
   align-items: center;
   justify-content: center;
 }
+
+.sidebar-toggler {
+  position: fixed;
+  bottom: 60px;
+  right: 12px;
+  z-index: 1020;
+  background: green;
+  padding: 10px;
+  width: 50px;
+  height: 50px;
+  text-decoration: none;
+  color: var(--bs-component-bg);
+  display: flex;
+  border-radius: 50px;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-toggler:hover {
+  background-color: var(--bs-orange);
+}
+
 @media (max-width: 991.98px) {
   .pos-mobile-sidebar-toggler {
     display: flex;
@@ -45116,4 +45138,55 @@ a.editable-click:hover {
   position: absolute;
   top: 2px;
   right: 5px;
+}
+/* ============ invoice============== */
+
+
+.footer-shape {
+  display: block;
+  -webkit-transform: rotate(-180deg);
+  transform: rotate(-180deg);
+  height: 200px;
+  overflow: hidden;
+  width: 100%;
+  margin-left: auto;
+  margin-bottom: 0;
+  left: 0;
+  right: 0;
+  position: relative;
+  left: 0;
+  right: 0;
+  position: relative;
+}
+@media (max-width: 767px) {
+  .footer-shape {
+    width: 153%;
+    height: 100px;
+  }
+}
+@media (max-width: 575px) {
+  .footer-shape {
+    width: 240%;
+  }
+}
+
+.con-tainer {
+  position: relative;
+  text-align: center;
+}
+.top-left {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+}
+
+.top-right {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+.b-left {
+  position: absolute;
+  bottom: 8px;
+  left: 16px;
 }

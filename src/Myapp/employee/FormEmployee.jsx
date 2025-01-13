@@ -9,7 +9,7 @@ import axios from 'axios';
 import { Config } from '../../config/connection';
 import { Notification } from '../../utils/Notification';
 function FormEmployee() {
-    const api=Config.API
+    const api=Config.API;
     const itemProvince = useProvince();
     const itemDepart = useDepart();
     const itemRights=useRights();

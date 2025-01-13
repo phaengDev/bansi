@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Config } from '../config/connection';
-import { Loader } from 'rsuite';
+import { Loader ,Placeholder} from 'rsuite';
 import axios from 'axios';
 import { Notification } from '../utils/Notification';
 export default function Login() {
@@ -22,7 +22,7 @@ export default function Login() {
         try {
             const resp = await axios.post(api + 'login/check', inputs);
             if (resp.status === 200) {
-                const { username, useremail, userid, employee_id,departName,profile, token, inserts,edits,deletes } = resp.data; 
+                const { username, useremail, userid, employee_id,departName,profile, token, inserts,edits,deletes,status_ck } = resp.data; 
                 localStorage.setItem('username', username);
                 localStorage.setItem('useremail', useremail);
                 localStorage.setItem('userid', userid);
@@ -31,6 +31,7 @@ export default function Login() {
                 localStorage.setItem('inserts', inserts);
                 localStorage.setItem('edits',edits);
                 localStorage.setItem('deletes',deletes);
+                localStorage.setItem('status_ck',status_ck);
                 localStorage.setItem('departName',departName);
                 localStorage.setItem('profile',profile)
                 // navigate('/');
@@ -89,8 +90,11 @@ export default function Login() {
                                     PLC <a href="#" className="text-red">V</a> 1.0.1
                                 </div>
                             </form>
+                            {isLoading===true && 
+                            <Loader backdrop size='lg' content="ກຳລັງກວດສອບ..." center vertical />
+                            }
                         </div>
-
+                       
                     </div>
 
                 </div>

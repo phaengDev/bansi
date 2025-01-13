@@ -1,13 +1,17 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 function Header() {
-  const userName=localStorage.getItem('username')
+  const userName=localStorage.getItem('username');
+  const handleLogout=()=>{
+    localStorage.clear();
+    window.location.href='/login';
+  }
   return (
     <div id="header" className="app-header">
 
       <div className="navbar-header bg-red text-white">
         <Link to={'/home'} className="navbar-brand text-white ">
-        <img src='./assets/img/logo/plc2.png' className="navbar-logo w-100 rounded-circle "></img> <span className='fw-bolder '> ບັນຊີ ລາຍຮັບລາຍຈ່າຍ </span>
+        <img src='../assets/img/logo/plc2.png' className="navbar-logo w-100 rounded-circle "></img> <span className='fw-bolder '> ບັນຊີ ລາຍຮັບລາຍຈ່າຍ </span>
         </Link>
         <button type="button" className="navbar-mobile-toggler " data-toggle="app-sidebar-mobile">
           <span className="icon-bar "></span>
@@ -105,7 +109,7 @@ function Header() {
             <a href="calendar.html" className="dropdown-item">Calendar</a>
             <a href="extra_settings_page.html" className="dropdown-item">Settings</a>
             <div className="dropdown-divider"></div>
-            <a href="login.html" className="dropdown-item">Log Out</a>
+            <a href="javascript:void(0);" onClick={handleLogout} className="dropdown-item">Log Out</a>
           </div>
         </div>
       </div>

@@ -2,8 +2,8 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 function Navbar() {
-  const userName=localStorage.getItem('username');
-  const departName=localStorage.getItem('departName');
+  const userName = localStorage.getItem('username');
+  const departName = localStorage.getItem('departName');
   return (
     <>
       <div id="sidebar" className="app-sidebar" data-bs-theme="dark">
@@ -58,21 +58,102 @@ function Navbar() {
             <div className="menu-item has-sub">
               <a href="javascript:;" className="menu-link fs-15px fs-bold">
                 <div className="menu-icon">
-                <i class="fa-solid fa-sliders" /></div>
+                  <i class="fa-solid fa-clock-rotate-left" /></div>
+                <div className="menu-text">ຂໍ້ມູນການເຂົ້າອອກ</div>
+                <div className="menu-caret"></div>
+              </a>
+              <div className="menu-submenu">
+                <div className="menu-item">
+                  <Link to={'/in-out'} className="menu-link">
+                    <div className="menu-text">ລົງຂໍ້ມູນເຂົ້າອອກ</div>
+                  </Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/lack'} className="menu-link">
+                    <div className="menu-text">ລົງຂໍ້ມູນຂາດວຽກ</div>
+                  </Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/leave'} className="menu-link">
+                    <div className="menu-text">ລົງຂໍ້ມູນລາພັກ</div>
+                  </Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/report-Leave'} className="menu-link">
+                    <div className="menu-text">ລາຍງານການເຂົ້າອອກ</div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="menu-item has-sub">
+              <a href="javascript:;" className="menu-link fs-15px fs-bold">
+                <div className="menu-icon">
+                  <i class="fa-solid fa-sliders" /></div>
                 <div className="menu-text">ການຕັ້ງຄ່າບັນຊີ</div>
                 <div className="menu-caret"></div>
               </a>
               <div className="menu-submenu">
                 <div className="menu-item">
+                  <Link to={'/overview'} className="menu-link"><div className="menu-text">ພາບລວມ</div></Link>
+                </div>
+                <div className="menu-item">
                   <Link to={'/type'} className="menu-link"><div className="menu-text">ປະເພດບັນຊີ</div></Link>
                 </div>
                 <div className="menu-item">
-                  <Link to={'/acount'} className="menu-link"><div className="menu-text">ບັນຊີເງິນຄັງ</div></Link>
+                  <Link to={'/treasury'} className="menu-link"><div className="menu-text">ບັນຊີເງິນຄັງ</div></Link>
                 </div>
                 <div className="menu-item">
                   <Link to={'/'} className="menu-link"><div className="menu-text">ເບີກເເງິນອອກຄັງ</div></Link>
                 </div>
               </div>
+            </div>
+
+            <div className="menu-item has-sub">
+              <a href="javascript:;" className="menu-link fs-15px fs-bold">
+                <div className="menu-icon"><i class="fa-solid fa-book" /></div>
+                <div className="menu-text">ລາຍຮັບ ລາຍຈ່າຍ</div>
+                <div className="menu-caret"></div>
+              </a>
+              <div className="menu-submenu">
+                <div className="menu-item">
+                  <Link to={'/incom'} className="menu-link"><div className="menu-text">ຂໍ້ມູນລາຍຮັບ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/cost'} className="menu-link"><div className="menu-text">ຂໍ້ມູນລາຍຈ່າຍ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/type-inex'} className="menu-link"><div className="menu-text">ປະເພດລາຍຮັບ ລາຍຈ່າຍ</div></Link>
+                </div>
+              </div>
+            </div>
+            <div className="menu-item has-sub">
+              <a href="javascript:;" className="menu-link fs-15px fs-bold">
+                <div className="menu-icon"><i class="fa-solid fa-users"/></div>
+                <div className="menu-text">ຂໍ້ມູນລູກຄ້າ</div>
+                <div className="menu-caret"></div>
+              </a>
+              <div className="menu-submenu">
+                <div className="menu-item">
+                  <Link to={'/customer'} className="menu-link"><div className="menu-text">ຂໍ້ມູນລູກຄ້າ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/'} className="menu-link"><div className="menu-text">ຂໍ້ມູນຈ່າຍການບໍລິການ</div></Link>
+                </div>
+                <div className="menu-item">
+                  <Link to={'/report-ct'} className="menu-link"><div className="menu-text">ລາຍງານລູກຄ້າ</div></Link>
+                </div>
+              </div>
+            </div>
+
+
+            <div className="menu-item">
+              <Link to={'/document'} className="menu-link fs-15px fs-bold">
+                <div className="menu-icon">
+                  <i class="fa-solid fa-folder-open" />
+                </div>
+                <div className="menu-text">ເອກະສານ </div>
+              </Link>
             </div>
             <div className="menu-item has-sub">
               <a href="javascript:;" className="menu-link fs-15px fs-bold">
@@ -92,7 +173,7 @@ function Navbar() {
                 </div>
               </div>
             </div>
-            
+
             <div className="menu-item d-flex">
               <a href="javascript:;" className="app-sidebar-minify-btn ms-auto d-flex align-items-center text-decoration-none" data-toggle="app-sidebar-minify"><i className="fa fa-angle-double-left"></i></a>
             </div>

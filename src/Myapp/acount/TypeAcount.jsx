@@ -13,7 +13,7 @@ const inserts=localStorage.getItem('inserts');
   const [data,setData]=useState({});
 const handleNew=()=>{
   setOpen(true)
-  setData({})
+  setData('')
 }
 const handleEdit=(item)=>{
   setOpen(true)
@@ -22,6 +22,8 @@ const handleEdit=(item)=>{
 
 const [filter, setFilter] = useState([]);
 const [itemTypeList,setItemTypeList]=useState([]);
+const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 10;
 const showTypeList = async () => {
   try {
     const response = await fetch(api + 'type/list');
@@ -37,13 +39,21 @@ const handleFilter=(value)=>{
   const filteredData = filter.filter((item) => {
     return (
       item.type_code.toLowerCase().includes(value.toLowerCase()) || 
-      item.code_list.toLowerCase().includes(value.toLowerCase()) || 
-      item.type_list_name.toLowerCase().includes(value.toLowerCase())
+      item.treasury_code.toLowerCase().includes(value.toLowerCase()) || 
+      item.acount_name.toLowerCase().includes(value.toLowerCase())
     );
   });
-
   setItemTypeList(filteredData);
 }
+
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = itemTypeList.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(itemTypeList.length / itemsPerPage);
+
+const handlePageChange = (pageNumber) => {
+  setCurrentPage(pageNumber);
+};
 
 
 useEffect(()=>{
@@ -58,7 +68,6 @@ useEffect(()=>{
         <li class="breadcrumb-item active">ຂໍ້ມູນປະເພດບັນຊີ</li>
       </ol>
       <h1 class="page-header">ຂໍ້ມູນປະເພດບັນຊີ </h1>
-
       <div className="row mb-3">
         <div className="col-sm-9"></div>
         <div className="col-sm-3">
@@ -80,16 +89,18 @@ useEffect(()=>{
               <th className='text-center w-10' >ໝວດບັນຊີ</th>
               <th className='text-center w-10' >ລະຫັດບັນຊີ</th>
               <th>ຊື່ປະເພດ</th>
+              <th className='text-center w-10'>ສະກຸນເງິນ</th>
               <th className='text-center w-5'>ການຕັ້ງຄ່າ</th>
             </tr>
           </thead>
           <tbody className='fs-14px'>
-            {itemTypeList.map((item,index)=>(
+            {currentItems.map((item,index)=>(
             <tr>
               <td className='text-center'>{index+1}</td>
               <td>{item.type_code} / {item.type_name}</td>
-              <td className='text-center'>{item.code_list}</td>
-              <td>{item.type_list_name}</td>
+              <td className='text-center'>{item.treasury_code}</td>
+              <td>{item.acount_name}</td>
+              <td className='text-center'>{item.currency} ({item.genus})</td>
               <td className='text-center'>
                 <button onClick={()=>handleEdit(item)} className={`btn btn-xs btn-blue me-2 ${edit==='2' &&'disabled'}`}><i class="fa-solid fa-pen-to-square"/></button>
                 <button className={`btn btn-xs btn-red me-2 ${del==='2' &&'disabled'}`}><i class="fa-solid fa-trash"/></button>
@@ -99,19 +110,32 @@ useEffect(()=>{
           </tbody>
         </table>
       </div>
-      <div class="d-md-flex align-items-center">
-        <div class="me-md-auto text-md-left text-center mb-2 mb-md-0">
-          Showing 1 to 10 of 57 entries
+      <div className="d-md-flex align-items-center">
+        <div className="me-md-auto text-md-left text-center mb-2 mb-md-0">
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filter.length)} of {filter.length} entries
         </div>
-        <ul class="pagination mb-0 justify-content-center">
-          <li class="page-item disabled"><a class="page-link">ກ່ອນຫນ້ານີ້</a></li>
-          <li class="page-item active"><a class="page-link" href="javascript:;">1</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">2</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">3</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">4</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">5</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">6</a></li>
-          <li class="page-item"><a class="page-link" href="javascript:;">ໜ້າຕໍ່ໄປ</a></li>
+        <ul className="pagination mb-0 justify-content-center">
+          <li className={`page-item ${currentPage === 1 && 'disabled'}`}>
+            <button className="page-link" 
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1} >
+              ກ່ອນຫນ້ານີ້
+            </button>
+          </li>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+              <button 
+                className="page-link" 
+                onClick={() => handlePageChange(i + 1)} >
+                {i + 1}
+              </button>
+            </li>
+          ))}
+          <li className={`page-item ${currentPage === totalPages && 'disabled'}`}>
+            <button className="page-link" 
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages} > ໜ້າຕໍ່ໄປ  </button>
+          </li>
         </ul>
       </div>
 

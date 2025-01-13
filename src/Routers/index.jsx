@@ -30,7 +30,7 @@ function Application() {
               }
             });
   
-            console.log('Response:', resp.data); 
+            // console.log('Response:', resp.data); 
           } catch (error) {
             console.error('Error making the API request:', error); // Handle errors
             navigate('/login');
