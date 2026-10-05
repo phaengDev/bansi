@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200" fill="none">
+  <defs>
+    <linearGradient id="base" x1="180" y1="100" x2="1740" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#071b20"/>
+      <stop offset=".55" stop-color="#0a302e"/>
+      <stop offset="1" stop-color="#164d40"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(1400 540) rotate(95) scale(690 770)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62a685" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#62a685" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="930" y1="240" x2="1570" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f2dfa9"/>
+      <stop offset=".45" stop-color="#c4a772"/>
+      <stop offset="1" stop-color="#756444"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="1000" y1="350" x2="1390" y2="790" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#548775"/>
+      <stop offset="1" stop-color="#143b34"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#73b79b" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#174d3e" stop-opacity=".5"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="540" y1="0" x2="1800" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0"/>
+      <stop offset=".45" stop-color="white" stop-opacity=".7"/>
+      <stop offset="1" stop-color="white" stop-opacity=".16"/>
+    </linearGradient>
+    <mask id="grid-fade"><path fill="url(#fade)" d="M0 0h1920v1200H0z"/></mask>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0v64" stroke="#b6d5b8" stroke-opacity=".1"/>
+      <circle cx="1" cy="1" r="1" fill="#b6d5b8" fill-opacity=".15"/>
+    </pattern>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="30" stdDeviation="28" flood-color="#020f11" flood-opacity=".4"/>
+    </filter>
+  </defs>
+
+  <path fill="url(#base)" d="M0 0h1920v1200H0z"/>
+  <path fill="url(#light)" d="M0 0h1920v1200H0z"/>
+  <path fill="url(#grid)" mask="url(#grid-fade)" d="M0 0h1920v1200H0z"/>
+
+  <!-- Fine engraved arcs, inspired by the linework on banknotes. -->
+  <g stroke="#a9c6a2" stroke-opacity=".075">
+    <ellipse cx="1430" cy="630" rx="590" ry="430" transform="rotate(-24 1430 630)"/>
+    <ellipse cx="1430" cy="630" rx="612" ry="446" transform="rotate(-24 1430 630)"/>
+    <ellipse cx="1430" cy="630" rx="634" ry="462" transform="rotate(-24 1430 630)"/>
+    <ellipse cx="1430" cy="630" rx="656" ry="478" transform="rotate(-24 1430 630)"/>
+    <ellipse cx="1430" cy="630" rx="678" ry="494" transform="rotate(-24 1430 630)"/>
+    <ellipse cx="1430" cy="630" rx="700" ry="510" transform="rotate(-24 1430 630)"/>
+  </g>
+
+  <!-- Paired decorative cash-flow lines; these are artwork, not financial data. -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M640 863C820 863 825 703 1010 703S1260 388 1646 388" stroke="#83c4a3" stroke-opacity=".28" stroke-width="2"/>
+    <path d="m1631 377 17 11-17 11" stroke="#83c4a3" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M1730 583c-202 0-252 280-486 280H888" stroke="#cfb27c" stroke-opacity=".3" stroke-width="2"/>
+    <path d="m903 852-17 11 17 11" stroke="#cfb27c" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M590 916h1190" stroke="#bad8bb" stroke-opacity=".1"/>
+  </g>
+
+  <!-- Translucent, rising ledger columns. -->
+  <g filter="url(#shadow)" stroke="#a3d5b5" stroke-opacity=".22" stroke-linejoin="round">
+    <path d="m1306 693 70-36 68 36-70 37z" fill="#649c7d" fill-opacity=".3"/>
+    <path d="M1306 693v143l68 38V730z" fill="url(#bar)"/>
+    <path d="M1374 730v144l70-37V693z" fill="#0e3b32" fill-opacity=".65"/>
+    <path d="m1444 547 70-36 68 36-70 37z" fill="#87b997" fill-opacity=".35"/>
+    <path d="M1444 547v226l68 38V584z" fill="url(#bar)"/>
+    <path d="M1512 584v227l70-37V547z" fill="#174937" fill-opacity=".75"/>
+    <path d="m1582 375 70-36 68 36-70 37z" fill="#b1ceb0" fill-opacity=".45"/>
+    <path d="M1582 375v335l68 38V412z" fill="url(#bar)"/>
+    <path d="M1650 412v336l70-37V375z" fill="#1b4b39" fill-opacity=".8"/>
+    <path d="m1582 375 68 37 70-37" stroke="#c3dbb7" stroke-opacity=".55"/>
+  </g>
+
+  <!-- An open two-column ledger, rendered as a quiet sculptural object. -->
+  <g transform="rotate(-12 1140 596)" filter="url(#shadow)">
+    <path d="M949 391c65-20 126-12 191 22 65-34 126-42 191-22v363c-65-20-126-12-191 22-65-34-126-42-191-22z" fill="#0b2826" stroke="#a5b78e" stroke-opacity=".32"/>
+    <path d="M965 372c56-12 114-3 175 29 61-32 119-41 175-29v363c-56-12-114-3-175 29-61-32-119-41-175-29z" fill="url(#paper)" stroke="#b9cead" stroke-opacity=".55"/>
+    <path d="M1140 401v363" stroke="#d7c493" stroke-opacity=".6"/>
+    <path d="M978 391c46-7 94 1 149 28M1153 419c55-27 103-35 149-28" stroke="#c8d4b2" stroke-opacity=".18"/>
+    <g stroke="#d2dcb9" stroke-opacity=".3" stroke-linecap="round">
+      <path d="M993 463c35-1 70 7 108 23M993 511c35-1 70 7 108 23M993 559c35-1 70 7 108 23M993 607c35-1 70 7 108 23M993 655c35-1 70 7 108 23"/>
+      <path d="M1179 486c38-16 73-24 108-23M1179 534c38-16 73-24 108-23M1179 582c38-16 73-24 108-23M1179 630c38-16 73-24 108-23M1179 678c38-16 73-24 108-23"/>
+      <path d="M1066 455v235M1252 437v233" stroke-opacity=".16"/>
+    </g>
+    <g stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1020 408v26m-8-10 8 10 8-10" stroke="#acd5b0"/>
+      <path d="M1239 434v-26m-8 10 8-10 8 10" stroke="#d9bd82"/>
+    </g>
+    <path d="m1155 408 14-6v68l-7-7-7 13z" fill="url(#metal)" opacity=".8"/>
+  </g>
+
+  <!-- Muted brass coins anchor the accounting illustration. -->
+  <g stroke="url(#metal)" stroke-opacity=".65" filter="url(#shadow)">
+    <path d="M1193 832v40c0 17 30 31 68 31s68-14 68-31v-40" fill="#655737"/>
+    <ellipse cx="1261" cy="832" rx="68" ry="31" fill="#b49a63"/>
+    <ellipse cx="1261" cy="832" rx="53" ry="22" stroke="#e2cf96" stroke-opacity=".55"/>
+    <path d="M1194 845c13 32 120 32 134 0m-134 13c13 32 120 32 134 0"/>
+    <path d="M1096 887v25c0 14 25 26 56 26s56-12 56-26v-25" fill="#74623c"/>
+    <ellipse cx="1152" cy="887" rx="56" ry="26" fill="#bca471"/>
+    <ellipse cx="1152" cy="887" rx="42" ry="18" stroke="#e2cf96" stroke-opacity=".6"/>
+    <path d="M1097 900c12 26 98 26 110 0"/>
+  </g>
+
+  <g fill="#d3c297" fill-opacity=".4">
+    <circle cx="885" cy="346" r="3"/>
+    <circle cx="1744" cy="831" r="3"/>
+    <path d="M1467 271h14m-7-7v14M855 728h12m-6-6v12" stroke="#d3c297" stroke-opacity=".4"/>
+  </g>
+</svg>

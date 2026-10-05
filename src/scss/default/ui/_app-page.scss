@@ -1,0 +1,436 @@
+// Styles for the reusable <AppPage> component (src/components/Elements/AppPage.tsx) — a standard
+// full-page content shell (header + content + optional footer) for pages that open as a real route
+// instead of a floating <AppWindow> popup.
+// Always fills its container edge-to-edge — no size to configure, unlike <AppWindow>, whichever
+// container it's dropped into (a full page's content area, or an <AppWindow> popup body) just needs
+// a definite height for this to size against.
+.app-page {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(40, 184, 232, 0.1), transparent 28%),
+    #f5f8fb;
+  user-select: text;
+}
+
+// The header + content + footer stack, sitting to the right of the optional rail.
+.app-page-main {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+// Optional dark icon rail — only rendered when the page passes `rail` to <AppPage>. It shares the
+// same three colour tokens as the <AppWindow> titlebar above it, so when a host page tints those
+// (the Life desktop feeds them from the active wallpaper) the rail and the titlebar stay in step
+// instead of the rail being stuck on blue. The opaque base layer keeps it dark over a light page.
+.app-page-rail {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  min-width: 56px;
+  width: 56px;
+  align-items: center;
+  flex-direction: column;
+  // ຂອບຊ້າຍ/ຂວາຢູ່ສາມສ່ວນຂ້າງລຸ່ມ ບໍ່ແມ່ນຢູ່ນີ້ — ໃຫ້ກ່ອງເມນູກວ້າງເຕັມແຖບ ແຖບ is-active ຈຶ່ງບໍ່ຖືກຕັດ
+  padding: 12px 0;
+  // ຫົວແຖບ ແລະ ທ້າຍແຖບ ຄ້າງຢູ່ບ່ອນເກົ່າ — ສ່ວນເມນູກາງເປັນຄົນເລື່ອນເອງ
+  overflow: hidden;
+  transition: width 0.2s ease;
+  background:
+    linear-gradient(
+      180deg,
+      var(--app-chrome-start, rgba(5, 49, 100, 0.94)),
+      var(--app-chrome-base, rgba(8, 46, 91, 0.9))
+    ),
+    var(--app-chrome-base, #082543);
+}
+
+.app-page-rail.is-open { width: 200px; min-width: 200px;}
+
+// ຂອບຂວາຂອງແຖບຕອນຂະຫຍາຍ — ລາກເພື່ອປັບຄວາມກວ້າງ (ຄວາມກວ້າງຕົວຈິງມາຈາກ inline style ຂອງ <AppPage>)
+.app-page-rail-resizer {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+  transition: background 0.15s ease;
+}
+
+.app-page-rail-resizer:hover,
+.app-page-rail.is-resizing .app-page-rail-resizer { background: rgba(94, 219, 255, 0.45); }
+
+// ກຳລັງລາກ — ປິດ transition ໃຫ້ແຖບຕາມເມົ້າທັນທີ ແລະ ບໍ່ໃຫ້ຄຸມຂໍ້ຄວາມຕິດມາ
+.app-page-rail.is-resizing { transition: none; user-select: none; }
+.app-page-rail.is-resizing .app-page-rail-toggle,
+.app-page-rail.is-resizing .app-page-rail-item { transition: none; }
+
+// ສາມສ່ວນຂອງແຖບ: ຫົວ (ປຸ່ມຫຍໍ້/ຂະຫຍາຍ) — ເມນູ — ທ້າຍ (prop `railFooter`)
+.app-page-rail-head,
+.app-page-rail-body,
+.app-page-rail-foot {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  padding-inline: 5px;
+}
+
+.app-page-rail-head,
+.app-page-rail-foot { flex: none; }
+
+// ເມນູຍາວກວ່າຄວາມສູງຈໍ — ໃຫ້ສ່ວນນີ້ເລື່ອນເອງ ບໍ່ໃຫ້ລາຍການລຸ່ມຖືກຕັດ
+.app-page-rail-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 205, 240, 0.32) transparent;
+}
+
+// ທ້າຍແຖບ — ມີເສັ້ນຄັ່ນບາງໆ ໃຫ້ຮູ້ວ່າແຍກອອກຈາກເມນູ
+.app-page-rail-foot {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 205, 240, 0.22);
+}
+
+.app-page-rail img {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.app-page-rail span {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: rgba(222, 240, 252, 0.54);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.app-page-rail span.is-active {
+  color: #fff;
+  background: rgba(57, 189, 235, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(104, 220, 255, 0.24);
+}
+
+.app-page-rail span.is-active::before,
+.app-page-rail-item.is-active::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: -9px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #5edbff;
+}
+
+// ເມນູໃນແຖບໄອຄອນ (prop `railNav`) — ຫຍໍ້ໄວ້ເຫັນແຕ່ໄອຄອນ, ກົດປຸ່ມຫົວແຖບແລ້ວແຖບເອງຈະກວ້າງອອກ
+// ໃຫ້ເຫັນຊື່ເມນູ ບໍ່ແມ່ນເປີດເປັນແຜງໃໝ່ຊ້ອນຂຶ້ນມາ.
+.app-page-rail-toggle,
+.app-page-rail-item {
+  position: relative;
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(222, 240, 252, 0.54);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: width 0.2s ease, color 0.15s ease, background 0.15s ease;
+}
+
+// ໄອຄອນກວ້າງເທົ່າແຖບຕອນຫຍໍ້ ຊື່ເມນູຈຶ່ງລຽນເປັນຖັນດຽວກັນຕອນຂະຫຍາຍ
+.app-page-rail-toggle > i,
+.app-page-rail-item > i {
+  width: 38px;
+  flex: none;
+  text-align: center;
+}
+
+.app-page-rail-toggle > span,
+.app-page-rail-item > span {
+  display: none;
+  padding-inline-end: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.app-page-rail.is-open .app-page-rail-toggle,
+.app-page-rail.is-open .app-page-rail-item { width: 100%; }
+
+.app-page-rail.is-open .app-page-rail-toggle > span,
+.app-page-rail.is-open .app-page-rail-item > span { display: block; }
+
+// ບໍ່ມີ hover ໃນມືຖື ຈຶ່ງໃຫ້ :active ບອກສະຖານະນຳ
+.app-page-rail-toggle:hover,
+.app-page-rail-toggle:focus-visible,
+.app-page-rail-toggle:active,
+.app-page-rail-item:hover,
+.app-page-rail-item:focus-visible,
+.app-page-rail-item:active {
+  color: #fff;
+  background: rgba(57, 189, 235, 0.2);
+  outline: none;
+}
+
+// ປຸ່ມຫຍໍ້/ຂະຫຍາຍ ຢູ່ຫົວແຖບ — ແຍກອອກຈາກລາຍການເມນູ
+.app-page-rail-toggle {
+  margin-bottom: 6px;
+  color: rgba(222, 240, 252, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(148, 205, 240, 0.28);
+}
+
+// Popover ຂອງແຖບໄອຄອນ — RSuite ຍ້າຍໄປ render ທີ່ body ຈຶ່ງບໍ່ຖືກ overflow ຂອງ .app-page ຕັດ.
+// ທັງພື້ນຫຼັງ ແລະ ຫົວລູກສອນ RSuite ອ່ານຈາກ --rs-bg-overlay ຕົວດຽວ ຈຶ່ງທັບແຄ່ຕົວແປນີ້ພໍ.
+.app-page-rail-popover {
+  // ສີດຽວກັນກັບແຖບໄອຄອນ — ປ່ຽນຕາມພື້ນຫຼັງທີ່ເລືອກໃນ DesktopSettings (fallback ໃຫ້ໜ້າອື່ນທີ່ບໍ່ມີ wallpaper)
+  --rs-bg-overlay: var(--app-chrome-base, #073160);
+  color: #e8f4fd;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// ຊື່ເມນູໃນ Popover ກົດໄດ້ຄືກັນກັບໄອຄອນ (Whisper ເປັນ enterable ຈຶ່ງເລື່ອນເມົ້າເຂົ້າໄປກົດໄດ້)
+.app-page-rail-popover button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.app-page-rail-popover button:hover,
+.app-page-rail-popover button:focus-visible {
+  color: #fff;
+  outline: none;
+  text-decoration: underline;
+}
+
+.app-page-rail-item.is-active {
+  color: #fff;
+  background: rgba(57, 189, 235, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(104, 220, 255, 0.24);
+}
+
+// ຫົວຂໍ້ນ້ອຍຂອງກຸ່ມເມນູ (`group` ໃນ railNav) — ຫຍໍ້ແຖບແລ້ວກາຍເປັນເສັ້ນຄັ່ນ ເພາະຂຽນຊື່ບໍ່ລົງ.
+// ຕ້ອງມີ .app-page-rail ນຳໜ້າ ເພື່ອຊະນະ `.app-page-rail span` (ກ່ອງໄອຄອນ 38px)
+.app-page-rail .app-page-rail-group {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 12px 8px 4px;
+  border-radius: 0;
+  overflow: hidden;
+  color: rgba(190, 224, 248, 0.6);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-align: start;
+  text-overflow: ellipsis;
+}
+
+// ຫຍໍ້ແຖບແລ້ວຂຽນຊື່ບໍ່ລົງ — ເຊື່ອງຊື່ໄວ້ ແລ້ວແຕ້ມເສັ້ນຄັ່ນກາງກ່ອງແທນ (ຄວາມສູງເທົ່າເກົ່າ
+// ລາຍການລຸ່ມຈຶ່ງບໍ່ຂະຍັບຕອນສະຫຼັບຫຍໍ້/ຂະຫຍາຍ)
+.app-page-rail:not(.is-open) .app-page-rail-group {
+  width: 22px;
+  margin-inline: auto;
+  padding-inline: 0;
+  color: transparent;
+  background: linear-gradient(rgba(148, 205, 240, 0.25), rgba(148, 205, 240, 0.25)) center 70% / 100% 1px no-repeat;
+}
+
+// ຈໍນ້ອຍແຖບຈະລອຍທັບເນື້ອຫາ — ພື້ນຫຼັງນີ້ໃຫ້ກົດປິດ (ຈໍໃຫຍ່ແຖບດັນເນື້ອຫາ ຈຶ່ງບໍ່ຕ້ອງໃຊ້)
+.app-page-rail-backdrop {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  display: none;
+  padding: 0;
+  border: 0;
+  background: rgba(9, 33, 56, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-page-rail,
+  .app-page-rail-toggle,
+  .app-page-rail-item { transition: none; }
+}
+
+.app-page-header {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 16px;
+  border-bottom: 1px solid #dde6ed;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.app-page-header > span:first-child { display: grid; gap: 1px; }
+
+.app-page-header small {
+  color: #8190a0;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.app-page-header h2 {
+  margin: 0;
+  color: #16324e;
+  font-size: clamp(12px, 1.3vw, 14px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+// Optional badge slot (e.g. a "Draft" pill) — apply this class to whatever node is passed as `badge`.
+.app-page-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  color: #947013;
+  border: 1px solid #eadba7;
+  border-radius: 999px;
+  background: #fff8dc;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.app-page-content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 18px;
+  overflow: auto;
+  padding: 22px;
+}
+
+// Common "main content + side panel" layout — pass `split` on <AppPage> to turn this on.
+.app-page-content.has-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.8fr);
+}
+
+.app-page-footer {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 22px;
+  color: #81909d;
+  border-top: 1px solid #dce6ed;
+  background: #fff;
+  font-size: 9px;
+}
+
+.app-page-footer > span:first-child i {
+  margin-inline-end: 4px;
+  color: #25a880;
+}
+
+.app-page-actions { display: flex; align-items: center; gap: 8px; }
+
+.app-page-actions button,
+.app-page-actions a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 13px;
+  color: #496174;
+  text-decoration: none;
+  border: 1px solid #d6e0e7;
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.app-page-actions .is-primary {
+  color: #fff;
+  border-color: #0786bd;
+  background: linear-gradient(145deg, #16afe0, #087eb7);
+  box-shadow: 0 7px 14px rgba(9, 131, 183, 0.18);
+}
+
+.app-page-actions button:hover { background: #f4f8fa; }
+.app-page-actions .is-primary:hover {
+  color: #fff;
+  background: linear-gradient(145deg, #1bb9e9, #0786c2);
+  filter: brightness(1.05);
+}
+
+.app-page-actions button:disabled { cursor: not-allowed; opacity: 0.5; filter: none; }
+
+@media (max-width: 767.98px) {
+  .app-page-rail { width: 44px; padding: 12px 0; }
+  .app-page-rail-head,
+  .app-page-rail-body,
+  .app-page-rail-foot { gap: 8px; }
+  .app-page-rail.is-open {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 186px;
+    box-shadow: 10px 0 26px rgba(8, 26, 45, 0.35);
+  }
+  .app-page-rail-backdrop { display: block; }
+  .app-page-rail img { width: 34px; height: 34px; }
+  .app-page-rail span { width: 34px; height: 34px; }
+  .app-page-rail span.is-active::before,
+  .app-page-rail-item.is-active::before { left: -5px; }
+  .app-page-rail-toggle,
+  .app-page-rail-item { width: 34px; height: 34px; }
+  .app-page-rail-toggle > i,
+  .app-page-rail-item > i { width: 34px; }
+  .app-page-header { min-height: 36px; padding: 6px 12px; }
+  .app-page-header h2 { font-size: 12px; }
+  .app-page-content.has-side { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+  .app-page-footer { align-items: stretch; flex-direction: column; padding: 9px 12px; }
+  .app-page-actions { width: 100%; }
+  .app-page-actions > * { flex: 1 1 50%; }
+}

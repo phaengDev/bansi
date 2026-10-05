@@ -1,0 +1,174 @@
+// Styles for the reusable <AppWindow> component (src/components/Elements/AppWindow.tsx) — a
+// draggable, minimize/maximize/close-able floating window used to build "desktop popup" pages.
+.app-window {
+  --app-window-width: 900px;
+  --app-window-height: 610px;
+  --app-window-min-width: 620px;
+  --app-window-min-height: 430px;
+  position: absolute;
+  z-index: 12;
+  display: flex;
+  width: min(var(--app-window-width), calc(100% - 32px));
+  height: min(var(--app-window-height), calc(100% - 92px));
+  min-width: min(var(--app-window-min-width), calc(100% - 32px));
+  min-height: min(var(--app-window-min-height), calc(100% - 92px));
+  flex-direction: column;
+  overflow: hidden;
+  color: #24364a;
+  border: 1px solid rgba(219, 238, 250, 0.82);
+  border-radius: 13px;
+  background: #f4f8fb;
+  box-shadow:
+    0 34px 90px rgba(0, 15, 52, 0.48),
+    0 8px 26px rgba(0, 27, 76, 0.26);
+  animation: app-window-open 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.app-window.is-maximized {
+  top: 0 !important;
+  right: 0;
+  bottom: 56px;
+  left: 0 !important;
+  width: auto;
+  height: auto;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  transition: bottom 200ms ease;
+  animation: app-window-maximize 180ms ease-out both;
+}
+
+.app-window-titlebar {
+  display: flex;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  color: #eaf7ff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  // Trust blue unless a host page tints it — the Life desktop feeds these three vars from the active
+  // wallpaper theme, so a colour wallpaper carries through to the titlebar (photos keep this blue).
+  background:
+    linear-gradient(
+      90deg,
+      var(--app-chrome-start, rgba(5, 49, 100, 0.94)),
+      var(--app-chrome-end, rgba(8, 99, 166, 0.88))
+    ),
+    var(--app-chrome-base, rgba(8, 46, 91, 0.9));
+  cursor: grab;
+  touch-action: none;
+}
+
+.app-window-titlebar:active { cursor: grabbing; }
+
+.app-window-title-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  margin-inline: 8px 7px;
+  flex: 0 0 22px;
+  place-items: center;
+  color: #fff;
+  font-size: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 7px;
+  background: linear-gradient(145deg, #1ed0ef, #0783cf);
+  box-shadow: 0 4px 9px rgba(0, 22, 72, 0.25);
+}
+
+.app-window-title {
+  display: grid;
+  min-width: 0;
+  margin-inline-end: auto;
+  line-height: 1.15;
+}
+
+.app-window-title strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-window-title small {
+  color: rgba(229, 244, 255, 0.64);
+  font-size: 8px;
+}
+
+// Above the top resize strips, so minimize/maximize/close stay clickable right up to the corner.
+.app-window-controls {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+}
+
+.app-window-controls button {
+  display: grid;
+  width: 36px;
+  height: 100%;
+  place-items: center;
+  color: #e8f6ff;
+  font-size: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.app-window-controls button:hover { background: rgba(255, 255, 255, 0.13); }
+.app-window-controls button.is-close:hover { color: #fff; background: #e64953; }
+
+.app-window-body {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: auto;
+}
+
+// Invisible grab strips for resizing, inset just inside the border (the window clips its overflow,
+// so they can't hang outside it). Corners come last in the DOM, so they win where they overlap.
+.app-window-resize {
+  position: absolute;
+  z-index: 3;
+  touch-action: none;
+}
+
+.app-window-resize.is-n { top: 0; right: 12px; left: 12px; height: 5px; cursor: ns-resize; }
+.app-window-resize.is-s { right: 12px; bottom: 0; left: 12px; height: 5px; cursor: ns-resize; }
+.app-window-resize.is-e { top: 12px; right: 0; bottom: 12px; width: 5px; cursor: ew-resize; }
+.app-window-resize.is-w { top: 12px; bottom: 12px; left: 0; width: 5px; cursor: ew-resize; }
+.app-window-resize.is-ne { top: 0; right: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+.app-window-resize.is-nw { top: 0; left: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.app-window-resize.is-se { right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.app-window-resize.is-sw { bottom: 0; left: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+
+@keyframes app-window-open {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes app-window-maximize {
+  from { opacity: 0.75; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 767.98px) {
+  .app-window,
+  .app-window.is-maximized {
+    top: 0 !important;
+    right: 0;
+    bottom: 56px;
+    left: 0 !important;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-window { animation: none; }
+}

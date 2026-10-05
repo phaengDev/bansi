@@ -22,3 +22,7 @@ node_modules
 *.njsproj
 *.sln
 *.sw?
+
+# local env (ໃຊ້ .env.example ເປັນແມ່ແບບ)
+.env
+.env.*.local

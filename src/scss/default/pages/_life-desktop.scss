@@ -1,0 +1,1845 @@
+.life-desktop {
+  --desktop-ink: #f6fbff;
+  --desktop-muted: rgba(239, 248, 255, 0.72);
+  --desktop-glass-strong: rgba(8, 31, 67, 0.76);
+
+  // Default wallpaper theme — "ປົກປ້ອງ" (Protect): trust blue. Each [data-wallpaper] preset below
+  // redefines just these vars, so .life-desktop-wallpaper/-glow/-bloom never change themselves.
+  --wallpaper-solid: #071a39;
+  --wallpaper-bg: linear-gradient(145deg, #07162f 0%, #0a3f88 45%, #187bd0 73%, #8ad3f8 100%);
+  --wallpaper-radial-1: radial-gradient(circle at 78% 18%, rgba(63, 193, 255, 0.72), transparent 29%);
+  --wallpaper-radial-2: radial-gradient(circle at 48% 65%, rgba(7, 120, 255, 0.54), transparent 42%);
+  --wallpaper-glow-bg: rgba(77, 197, 255, 0.19);
+  --wallpaper-glow-shadow: rgba(23, 161, 255, 0.32);
+  --wallpaper-bloom-border: rgba(43, 167, 255, 0.78);
+  --wallpaper-bloom-border-top: rgba(145, 225, 255, 0.92);
+  --wallpaper-bloom-border-right: rgba(0, 89, 238, 0.9);
+  --wallpaper-bloom-shadow-1: rgba(201, 242, 255, 0.4);
+  --wallpaper-bloom-shadow-2: rgba(0, 30, 160, 0.48);
+  --wallpaper-bloom-shadow-3: rgba(0, 15, 76, 0.42);
+
+  // Window chrome — <AppWindow> titlebars and the <AppPage> side rail — follows the wallpaper theme,
+  // so the windows match the desktop behind them. Only the colour themes below re-tint these; the
+  // photo wallpapers leave them alone and keep this blue, as there is no one colour to pull out of a
+  // photograph.
+  --app-chrome-start: rgba(5, 49, 100, 0.94);
+  --app-chrome-end: rgba(8, 99, 166, 0.88);
+  --app-chrome-base: rgba(8, 46, 91, 0.9);
+
+  position: relative;
+  isolation: isolate;
+  // bansi: desktop ເປັນໜ້າເຕັມຈໍໂດຍກົງ (ບໍ່ມີ .app-content ຫໍ່ ຄືໂປຣເຈັກ insurance) ຈຶ່ງບໍ່ຕ້ອງດຶງຂອບອອກ
+  width: 100%;
+  height: 100dvh;
+  min-height: 500px;
+  overflow: hidden;
+  color: var(--desktop-ink);
+  font-family: 'NotoSerifLao', 'Segoe UI', sans-serif;
+  background: var(--wallpaper-solid);
+  user-select: none;
+}
+
+// ຄ່າຕັ້ງຕົ້ນຂອງສີກອບໜ້າຕ່າງສຳລັບ <html> — ໃຊ້ກັບ overlay ທີ່ RSuite ຍ້າຍໄປ render ຢູ່ body
+// (ເຊັ່ນ Popover ຂອງແຖບໄອຄອນ). ບລັອກ preset ຂ້າງລຸ່ມທັບຄ່ານີ້ຕາມພື້ນຫຼັງທີ່ເລືອກ.
+:root[data-wallpaper] {
+  --app-chrome-start: rgba(5, 49, 100, 0.94);
+  --app-chrome-end: rgba(8, 99, 166, 0.88);
+  --app-chrome-base: rgba(8, 46, 91, 0.9);
+}
+
+// Accounting illustration, using the same wallpaper and window theme variables.
+.life-desktop[data-wallpaper='finance'],
+:root[data-wallpaper='finance'] {
+  --wallpaper-solid: #071f20;
+  --wallpaper-bg: url('/assets/img/desktop/finance-wallpaper.svg') center / cover no-repeat;
+  --wallpaper-radial-1: none;
+  --wallpaper-radial-2: none;
+  --desktop-glass-strong: rgba(6, 35, 33, 0.88);
+  --app-chrome-start: rgba(8, 69, 53, 0.94);
+  --app-chrome-end: rgba(17, 125, 93, 0.88);
+  --app-chrome-base: rgba(6, 52, 40, 0.9);
+}
+
+.life-desktop[data-wallpaper='finance'] .life-desktop-brand-trigger {
+  background: rgba(8, 39, 36, 0.4);
+  border-color: rgba(184, 213, 185, 0.22);
+}
+
+// More account artwork — name: (solid, svg file, glass, chrome-start, chrome-end, chrome-base, brand accent)
+$account-photos: (
+  'ledger': (#060b1a, 'ledger-wallpaper.svg', rgba(9, 18, 40, 0.9), rgba(14, 29, 60, 0.95), rgba(31, 56, 104, 0.9), rgba(15, 31, 63, 0.92), rgba(212, 180, 106, 0.24)),
+  'rosette': (#03130f, 'rosette-wallpaper.svg', rgba(5, 32, 26, 0.9), rgba(8, 52, 42, 0.95), rgba(15, 80, 62, 0.9), rgba(8, 42, 34, 0.92), rgba(227, 194, 124, 0.24)),
+  'contour': (#0a0c10, 'contour-wallpaper.svg', rgba(16, 19, 25, 0.9), rgba(24, 28, 36, 0.95), rgba(44, 52, 64, 0.9), rgba(22, 26, 33, 0.92), rgba(126, 200, 227, 0.24)),
+  'silk': (#120806, 'silk-wallpaper.svg', rgba(36, 18, 10, 0.9), rgba(58, 30, 15, 0.95), rgba(100, 58, 26, 0.9), rgba(42, 20, 11, 0.92), rgba(240, 194, 122, 0.26)),
+);
+
+@each $name, $c in $account-photos {
+  .life-desktop[data-wallpaper='#{$name}'],
+  :root[data-wallpaper='#{$name}'] {
+    --wallpaper-solid: #{nth($c, 1)};
+    --wallpaper-bg: url('/assets/img/desktop/#{nth($c, 2)}') center / cover no-repeat;
+    --wallpaper-radial-1: none;
+    --wallpaper-radial-2: none;
+    --desktop-glass-strong: #{nth($c, 3)};
+    --app-chrome-start: #{nth($c, 4)};
+    --app-chrome-end: #{nth($c, 5)};
+    --app-chrome-base: #{nth($c, 6)};
+  }
+
+  .life-desktop[data-wallpaper='#{$name}'] .life-desktop-brand-trigger {
+    background: #{rgba(nth($c, 1), 0.45)};
+    border-color: #{nth($c, 7)};
+  }
+}
+
+.life-desktop:is([data-wallpaper='finance'], [data-wallpaper='ledger'], [data-wallpaper='rosette'], [data-wallpaper='contour'], [data-wallpaper='silk']) {
+  .life-desktop-glow,
+  .life-desktop-bloom {
+    display: none;
+  }
+}
+
+// ---- Account desktop color themes ------------------------------------------------------------
+// ຊຸດສີຂອງໜ້າບັນຊີ — ໂທນເຂັ້ມ ສຸຂຸມແບບທະນາຄານ/ປຶ້ມບັນຊີ: ພື້ນ gradient + ແສງສີເນັ້ນມຸມຂວາເທິງ +
+// ເສັ້ນຕາລາງບາງໆຄືເຈ້ຍບັນຊີ. ບໍ່ມີວົງແຫວນ bloom ຂອງໜ້າປະກັນຊີວິດ. ຕ້ອງກົງກັບ wallpaperSwatches
+// ໃນ src/pages/account/DesktopShared.ts
+// name: (solid, base, mid, accent, chrome-start, chrome-end)
+$account-themes: (
+  'acc-ledger':   (#06201b, #0d3b31, #1c5e4c, #7fc8a4, #0b3a30, #17634f),
+  'acc-navy':     (#070d1e, #0f1f3f, #1d3563, #d4b46a, #0e1d3c, #1f3868),
+  'acc-graphite': (#0c0e11, #1a1e24, #2d333c, #9fb0c3, #1a1e25, #313844),
+  'acc-treasury': (#04191c, #0a3339, #145459, #6fd1cf, #0a3339, #16595e),
+  'acc-slate':    (#0e1620, #1e2d3d, #34495e, #a9c1d9, #1c2b3b, #36506a),
+  'acc-bronze':   (#1a1008, #3a2511, #5e3e1c, #e2bd7a, #3a2511, #664420),
+  'acc-burgundy': (#1a070c, #3a1019, #5c1d2a, #e0a38a, #3c111b, #66222f),
+  'acc-plum':     (#150c1f, #2b1a3f, #45305f, #c6a8e6, #2b1a3f, #4b3468),
+);
+
+@each $name, $c in $account-themes {
+  $solid: nth($c, 1);
+  $base: nth($c, 2);
+  $mid: nth($c, 3);
+  $accent: nth($c, 4);
+
+  .life-desktop[data-wallpaper='#{$name}'],
+  :root[data-wallpaper='#{$name}'] {
+    --wallpaper-solid: #{$solid};
+    --wallpaper-bg: linear-gradient(150deg, #{$solid} 0%, #{$base} 52%, #{$mid} 100%);
+    --wallpaper-radial-1: radial-gradient(ellipse at 82% 12%, #{rgba($accent, 0.2)}, transparent 46%),
+      radial-gradient(ellipse at 10% 100%, #{rgba($accent, 0.08)}, transparent 40%);
+    --wallpaper-radial-2: repeating-linear-gradient(0deg, #{rgba($accent, 0.06)} 0 1px, transparent 1px 56px),
+      repeating-linear-gradient(90deg, #{rgba($accent, 0.045)} 0 1px, transparent 1px 56px);
+    --desktop-glass-strong: #{rgba(mix($solid, $base, 50%), 0.9)};
+    --app-chrome-start: #{rgba(nth($c, 5), 0.95)};
+    --app-chrome-end: #{rgba(nth($c, 6), 0.9)};
+    --app-chrome-base: #{rgba($base, 0.92)};
+  }
+
+  .life-desktop[data-wallpaper='#{$name}'] .life-desktop-brand-trigger {
+    background: #{rgba($solid, 0.45)};
+    border-color: #{rgba($accent, 0.24)};
+  }
+}
+
+.life-desktop[data-wallpaper^='acc-'] {
+  .life-desktop-glow,
+  .life-desktop-bloom {
+    display: none;
+  }
+}
+
+// Whatever page is active (DesktopMenu, ExampleRegister, …) renders here, full-bleed, above the taskbar.
+.life-desktop-stage {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding-bottom: 56px; // reserve room for the taskbar so it's not hidden behind it (ignored by absolutely-positioned children like the wallpaper)
+  transition: padding-bottom 200ms ease;
+}
+
+// While the taskbar is auto-hidden (unpinned and not hovered), give that space back to the page.
+.life-desktop-stage.is-full {
+  padding-bottom: 0;
+}
+
+.life-desktop-wallpaper {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--wallpaper-radial-1), var(--wallpaper-radial-2), var(--wallpaper-bg);
+  transition: background 400ms ease;
+}
+
+.life-desktop-wallpaper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.45) 0.6px, transparent 0.6px);
+  background-size: 4px 4px;
+  mix-blend-mode: soft-light;
+}
+
+.life-desktop-glow {
+  position: absolute;
+  width: min(72vw, 1100px);
+  aspect-ratio: 1.3;
+  top: 46%;
+  left: 62%;
+  border-radius: 49% 51% 58% 42%;
+  background: var(--wallpaper-glow-bg);
+  box-shadow: 0 0 130px 70px var(--wallpaper-glow-shadow);
+  filter: blur(12px);
+  transform: translate(-50%, -50%) rotate(-14deg);
+  animation: life-glow-breathe 12s ease-in-out infinite;
+  transition: background 400ms ease, box-shadow 400ms ease;
+}
+
+.life-desktop-bloom {
+  position: absolute;
+  top: 45%;
+  left: 64%;
+  width: min(65vw, 980px);
+  aspect-ratio: 1.55;
+  border: clamp(52px, 7vw, 108px) solid var(--wallpaper-bloom-border);
+  border-top-color: var(--wallpaper-bloom-border-top);
+  border-right-color: var(--wallpaper-bloom-border-right);
+  border-radius: 46% 54% 40% 60% / 58% 42% 58% 42%;
+  box-shadow:
+    inset 24px 18px 32px var(--wallpaper-bloom-shadow-1),
+    inset -32px -28px 44px var(--wallpaper-bloom-shadow-2),
+    0 36px 80px var(--wallpaper-bloom-shadow-3);
+  transform: translate(-50%, -50%) rotate(-17deg);
+  animation: life-bloom-spin 90s linear infinite;
+  transition: border-color 400ms ease, box-shadow 400ms ease;
+}
+
+.life-desktop-bloom--back {
+  opacity: 0.55;
+  transform: translate(-48%, -48%) rotate(15deg) scale(1.08);
+  animation: life-bloom-spin-back 130s linear infinite;
+}
+
+.life-desktop-bloom--middle {
+  width: min(50vw, 760px);
+  opacity: 0.82;
+  transform: translate(-48%, -50%) rotate(58deg);
+  animation: life-bloom-spin-middle 70s linear infinite reverse;
+}
+
+.life-desktop-bloom--front {
+  width: min(36vw, 560px);
+  border-width: clamp(42px, 5vw, 78px);
+  transform: translate(-48%, -50%) rotate(112deg);
+  animation: life-bloom-spin-front 50s linear infinite;
+}
+
+// Positions the brand/user-menu widget in the top-right corner. (Desktop Settings now lives in the
+// taskbar's bottom-left corner instead — see .life-taskbar-left below.)
+.life-desktop-brand { position: relative; }
+
+.life-desktop-toolbar {
+  position: absolute;
+  z-index: 2;
+  top: clamp(20px, 3.5vw, 52px);
+  right: clamp(22px, 4vw, 64px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.life-desktop-brand-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(4, 24, 61, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 18, 66, 0.14);
+  backdrop-filter: blur(16px) saturate(140%);
+  animation: life-desktop-enter 650ms 100ms both;
+  font: inherit;
+  cursor: default;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.life-desktop-brand-trigger:hover,
+.life-desktop-brand-trigger:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(4, 24, 61, 0.3);
+}
+
+.life-desktop-brand-logo {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(1, 20, 54, 0.24);
+}
+
+.life-desktop-brand-logo img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.life-desktop-brand-trigger > span:last-child {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.life-desktop-brand-trigger strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.life-desktop-brand-trigger small {
+  color: var(--desktop-muted);
+  font-size: 11px;
+}
+
+.life-desktop-brand-trigger small i {
+  margin-inline-end: 3px;
+  color: #8de8c2;
+}
+
+.life-desktop-brand-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  min-width: 190px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 16px 40px rgba(0, 13, 49, 0.42);
+  backdrop-filter: blur(28px) saturate(150%);
+  animation: life-desktop-enter 160ms ease both;
+}
+
+.life-desktop-brand-menu-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.life-desktop-brand-menu-user img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.life-desktop-brand-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  color: #eaf6ff;
+  text-align: left;
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: default;
+}
+
+.life-desktop-brand-menu-item:hover,
+.life-desktop-brand-menu-item:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.life-desktop-brand-menu-item.is-danger { color: #ff9a9a; }
+.life-desktop-brand-menu-item.is-danger:hover { color: #ffb3b3; }
+
+// Freeform canvas the icons are dragged around inside of — bounded so icons can't be dropped
+// under the brand widget or the taskbar. Each icon positions itself absolutely within this.
+.life-desktop-shortcuts {
+  position: absolute;
+  z-index: 2;
+  top: clamp(22px, 4vw, 56px);
+  right: clamp(16px, 2.8vw, 42px);
+  bottom: 72px;
+  left: clamp(16px, 2.8vw, 42px);
+}
+
+.life-desktop-shortcut {
+  position: absolute;
+  display: flex;
+  width: 112px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 6px;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  text-shadow: 0 2px 5px rgba(0, 15, 52, 0.88);
+  animation: life-desktop-enter 520ms calc(80ms + var(--shortcut-order) * 55ms) both;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, left 260ms ease, top 260ms ease;
+}
+
+.life-desktop-shortcut:hover,
+.life-desktop-shortcut:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+  outline: none;
+  background: rgba(223, 243, 255, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(6, 48, 107, 0.16);
+  transform: translateY(-2px);
+}
+
+// Being dragged right now — lifted above the other icons, no transition lag chasing the pointer.
+.life-desktop-shortcut.is-dragging {
+  z-index: 3;
+  cursor: grabbing;
+  background: rgba(223, 243, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  transition: none;
+}
+
+.life-desktop-shortcut > span:last-child {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.life-desktop-shortcut-icon {
+  position: relative;
+  display: grid;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff;
+  font-size: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 15px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.38),
+    0 10px 20px rgba(0, 15, 66, 0.3);
+}
+
+.life-desktop-shortcut-icon.is-cyan { background: linear-gradient(145deg, #20c9ed, #0877d1); }
+.life-desktop-shortcut-icon.is-gold { background: linear-gradient(145deg, #ffd45f, #e28b12); }
+.life-desktop-shortcut-icon.is-coral { background: linear-gradient(145deg, #ff8b7c, #d94867); }
+.life-desktop-shortcut-icon.is-violet { background: linear-gradient(145deg, #aa8cff, #604bd8); }
+.life-desktop-shortcut-icon.is-emerald { background: linear-gradient(145deg, #4ed7a4, #078666); }
+.life-desktop-shortcut-icon.is-slate { background: linear-gradient(145deg, #a9c7dc, #42647f); }
+.life-desktop-shortcut-icon.is-sky { background: linear-gradient(145deg, #8fd3ff, #2f8fd0); }
+
+// ກະແຈນ້ອຍມຸມລຸ່ມຂວາ — ເມນູນີ້ຕັ້ງລະຫັດຜ່ານໄວ້ (account/menuLock.ts)
+.life-desktop-shortcut-lock {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #fff;
+  background: #14314d;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.life-app-form-card,
+.life-app-summary {
+  border: 1px solid #dce6ed;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(27, 62, 94, 0.06);
+}
+
+.life-app-form-card { padding: 20px; }
+
+.life-app-form-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf1f4;
+}
+
+.life-app-form-card-heading > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #087fb8;
+  border-radius: 10px;
+  background: #e7f7fd;
+  font-size: 15px;
+}
+
+.life-app-form-card-heading h3,
+.life-app-summary h3 {
+  margin: 0;
+  color: #233e58;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.life-app-form-card-heading small {
+  color: #8c9aaa;
+  font-size: 11px;
+}
+
+// Rows inside the Desktop Settings flyout (dark glass — see .settings-menu).
+.settings-menu-body { padding: 6px 0 10px; }
+
+.settings-menu-section {
+  padding: 12px 16px 4px;
+  color: rgba(229, 244, 255, 0.5);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 6px 16px;
+}
+
+.settings-menu-row.is-disabled { opacity: 0.55; }
+
+.settings-menu-row-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #eaf6ff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-menu-row-label i { width: 14px; color: #5edbff; text-align: center; }
+
+.settings-menu-row-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-menu-row-state {
+  color: rgba(229, 244, 255, 0.56);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.settings-menu-btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  color: #eaf6ff;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 150ms ease;
+}
+
+.settings-menu-btn:hover,
+.settings-menu-btn:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+// Wallpaper picker — one swatch button per theme, each previewing its own gradient.
+// Four swatches fit across the flyout; anything past that is reached by scrolling sideways, with
+// snapping so a swipe always lands on a whole swatch rather than halfway through one.
+.settings-menu-swatches {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 24px) / 4);
+  gap: 8px;
+  padding: 4px 16px 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  // No visible scrollbar — the soft fade on the right edge is what hints that the row keeps going,
+  // and the row is dragged with the mouse instead (see <ScrollStrip> in DesktopSettings.tsx).
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+
+.settings-menu-swatches:active { cursor: grabbing; }
+
+.settings-menu-swatches::-webkit-scrollbar { display: none; }
+
+.settings-menu-swatch {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  scroll-snap-align: start;
+}
+
+.settings-menu-swatch-preview {
+  position: relative;
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: linear-gradient(145deg, var(--swatch-from), var(--swatch-to));
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 4px 10px rgba(0, 8, 30, 0.35);
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.settings-menu-swatch:hover .settings-menu-swatch-preview,
+.settings-menu-swatch:focus-visible .settings-menu-swatch-preview {
+  transform: translateY(-2px);
+}
+
+.settings-menu-swatch-preview.is-selected {
+  border-color: #fff;
+}
+
+.settings-menu-swatch-preview i {
+  color: #fff;
+  font-size: 13px;
+  text-shadow: 0 1px 3px rgba(0, 8, 30, 0.6);
+}
+
+.settings-menu-swatch-label {
+  color: rgba(229, 244, 255, 0.75);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.settings-menu-hint {
+  margin: 0;
+  padding: 0 16px 4px;
+  color: rgba(229, 244, 255, 0.56);
+  font-size: 11px;
+}
+
+.life-start {
+  position: absolute;
+  z-index: 20;
+  bottom: 68px;
+  left: 50%;
+  width: min(560px, calc(100% - 28px));
+  overflow: hidden;
+  color: #eaf6ff;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 22px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 28px 80px rgba(0, 13, 49, 0.46);
+  backdrop-filter: blur(34px) saturate(150%);
+  transform: translateX(-50%);
+  animation: life-start-open 220ms ease-out both;
+}
+
+.life-start-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 30px 22px;
+  padding: 0 15px;
+  color: rgba(230, 244, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom-color: #53bdf7;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.life-start-search input {
+  width: 100%;
+  height: 40px;
+  color: #fff;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  user-select: text;
+}
+
+.life-start-search input::placeholder { color: rgba(229, 242, 255, 0.58); }
+
+.life-start-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px 12px;
+}
+
+.life-start-heading strong {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.life-start-heading button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #dbeeff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.life-start-heading button:hover { background: rgba(255, 255, 255, 0.17); }
+
+.life-start-apps {
+  display: grid;
+  min-height: 210px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 24px 26px;
+}
+
+.life-start-apps a,
+.life-start-apps button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 7px 10px;
+  color: #f2f8ff;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  font: inherit;
+  cursor: default;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.life-start-apps a:hover,
+.life-start-apps a:focus-visible,
+.life-start-apps button:hover,
+.life-start-apps button:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.13);
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.life-start-apps .life-desktop-shortcut-icon {
+  width: 44px;
+  height: 44px;
+  font-size: 19px;
+  border-radius: 13px;
+}
+
+// ລາຍການທີ່ກຳລັງເປີດເມນູຄລິກຂວາຢູ່ — ຄ້າງ highlight ໄວ້ໃຫ້ຮູ້ວ່າເມນູເປັນຂອງອັນໃດ
+.life-start-apps button.is-context {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.life-start-apps .life-desktop-shortcut-lock {
+  right: -6px;
+  bottom: -6px;
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+}
+
+// ເມນູຄລິກຂວາ (account/MenuContextMenu) — ແກ້ວເຂັ້ມແບບດຽວກັບ Start menu, ວາງຕາມຈຸດທີ່ຄລິກ
+.life-context-menu {
+  position: fixed;
+  z-index: 1040;
+  display: flex;
+  min-width: 230px;
+  max-width: 300px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  color: #eaf6ff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: var(--desktop-glass-strong, rgba(6, 35, 33, 0.94));
+  box-shadow: 0 18px 48px rgba(0, 13, 49, 0.5);
+  backdrop-filter: blur(28px) saturate(150%);
+  animation: life-context-open 120ms ease-out both;
+
+  hr {
+    margin: 4px 6px;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    opacity: 1;
+  }
+
+  > button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    color: inherit;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    text-align: start;
+    cursor: default;
+
+    i { width: 16px; color: rgba(234, 246, 255, 0.7); font-size: 12px; text-align: center; }
+
+    &:hover:not(:disabled),
+    &:focus-visible { outline: none; background: rgba(255, 255, 255, 0.12); }
+
+    &:disabled { opacity: 0.45; }
+
+    &.is-danger,
+    &.is-danger i { color: #ff9a9a; }
+  }
+}
+
+.life-context-menu-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 8px;
+
+  .life-desktop-shortcut-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-size: 13px;
+    box-shadow: none;
+  }
+
+  b {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  em {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding: 1px 8px;
+    color: #ffd98a;
+    background: rgba(255, 201, 74, 0.16);
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-style: normal;
+    font-weight: 700;
+
+    i { font-size: 9px; }
+  }
+}
+
+.life-context-menu-note {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  color: rgba(234, 246, 255, 0.6);
+  font-size: 12px;
+  line-height: 1.45;
+
+  i { margin-top: 3px; font-size: 11px; }
+}
+
+@keyframes life-context-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-context-menu { animation: none; }
+}
+
+.life-start-empty {
+  display: grid;
+  min-height: 210px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: rgba(230, 244, 255, 0.65);
+  font-size: 13px;
+}
+
+.life-start-empty i { font-size: 28px; }
+
+.life-start-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 19, 54, 0.28);
+}
+
+.life-start-footer img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  padding: 3px;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.life-start-footer span { display: grid; }
+.life-start-footer strong { font-size: 12px; }
+.life-start-footer small { color: rgba(231, 244, 255, 0.62); font-size: 10px; }
+
+// While the taskbar is auto-hidden, a maximized popup shouldn't still leave a gap where the
+// taskbar would have been — let it use that space too, same as .life-desktop-stage.is-full does.
+.life-desktop.is-taskbar-hidden .app-window.is-maximized {
+  bottom: 0;
+}
+
+// Thin hover strip along the very bottom edge — only rendered when the taskbar is unpinned, so
+// hovering there (or tapping it) slides the auto-hidden taskbar back into view.
+.life-taskbar-trigger {
+  position: absolute;
+  z-index: 29;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+}
+
+.life-taskbar {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  height: 56px;
+  // Settings + the pinned home/calendar on the left, the Start button group truly centred, tray right.
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(214, 237, 250, 0.48);
+  box-shadow: 0 -8px 30px rgba(0, 24, 75, 0.15);
+  backdrop-filter: blur(28px) saturate(155%);
+  transition: transform 200ms ease;
+}
+
+.life-taskbar.is-hidden {
+  transform: translateY(100%);
+}
+
+// Desktop Settings — pinned at the far bottom-left corner of the taskbar.
+.life-taskbar-left {
+  display: flex;
+  grid-column: 1;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  padding: 0 17px;
+}
+
+// Anchors the Desktop Settings flyout to the button that opens it.
+.life-taskbar-settings {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+// Filled rather than transparent: the taskbar itself is a light frosted bar, so a bare white icon
+// washed straight into it. The fill is the wallpaper theme's own dark chrome colour, so it stays
+// readable on every theme and reads as a real button next to the accent-filled home key.
+.life-taskbar-settings-btn {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: #f4fbff;
+  font-size: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 11px;
+  background: var(--app-chrome-base, rgba(8, 46, 91, 0.9));
+  box-shadow: 0 5px 14px rgba(0, 24, 70, 0.32);
+  transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.life-taskbar-settings-btn:hover,
+.life-taskbar-settings-btn:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.72);
+  outline: none;
+  box-shadow: 0 8px 18px rgba(0, 24, 70, 0.4);
+  transform: translateY(-2px);
+}
+
+// While its flyout is open — an accent ring, not the home key's fill, so the two never look alike.
+.life-taskbar-settings-btn.is-active {
+  color: #fff;
+  border-color: rgba(126, 230, 255, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(94, 219, 255, 0.38),
+    0 8px 18px rgba(0, 24, 70, 0.42);
+  transform: translateY(-2px);
+}
+
+// Flyout list of settings — opens upward from the corner icon, same glass style as the other menus.
+.settings-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  z-index: 40;
+  width: 300px;
+  max-height: calc(100dvh - 80px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 14px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 16px 40px rgba(0, 13, 49, 0.42);
+  backdrop-filter: blur(28px) saturate(150%);
+  animation: life-desktop-enter 160ms ease both;
+}
+
+.settings-menu-heading {
+  padding: 12px 16px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+// Shared button strip — used both for the pinned pair on the left and the centred Start group.
+.life-taskbar-apps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.life-taskbar-apps.is-center {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.life-taskbar-apps > a,
+.life-taskbar-apps > button {
+  position: relative;
+  display: grid;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  color: #eff8ff;
+  font-size: 18px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.life-taskbar-apps > a:hover,
+.life-taskbar-apps > a:focus-visible,
+.life-taskbar-apps > button:hover,
+.life-taskbar-apps > button:focus-visible,
+.life-taskbar-apps > button.is-active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.life-taskbar-apps > a::after,
+.life-taskbar-apps > button.is-active::after {
+  content: '';
+  position: absolute;
+  right: 13px;
+  bottom: 2px;
+  left: 13px;
+  height: 2px;
+  border-radius: 3px;
+  background: #d5f2ff;
+}
+
+// Home is the way back out of the desktop, so it gets a filled accent treatment instead of the
+// plain ghost buttons around it.
+.life-taskbar-apps > .is-home {
+  color: #04263c;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(150deg, #86e8ff, #1f9fd8);
+  box-shadow: 0 6px 16px rgba(8, 106, 158, 0.45);
+}
+
+.life-taskbar-apps > .is-home:hover,
+.life-taskbar-apps > .is-home:focus-visible {
+  color: #04263c;
+  border-color: #fff;
+  background: linear-gradient(150deg, #9df0ff, #2eb4ec);
+  transform: translateY(-2px);
+}
+
+.life-taskbar-apps > .is-home i { font-size: 19px; }
+.life-taskbar-apps > .is-home::after { background: rgba(4, 38, 60, 0.5); }
+
+.life-taskbar-apps > button.life-taskbar-running-app:not(.is-active)::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  bottom: 2px;
+  left: 16px;
+  height: 2px;
+  border-radius: 3px;
+  background: rgba(229, 246, 255, 0.62);
+}
+
+.life-taskbar-start {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  transform: perspective(28px) rotateY(-8deg);
+}
+
+.life-taskbar-start i {
+  border-radius: 1px;
+  background: linear-gradient(145deg, #8be5ff, #fff);
+  box-shadow: 0 0 7px rgba(91, 208, 255, 0.45);
+}
+
+.life-taskbar-tray {
+  display: flex;
+  grid-column: 3;
+  align-items: center;
+  justify-self: end;
+  gap: 12px;
+  padding: 0 17px;
+  color: #f5fbff;
+  text-shadow: 0 1px 3px rgba(0, 25, 62, 0.66);
+}
+
+.life-taskbar-status { display: flex; gap: 9px; font-size: 12px; }
+// Tray clock — click it for the flyout below, Windows-style.
+.life-taskbar-clock { position: relative; }
+
+.life-taskbar-clock-trigger {
+  display: grid;
+  justify-items: end;
+  padding: 3px 8px;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  line-height: 1.25;
+}
+
+.life-taskbar-clock-trigger:hover,
+.life-taskbar-clock-trigger.is-active {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.life-taskbar-clock-trigger strong { font-size: 11px; font-weight: 600; }
+.life-taskbar-clock-trigger small { font-size: 10px; }
+
+// The flyout itself: big clock, the weekday, then the full date as the way into the calendar app.
+.life-clock-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 40;
+  width: 330px;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 14px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 16px 40px rgba(0, 13, 49, 0.42);
+  backdrop-filter: blur(28px) saturate(150%);
+  animation: life-desktop-enter 160ms ease both;
+}
+
+.life-clock-panel-time {
+  color: #f6fbff;
+  font-size: 44px;
+  font-weight: 300;
+  line-height: 1.05;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.life-clock-panel-weekday {
+  margin-top: 4px;
+  color: rgba(229, 244, 255, 0.62);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+// Today's lunar reading, in the full wording the calendar app uses.
+.life-clock-panel-lunar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 3px;
+  color: rgba(229, 244, 255, 0.78);
+  font-size: 10px;
+  text-align: center;
+}
+
+.life-clock-panel-lunar strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  color: #ffe6a6;
+  border-radius: 999px;
+  background: rgba(255, 190, 60, 0.18);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.life-clock-panel-lunar img { width: 11px; height: 11px; object-fit: contain; }
+
+.life-clock-panel-date {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  color: #eaf6ff;
+  text-align: start;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.07);
+  font: inherit;
+}
+
+.life-clock-panel-date:hover {
+  border-color: rgba(94, 219, 255, 0.5);
+  background: rgba(94, 219, 255, 0.16);
+}
+
+.life-clock-panel-date.is-open {
+  border-color: rgba(94, 219, 255, 0.5);
+  background: rgba(94, 219, 255, 0.16);
+}
+
+.life-clock-panel-date span { display: grid; gap: 2px; }
+.life-clock-panel-date strong { font-size: 12px; font-weight: 700; }
+.life-clock-panel-date small { color: rgba(229, 244, 255, 0.6); font-size: 10px; }
+.life-clock-panel-date i { color: #5edbff; font-size: 12px; }
+
+// Month grid that unfolds under the date — deliberately a plain month view, the full calendar app
+// (with lunar dates and holidays) is the one on the taskbar.
+.life-clock-calendar { margin-top: 12px; }
+
+.life-clock-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.life-clock-calendar-head strong {
+  color: #eaf6ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.life-clock-calendar-head button {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: #d6ecfa;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 10px;
+}
+
+.life-clock-calendar-head button:hover { background: rgba(255, 255, 255, 0.14); }
+
+.life-clock-calendar-grid {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.life-clock-calendar-weekday {
+  padding-bottom: 4px;
+  color: rgba(229, 244, 255, 0.46);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+}
+
+// Each cell carries the civil day on top and its waxing/waning ("ຂຶ້ນ/ແຮມ") reading underneath, with
+// a Buddha mark on ວັນພຣະ — the same three facts the full calendar page shows, just condensed.
+.life-clock-calendar-day {
+  display: grid;
+  gap: 1px;
+  padding: 3px 0 4px;
+  justify-items: center;
+  color: #eaf6ff;
+  border-radius: 7px;
+  line-height: 1.1;
+}
+
+.life-clock-calendar-day em {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.life-clock-calendar-day em img { width: 9px; height: 9px; object-fit: contain; }
+
+.life-clock-calendar-day small {
+  color: rgba(229, 244, 255, 0.5);
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.life-clock-calendar-day.is-wan-phra { background: rgba(255, 190, 60, 0.12); }
+
+.life-clock-calendar-day.is-outside { color: rgba(229, 244, 255, 0.28); }
+.life-clock-calendar-day.is-outside small { color: rgba(229, 244, 255, 0.2); }
+.life-clock-calendar-day.is-outside em img { opacity: 0.4; }
+
+.life-clock-calendar-day.is-today {
+  color: #04263c;
+  background: #5edbff;
+}
+
+.life-clock-calendar-day.is-today em { font-weight: 800; }
+.life-clock-calendar-day.is-today small { color: rgba(4, 38, 60, 0.72); }
+
+// Windows-style language indicator in the tray — click to flip open a small list of languages.
+.life-taskbar-lang { position: relative; }
+
+.life-taskbar-lang > button {
+  display: grid;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 8px;
+  place-items: center;
+  color: #eff8ff;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.life-taskbar-lang > button:hover,
+.life-taskbar-lang > button:focus-visible,
+.life-taskbar-lang > button.is-active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.life-taskbar-lang-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 40;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 16px 40px rgba(0, 13, 49, 0.42);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+
+.life-taskbar-lang-menu button {
+  min-width: 108px;
+  padding: 9px 14px;
+  color: #eaf6ff;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.life-taskbar-lang-menu button:hover,
+.life-taskbar-lang-menu button:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.life-taskbar-lang-menu button.is-selected {
+  color: #fff;
+  font-weight: 700;
+  background: rgba(57, 189, 235, 0.22);
+}
+
+@keyframes life-desktop-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Slow, layered motion for the wallpaper — each ring drifts at its own speed/direction so the
+// whole thing reads as one gently turning shape rather than a spinning wheel.
+@keyframes life-glow-breathe {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -50%) rotate(-14deg) scale(1.05); opacity: 0.85; }
+}
+
+@keyframes life-bloom-spin {
+  from { transform: translate(-50%, -50%) rotate(-17deg); }
+  to { transform: translate(-50%, -50%) rotate(343deg); }
+}
+
+@keyframes life-bloom-spin-back {
+  from { transform: translate(-48%, -48%) rotate(15deg) scale(1.08); }
+  to { transform: translate(-48%, -48%) rotate(375deg) scale(1.08); }
+}
+
+@keyframes life-bloom-spin-middle {
+  from { transform: translate(-48%, -50%) rotate(58deg); }
+  to { transform: translate(-48%, -50%) rotate(418deg); }
+}
+
+@keyframes life-bloom-spin-front {
+  from { transform: translate(-48%, -50%) rotate(112deg); }
+  to { transform: translate(-48%, -50%) rotate(472deg); }
+}
+
+@keyframes life-start-open {
+  from { opacity: 0; transform: translate(-50%, 16px) scale(0.97); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@media (max-width: 767.98px) {
+  .life-desktop {
+    min-height: 460px;
+  }
+
+  .life-desktop-toolbar {
+    top: 16px;
+    right: 14px;
+    gap: 7px;
+  }
+
+  .life-desktop-brand-trigger { padding: 7px; }
+  .life-desktop-brand-logo { width: 38px; height: 38px; }
+  .life-desktop-brand-logo img { width: 31px; height: 31px; }
+  .life-desktop-brand-trigger > span:last-child { display: none; }
+
+  .life-desktop-shortcuts {
+    top: 14px;
+    left: 10px;
+    grid-template-columns: repeat(2, 92px);
+    grid-auto-rows: 98px;
+    gap: 5px;
+  }
+
+  .life-desktop-shortcut { width: 92px; gap: 5px; padding: 6px 4px; }
+  .life-desktop-shortcut-icon { width: 44px; height: 44px; font-size: 19px; }
+  .life-desktop-shortcut > span:last-child { font-size: 10px; }
+  .life-desktop-bloom { left: 72%; width: 115vw; }
+  .life-desktop-bloom--middle { width: 92vw; }
+  .life-desktop-bloom--front { width: 70vw; }
+
+  .life-desktop[data-wallpaper='finance'] {
+    --wallpaper-radial-1: linear-gradient(90deg, rgba(7, 31, 32, 0.72), rgba(7, 31, 32, 0.2));
+
+    .life-desktop-wallpaper { background-position: 62% center; }
+  }
+
+  .life-app-form-card { padding: 14px; }
+
+  .life-start {
+    bottom: 64px;
+    max-height: calc(100% - 78px);
+    overflow-y: auto;
+    border-radius: 18px;
+  }
+
+  .life-start-search { margin: 18px 18px 16px; }
+  .life-start-heading { padding-inline: 20px; }
+  .life-start-apps { grid-template-columns: repeat(2, 1fr); padding-inline: 14px; }
+  .life-start-footer { padding-inline: 20px; }
+  .life-taskbar-status { display: none; }
+  .life-taskbar-tray { padding: 0 8px; }
+  .life-taskbar-left { gap: 8px; padding: 0 10px; }
+  .settings-menu { width: min(300px, calc(100vw - 24px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-desktop-glow,
+  .life-desktop-bloom,
+  .life-desktop-brand-trigger,
+  .life-desktop-brand-menu,
+  .settings-menu,
+  .life-desktop-shortcuts,
+  .life-desktop-shortcut,
+  .life-start {
+    animation: none;
+  }
+
+  .life-desktop-shortcut,
+  .life-taskbar-apps > a,
+  .life-taskbar-apps > button {
+    transition: none;
+  }
+}
+
+// ---- ພາບລວມມື້ນີ້ (DesktopGlance) — ຂວາຂອງ desktop ໃຕ້ບັດຜູ້ໃຊ້; ແກ້ວສີເຂັ້ມຄືບັດຜູ້ໃຊ້ ເຂົ້າກັບທຸກພາບພື້ນຫຼັງ ----
+.life-desktop-stage {
+  --glance-w: clamp(360px, 31vw, 480px);
+  --glance-top: calc(clamp(20px, 3.5vw, 52px) + 80px);
+  --glance-right: clamp(22px, 4vw, 64px);
+}
+
+// ໄອຄອນວາງໄດ້ສະເພາະຊ້າຍຂອງພາບລວມ
+.life-desktop-shortcuts.has-glance {
+  right: calc(var(--glance-w) + var(--glance-right) + 16px);
+}
+
+.acc-glance,
+.acc-glance-pill {
+  position: absolute;
+  z-index: 3; // ເທິງພື້ນທີ່ໄອຄອນ (z 2) — ຕອນເຊື່ອງ ປຸ່ມຢູ່ໃນພື້ນທີ່ນັ້ນ
+  top: var(--glance-top);
+  right: var(--glance-right);
+  color: #fff;
+  background: rgba(6, 26, 30, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.acc-glance {
+  display: flex;
+  width: var(--glance-w);
+  max-height: calc(100% - var(--glance-top) - 72px);
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  overflow-y: auto;
+  border-radius: 20px;
+  animation: life-desktop-enter 650ms 160ms both;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+
+  button { font: inherit; cursor: pointer; }
+}
+
+.acc-glance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: rgba(6, 26, 30, 0.62); }
+}
+
+.acc-glance-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+
+  > span { flex: 1 1 auto; min-width: 0; }
+  b { display: block; font-size: 15px; font-weight: 700; }
+  small { display: block; color: rgba(255, 255, 255, 0.6); font-size: 11.5px; }
+
+  button {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.75);
+    background: none;
+    border: 0;
+    border-radius: 50%;
+
+    &:hover:not(:disabled) { color: #fff; background: rgba(255, 255, 255, 0.12); }
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+}
+
+.acc-glance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.acc-glance-card {
+  display: flex;
+  min-width: 0;
+  min-height: 126px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  color: #fff;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.26);
+    transform: translateY(-1px);
+
+    .acc-glance-card-go { opacity: 0.9; }
+  }
+
+  &.is-sky { --glance-tone: #7dd3fc; --glance-tone-bg: rgba(56, 189, 248, 0.2); }
+  &.is-emerald { --glance-tone: #6ee7b7; --glance-tone-bg: rgba(52, 211, 153, 0.2); }
+  &.is-gold { --glance-tone: #fcd34d; --glance-tone-bg: rgba(251, 191, 36, 0.2); }
+  &.is-coral { --glance-tone: #fda4af; --glance-tone-bg: rgba(251, 113, 133, 0.2); }
+}
+
+.acc-glance-card-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.acc-glance-card-icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  color: var(--glance-tone);
+  background: var(--glance-tone-bg);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.acc-glance-card-title { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.acc-glance-card-go { flex: none; font-size: 10px; opacity: 0.4; transition: opacity 150ms ease; }
+
+.acc-glance-money {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+
+  b {
+    overflow: hidden;
+    font-size: 19px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small { color: rgba(255, 255, 255, 0.6); font-size: 11px; }
+
+  &.is-minor b { font-size: 14px; }
+  .is-negative { color: #fca5a5; }
+  .is-positive { color: #86efac; }
+}
+
+.acc-glance-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+
+  > span { display: flex; min-width: 0; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  small { min-width: 40px; color: rgba(255, 255, 255, 0.6); font-size: 11px; }
+  em { font-size: 11px; font-style: normal; font-weight: 600; }
+  // ມື້ນີ້ (ແຖວສຸດທ້າຍ) ຕົກແຖວໄດ້ ແທນທີ່ຈະຖືກຕັດ
+  > span.is-wrap { flex-wrap: wrap; column-gap: 6px; row-gap: 0; white-space: normal; }
+  .is-good { color: #86efac; }
+  .is-bad { color: #fca5a5; }
+}
+
+.acc-glance-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  em {
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .is-bad { color: #fecaca; background: rgba(248, 113, 113, 0.2); }
+  .is-warn { color: #fde68a; background: rgba(251, 191, 36, 0.18); }
+  .is-good { color: #a7f3d0; background: rgba(52, 211, 153, 0.16); }
+}
+
+.acc-glance-muted {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.5;
+
+  i { margin-right: 3px; }
+}
+
+.acc-glance-skeleton {
+  display: block;
+  height: 40px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: acc-glance-shimmer 1.2s linear infinite;
+}
+
+@keyframes acc-glance-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.acc-glance-todo {
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 2px 8px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+
+    small {
+      padding: 0 7px;
+      color: #fecaca;
+      background: rgba(248, 113, 113, 0.25);
+      border-radius: 10px;
+      font-size: 11px;
+    }
+  }
+}
+
+.acc-glance-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--item-tone);
+  border-radius: 10px;
+  transition: background 150ms ease;
+
+  &:hover,
+  &:focus-visible { outline: none; background: rgba(255, 255, 255, 0.12); }
+
+  > i { width: 16px; flex: none; color: var(--item-tone); text-align: center; }
+
+  > span { flex: 1 1 auto; min-width: 0; }
+
+  b,
+  small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  b { font-size: 12.5px; font-weight: 600; }
+  small { color: rgba(255, 255, 255, 0.6); font-size: 11px; }
+
+  em { flex: none; font-size: 12px; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  &.is-danger { --item-tone: #f87171; }
+  &.is-warn { --item-tone: #fbbf24; }
+}
+
+.acc-glance-clear {
+  margin: 0;
+  padding: 10px 12px;
+  color: #a7f3d0;
+  background: rgba(52, 211, 153, 0.1);
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+
+.acc-glance-more { margin: 2px 0 0; color: rgba(255, 255, 255, 0.6); text-align: center; font-size: 11.5px; }
+
+// ຈໍບໍ່ກວ້າງພໍ — ບໍ່ສະແດງພາບລວມ ໃຫ້ໄອຄອນໃຊ້ທັງໝົດ
+@media (max-width: 1099.98px) {
+  .acc-glance,
+  .acc-glance-pill { display: none; }
+
+  .life-desktop-shortcuts.has-glance { right: clamp(16px, 2.8vw, 42px); }
+}

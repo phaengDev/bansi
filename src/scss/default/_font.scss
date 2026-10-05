@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
+
+ @font-face {
+    font-family: 'NotoSerifLao';
+    src: url('/assets/fonts/NotoSerifLao.ttf') format('truetype');
+    font-weight: 350;
+    font-style: normal;
+}
+/* ⚠️ ຫ້າມໃຊ້ 'PingFang SC' — Chrome/macOS embed ບໍ່ໄດ້ຕອນພິມ → ຕົວຈີນຫາຍໃນ print preview
+   ໃຊ້ 'Heiti SC' (macOS) / 'Microsoft YaHei' (Windows) ແທນ */
+body {
+    font-family: 'NotoSerifLao', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif !important;
+}
+
+.font-app {
+    font-family: 'NotoSerifLao', 'Heiti SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif !important;
+}

@@ -1,0 +1,1184 @@
+// ---- ບັນຊີຄູ່ (GL): ຜັງບັນຊີ, ຜູກບັນຊີ, ສະໝຸດລາຍວັນ, ບັນທຶກທົ່ວໄປ, ງົບທົດລອງ (src/pages/account/gl/*) ----
+// ສີຂອງກຸ່ມມາຈາກ .acc-tone (--tone-a/-b/-soft/-deep) ຂອງ _account-setting.scss
+
+.acc-tone.is-slate { --tone-a: #94a3b8; --tone-b: #475569; --tone-soft: #eef2f6; --tone-deep: #1e293b; }
+
+.acc-gl {
+  --gl-text: #14314d;
+  --gl-muted: #7b8a97;
+  --gl-line: #e3eaf0;
+  --gl-soft: #f6f8fa;
+
+  color: var(--gl-text);
+}
+
+// ---- ສ່ວນນ້ອຍທີ່ໃຊ້ຫຼາຍບ່ອນ ----
+.acc-gl-code {
+  display: inline-block;
+  min-width: 52px;
+  margin-right: 8px;
+  padding: 1px 7px;
+  color: var(--tone-deep);
+  background: var(--tone-soft);
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.acc-gl-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+
+  > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.acc-gl-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  color: var(--tone-deep);
+  background: var(--tone-soft);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.acc-gl-mono { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.acc-gl-ref { display: block; color: var(--gl-muted, #7b8a97); font-size: 11px; }
+
+.acc-gl-act {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: #5b6f80;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) { color: #1559c9; background: #e8f1ff; }
+  &.is-danger:hover:not(:disabled) { color: #c4343a; background: #fdecec; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+// ປຸ່ມເປີດ/ປິດໃຊ້ງານໃນແຖວຜັງບັນຊີ — ຂຽວເມື່ອໃຊ້ງານ, ເທົາເມື່ອປິດ
+.acc-gl-act.acc-gl-switch {
+  color: #a3b1bd;
+  font-size: 15px;
+
+  &.is-on { color: #0b8a6a; }
+  &:hover:not(:disabled) { color: #075c47; background: #e7f6f0; }
+}
+
+.acc-gl-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 0;
+  color: #7b8a97;
+  font-size: 12px;
+}
+
+.acc-gl-group-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 10px;
+  color: var(--tone-deep);
+  background: var(--tone-soft);
+  border-radius: 999px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.acc-gl-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #3d5266;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.acc-gl-ok { color: #08735f !important; font-weight: 700; }
+.acc-gl-bad { color: #c4343a !important; font-weight: 700; }
+
+// ---- ບັດສະຖານະ (ຍັງບໍ່ແລ່ນ SQL / ເປີດໃຊ້ແລ້ວ) ----
+.acc-gl-setup-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid;
+  border-radius: 14px;
+
+  > i { margin-top: 2px; font-size: 22px; }
+  > div { flex: 1; min-width: 0; }
+  b { display: block; font-size: 15px; }
+  p { margin: 4px 0 8px; color: #5b6f80; }
+
+  code {
+    display: inline-block;
+    padding: 4px 10px;
+    color: #14314d;
+    background: #fff;
+    border: 1px dashed #c9d4dd;
+    border-radius: 8px;
+    font-size: 12.5px;
+  }
+
+  &.is-warn { color: #7a4604; background: #fff8e8; border-color: #fbe3a8; }
+  &.is-ok { color: #054f3d; background: #effaf6; border-color: #bfe9da; }
+}
+
+.acc-gl-setup-stat {
+  align-self: center;
+  color: #054f3d;
+  font-size: 12.5px;
+  white-space: nowrap;
+
+  b { display: inline; font-size: 22px; }
+}
+
+.acc-gl-steps {
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+
+  header { margin-bottom: 10px; font-weight: 800; }
+
+  ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    counter-reset: gl-step;
+    list-style: none;
+  }
+
+  li {
+    position: relative;
+    padding: 10px 12px 10px 44px;
+    background: #f6f8fa;
+    border-radius: 10px;
+    counter-increment: gl-step;
+
+    &::before {
+      content: counter(gl-step);
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: #fff;
+      background: #1559c9;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    b { display: block; font-size: 13px; }
+    small { color: #7b8a97; font-size: 11.5px; }
+  }
+}
+
+.acc-gl-rebuild {
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+
+  p { margin: 8px 0 12px; color: #5b6f80; }
+}
+
+.acc-gl-rebuild-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  span {
+    padding: 6px 12px;
+    background: #f6f8fa;
+    border-radius: 10px;
+    font-size: 12.5px;
+  }
+
+  b { margin-right: 4px; font-size: 18px; }
+}
+
+.acc-gl-rebuild-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #d5dee6;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  .is-ok { color: #08735f; }
+  .is-bad { color: #c4343a; }
+
+  ul {
+    flex-basis: 100%;
+    max-height: 220px;
+    margin: 0;
+    padding-left: 18px;
+    overflow: auto;
+    color: #5b6f80;
+    font-weight: 500;
+  }
+}
+
+// ---- ຜັງບັນຊີ: ບັດຂອງແຕ່ລະກຸ່ມ + ຕາຕະລາງຕົ້ນໄມ້ ----
+.acc-gl-group {
+  margin-bottom: 14px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(27, 62, 94, 0.04);
+
+  > header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--tone-soft);
+    border-bottom: 1px solid #e3eaf0;
+  }
+}
+
+.acc-gl-group-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, var(--tone-a), var(--tone-b));
+  border-radius: 10px;
+}
+
+.acc-gl-group-title {
+  flex: 1;
+  min-width: 0;
+
+  b { display: block; color: var(--tone-deep); font-size: 14.5px; }
+  small { color: #5b6f80; font-size: 11.5px; }
+}
+
+.acc-gl-group-total {
+  color: var(--tone-deep);
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.acc-gl-tree {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+
+  td {
+    padding: 7px 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f3f6;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+  tr.is-header td { background: #fafbfc; font-weight: 700; }
+  tr.is-postable { cursor: pointer; }
+  tr.is-postable:hover td { background: #f6faff; }
+  tr.is-off td { opacity: 0.55; }
+}
+
+.acc-gl-tree-name { white-space: nowrap; }
+.acc-gl-name { white-space: normal; }
+.acc-gl-tree-type { width: 190px; color: #7b8a97; font-size: 12px; }
+.acc-gl-tree-side { width: 50px; text-align: center; }
+.acc-gl-tree-balance { width: 160px; font-weight: 700; text-align: right; }
+.acc-gl-tree-actions { width: 104px; text-align: right; white-space: nowrap; }
+
+.acc-gl-caret {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  place-items: center;
+  vertical-align: middle;
+  color: #5b6f80;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+
+  &:hover:not(:disabled) { background: #e8eef4; }
+  &:disabled { opacity: 0.35; }
+  &.is-leaf { visibility: hidden; }
+}
+
+.acc-gl-lock { margin-left: 6px; color: #b3c0cb; font-size: 10.5px; }
+
+.acc-gl-role {
+  margin-left: 6px;
+  padding: 0 7px;
+  color: #604bd8;
+  background: #efeaff;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.acc-gl-off {
+  margin-left: 6px;
+  padding: 0 7px;
+  color: #7b8a97;
+  background: #eef2f5;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.acc-gl-side {
+  display: inline-block;
+  min-width: 28px;
+  padding: 0 6px;
+  color: #0f3c8a;
+  background: #e8f1ff;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+
+  &.is-cr { color: #8e2440; background: #ffeceb; }
+}
+
+// ---- ປຶ້ມບັນຊີໃຫຍ່ (modal) + ຕາຕະລາງທົ່ວໄປ ----
+.acc-gl-ledger-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  small { display: block; color: #7b8a97; font-size: 12px; }
+}
+
+.acc-gl-ledger-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.acc-gl-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td { padding: 8px 10px; text-align: left; vertical-align: top; }
+
+  th {
+    color: #7b8a97;
+    background: #f6f8fa;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    border-bottom: 1px solid #d5dee6;
+  }
+
+  td { border-bottom: 1px solid #eef2f5; }
+  .is-num { text-align: right; white-space: nowrap; }
+  .is-strong { font-weight: 800; }
+  td .acc-gl-source { margin-left: 6px; }
+  tr.is-opening td { color: #5b6f80; font-style: italic; background: #fafbfc; }
+  tr.is-reversed td { color: #7b8a97; }
+  tr.is-empty td { color: #7b8a97; font-style: italic; text-align: center; }
+
+  tfoot td {
+    font-weight: 800;
+    background: #f6f8fa;
+    border-top: 1px solid #9fb0bf;
+    border-bottom: 3px double #9fb0bf;
+  }
+}
+
+// ---- ຜູກບັນຊີ ----
+.acc-gl-map-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  p {
+    flex: 1;
+    margin: 0;
+    color: #5b6f80;
+    font-size: 12.5px;
+  }
+
+  em {
+    margin-left: 6px;
+    padding: 0 7px;
+    color: #1559c9;
+    background: #fff;
+    border-radius: 999px;
+    font-size: 11px;
+    font-style: normal;
+  }
+}
+
+.acc-gl-map {
+  margin-bottom: 14px;
+  padding: 6px 0;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+
+  > header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 16px 10px;
+    font-weight: 800;
+    border-bottom: 1px solid #eef2f5;
+
+    small { color: #7b8a97; font-size: 11.5px; font-weight: 600; }
+  }
+}
+
+.acc-gl-map-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px minmax(240px, 380px);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f3f5f8;
+
+  &:last-child { border-bottom: 0; }
+  &.is-dirty { background: #fffbea; }
+}
+
+.acc-gl-map-icon {
+  display: grid;
+  height: 32px;
+  place-items: center;
+  color: #1559c9;
+  background: #e8f1ff;
+  border-radius: 9px;
+  font-size: 11px;
+}
+
+.acc-gl-map-text {
+  min-width: 0;
+
+  b { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  small { display: block; color: #7b8a97; font-size: 11.5px; }
+}
+
+.acc-gl-map-arrow { color: #b3c0cb; }
+.acc-gl-map-empty { margin: 0; padding: 12px 16px; color: #7b8a97; font-style: italic; }
+
+// ---- ສະໝຸດລາຍວັນ ----
+.acc-gl-journal-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  .acs-stats { flex: 1; }
+  .acc-gl-range { width: 230px; }
+  .acs-search { width: 260px; }
+}
+
+.acc-gl-source-filter { margin-bottom: 12px; }
+
+.acc-gl-entries {
+  display: grid;
+  gap: 10px;
+
+  &.is-refreshing { opacity: 0.6; }
+}
+
+.acc-gl-entry {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 12px;
+
+  > header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #fafbfc;
+    border-bottom: 1px solid #eef2f5;
+  }
+
+  &.is-reversed { opacity: 0.72; }
+  &.is-reversal > header { background: #fff8f3; }
+}
+
+.acc-gl-entry-date {
+  display: grid;
+  min-width: 52px;
+  padding: 4px 6px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 9px;
+
+  b { font-size: 17px; line-height: 1.1; }
+  small { color: #7b8a97; font-size: 10.5px; }
+}
+
+.acc-gl-entry-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.acc-gl-entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: 12.5px;
+
+  .acc-gl-ref { display: inline; }
+}
+
+.acc-gl-entry-desc {
+  display: block;
+  overflow: hidden;
+  color: #3d5266;
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acc-gl-entry-total {
+  text-align: right;
+
+  b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  small { color: #7b8a97; font-size: 11px; }
+}
+
+.acc-gl-flag {
+  padding: 0 8px;
+  color: #7a4604;
+  background: #fff4dc;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+
+  &.is-bad { color: #8e2440; background: #ffeceb; }
+}
+
+// ແຖວໜີ້ຢູ່ຊ້າຍ, ແຖວມີຍໍ້ເຂົ້າ — ແບບສະໝຸດລາຍວັນທີ່ນັກບັນຊີຄຸ້ນເຄີຍ
+.acc-gl-entry-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+
+  td { padding: 6px 14px; border-bottom: 1px solid #f3f5f8; }
+  tr:last-child td { border-bottom: 0; }
+  .is-num { width: 150px; text-align: right; white-space: nowrap; }
+  tr.is-cr .acc-gl-entry-account { padding-left: 46px; }
+}
+
+.acc-gl-entry-account {
+  small { margin-left: 8px; color: #7b8a97; font-size: 11.5px; }
+}
+
+.acc-gl-balance-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  color: #5b6f80;
+  background: #f6f8fa;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  &.is-ok { color: #054f3d; background: #effaf6; }
+  &.is-bad { color: #8e2440; background: #fdf3f3; }
+}
+
+// ---- ງົບທົດລອງ ----
+.acc-gl-tb {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td { padding: 6px 10px; text-align: right; white-space: nowrap; }
+
+  th {
+    color: #7b8a97;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid #d5dee6;
+
+    small { display: block; font-size: 10.5px; font-weight: 600; }
+  }
+
+  th[rowspan],
+  td:first-child { text-align: left; }
+
+  td:first-child { white-space: normal; }
+  td { border-bottom: 1px solid #f0f3f6; }
+  td:nth-child(2n + 2) { border-left: 1px solid #f0f3f6; }
+  .is-strong { font-weight: 800; }
+
+  tr.is-header td { color: #3d5266; background: #fafbfc; font-weight: 700; }
+  tr.is-postable { cursor: pointer; }
+  tr.is-postable:hover td { background: #f6faff; }
+  tr.is-empty td { color: #7b8a97; font-style: italic; text-align: center; }
+
+  tfoot td {
+    font-size: 13px;
+    font-weight: 800;
+    background: #f2f8f6;
+    border-top: 1px solid #14314d;
+    border-bottom: 3px double #14314d;
+  }
+
+  tfoot tr.is-bad td { color: #c4343a; background: #fdf3f3; }
+}
+
+// ໃບສະຫຼຸບຊັບສົມບັດ (ໃຊ້ .acc-fs-table)
+.acc-fs-table.is-balance {
+  td.is-previous { color: #5b6f80; }
+  th:not(:first-child),
+  td:not(:first-child) { width: 180px; }
+}
+
+@container (max-width: 860px) {
+  .acc-gl-map-row { grid-template-columns: 36px minmax(0, 1fr); }
+  .acc-gl-map-arrow { display: none; }
+  .acc-gl-map-picker { grid-column: 1 / -1; }
+}
+
+// ---- ລູກໜີ້ / ເຈົ້າໜີ້ (src/pages/account/arap/*) — ສີຫຼັກຈາກ .acc-tone (ລູກໜີ້ is-emerald, ເຈົ້າໜີ້ is-coral) ----
+.acc-arap-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.acc-arap-aside {
+  display: grid;
+  text-align: right;
+
+  small { color: #7b8a97; font-size: 11px; }
+  b { font-size: 15px; font-variant-numeric: tabular-nums; }
+}
+
+.acc-arap-empty { margin: 0; padding: 14px; color: #7b8a97; font-style: italic; text-align: center; }
+
+.acc-arap-docs tr.is-click { cursor: pointer; }
+.acc-arap-docs tr.is-click:hover td { background: #f6faff; }
+.acc-gl-ref.is-bad { color: #c4343a; font-weight: 700; }
+
+.acc-arap-desc { margin: 0 0 10px; color: #5b6f80; }
+
+.acc-arap-paid {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f6f8fa;
+  border-radius: 10px;
+  font-size: 12.5px;
+
+  span { display: flex; align-items: center; gap: 6px; }
+  span i { color: #08735f; }
+  em { margin-left: auto; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .is-empty { color: #7b8a97; font-style: italic; }
+  .is-total { padding-top: 6px; font-weight: 800; border-top: 1px dashed #c9d4dd; }
+}
+
+.acc-arap-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  .acc-xfer-logo { width: 22px; height: 22px; }
+}
+
+.acc-arap-chip {
+  display: inline-block;
+  margin: 1px 4px 1px 0;
+  padding: 0 7px;
+  color: #3d5266;
+  background: #eef2f5;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.acc-arap-agebar {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  background: #eef2f5;
+  border-radius: 7px;
+
+  i { display: block; height: 100%; }
+}
+
+.acc-arap-agelegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 10px;
+  font-size: 12px;
+
+  span { display: inline-flex; align-items: center; gap: 6px; color: #5b6f80; }
+  i { width: 10px; height: 10px; border-radius: 3px; }
+  b { color: #14314d; font-variant-numeric: tabular-nums; }
+}
+
+.acc-arap-dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 2px; }
+.acc-arap-aging td.is-late { color: #c4343a; }
+
+.acc-arap-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.acc-arap-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 4px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #f0f3f6;
+
+  &:hover { background: #f8fbfd; }
+  b { font-variant-numeric: tabular-nums; }
+}
+
+.acc-arap-top-name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  small { display: block; color: #7b8a97; font-size: 11px; font-weight: 500; }
+}
+
+.acc-arap-top-bar {
+  height: 8px;
+  overflow: hidden;
+  background: #eef2f5;
+  border-radius: 4px;
+
+  i { display: block; height: 100%; background: linear-gradient(90deg, var(--tone-a), var(--tone-b)); border-radius: 4px; }
+}
+
+.acc-arap-watch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f3f6;
+
+  &:last-child { border-bottom: 0; }
+}
+
+.acc-arap-days {
+  display: grid;
+  min-width: 46px;
+  padding: 3px 4px;
+  text-align: center;
+  color: #054f3d;
+  background: #e3f8ef;
+  border-radius: 8px;
+
+  b { font-size: 14px; line-height: 1.1; }
+  small { font-size: 10px; }
+
+  &.is-late { color: #8e2440; background: #ffeceb; }
+}
+
+.acc-arap-watch-text {
+  flex: 1;
+  min-width: 0;
+
+  b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small { color: #7b8a97; font-size: 11px; }
+}
+
+.acc-arap-watch-amount { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.acc-rp-btn.is-danger { color: #c4343a; }
+
+@container (max-width: 860px) {
+  .acc-arap-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+// ---- ຟອມແບບຂັ້ນຕອນ: ໃບແຈ້ງໜີ້/ໃບບິນ, ຮັບ/ຈ່າຍຊຳລະ, ບັນທຶກທົ່ວໄປ — ໃຊ້ .acc-book-modal.is-steps.is-xfer (+ .is-expense ສີແດງ) ----
+.rs-modal.acc-book-modal.acc-arap-form { --rs-modal-size: 1020px; }
+
+// ສີຫຼັກສີຂຽວ (ລູກໜີ້, ບັນທຶກທົ່ວໄປ) — ປຸ່ມເພີ່ມແຖວຂອງ .acc-ex-add ເປັນສີແດງຂອງຟອມລາຍຈ່າຍ
+.acc-arap-form:not(.is-expense) .acc-ex-add {
+  color: #075c47;
+  border-color: #9fd6c3;
+
+  &:hover { background: #f0faf6; }
+}
+
+// picker ທີ່ຍັງບໍ່ໄດ້ເລືອກຕອນກົດບັນທຶກ
+.acc-arap-form .rs-picker.has-error .rs-picker-toggle,
+.acc-arap-form .rs-input-group.has-error,
+.acc-arap-form .rs-number-input.has-error { background: #fff7f7; border-color: #e5484d; }
+
+.acc-arap-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  > .rs-picker { flex: 1; min-width: 0; }
+}
+
+.acc-arap-quick-add {
+  display: inline-flex;
+  flex: none;
+  height: 40px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  color: #075c47;
+  background: #fff;
+  border: 1px dashed #9fd6c3;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { background: #f0faf6; border-style: solid; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.acc-arap-error { display: block; margin-top: 4px; color: #c4343a; font-size: 11.5px; font-weight: 600; }
+
+.acc-arap-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: #7b8a97;
+  font-size: 11.5px;
+}
+
+.acc-arap-partner-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    color: #3d5266;
+    background: #f1f4f7;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  i { color: #7b8a97; font-size: 10.5px; }
+  .is-warn { color: #8a5a00; background: #fff4dc; }
+}
+
+.acc-arap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+
+  button {
+    padding: 2px 10px;
+    color: #5b6f80;
+    background: #fff;
+    border: 1px solid #dfe6ec;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+
+    &:hover { border-color: var(--book-accent, #0b8a6a); }
+
+    &.is-active {
+      color: #fff;
+      background: var(--book-accent, #0b8a6a);
+      border-color: var(--book-accent, #0b8a6a);
+    }
+  }
+}
+
+.acc-arap-note-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+
+  &:disabled { opacity: 0.5; }
+}
+
+// ແຖວລາຍການ: # | ບັນຊີ | ລາຍລະອຽດ | ຈຳນວນ | ລຶບ
+.acc-ex-row.acc-arap-row { grid-template-columns: 24px minmax(220px, 1.25fr) minmax(150px, 1fr) 160px 30px; }
+
+// ແຖວຕັດໜີ້: ☐ | ໃບ | ຄົບກຳນົດ | ຍອດຄ້າງ | ຈຳນວນທີ່ຕັດ
+.acc-ex-row.acc-arap-alloc-row {
+  grid-template-columns: 24px minmax(160px, 1fr) 140px 150px 170px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f3f6;
+
+  &.is-head { padding: 0 0 4px; }
+  &.is-on { background: linear-gradient(90deg, rgba(11, 138, 106, 0.05), transparent 60%); }
+  &.is-off { opacity: 0.45; }
+}
+
+// ແຖວບັນທຶກທົ່ວໄປ: # | ບັນຊີ | ລາຍລະອຽດ | ໜີ້ | ມີ | ຄຳສັ່ງ
+.acc-ex-row.acc-gl-jrow { grid-template-columns: 24px minmax(220px, 1.3fr) minmax(130px, 1fr) 140px 140px 66px; }
+
+// ຫົວຖັນ: ຍົກເລີກການຈັດຂວາຂອງ .acc-ex-row ແລ້ວຈັດຂວາສະເພາະຖັນເງິນ
+.acc-ex-row.acc-arap-row.is-head span,
+.acc-ex-row.acc-arap-alloc-row.is-head span,
+.acc-ex-row.acc-gl-jrow.is-head span { text-align: left; }
+
+.acc-ex-row.acc-arap-row.is-head span:nth-child(4),
+.acc-ex-row.acc-arap-alloc-row.is-head span:nth-child(4),
+.acc-ex-row.acc-arap-alloc-row.is-head span:nth-child(5),
+.acc-ex-row.acc-gl-jrow.is-head span:nth-child(4),
+.acc-ex-row.acc-gl-jrow.is-head span:nth-child(5) { text-align: right; }
+
+.acc-arap-check {
+  display: grid;
+  margin: 0;
+  place-items: center;
+
+  input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--book-accent, #0b8a6a); }
+}
+
+.acc-arap-doc-cell {
+  min-width: 0;
+  font-size: 12.5px;
+
+  b { display: block; }
+  small { display: block; color: #7b8a97; font-size: 11px; }
+  small.is-bad { color: #c4343a; font-weight: 700; }
+}
+
+.acc-gl-jrow-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.acc-gl-jtotals {
+  display: flex;
+  gap: 18px;
+
+  span { display: flex; align-items: baseline; gap: 8px; }
+  small { color: #5b6f80; font-size: 12px; font-weight: 700; }
+  b { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+}
+
+.acc-arap-form .acc-gl-balance-check { margin-top: 8px; }
+
+@container (max-width: 720px) {
+  .acc-ex-row.acc-arap-row,
+  .acc-ex-row.acc-gl-jrow,
+  .acc-ex-row.acc-arap-alloc-row { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  .acc-ex-row.acc-arap-row .acc-ex-cell.is-desc { grid-column: span 4; }
+  .acc-ex-row.acc-gl-jrow .acc-ex-cell.is-desc { grid-column: 1 / -1; }
+  .acc-ex-row.acc-gl-jrow .acc-ex-cell.is-money { grid-column: span 3; }
+  .acc-gl-jrow-actions { position: absolute; top: 8px; right: 8px; }
+  .acc-ex-row.acc-arap-alloc-row { padding: 10px; }
+  .acc-ex-row.acc-arap-alloc-row .acc-arap-doc-cell { grid-column: span 5; }
+  .acc-ex-row.acc-arap-alloc-row .acc-ex-cell { grid-column: span 3; }
+}
+
+// ຟອມແບບຂັ້ນຕອນທີ່ບໍ່ໄດ້ຢູ່ໃນ <Form> ຂອງ rsuite — .rs-form-group ຂອງ rsuite ເປັນ flex ທີ່ເອົາທິດທາງຈາກ
+// --rs-form-group-direction (ມີແຕ່ <Form> ທີ່ຕັ້ງໃຫ້) → ຕັ້ງເອງໃຫ້ປ້າຍຢູ່ເທິງຊ່ອງ ແລະ ຊ່ອງເຕັມຄວາມກວ້າງ
+.acc-arap-form .acc-book-main {
+  --rs-form-group-direction: column;
+
+  .rs-form-group {
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .rs-form-group > .rs-picker,
+  .rs-form-group > .rs-input,
+  .rs-form-group > .rs-number-input,
+  .rs-form-group > .rs-input-group { width: 100%; }
+}
+
+// ---- ປຶ້ມບັນຊີໃຫຍ່ (GeneralLedgerPage) — ຊ້າຍ: ລາຍຊື່ບັນຊີ, ຂວາ: ປຶ້ມຂອງບັນຊີທີ່ເລືອກ ----
+.acc-gl-book {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.acc-gl-book-list {
+  position: sticky;
+  top: 0;
+  display: flex;
+  max-height: calc(100dvh - 150px);
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--gl-line);
+  border-radius: 12px;
+
+  .acc-type-search { flex: none; width: 100%; }
+}
+
+.acc-gl-book-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gl-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.acc-gl-book-none { margin: 12px 0; color: var(--gl-muted); text-align: center; font-size: 12.5px; }
+
+.acc-gl-book-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  h6 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 4px 4px;
+    color: var(--gl-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+
+    small {
+      margin-left: auto;
+      padding: 0 6px;
+      background: var(--gl-soft);
+      border-radius: 10px;
+      font-size: 11px;
+    }
+  }
+}
+
+.acc-gl-book-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 8px;
+  color: var(--gl-text);
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12.5px;
+
+  .acc-gl-code { flex: none; }
+
+  .acc-gl-book-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  b {
+    flex: none;
+    margin-left: 8px;
+    color: var(--gl-muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+
+    &.is-negative { color: #c0392b; }
+  }
+
+  &:hover { background: var(--gl-soft); }
+
+  &.is-active {
+    background: #e9f7f1;
+    border-color: #a9dcc7;
+
+    b { color: #075c47; }
+  }
+}
+
+.acc-gl-book-main {
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--gl-line);
+  border-radius: 12px;
+}
+
+.acc-gl-book-head {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--gl-line);
+
+  h3 { margin: 0; font-size: 17px; font-weight: 700; }
+}
+
+@media (max-width: 767.98px) {
+  .acc-gl-book { grid-template-columns: 1fr; }
+  .acc-gl-book-list { position: static; max-height: 300px; }
+}

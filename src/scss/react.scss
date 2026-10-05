@@ -1,0 +1,359 @@
+@import "./default/styles.scss";
+
+$prefix: "bs-";
+
+/* react-quill */
+body {
+  // font-family: 'NotoSerifLao', sans-serif !important;
+  font-size: 14px;
+
+  & .ql-toolbar,
+  & .ql-container {
+    border-color: var(--#{$prefix}border-color) !important;
+
+    & .ql-picker {
+      color: var(--#{$prefix}body-color);
+    }
+    & button,
+    & .ql-picker-label,
+    & .ql-picker-item {
+      &:hover,
+      &:focus {
+        background: rgba(var(--#{$prefix}body-color-rgb), 0.25) !important;
+        color: var(--#{$prefix}body-color) !important;
+        border-radius: $border-radius;
+      }
+      &.ql-active {
+        background: rgba(var(--#{$prefix}theme-rgb), 0.25) !important;
+        border-radius: $border-radius;
+        color: var(--#{$prefix}theme) !important;
+        border: none !important;
+
+        & .ql-stroke {
+          stroke: var(--#{$prefix}theme) !important;
+        }
+        & .ql-fill {
+          fill: var(--#{$prefix}theme) !important;
+        }
+      }
+    }
+    & .ql-picker-options .ql-picker-item {
+      border-radius: 0 !important;
+
+      &:hover,
+      &:focus {
+        background: rgba(var(--#{$prefix}body-color-rgb), 0.25) !important;
+        color: var(--#{$prefix}body-color);
+      }
+      &.ql-selected {
+        background: rgba(var(--#{$prefix}theme-rgb), 0.25) !important;
+        color: var(--#{$prefix}theme) !important;
+      }
+    }
+    & .ql-stroke {
+      fill: transparent !important;
+      stroke: var(--#{$prefix}body-color) !important;
+    }
+  }
+}
+
+/* React DataTable */
+body {
+  & .rdt_TableHeader {
+    padding: 0;
+    font-size: $font-size-base * 1.5;
+    margin-bottom: $spacer * 0.5;
+    min-height: auto;
+    background: none;
+    color: var(--#{$prefix}component-color);
+
+    & > div + div {
+      background: var(--#{$prefix}light);
+      color: var(--#{$prefix}component-color);
+      font-size: $font-size-base;
+
+      & > div {
+        font-weight: $font-weight-bold;
+      }
+    }
+  }
+  & .rdt_TableHead {
+    & .rdt_TableHeadRow {
+      border-color: var(--#{$prefix}component-border-color);
+    }
+  }
+  & .rdt_Table {
+    border: 1px solid var(--#{$prefix}component-border-color);
+    color: var(--#{$prefix}component-color);
+    background: none;
+
+    & svg {
+      fill: var(--#{$prefix}component-color);
+    }
+    & .rdt_TableHeadRow {
+      min-height: auto;
+      font-weight: $font-weight-bold;
+      color: var(--#{$prefix}component-color);
+      background: none;
+    }
+    & .rdt_TableRow {
+      padding: 0;
+      min-height: auto;
+      color: var(--#{$prefix}component-color);
+      background: none;
+
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--#{$prefix}component-border-color);
+      }
+      &:last-child {
+        margin-bottom: -1px;
+      }
+
+      & > div + div {
+        @if ($enable-rtl) {
+          border-right: 1px solid var(--#{$prefix}component-border-color);
+        } @else {
+          border-left: 1px solid var(--#{$prefix}component-border-color);
+        }
+      }
+    }
+    & .rdt_TableCol {
+      padding: $table-cell-padding-y $table-cell-padding-x;
+    }
+    & .rdt_TableCol_Sortable {
+      & > span {
+        color: transparent;
+        position: relative;
+        padding: 0;
+
+        @if ($enable-rtl) {
+          margin-right: auto;
+        } @else {
+          margin-left: auto;
+        }
+
+        &:before {
+          content: "\f0dd";
+          color: var(--#{$prefix}component-active-bg);
+          font-size: $font-size-lg;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          @include fontawesome();
+        }
+      }
+    }
+    & .rdt_TableCell {
+      padding: $table-cell-padding-y $table-cell-padding-x;
+    }
+    & input[type="checkbox"] {
+      width: $form-check-input-width;
+      height: $form-check-input-width;
+      margin-top: ($line-height-base - $form-check-input-width) * 0.5; // line-height minus check height
+      vertical-align: top;
+      background-color: $form-check-input-bg;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      border: $form-check-input-border;
+      appearance: none;
+      font-size: $font-size-base !important;
+      print-color-adjust: exact; // Keep themed appearance for print
+      @include transition($form-check-transition);
+      @include border-radius($form-check-input-border-radius);
+
+      &:active {
+        filter: $form-check-input-active-filter;
+      }
+      &:focus {
+        border-color: $form-check-input-focus-border;
+        outline: 0;
+        box-shadow: $form-check-input-focus-box-shadow;
+      }
+      &:checked {
+        background-color: $form-check-input-checked-bg-color;
+        border-color: $form-check-input-checked-border-color;
+
+        &[type="checkbox"] {
+          @if $enable-gradients {
+            background-image:
+              escape-svg($form-check-input-checked-bg-image),
+              var(--#{$prefix}gradient);
+          } @else {
+            background-image: escape-svg($form-check-input-checked-bg-image);
+          }
+        }
+      }
+
+      &[type="checkbox"]:indeterminate {
+        background-color: $form-check-input-indeterminate-bg-color;
+        border-color: $form-check-input-indeterminate-border-color;
+
+        @if $enable-gradients {
+          background-image:
+            escape-svg($form-check-input-indeterminate-bg-image),
+            var(--#{$prefix}gradient);
+        } @else {
+          background-image: escape-svg(
+            $form-check-input-indeterminate-bg-image
+          );
+        }
+      }
+
+      &:disabled {
+        pointer-events: none;
+        filter: none;
+        opacity: $form-check-input-disabled-opacity;
+      }
+
+      // Use disabled attribute in addition of :disabled pseudo-class
+      // See: https://github.com/twbs/bootstrap/issues/28247
+      &[disabled],
+      &:disabled {
+        ~ .form-check-label {
+          cursor: default;
+          opacity: $form-check-label-disabled-opacity;
+        }
+      }
+    }
+    & .rdt_ExpanderRow {
+      margin: 0;
+      padding: $spacer;
+      background: var(--#{$prefix}light);
+      border-bottom: 1px solid var(--#{$prefix}component-border-color);
+
+      & pre {
+        margin: 0;
+        color: var(--#{$prefix}component-color);
+      }
+    }
+  }
+  & .rdt_Pagination {
+    border: none;
+    background: none;
+    color: var(--#{$prefix}component-color);
+    font-size: $font-size-base;
+    min-height: auto;
+    padding: $spacer * 0.5 0;
+
+    & button {
+      width: auto;
+      height: auto;
+      color: var(--#{$prefix}component-color);
+      border-radius: $border-radius;
+      padding: $btn-padding-y-sm $btn-padding-x-sm * 0.5;
+
+      & svg {
+        fill: var(--#{$prefix}component-color);
+      }
+      &:hover:not(:disabled) {
+        background: var(--#{$prefix}light);
+      }
+      &:disabled {
+        opacity: 0.25;
+      }
+      & + button {
+        @if ($enable-rtl) {
+          margin-right: $spacer * 0.25;
+        } @else {
+          margin-left: $spacer * 0.25;
+        }
+      }
+    }
+    & select {
+      display: block;
+      height: auto;
+      padding: $form-select-padding-y-sm $form-select-indicator-padding
+        $form-select-padding-y-sm $form-select-padding-x;
+      -moz-padding-start: subtract(
+        $form-select-padding-x,
+        3px
+      ); // See https://github.com/twbs/bootstrap/issues/32636
+      font-family: $form-select-font-family;
+      @include font-size($form-select-font-size);
+      font-weight: $form-select-font-weight;
+      line-height: $form-select-line-height;
+      color: $form-select-color;
+      background-color: $form-select-bg;
+      background-image: escape-svg($form-select-indicator);
+      background-repeat: no-repeat;
+      background-position: $form-select-bg-position;
+      background-size: $form-select-bg-size;
+      border: $form-select-border-width solid
+        var(--#{$prefix}component-border-color);
+      @include border-radius($form-select-border-radius, 0);
+      @include box-shadow($form-select-box-shadow);
+      @include transition($form-select-transition);
+      appearance: none;
+
+      &:focus {
+        border-color: $form-select-focus-border-color;
+        outline: 0;
+        @if $enable-shadows {
+          @include box-shadow(
+            $form-select-box-shadow,
+            $form-select-focus-box-shadow
+          );
+        } @else {
+          box-shadow: $form-select-focus-box-shadow;
+        }
+      }
+      & + svg {
+        display: none;
+      }
+    }
+  }
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  position: relative;
+}
+
+.table-fixed {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+}
+
+.table-fixed th,
+.table-fixed td {
+  // padding: 10px;
+  // border: 1px solid #ddd;
+  background: #fff;
+}
+
+/* ✅ Fixed Left */
+.fixed-left {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+/* ✅ Fixed Right */
+.fixed-right {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+#awn-popup-wrapper {
+  .awn-buttons {
+    .awn-btn-cancel {
+      background: #dc3545 !important;
+
+      &:hover,
+      &:focus-visible {
+        background: #b02a37 !important;
+      }
+    }
+  }
+}
