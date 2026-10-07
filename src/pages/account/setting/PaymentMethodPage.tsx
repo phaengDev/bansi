@@ -5,6 +5,7 @@ import { InputField } from '../../../utils/inputFields';
 import { createModel, requiredField } from '../../../utils/validate';
 import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
+import { useTreasuryAccountOptions, type OptionList, type TreasuryAccountOption } from '../../../utils/selectOption';
 import { ChoiceTiles, FormSection, ListState, MetaChip, SettingCard, SettingModal, SettingToolbar, ToggleField } from './settingKit';
 import { postfixProp, runSave, saveSetting, useSettingList, useStatusToggle } from './settingApi';
 
@@ -22,7 +23,6 @@ type PaymentMethod = {
   account?: { _uuid: number; acountName: string; acount_number?: string } | null;
 };
 
-type AccountOption = { _uuid: number; acountName: string; acount_number?: string; banks?: { abbr?: string } | null };
 
 /** method_type — 1 ເງິນສົດ, 2 ໂອນທະນາຄານ, 3 QR, 4 ເຊັກ, 5 ບັດ */
 const TYPES = [
@@ -34,12 +34,9 @@ const TYPES = [
 ];
 const typeOf = (value: number) => TYPES.find((x) => x.value === Number(value)) ?? TYPES[0];
 
-const accountLabel = (a: AccountOption) =>
-  [a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · ');
-
 const PaymentMethodForm = ({ data, accounts, count, onClose, onSaved }: {
   data: PaymentMethod | null;
-  accounts: AccountOption[];
+  accounts: OptionList<TreasuryAccountOption>;
   count: number;
   onClose: () => void;
   onSaved: () => void;
@@ -100,7 +97,7 @@ const PaymentMethodForm = ({ data, accounts, count, onClose, onSaved }: {
           <div className="is-wide">
             <InputField name="account_id" label={t('pmAccount')} accepter={SelectPicker} block required={false}
               placeholder={t('pmNoAccount')}
-              data={accounts.map((a) => ({ label: accountLabel(a), value: a._uuid }))}
+              data={accounts}
             />
           </div>
           <ToggleField label={t('pmRequireRef')} checked={requireRef} onChange={setRequireRef} onText={t('pmRequireRef')} offText={t('pmNoRef')} />
@@ -122,7 +119,7 @@ const PaymentMethodPage = () => {
   const t = useT();
   const { rows, loading, reload } = useSettingList<PaymentMethod>('/payment-method/fetch');
   const statusToggle = useStatusToggle('/payment-method', reload);
-  const { rows: accounts } = useSettingList<AccountOption>('/treasury-account/option');
+  const accounts = useTreasuryAccountOptions();
   const [keyword, setKeyword] = useState('');
   const [editing, setEditing] = useState<PaymentMethod | null | undefined>(undefined);
 

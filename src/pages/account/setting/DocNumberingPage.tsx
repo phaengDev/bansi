@@ -6,6 +6,7 @@ import { InputField } from '../../../utils/inputFields';
 import { createModel, requiredField } from '../../../utils/validate';
 import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
+import { useJournalTypes, type JournalType, type OptionList } from '../../../utils/selectOption';
 import { ChoiceTiles, FormSection, ListState, MetaChip, SettingCard, SettingModal, SettingToolbar, ToggleField } from './settingKit';
 import { runSave, saveSetting, useSettingList, useStatusToggle } from './settingApi';
 import { toneOf } from './accountTone';
@@ -31,7 +32,6 @@ type DocNumbering = NumberFormat & {
   journal?: { _uuid: number; journal_code: string; name: string } | null;
 };
 
-type JournalOption = { _uuid: number; journal_code: string; name: string };
 
 const RESETS = [
   { value: 0, label: 'dnResetNever', icon: 'fa-infinity' },
@@ -78,7 +78,7 @@ const NumberPreview = ({ format, seq }: { format: NumberFormat; seq: number }) =
 
 const DocNumberingForm = ({ data, journals, onClose, onSaved }: {
   data: DocNumbering | null;
-  journals: JournalOption[];
+  journals: OptionList<JournalType>;
   onClose: () => void;
   onSaved: () => void;
 }) => {
@@ -144,7 +144,7 @@ const DocNumberingForm = ({ data, journals, onClose, onSaved }: {
           <div className="is-wide">
             <InputField name="journal_id" label={t('dnJournal')} accepter={SelectPicker} block required={false}
               placeholder={t('select')}
-              data={journals.map((j) => ({ label: `${j.journal_code} · ${j.name}`, value: j._uuid }))}
+              data={journals}
             />
           </div>
         </FormSection>
@@ -199,7 +199,7 @@ const DocNumberingPage = () => {
   const t = useT();
   const { rows, loading, reload } = useSettingList<DocNumbering>('/doc-numbering/fetch');
   const statusToggle = useStatusToggle('/doc-numbering', reload);
-  const { rows: journals } = useSettingList<JournalOption>('/journal-type/option');
+  const journals = useJournalTypes();
   const [keyword, setKeyword] = useState('');
   const [editing, setEditing] = useState<DocNumbering | null | undefined>(undefined);
 

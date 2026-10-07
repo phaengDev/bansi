@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Input, InputGroup, Loader } from 'rsuite';
-import { deleteApi, getApi, postApi } from '../../../utils/configApi';
+import { deleteApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
-import { useCurrency } from '../../../utils/selectOption';
+import { useAccountClasses, useCurrency } from '../../../utils/selectOption';
 import { useT } from '../../../context/LanguageContext';
 import type { AccountClass } from './AccountClassForm';
 import AccountTypeForm, { type AccountType } from './AccountTypeForm';
@@ -30,7 +30,7 @@ const AccountTypePage = () => {
   const t = useT();
   const currencies = useCurrency();
   const [rows, setRows] = useState<AccountType[]>([]);
-  const [classes, setClasses] = useState<AccountClass[]>([]);
+  const classes = useAccountClasses();
   const [isLoading, setIsLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [typeId, setTypeId] = useState<number | null>(null);
@@ -53,17 +53,7 @@ const AccountTypePage = () => {
     }
   };
 
-  const fetchClasses = async () => {
-    try {
-      const res = await getApi('/type-account/option');
-      setClasses(res.data?.data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   useEffect(() => {
-    fetchClasses();
     fetchData();
   }, []);
 

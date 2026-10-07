@@ -6,13 +6,13 @@ import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
+import { useFiscalYears } from '../../../utils/selectOption';
 import { ListState, SettingToolbar } from './settingKit';
 import { runSave, useSettingList } from './settingApi';
 import { toneOf } from './accountTone';
 import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import { currencySymbol } from '../ledger/currency';
 
-type FiscalYear = { _uuid: number; fiscal_code: string; fiscal_name?: string; is_current: number; status: number };
 type OpeningRow = { account_id: number; balance_usable: string | number; balance_held: string | number };
 type Amounts = { usable: number; held: number };
 
@@ -25,7 +25,8 @@ const same = (a?: Amounts, b?: Amounts) => (a?.usable ?? 0) === (b?.usable ?? 0)
  */
 const OpeningBalancePage = () => {
   const t = useT();
-  const { rows: years, loading: yearsLoading } = useSettingList<FiscalYear>('/fiscal-year/option');
+  const years = useFiscalYears();
+  const yearsLoading = years.loading;
   const { rows: accounts, loading: accountsLoading } = useSettingList<TreasuryAccount>('/treasury-account/fetch', 'post');
   const [fiscalId, setFiscalId] = useState<number | null>(null);
   const [saved, setSaved] = useState<Record<number, Amounts>>({});

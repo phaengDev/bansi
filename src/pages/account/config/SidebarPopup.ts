@@ -128,6 +128,34 @@ export const PAYABLES_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ເມນູຂອງໜ້າຕ່າງ ງົບປະມານ — ຕິດຕາມງົບຂອງປີ ແລະ ທຽບລາຍເດືອນ */
+export const BUDGET_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppBudget',
+    items: [
+      { key: 'overview', icon: 'fa-solid fa-gauge-high', label: 'budgetOverview' },
+      { key: 'monthly', icon: 'fa-solid fa-calendar-days', label: 'budgetMonthly' },
+    ],
+  },
+];
+
+/** ເມນູຂອງໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ຜູ້ໃຊ້ລະບົບ, ພະແນກ ແລະ ຕຳແໜ່ງ, ພະນັກງານ */
+export const HR_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'hrGroupSystem',
+    items: [
+      { key: 'users', icon: 'fa-solid fa-user-shield', label: 'hrUsers' },
+    ],
+  },
+  {
+    group: 'hrGroupOrg',
+    items: [
+      { key: 'departments', icon: 'fa-solid fa-sitemap', label: 'hrDepartmentsPositions' },
+      { key: 'employees', icon: 'fa-solid fa-id-card', label: 'hrEmployees' },
+    ],
+  },
+];
+
 /** ເມນູຂອງໜ້າຕ່າງ ຜັງບັນຊີ — ຜັງບັນຊີ, ຜູກບັນຊີ ແລະ ການເປີດໃຊ້ລະບົບບັນຊີຄູ່ */
 export const CHART_MENU: SidebarPopupGroup[] = [
   {

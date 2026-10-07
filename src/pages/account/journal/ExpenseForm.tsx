@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } fro
 import { AutoComplete, Button, DatePicker, Form, Input, Modal, NumberInput, Schema, Textarea } from 'rsuite';
 import moment from 'moment';
 import type { FormInstance } from 'rsuite';
-import { formatNumber, getApi, postApi, putApi } from '../../../utils/configApi';
+import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { InputField } from '../../../utils/inputFields';
@@ -14,10 +14,13 @@ import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import { currencySymbol } from '../ledger/currency';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
 import {
-  CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, formatQty, isAllowedFile, isFutureDay,
-  type AccountClass, type Category, type Tax, type TaxMode,
+  CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, defaultClassId, formatQty, isAllowedFile, isFutureDay,
+  type TaxMode,
 } from './journalKit';
+import { useAccountClasses, useFinanceCategories, useTaxes } from '../../../utils/selectOption';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
+import { kip, type BudgetCheck } from '../budget/budgetApi';
+import { BudgetHint } from '../budget/BudgetKit';
 
 const { StringType, NumberType, DateType } = Schema.Types;
 
@@ -125,15 +128,17 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const isEdit = !!data;
   const [saving, setSaving] = useState(false);
   const [removeFile, setRemoveFile] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [taxes, setTaxes] = useState<Tax[]>([]);
+  const categories = useFinanceCategories(2);
+  const taxes = useTaxes();
   /** ຈ່າຍໃຫ້ໃຜ — ເລືອກລູກຄ້າ/ຜູ້ສະໜອງ ຫຼື ພິມຊື່ເອງ (ຊື່ເກັບໃນ payee_name) */
   const [customer, setCustomer] = useState<CustomerValue>({
     partner: data?.partner_id ? data.partner ?? null : null,
     name: data?.payee_name ?? data?.partner?.name ?? '',
   });
-  const [classes, setClasses] = useState<AccountClass[]>([]);
-  const [payClass, setPayClass] = useState<number | null>(classIdOf(data?.acount ?? undefined) ?? null);
+  const classes = useAccountClasses();
+  const [payClassPicked, setPayClass] = useState<number | null>(classIdOf(data?.acount ?? undefined) ?? null);
+  /** ຍັງບໍ່ເລືອກ = ໝວດເງິນສົດ (ຫຼື ໝວດທຳອິດ) */
+  const payClass = payClassPicked ?? defaultClassId(classes);
   const [taxMode, setTaxMode] = useState<TaxMode>('none');
   const [manualMethod, setManualMethod] = useState(1);
   const [file, setFile] = useState<File | null>(null);
@@ -155,23 +160,6 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     payee_account_number: data?.payee_account_number ?? '',
     description: data?.description ?? '',
   });
-
-  useEffect(() => {
-    getApi('/finance-category/option/2')
-      .then((res) => setCategories(res.data?.data ?? []))
-      .catch((error) => console.error(error));
-    getApi('/tax/option')
-      .then((res) => setTaxes(res.data?.data ?? []))
-      .catch((error) => console.error(error));
-    getApi('/type-account/option')
-      .then((res) => {
-        const list: AccountClass[] = [...(res.data?.data ?? [])]
-          .sort((a, b) => String(a.type_code).localeCompare(String(b.type_code), undefined, { numeric: true }));
-        setClasses(list);
-        setPayClass((current) => current ?? (list.find((c) => c.type_code === CASH_CLASS_CODE) ?? list[0])?._uuid ?? null);
-      })
-      .catch((error) => console.error(error));
-  }, []);
 
   useEffect(() => () => {
     if (filePreview) URL.revokeObjectURL(filePreview);
@@ -216,6 +204,35 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     : computeTax(subtotal, taxMode, selectedTax, Number(inputs.tax) || 0, manualMethod);
   /** ບໍ່ສະແດງຍອດຂອງບັນຊີ — ບອກພຽງວ່າພໍຈ່າຍບໍ່ (backend ກວດຊ້ຳຕອນບັນທຶກ) */
   const insufficient = !isEdit && !!account && calc.total > Number(account.balance_treasury ?? 0);
+
+  // ---- ງົບປະມານຂອງປະເພດທີ່ເລືອກ (ເຕືອນເທົ່ານັ້ນ ບໍ່ກັ້ນການບັນທຶກ) ----
+  const [budgetCheck, setBudgetCheck] = useState<BudgetCheck | null>(null);
+  const budget = inputs.type_expense_fk ? budgetCheck : null;
+  const budgetDate = inputs.expense_date ? moment(inputs.expense_date).format('YYYY-MM-DD') : '';
+  useEffect(() => {
+    if (!inputs.type_expense_fk) return;
+    let cancelled = false;
+    // ລໍຖ້າພິມຈຳນວນແລ້ວຄ່ອຍຖາມ (ບໍ່ຖາມທຸກຕົວອັກສອນ)
+    const timer = setTimeout(() => {
+      postApi('/budget/check', {
+        category_id: inputs.type_expense_fk,
+        expense_date: budgetDate,
+        acount_id_fk: inputs.acount_id_fk ?? undefined,
+        amount: calc.total,
+        exclude_id: data?._uuid,
+      })
+        .then((res) => !cancelled && setBudgetCheck(res.data?.data ?? null))
+        .catch(() => !cancelled && setBudgetCheck(null));
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [inputs.type_expense_fk, budgetDate, inputs.acount_id_fk, calc.total, data?._uuid]);
+  /** ຍອດທີ່ຈະເກີນງົບ (ປີ ຫຼື ເດືອນ ອັນໃດຫຼາຍກວ່າ) — 0 = ບໍ່ເກີນ */
+  const budgetOver = budget?.has_budget
+    ? Math.max(0, -budget.after, budget.month ? -budget.month.after : 0)
+    : 0;
 
   const selectPayClass = (value: number) => {
     setPayClass(value);
@@ -334,8 +351,9 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     if (!formOk || !linesValid) return;
     if (isEdit) return save();
     if (insufficient) return Notific.warning('expenseInsufficient');
-    // ບັນທຶກໃໝ່ = ເງິນອອກຈາກບັນຊີທັນທີ ແລະ ແກ້ຈຳນວນບໍ່ໄດ້ອີກ → ຢືນຢັນກ່ອນ
-    Notific.confirm(`${t('expenseConfirm')} ${money(calc.total)} ← ${account?.acountName ?? ''}`, save);
+    // ບັນທຶກໃໝ່ = ເງິນອອກຈາກບັນຊີທັນທີ ແລະ ແກ້ຈຳນວນບໍ່ໄດ້ອີກ → ຢືນຢັນກ່ອນ (ເກີນງົບ = ບອກໃນຂໍ້ຄວາມຢືນຢັນນຳ)
+    const overText = budgetOver > 0 ? ` — ${t('expenseBudgetConfirm')} ${kip(budgetOver)}` : '';
+    Notific.confirm(`${t('expenseConfirm')} ${money(calc.total)} ← ${account?.acountName ?? ''}${overText}`, save);
   };
 
   const existingFile = data?.file_url && !removeFile && !file;
@@ -577,6 +595,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
                 <p className="acc-ex-warn"><i className="fa-solid fa-triangle-exclamation" /> {t('expenseInsufficient')}</p>
               )}
             </div>
+            {budget && <div className="is-wide"><BudgetHint check={budget} /></div>}
           </FormStep>
 
           {/* ---- ຂັ້ນ 4: ໃບບິນ + ໝາຍເຫດ ---- */}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader } from 'rsuite';
 import type { Moment } from 'moment';
-import { getApi, postApi } from '../../../utils/configApi';
+import { postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useLangField, useT } from '../../../context/LanguageContext';
@@ -9,8 +9,8 @@ import { isNotReady, money, type Balance, type ChartAccount } from '../gl/glApi'
 import { GlNotReady, useChartAccounts } from '../gl/glKit';
 import type { StatementData } from './FinancialStatementsPage';
 import StatementDoc from './StatementDoc';
+import { useFiscalYears, type FiscalYear } from '../../../utils/selectOption';
 
-type FiscalYear = { _uuid: number; fiscal_code: string; start_date: string; end_date: string };
 
 /** ໝວດໃນໃບສະຫຼຸບຊັບສົມບັດ — ລຽງຕາມ account_type */
 const SECTIONS = [
@@ -38,7 +38,7 @@ const BalanceSheet = ({ data }: { data: StatementData }) => {
   const t = useT();
   const lf = useLangField();
   const { rows: accounts, notReady: chartNotReady } = useChartAccounts();
-  const [years, setYears] = useState<FiscalYear[] | null>(null);
+  const years = useFiscalYears();
   const [snapshots, setSnapshots] = useState<{ now: Snapshot; before: Snapshot } | null>(null);
   const [error, setError] = useState('');
   const [notReady, setNotReady] = useState(false);
@@ -46,11 +46,7 @@ const BalanceSheet = ({ data }: { data: StatementData }) => {
   const endBefore = data.prev.end;
 
   useEffect(() => {
-    getApi('/fiscal-year/option').then((res) => setYears(res.data?.data ?? [])).catch(() => setYears([]));
-  }, []);
-
-  useEffect(() => {
-    if (!years) return;
+    if (years.loading) return;
     let cancelled = false;
     setError('');
     const fetchAt = (end: Moment) => postApi('/gl/balances', {

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker, Textarea } from 'rsuite';
 import moment from 'moment';
-import { getApi, postApi } from '../../../utils/configApi';
+import { postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
-import { useCurrency } from '../../../utils/selectOption';
+import { useCurrency, useTaxes } from '../../../utils/selectOption';
 import { canCreate } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { isFutureDay, type Tax } from '../journal/journalKit';
@@ -57,7 +57,7 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const { rows: accounts, loading: accountsLoading } = useChartAccounts();
   const lineOptions = useAccountOptions(accounts, (a) => (cfg.lineGroups as readonly number[]).includes(Number(a.account_group)));
   const currencies = useCurrency() as unknown as { label: string; value: number; rate: number }[];
-  const [taxes, setTaxes] = useState<Tax[]>([]);
+  const taxes = useTaxes();
   const [partner, setPartner] = useState<number | null>(partnerId ?? null);
   const [addingPartner, setAddingPartner] = useState(false);
   const [docDate, setDocDate] = useState<Date>(new Date());
@@ -71,10 +71,6 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const [lines, setLines] = useState<Line[]>(() => [blankLine()]);
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    getApi('/tax/option').then((res) => setTaxes(res.data?.data ?? [])).catch((error) => console.error(error));
-  }, []);
 
   const partnerOptions = partners
     .filter((p) => isPartnerOf(kind, p) && Number(p.status) === 1)

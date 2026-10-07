@@ -1,0 +1,348 @@
+// ---- ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ / HR (src/pages/hr/*) — ໃຊ້ໜ້າຕາດຽວກັບໜ້າຕັ້ງຄ່າບັນຊີ (.acs-*, .acc-book-modal, .acc-gl-table) ----
+
+// ຮູບພະນັກງານ / ຜູ້ໃຊ້ — ບໍ່ມີຮູບ = ຕົວອັກສອນທຳອິດ
+.hr-avatar {
+  display: inline-grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #aa8cff, #604bd8);
+  border-radius: 50%;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+  b { font-size: 15px; font-weight: 800; line-height: 1; }
+
+  &.is-sm { width: 24px; height: 24px; b { font-size: 11px; } }
+  &.is-lg { width: 64px; height: 64px; b { font-size: 26px; } }
+}
+
+// ໃນບັດຜູ້ໃຊ້ — ຮູບເຕັມກ່ອງ badge
+.acs-card-badge .hr-avatar {
+  width: 52px;
+  height: 52px;
+  background: transparent;
+  border-radius: inherit;
+
+  b { font-size: 21px; }
+}
+
+.hr-self {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 7px;
+  color: #604bd8;
+  background: #efeaff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+// ຕົວເລືອກພະນັກງານໃນ SelectPicker
+.hr-opt {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  b { color: #604bd8; font-variant-numeric: tabular-nums; }
+  small { margin-left: 6px; color: #7b8a97; }
+}
+
+// ---- ຟອມຜູ້ໃຊ້: ສິດ ເພີ່ມ / ແກ້ໄຂ / ລຶບ ເປັນ checkbox ແຖວດຽວ ----
+.hr-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hr-perm {
+  margin: 0;
+
+  // rsuite 6: .rs-checkbox-checker > label > (.rs-checkbox-control + .rs-checkbox-label) — ໃຫ້ label ທັງອັນເປັນປຸ່ມ
+  .rs-checkbox-checker { min-height: 0; padding: 0; }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    margin: 0;
+    padding: 8px 16px 8px 12px;
+    color: #5b6f80;
+    background: #fff;
+    border: 1px solid #dfe6ec;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .rs-checkbox-control { flex: none; }
+  .rs-checkbox-label { display: inline-flex; align-items: center; gap: 6px; padding: 0; }
+  .rs-checkbox-label i { font-size: 12px; opacity: 0.8; }
+
+  &:hover label { border-color: #b8d9cd; }
+  &.is-on label { color: #075c47; background: #eef8f4; border-color: #9fd5c2; }
+  &[data-disabled='true'] label { cursor: not-allowed; opacity: 0.7; }
+}
+
+// ---- ຟອມພະແນກ: ລາຍການຕຳແໜ່ງ ----
+.hr-positions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hr-position-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .rs-input { flex: 1; }
+  &.is-off .rs-input { color: #8a9aa8; text-decoration: line-through; }
+}
+
+.hr-position-no {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  color: #604bd8;
+  background: #efeaff;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.hr-position-add { align-self: flex-start; }
+
+// ---- ຟອມພະນັກງານ: ຮູບວົງມົນ (ຊ້າຍ) + ຊ່ອງຂໍ້ມູນສ່ວນຕົວ 2 ຖັນ (ຂວາ) ----
+.hr-profile {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.hr-profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.hr-photo-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+
+  > small { color: #7b8a97; font-size: 11px; text-align: center; }
+}
+
+.hr-photo-frame { position: relative; }
+
+.hr-photo-circle {
+  position: relative;
+  display: grid;
+  width: 148px;
+  height: 148px;
+  margin: 0;
+  overflow: hidden;
+  place-items: center;
+  background: #f4f1ff;
+  border: 2px dashed #b9a8f5;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+
+  &:hover,
+  &:focus-within {
+    background: #ece6ff;
+    border-color: #604bd8;
+    box-shadow: 0 0 0 4px rgba(96, 75, 216, 0.12);
+  }
+
+  &.has-photo {
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #d9d0fb, 0 8px 20px rgba(53, 39, 140, 0.18);
+  }
+
+  &.has-photo:hover .hr-photo-overlay { opacity: 1; }
+}
+
+.hr-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #604bd8;
+
+  i { font-size: 30px; }
+  b { font-size: 12.5px; font-weight: 700; }
+}
+
+.hr-photo-overlay {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 14px;
+  color: #fff;
+  background: linear-gradient(180deg, transparent, rgba(20, 16, 50, 0.72));
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hr-photo-clear {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: #c4343a;
+  background: #fff;
+  border: 1px solid #f3c4c6;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(15, 42, 61, 0.15);
+
+  &:hover { color: #fff; background: #e5484d; border-color: #e5484d; }
+}
+
+// ຊ່ອງຊື່ ທີ່ມີ dropdown ເພດຢູ່ທາງໜ້າ — ໃຊ້ໜ້າຕາຂອງ rsuite ຄືຊ່ອງອື່ນ, ສູງເທົ່າກັນ
+.hr-name-field .rs-input-group-addon.hr-gender { padding: 0 0 0 2px; }
+.hr-gender-value.is-male i { color: #1559c9; }
+.hr-gender-value.is-female i { color: #d9467a; }
+
+@media (max-width: 767.98px) {
+  .hr-profile { grid-template-columns: minmax(0, 1fr); }
+  .hr-profile-fields { grid-template-columns: minmax(0, 1fr); }
+}
+
+.hr-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+
+  &.is-warn { color: #8a4b04; background: #fff4dc; border: 1px solid #f5d79b; }
+}
+
+// ---- ລາຍການພະນັກງານ ----
+.hr-filter { width: 190px; }
+
+.hr-table {
+  td { vertical-align: middle; }
+  tr.is-click { cursor: pointer; }
+  tr.is-click:hover td { background: #f8f6ff; }
+}
+
+.hr-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  b { display: block; }
+}
+
+// ---- ລາຍລະອຽດພະນັກງານ ----
+.hr-detail .acc-gl-ledger-head .rs-modal-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.hr-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  margin: 0 0 12px;
+
+  > div {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eef2f5;
+  }
+
+  > .is-wide { grid-column: 1 / -1; }
+  dt { color: #7b8a97; font-size: 12px; font-weight: 600; }
+  dd { margin: 0; color: #14314d; font-weight: 600; overflow-wrap: anywhere; }
+  dd small { margin-left: 4px; color: #7b8a97; font-weight: 500; }
+  dd i { color: #604bd8; }
+}
+
+// ບັນຊີຮັບເງິນເດືອນໃນລາຍລະອຽດ — ໂລໂກ້ + ທະນາຄານ · ເລກບັນຊີ + ຊື່ + ປຸ່ມສຳເນົາ
+.hr-bank-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  > img,
+  > i { width: 26px; height: 26px; flex: none; border-radius: 6px; object-fit: contain; }
+  > i { display: grid; place-items: center; color: #0a8fc2; background: #e2f6fd; font-size: 12px; }
+  b { display: block; font-variant-numeric: tabular-nums; }
+  small { display: block; color: #7b8a97; font-weight: 600; }
+  .acc-gl-act i { color: #604bd8; }
+}
+
+.hr-info .hr-bank-account small { margin: 0; }
+.hr-bank-opt .acc-xfer-opt-text small { color: #7b8a97; }
+
+.hr-docs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 16px 0 8px;
+
+  h6 { display: flex; align-items: center; gap: 8px; margin: 0; color: #14314d; font-size: 13.5px; font-weight: 800; }
+  h6 em { padding: 0 7px; color: #604bd8; background: #efeaff; border-radius: 10px; font-size: 11px; font-style: normal; }
+  label { margin: 0; cursor: pointer; }
+}
+
+.acc-rp-btn.is-disabled { cursor: not-allowed; opacity: 0.5; }
+
+.hr-docs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #f0f3f6;
+
+    > i { width: 22px; color: #604bd8; font-size: 18px; text-align: center; }
+    > span { flex: 1; min-width: 0; }
+    b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    small { color: #7b8a97; font-size: 11px; }
+  }
+
+  .fa-file-pdf { color: #c4343a; }
+  .fa-file-excel { color: #1d7a45; }
+  .fa-file-word { color: #1559c9; }
+}
+
+.hr-docs-note { display: block; margin-top: 8px; color: #7b8a97; font-size: 11.5px; }
+
+@media (max-width: 767.98px) {
+  .hr-info { grid-template-columns: minmax(0, 1fr); }
+  .hr-filter { width: 100%; }
+}

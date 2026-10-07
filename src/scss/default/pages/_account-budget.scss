@@ -1,0 +1,354 @@
+// ---- ງົບປະມານລາຍຈ່າຍ (src/pages/account/budget/*) — ໃຊ້ .acc-rp ເປັນພື້ນ (ຕົວກັ່ນ, ຕົວເລກສະຫຼຸບ, ບັດ) ສີຫຼັກສີທອງ ----
+.acc-rp.acc-bg {
+  --rp-accent: #d48a12;
+  --rp-accent-2: #f2b84b;
+  --rp-ink: #a8620a;
+  --rp-deep: #6b3d05;
+  --rp-soft: #fff4dc;
+}
+
+// ສີຂອງແຕ່ລະສະຖານະ — ໃຊ້ຮ່ວມກັນ: ປ້າຍ, ແຖບຄວາມຄືບໜ້າ, ຊ່ອງໃນຕາຕະລາງລາຍເດືອນ
+.acc-bg-status,
+.acc-bg-bar,
+.acc-bg-cell {
+  --bg-ink: #7b8a97;
+  --bg-soft: #eef1f4;
+  --bg-fill: linear-gradient(90deg, #b8c4ce, #8a9aa8);
+
+  &.is-using { --bg-ink: #1d7fc4; --bg-soft: #e6f2fb; --bg-fill: linear-gradient(90deg, #5fb4f0, #1d7fc4); }
+  &.is-near { --bg-ink: #a8620a; --bg-soft: #fff4dc; --bg-fill: linear-gradient(90deg, #ffc94a, #d48a12); }
+  &.is-full { --bg-ink: #0e7a52; --bg-soft: #e3f7ee; --bg-fill: linear-gradient(90deg, #4ed7a4, #0e9460); }
+  &.is-over { --bg-ink: #c4343a; --bg-soft: #ffeceb; --bg-fill: linear-gradient(90deg, #f07a7f, #c4343a); }
+}
+
+.acc-bg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  color: var(--bg-ink);
+  background: var(--bg-soft);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  i { font-size: 10px; }
+}
+
+// ແຖບຄວາມຄືບໜ້າ + ຂີດຕັ້ງ "ຄວນໃຊ້ຮອດມື້ນີ້ຕາມແຜນ"
+.acc-bg-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  overflow: visible;
+  background: #eef2f5;
+  border-radius: 4px;
+
+  i {
+    display: block;
+    max-width: 100%;
+    height: 100%;
+    background: var(--bg-fill);
+    border-radius: 4px;
+  }
+
+  em {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    margin-left: -1px;
+    background: #14314d;
+    border-radius: 1px;
+    opacity: 0.55;
+  }
+}
+
+.acc-bg-plan-key {
+  display: inline-block;
+  width: 2px;
+  height: 12px;
+  margin: 0 2px 0 6px;
+  vertical-align: -2px;
+  background: #14314d;
+  opacity: 0.55;
+}
+
+.acc-bg-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .acc-bg-bar { flex: 1; min-width: 60px; }
+  b { min-width: 40px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+.acc-bg-period {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5b6f80;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.acc-bg-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0 0;
+  color: #7b8a97;
+  font-size: 11.5px;
+
+  i { margin-right: 2px; }
+
+  &.is-warn {
+    margin: 0;
+    padding: 9px 12px;
+    color: #8a4b04;
+    background: #fff4dc;
+    border: 1px solid #f5d79b;
+    border-radius: 10px;
+    font-size: 12.5px;
+  }
+}
+
+.acc-bg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  p { max-width: 460px; margin: 4px 0 0; }
+  .acc-class-add { height: 38px; margin-top: 12px; padding: 0 18px; }
+}
+
+// ບັດຕາຕະລາງ — ຫົວມີຕົວກັ່ນສະຖານະຢູ່ຂວາ
+.acc-bg-card > header {
+  flex-wrap: wrap;
+
+  .acc-type-segment { margin-left: auto; }
+}
+
+.acc-bg-table,
+.acc-bg-matrix {
+  tr.is-click { cursor: pointer; }
+  tr.is-click:hover td { background: #fffaf0; }
+}
+
+.acc-bg-table {
+  td { vertical-align: middle; }
+  .acc-bg-col-progress { width: 200px; min-width: 160px; }
+}
+
+.acc-bg-neg { color: #c4343a; }
+
+.acc-bg-cat {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+
+  .acc-gl-code { flex: none; min-width: 44px; }
+  > span { min-width: 0; font-weight: 600; }
+  small { font-weight: 400; }
+  small i { font-size: 10px; }
+}
+
+// ຕາຕະລາງລາຍເດືອນ — ຊ່ອງສີຕາມສະຖານະຂອງເດືອນ, ຖັນເດືອນນີ້ເນັ້ນ, ເດືອນໜ້າຈາງ
+.acc-bg-matrix {
+  min-width: 980px;
+
+  th.is-now { color: #6b3d05; background: #fff4dc; }
+  td.is-now { box-shadow: inset 1px 0 0 #f5d79b, inset -1px 0 0 #f5d79b; }
+  td.is-future { opacity: 0.55; }
+  tr.is-loose td { color: #5b6f80; }
+
+  .acc-bg-cat .acc-gl-code { min-width: 40px; }
+}
+
+.acc-bg-cell {
+  b { display: block; font-weight: 700; }
+  small { display: block; color: #7b8a97; font-size: 10.5px; }
+
+  &.is-using,
+  &.is-near,
+  &.is-full,
+  &.is-over {
+    background: var(--bg-soft);
+
+    b { color: var(--bg-ink); }
+  }
+}
+
+.acc-bg-matrix-plan td { color: #5b6f80; font-weight: 600 !important; background: #fbfcfd !important; }
+
+// ---- ຟອມງົບ ----
+.acc-bg-spread {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  .rs-input-number { width: 220px; }
+  small { flex-basis: 100%; color: #7b8a97; font-size: 11.5px; }
+}
+
+.acc-bg-months {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.acc-bg-month {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+
+  > span { color: #5b6f80; font-size: 12px; font-weight: 700; }
+  small { color: #7b8a97; font-size: 10.5px; }
+  small.is-bad { color: #c4343a; font-weight: 700; }
+}
+
+.acs-modal .has-error .rs-picker-toggle,
+.acs-modal .rs-input-number.has-error { border-color: #e5484d; }
+
+@container (max-width: 640px) {
+  .acc-bg-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767.98px) {
+  .acc-bg-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+// ---- ລາຍລະອຽດຂອງປະເພດ (modal) ----
+.acc-bg-detail-sum {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+
+  span {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    background: #f6f8fa;
+    border-radius: 10px;
+  }
+
+  small { color: #7b8a97; font-size: 11.5px; font-weight: 700; }
+  b { color: #14314d; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .is-bad b { color: #c4343a; }
+}
+
+// ກຣາຟແທ່ງນ້ອຍລາຍເດືອນ — ແທ່ງ = ໃຊ້ຈິງ, ຂີດນອນ = ງົບຂອງເດືອນ
+.acc-bg-mini {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0 6px;
+}
+
+.acc-bg-mini-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+
+  small { color: #7b8a97; font-size: 10px; }
+  &.is-now small { color: #a8620a; font-weight: 800; }
+}
+
+.acc-bg-mini-track {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 64px;
+  align-items: flex-end;
+  justify-content: center;
+  background: linear-gradient(#eef2f5 1px, transparent 1px) 0 0 / 100% 50%;
+  border-bottom: 1px solid #d5dee6;
+
+  i {
+    display: block;
+    width: 60%;
+    max-width: 18px;
+    background: linear-gradient(180deg, #f2b84b, #d48a12);
+    border-radius: 3px 3px 0 0;
+
+    &.is-over { background: linear-gradient(180deg, #f07a7f, #c4343a); }
+  }
+
+  em {
+    position: absolute;
+    z-index: 1;
+    right: 8%;
+    left: 8%;
+    border-top: 2px dashed rgba(20, 49, 77, 0.55);
+  }
+}
+
+.acc-bg-detail-title { margin: 14px 0 8px; color: #14314d; font-size: 13px; font-weight: 800; }
+
+// ---- ຄຳເຕືອນງົບໃນຟອມລາຍຈ່າຍ ----
+.acc-bg-hint {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fffaf0;
+  border: 1px solid #f5d79b;
+  border-radius: 10px;
+  font-size: 12px;
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: #8a4b04;
+    font-weight: 600;
+  }
+
+  &.is-none {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: #7b8a97;
+    background: #f6f8fa;
+    border-color: #e3eaf0;
+  }
+
+  &.is-over {
+    background: #fff5f5;
+    border-color: #f5b5b8;
+
+    p { color: #c4343a; }
+  }
+}
+
+.acc-bg-hint-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+
+  span { display: inline-flex; align-items: center; gap: 6px; color: #6b3d05; font-weight: 800; }
+  b { color: #14314d; font-variant-numeric: tabular-nums; }
+}
+
+.acc-bg-hint-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-variant-numeric: tabular-nums;
+
+  span { color: #14314d; font-weight: 700; }
+  small { margin-right: 4px; color: #7b8a97; font-weight: 600; }
+  .is-bad { color: #c4343a; }
+}
+
+.acc-arap-watch.is-click { cursor: pointer; }
+.acc-arap-watch.is-click:hover { background: #fffaf0; }

@@ -17,6 +17,8 @@ import FinancialStatementsPage from './statements/FinancialStatementsPage';
 import ChartOfAccountsPage from './gl/ChartOfAccountsPage';
 import TrialBalancePage from './gl/TrialBalancePage';
 import ArApWindow from './arap/ArApWindow';
+import BudgetWindow from './budget/BudgetWindow';
+import HrWindow from '../hr/HrWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import MenuContextMenu from './MenuContextMenu';
 import { MenuLockForm, type MenuLockMode } from './setting/MenuLockPage';
@@ -47,6 +49,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   trialBalance: <TrialBalancePage />,
   receivables: <ArApWindow kind={1} />,
   payables: <ArApWindow kind={2} />,
+  budget: <BudgetWindow />,
+  hr: <HrWindow />,
 };
 
 /**
@@ -98,6 +102,8 @@ const AccountShell: React.FC = () => {
   const payablesWindow = usePopupWindow();
   const trialBalanceWindow = usePopupWindow();
   const statementsWindow = usePopupWindow();
+  const budgetWindow = usePopupWindow();
+  const hrWindow = usePopupWindow();
   const calendarWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
@@ -109,6 +115,8 @@ const AccountShell: React.FC = () => {
     payables: payablesWindow,
     trialBalance: trialBalanceWindow,
     financialStatements: statementsWindow,
+    budget: budgetWindow,
+    hr: hrWindow,
     calendar: calendarWindow,
     settings: settingsWindow,
   };

@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
+import type { AccountClass, FinanceCategory, Tax } from '../../../utils/selectOption';
 
 /** ສ່ວນທີ່ຟອມລາຍຮັບ (IncomeForm) ແລະ ລາຍຈ່າຍ (ExpenseForm) ໃຊ້ຮ່ວມກັນ */
 
@@ -17,10 +18,12 @@ export const CASH_CLASS_CODE = '101';
 /** ໝວດຂອງບັນຊີເງິນຄັງ (tbl_type_account._uuid ຜ່ານປະເພດບັນຊີ) */
 export const classIdOf = (account?: TreasuryAccount) => account?.treasury?.typeId;
 
-export type Category = { _uuid: number; type_code: string; type_name: string };
-/** ໝວດບັນຊີ (tbl_type_account) — ຕົວເລືອກ "ຮັບເງິນເຂົ້າ" / "ຈ່າຍຈາກ" */
-export type AccountClass = { _uuid: number; type_code: string; type_name: string };
-export type Tax = { _uuid: number; tax_code: string; name: string; rate: string | number; calc_method: number; is_default: number };
+// ປະເພດຂໍ້ມູນຂອງຊ່ອງເລືອກ ຢູ່ utils/selectOption (ບ່ອນດຶງຂໍ້ມູນ) — ສົ່ງຕໍ່ໃຫ້ຟອມທີ່ import ຈາກນີ້ຢູ່ແລ້ວ
+export type { FinanceCategory as Category, AccountClass, Tax };
+
+/** ໝວດຕັ້ງຕົ້ນຂອງ "ຮັບເງິນເຂົ້າ" / "ຈ່າຍຈາກ" — ໝວດເງິນສົດ (ບໍ່ມີ = ໝວດທຳອິດ) */
+export const defaultClassId = (classes: AccountClass[]) =>
+  (classes.find((c) => c.type_code === CASH_CLASS_CODE) ?? classes[0])?._uuid ?? null;
 export type TaxMode = 'none' | 'select' | 'manual';
 
 /** ລົງຍ້ອນຫຼັງໄດ້ ແຕ່ບໍ່ໃຫ້ເລືອກວັນໃນອະນາຄົດ (backend ກວດຊ້ຳ) */

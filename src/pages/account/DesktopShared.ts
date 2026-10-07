@@ -114,6 +114,8 @@ export type ShortcutId =
   | 'payables'
   | 'trialBalance'
   | 'financialStatements'
+  | 'budget'
+  | 'hr'
   | 'calendar'
   | 'settings';
 
@@ -127,6 +129,8 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   payables: 'accountAppPayables',
   trialBalance: 'accountAppTrialBalance',
   financialStatements: 'accountAppFinancialStatements',
+  budget: 'accountAppBudget',
+  hr: 'accountAppHr',
   calendar: 'calendar',
   settings: 'accountAppSettings',
 };
@@ -141,6 +145,8 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   payables: 'accountAppPayablesDesc',
   trialBalance: 'accountAppTrialBalanceDesc',
   financialStatements: 'accountAppFinancialStatementsDesc',
+  budget: 'accountAppBudgetDesc',
+  hr: 'accountAppHrDesc',
   settings: 'accountAppSettingsDesc',
 };
 
@@ -160,6 +166,8 @@ export const shortcuts: ReadonlyArray<{
   { id: 'payables', icon: 'fa-file-invoice-dollar', tone: 'coral', path: '/account/payable', popup: true },
   { id: 'trialBalance', icon: 'fa-scale-balanced', tone: 'violet', path: '/account/trial-balance', popup: true },
   { id: 'financialStatements', icon: 'fa-chart-pie', tone: 'emerald', path: '/account/statements', popup: true },
+  { id: 'budget', icon: 'fa-bullseye', tone: 'gold', path: '/account/budget', popup: true },
+  { id: 'hr', icon: 'fa-users-gear', tone: 'violet', path: '/hr', popup: true },
   { id: 'calendar', icon: 'fa-calendar-days', tone: 'coral', path: '/calendar', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
 ];

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button, DatePicker, Form, Modal, NumberInput, Schema, Textarea } from 'rsuite';
 import moment from 'moment';
 import type { FormInstance } from 'rsuite';
-import { formatNumber, getApi, postApi, putApi } from '../../../utils/configApi';
+import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { InputField } from '../../../utils/inputFields';
@@ -14,9 +14,10 @@ import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import { currencySymbol } from '../ledger/currency';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
 import {
-  CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, isAllowedFile, isFutureDay,
-  type AccountClass, type Category, type Tax, type TaxMode,
+  CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, defaultClassId, isAllowedFile, isFutureDay,
+  type TaxMode,
 } from './journalKit';
+import { useAccountClasses, useFinanceCategories, useTaxes } from '../../../utils/selectOption';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
 
 export { CASH, TRANSFER };
@@ -84,8 +85,8 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const formRef = useRef<FormInstance>(null);
   const isEdit = !!data;
   const [saving, setSaving] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [taxes, setTaxes] = useState<Tax[]>([]);
+  const categories = useFinanceCategories(1);
+  const taxes = useTaxes();
   const [taxMode, setTaxMode] = useState<TaxMode>('none');
   const [manualMethod, setManualMethod] = useState(1);
   const [file, setFile] = useState<File | null>(null);
@@ -95,9 +96,11 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
     partner: data?.partner_id ? data.partner ?? null : null,
     name: data?.payer_name ?? data?.partner?.name ?? '',
   });
-  const [classes, setClasses] = useState<AccountClass[]>([]);
+  const classes = useAccountClasses();
   /** ໝວດທີ່ຮັບເງິນເຂົ້າ — ຕອນແກ້ໄຂ ເອົາຕາມບັນຊີທີ່ບັນທຶກແລ້ວ; ບັນທຶກໃໝ່ ຕັ້ງເປັນໝວດເງິນສົດເມື່ອໂຫຼດໝວດແລ້ວ */
-  const [receiveClass, setReceiveClass] = useState<number | null>(classIdOf(data?.acount ?? undefined) ?? null);
+  const [receiveClassPicked, setReceiveClass] = useState<number | null>(classIdOf(data?.acount ?? undefined) ?? null);
+  /** ຍັງບໍ່ເລືອກ = ໝວດເງິນສົດ (ຫຼື ໝວດທຳອິດ) */
+  const receiveClass = receiveClassPicked ?? defaultClassId(classes);
   const [inputs, setInputs] = useState<any>({
     income_date: data ? incomeDateOf(data).toDate() : new Date(),
     incom_title: data?.incom_title ?? '',
@@ -111,23 +114,6 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
     payer_account_name: data?.payer_account_name ?? '',
     payer_account_number: data?.payer_account_number ?? '',
   });
-
-  useEffect(() => {
-    getApi('/finance-category/option/1')
-      .then((res) => setCategories(res.data?.data ?? []))
-      .catch((error) => console.error(error));
-    getApi('/tax/option')
-      .then((res) => setTaxes(res.data?.data ?? []))
-      .catch((error) => console.error(error));
-    getApi('/type-account/option')
-      .then((res) => {
-        const list: AccountClass[] = [...(res.data?.data ?? [])]
-          .sort((a, b) => String(a.type_code).localeCompare(String(b.type_code), undefined, { numeric: true }));
-        setClasses(list);
-        setReceiveClass((current) => current ?? (list.find((c) => c.type_code === CASH_CLASS_CODE) ?? list[0])?._uuid ?? null);
-      })
-      .catch((error) => console.error(error));
-  }, []);
 
   /** ປ່ຽນໝວດ → ລ້າງບັນຊີທີ່ເລືອກໄວ້ ຖ້າມັນບໍ່ຢູ່ໃນໝວດໃໝ່ */
   const selectReceive = (value: number) => {
