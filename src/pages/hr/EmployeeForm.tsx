@@ -8,14 +8,20 @@ import { Notific } from '../../utils/Notification';
 import { InputField } from '../../utils/inputFields';
 import { useT } from '../../context/LanguageContext';
 import { amountFormatter } from '../account/gl/glKit';
-import { ChoiceTiles, FormStep, PickerField } from '../account/setting/settingKit';
+import { FormStep, PickerField } from '../account/setting/settingKit';
 import { fromApiDate } from '../account/setting/settingApi';
-import { GENDERS, MAX_FILE, RESIGNED, WORKING, fullName, type Employee } from './hrApi';
+import { GENDERS, MAX_FILE, fileSizeText, fullName, type Employee } from './hrApi';
 import { useBanks, useDepartments, useDistricts, usePositions, useProvinces } from '../../utils/selectOption';
 import { bankLabel } from './hrKit';
 
 const { StringType, NumberType } = Schema.Types;
 const IMAGE = /^image\/(jpeg|png|webp)$/;
+const CV_FILE = /\.(pdf|docx?|jpe?g|png|webp)$/i;
+/** ຊື່ໄຟລ໌ທີ່ມີຄຳວ່າ CV ເຊັ່ນ "CV_bounmy.pdf", "my-cv.docx" */
+const CV_NAME = /(^|[^a-z])cv([^a-z]|$)/i;
+
+const cvIcon = (name: string) =>
+  /\.pdf$/i.test(name) ? 'fa-file-pdf' : /\.docx?$/i.test(name) ? 'fa-file-word' : 'fa-file-image';
 
 type Props = {
   /** null = ເພີ່ມໃໝ່ */
@@ -98,7 +104,9 @@ const NameWithGender = ({ gender, onGender }: { gender: number; onGender: (value
 
 /**
  * ຟອມພະນັກງານ — POST /employee/create, PUT /employee/:id (multipart, ຮູບ field "profile").
- * ພະແນກ → ຕຳແໜ່ງ (ສະເພາະຂອງພະແນກນັ້ນ), ແຂວງ → ເມືອງ. ຕັ້ງເປັນລາອອກ = ບັນຊີຜູ້ໃຊ້ທີ່ຜູກໄວ້ຖືກປິດ
+ * ພະແນກ → ຕຳແໜ່ງ (ສະເພາະຂອງພະແນກນັ້ນ), ແຂວງ → ເມືອງ. ບໍ່ສົ່ງສະຖານະ — ເພີ່ມໃໝ່ = ເຮັດວຽກຢູ່,
+ * ລາອອກ / ກັບເຂົ້າວຽກ ເຮັດຢູ່ໜ້າລາຍລະອຽດ (EmployeeDetail).
+ * CV: ບັນທຶກພະນັກງານແລ້ວຈຶ່ງອັບໂຫຼດເປັນເອກະສານຄັດຕິດ (POST /employee/document/:id) ຊື່ໄຟລ໌ນຳໜ້າ "CV_"
  */
 const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   const t = useT();
@@ -108,10 +116,10 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   const provinces = useProvinces();
   const banks = useBanks();
   const [gender, setGender] = useState<number>(data?.gender ?? 1);
-  const [status, setStatus] = useState<number>(data?.work_status ?? WORKING);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
+  const [cv, setCv] = useState<File | null>(null);
   const [inputs, setInputs] = useState<any>({
     emp_code: data?.emp_code ?? '',
     first_name: data?.first_name ?? '',
@@ -122,7 +130,6 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     department_id: data?.department_id ?? null,
     position_id: data?.position_id ?? null,
     start_date: fromApiDate(data?.start_date) ?? (data ? null : new Date()),
-    end_date: fromApiDate(data?.end_date),
     basic_salary: data?.basic_salary ?? null,
     bank_id: data?.bank_id ?? null,
     bank_account_no: data?.bank_account_no ?? '',
@@ -177,6 +184,31 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     if (data?.profile) setRemovePhoto(true);
   };
 
+  const pickCv = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!CV_FILE.test(file.name)) return Notific.warning('hrCvType');
+    if (file.size > MAX_FILE) return Notific.warning('incomeFileSize');
+    setCv(file);
+  };
+
+  /** ອັບໂຫຼດ CV ຫຼັງບັນທຶກ — ຄືນຂໍ້ມູນພະນັກງານລ່າສຸດ (ມີ CV ໃນເອກະສານ); ບໍ່ສຳເລັດ = ພະນັກງານຍັງບັນທຶກແລ້ວ */
+  const uploadCv = async (saved: Employee) => {
+    if (!cv || !saved?._uuid) return saved;
+    const file = CV_NAME.test(cv.name) ? cv : new File([cv], `CV_${cv.name}`, { type: cv.type });
+    const body = new FormData();
+    body.append('files', file);
+    try {
+      const res = await postApi(`/employee/document/${btoa(String(saved._uuid))}`, body);
+      return (res.data?.data ?? saved) as Employee;
+    } catch (error) {
+      console.error(error);
+      Notific.error(`${t('hrCvUploadFailed')} — ${getErrorMessage(error)}`);
+      return saved;
+    }
+  };
+
   const submit = async () => {
     if (!formRef.current?.check()) return;
     // ເລືອກທະນາຄານແລ້ວ ຕ້ອງມີເລກບັນຊີ (schema ບໍ່ກວດຊ່ອງຫວ່າງທີ່ບໍ່ບັງຄັບ)
@@ -193,8 +225,6 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     body.append('department_id', String(inputs.department_id));
     body.append('position_id', inputs.position_id ? String(inputs.position_id) : '');
     body.append('start_date', apiDate(inputs.start_date));
-    body.append('end_date', status === RESIGNED ? apiDate(inputs.end_date) : '');
-    body.append('work_status', String(status));
     body.append('basic_salary', String(Number(inputs.basic_salary) || 0));
     body.append('bank_id', inputs.bank_id ? String(inputs.bank_id) : '');
     body.append('bank_account_no', inputs.bank_id ? text(inputs.bank_account_no) : '');
@@ -211,7 +241,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
         ? await putApi(`/employee/${btoa(String(data._uuid))}`, body)
         : await postApi('/employee/create', body);
       Notific.success('saveSuccessDone');
-      onSaved(res.data?.data);
+      onSaved(await uploadCv(res.data?.data));
       onClose();
     } catch (error) {
       console.error(error);
@@ -222,7 +252,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   };
 
   const photoUrl = preview ?? (removePhoto ? null : data?.profile_url);
-  const resigningLinked = status === RESIGNED && data?.user && Number(data.user.status) === 1;
+  const currentCv = data?.documents.filter((d) => CV_NAME.test(d.original_name)).at(-1);
 
   const personalDone = !!String(inputs.first_name).trim();
   const workDone = !!inputs.department_id;
@@ -278,22 +308,6 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
             <InputField name="basic_salary" label={t('hrBasicSalary')} accepter={NumberInput} required={false} formatter={amountFormatter}
               controls={false} prefix="₭"
             />
-            <ChoiceTiles<number> className={status === RESIGNED ? '' : 'is-wide'} label={t('hrWorkStatus')} value={status} onChange={setStatus}
-              options={[
-                { value: WORKING, label: t('hrWorking'), icon: 'fa-briefcase' },
-                { value: RESIGNED, label: t('hrResigned'), icon: 'fa-door-open' },
-              ]}
-            />
-            {status === RESIGNED && (
-              <InputField name="end_date" label={t('hrEndDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy" block required={false}
-                placeholder="dd/mm/yyyy"
-              />
-            )}
-            {resigningLinked && (
-              <p className="is-wide hr-note is-warn">
-                <i className="fa-solid fa-user-lock" /> {t('hrResignCloseUser')} ({data!.user!.user_name})
-              </p>
-            )}
           </FormStep>
 
           {/* ---- ຂັ້ນ 3: ບັນຊີຮັບເງິນເດືອນ (ໂອນທ້າຍເດືອນ) ---- */}
@@ -324,6 +338,38 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
             </div>
             <div className="is-wide">
               <InputField name="description" label={t('detail')} accepter={Textarea} rows={2} required={false} />
+            </div>
+          </FormStep>
+
+          {/* ---- ຂັ້ນ 5: CV (ອັບໂຫຼດຫຼັງບັນທຶກພະນັກງານ) ---- */}
+          <FormStep no={5} done={!!cv || !!currentCv} title={t('hrCv')} hint={t('hrCvHint')}>
+            <div className="is-wide acc-jr-file">
+              {cv ? (
+                <div className="acc-jr-file-card">
+                  <span className="acc-jr-file-thumb"><i className={`fa-solid ${cvIcon(cv.name)}`} /></span>
+                  <span className="acc-jr-file-name">
+                    <b>{cv.name}</b>
+                    <small>{fileSizeText(cv.size)}</small>
+                  </span>
+                  <button type="button" className="acc-jr-file-remove" onClick={() => setCv(null)}
+                    aria-label={t('incomeFileRemove')} title={t('incomeFileRemove')}
+                  >
+                    <i className="fa-solid fa-trash" />
+                  </button>
+                </div>
+              ) : (
+                <label className="acs-logo-pick">
+                  <span className="acs-logo-preview"><i className="fa-solid fa-file-lines" /></span>
+                  <span className="acs-logo-text">
+                    <b><i className="fa-solid fa-upload" /> {t(currentCv ? 'hrCvPickNew' : 'hrCvPick')}</b>
+                    <small>PDF, Word, JPG, PNG · ≤ 5MB</small>
+                  </span>
+                  <input type="file" accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp" hidden onChange={pickCv} />
+                </label>
+              )}
+              {currentCv && !cv && (
+                <small className="hr-cv-current"><i className="fa-solid fa-paperclip" /> {t('hrCvCurrent')}: {currentCv.original_name}</small>
+              )}
             </div>
           </FormStep>
         </Form>

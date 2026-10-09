@@ -1,19 +1,83 @@
 import { useState, type ChangeEvent, type ReactNode } from 'react';
-import { Button, Loader, Modal } from 'rsuite';
+import { Button, DatePicker, Loader, Modal } from 'rsuite';
 import moment from 'moment';
-import { deleteApi, formatNumber, postApi } from '../../utils/configApi';
+import { deleteApi, formatNumber, postApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import {
-  GENDERS, MAX_DOCUMENTS, MAX_FILE, downloadWithAuth, fileSizeText, fullName, type Employee, type EmployeeDocument,
+  GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, downloadWithAuth, fileSizeText, fullName, type Employee, type EmployeeDocument,
 } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
 
 const DOCUMENT = /\.(jpe?g|png|webp|pdf|docx?|xlsx?)$/i;
 
 const showDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').format('DD/MM/YYYY') : '—');
+
+/** PUT ສະເພາະ work_status + end_date (backend ໃຊ້ຄ່າເດີມຂອງຖັນທີ່ບໍ່ສົ່ງ); ລາອອກ = backend ປິດບັນຊີຜູ້ໃຊ້ທີ່ຜູກໄວ້ */
+const saveWorkStatus = async (employee: Employee, status: number, endDate: Date | null) => {
+  const body = new FormData();
+  body.append('work_status', String(status));
+  body.append('end_date', endDate ? moment(endDate).format('YYYY-MM-DD') : '');
+  const res = await putApi(`/employee/${btoa(String(employee._uuid))}`, body);
+  return (res.data?.data ?? employee) as Employee;
+};
+
+/** ກ່ອງລາອອກ — ເລືອກວັນລາອອກ (ຕັ້ງແຕ່ວັນເຂົ້າວຽກ) ແລ້ວຢືນຢັນ */
+const ResignModal = ({ employee, onClose, onSaved }: {
+  employee: Employee;
+  onClose: () => void;
+  onSaved: (saved: Employee) => void;
+}) => {
+  const t = useT();
+  const [date, setDate] = useState<Date | null>(new Date());
+  const [saving, setSaving] = useState(false);
+  const linkedUser = employee.user && Number(employee.user.status) === 1 ? employee.user : null;
+
+  const submit = async () => {
+    if (!date) return;
+    try {
+      setSaving(true);
+      const saved = await saveWorkStatus(employee, RESIGNED, date);
+      Notific.success('saveSuccessDone');
+      onSaved(saved);
+    } catch (error) {
+      Notific.error(getErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open onClose={onClose} size="xs" className="acc-lock-modal hr-resign">
+      <Modal.Body>
+        <div className="acc-lock">
+          <span className="hr-resign-icon"><i className="fa-solid fa-door-open" /></span>
+          <h4>{t('hrResign')}</h4>
+          <p>{employee.emp_code} · {fullName(employee)}</p>
+          <label className="hr-resign-field">
+            <span>{t('hrEndDate')}</span>
+            <DatePicker value={date} onChange={setDate} oneTap format="dd/MM/yyyy" block placement="bottomStart"
+              shouldDisableDate={(day) => !!employee.start_date && moment(day).isBefore(moment(employee.start_date, 'YYYY-MM-DD'), 'day')}
+            />
+          </label>
+          {linkedUser && (
+            <div className="hr-note is-warn">
+              <i className="fa-solid fa-user-lock" /> {t('hrResignCloseUser')} ({linkedUser.user_name})
+            </div>
+          )}
+          <div className="acc-lock-actions">
+            <Button appearance="default" className="acc-lock-btn is-cancel" onClick={onClose}>{t('cancel')}</Button>
+            <Button appearance="primary" className="acc-lock-btn is-danger" loading={saving} disabled={!date} onClick={submit}>
+              <i className="fa-solid fa-door-open" /> {t('hrResignConfirm')}
+            </Button>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
+};
 
 /** ໄລຍະເວລາ (ປີ ເດືອນ) ຈາກວັນທີ ຮອດ ມື້ນີ້ ຫຼື ວັນທີສິ້ນສຸດ */
 const spanText = (from: string | null, to: string | null, t: (key: string) => string) => {
@@ -31,18 +95,22 @@ const docIcon = (doc: EmployeeDocument) =>
       : /sheet|excel|xlsx?$/i.test(doc.mime_type ?? doc.original_name) ? 'fa-file-excel' : 'fa-file-word';
 
 /**
- * ລາຍລະອຽດພະນັກງານ — ຂໍ້ມູນທັງໝົດ, ບັນຊີຜູ້ໃຊ້ທີ່ຜູກ ແລະ ເອກະສານຄັດຕິດ (ອັບໂຫຼດ ≤ 5 ໄຟລ໌ × 5MB, ດາວໂຫຼດຜ່ານ API ທີ່ login ແລ້ວ, ລຶບ)
+ * ລາຍລະອຽດພະນັກງານ — ຂໍ້ມູນທັງໝົດ, ບັນຊີຜູ້ໃຊ້ທີ່ຜູກ ແລະ ເອກະສານຄັດຕິດ (ອັບໂຫຼດ ≤ 5 ໄຟລ໌ × 5MB, ດາວໂຫຼດຜ່ານ API ທີ່ login ແລ້ວ, ລຶບ).
+ * ປ່ຽນສະຖານະຢູ່ນີ້: ລາອອກ (ເລືອກວັນລາອອກ) / ກັບເຂົ້າວຽກ (ລ້າງວັນລາອອກ)
  */
 const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
   employee: Employee;
   onClose: () => void;
-  onEdit: () => void;
-  /** ເອກະສານປ່ຽນ — ໃຫ້ລາຍການໂຫຼດຄືນ */
+  /** ສົ່ງຂໍ້ມູນລ່າສຸດ (ຫຼັງອັບໂຫຼດ / ລາອອກ) ໄປຟອມແກ້ໄຂ */
+  onEdit: (employee: Employee) => void;
+  /** ເອກະສານ / ສະຖານະປ່ຽນ — ໃຫ້ລາຍການໂຫຼດຄືນ */
   onChanged: () => void;
 }) => {
   const t = useT();
   const [employee, setEmployee] = useState(initial);
   const [uploading, setUploading] = useState(false);
+  const [resigning, setResigning] = useState(false);
+  const resigned = Number(employee.work_status) === RESIGNED;
   const gender = GENDERS.find((g) => g.value === Number(employee.gender));
   const address = [employee.village, employee.district?.district_name, employee.province?.province_name].filter(Boolean).join(', ');
 
@@ -81,6 +149,18 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
         const res = await deleteApi(`/employee/document/${btoa(String(doc._uuid))}`);
         setEmployee(res.data?.data ?? { ...employee, documents: employee.documents.filter((d) => d._uuid !== doc._uuid) });
         Notific.success('acsDeleted');
+        onChanged();
+      } catch (error) {
+        Notific.error(getErrorMessage(error));
+      }
+    });
+
+  /** ກັບເຂົ້າວຽກ — ລ້າງວັນລາອອກ; ບັນຊີຜູ້ໃຊ້ທີ່ຖືກປິດ ຕ້ອງເປີດເອງຢູ່ໜ້າຜູ້ໃຊ້ */
+  const reinstate = () =>
+    Notific.confirm(`${t('hrReinstateConfirm')} ${employee.emp_code} ${fullName(employee)}`, async () => {
+      try {
+        setEmployee(await saveWorkStatus(employee, WORKING, null));
+        Notific.success('saveSuccessDone');
         onChanged();
       } catch (error) {
         Notific.error(getErrorMessage(error));
@@ -170,11 +250,30 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
         <small className="hr-docs-note">{t('hrDocumentNote')}</small>
       </Modal.Body>
       <Modal.Footer>
+        {resigned ? (
+          <button type="button" className="acc-rp-btn hr-status-btn" disabled={!canEdit} onClick={reinstate}>
+            <i className="fa-solid fa-rotate-left" /> {t('hrReinstate')}
+          </button>
+        ) : (
+          <button type="button" className="acc-rp-btn is-danger hr-status-btn" disabled={!canEdit} onClick={() => setResigning(true)}>
+            <i className="fa-solid fa-door-open" /> {t('hrResign')}
+          </button>
+        )}
         <Button appearance="default" className="acc-book-btn is-cancel" onClick={onClose}>{t('close')}</Button>
-        <Button appearance="primary" className="acc-book-btn is-save" disabled={!canEdit} onClick={onEdit}>
+        <Button appearance="primary" className="acc-book-btn is-save" disabled={!canEdit} onClick={() => onEdit(employee)}>
           <i className="fa-solid fa-pen" /> {t('edit')}
         </Button>
       </Modal.Footer>
+
+      {resigning && (
+        <ResignModal employee={employee} onClose={() => setResigning(false)}
+          onSaved={(saved) => {
+            setEmployee(saved);
+            setResigning(false);
+            onChanged();
+          }}
+        />
+      )}
     </Modal>
   );
 };

@@ -233,6 +233,10 @@
   .hr-profile-fields { grid-template-columns: minmax(0, 1fr); }
 }
 
+// CV ທີ່ມີແລ້ວ (ຟອມແກ້ໄຂ) — ໃຕ້ປຸ່ມເລືອກໄຟລ໌
+.hr-cv-current { display: block; margin-top: 6px; color: #7b8a97; font-size: 12px; overflow-wrap: anywhere; }
+.hr-cv-current i { color: #604bd8; }
+
 .hr-note {
   display: flex;
   align-items: center;
@@ -342,7 +346,486 @@
 
 .hr-docs-note { display: block; margin-top: 8px; color: #7b8a97; font-size: 11.5px; }
 
+// ປຸ່ມ ລາອອກ / ກັບເຂົ້າວຽກ — ຊ້າຍສຸດຂອງ footer, ແຍກຈາກ ປິດ / ແກ້ໄຂ
+.hr-detail .rs-modal-footer .hr-status-btn { margin-right: auto; }
+.acc-rp-btn.is-danger.hr-status-btn { border-color: #f3c4cc; }
+.acc-rp-btn.is-danger.hr-status-btn:hover:not(:disabled) { color: #fff; background: #e5484d; border-color: #e5484d; }
+
+// ກ່ອງລາອອກ — ໃຊ້ໂຄງ .acc-lock-modal (ກ່ອງນ້ອຍກາງຈໍ) + ຊ່ອງວັນລາອອກ ແລະ ປຸ່ມຢືນຢັນສີແດງ
+.hr-resign-icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  color: #c4343a;
+  background: #fdecec;
+  border-radius: 18px;
+  font-size: 26px;
+}
+
+.hr-resign-field {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  text-align: start;
+
+  > span { color: #3d5266; font-size: 12.5px; font-weight: 700; }
+}
+
+.hr-resign .hr-note { width: 100%; margin-top: 12px; text-align: start; }
+.rs-btn.acc-lock-btn.is-danger { color: #fff; background: #e5484d; border: 0; }
+.rs-btn.acc-lock-btn.is-danger:hover:not(:disabled) { background: #c4343a; }
+
 @media (max-width: 767.98px) {
   .hr-info { grid-template-columns: minmax(0, 1fr); }
   .hr-filter { width: 100%; }
+}
+
+// ---- ຂໍ້ມູນບໍລິສັດ (CompanyPage) — ຟອມໃນໜ້າ (ບໍ່ແມ່ນ modal): ໃຊ້ບັດຂັ້ນຕອນ .acc-book-step ຄືຟອມພະນັກງານ
+// ຈຶ່ງປະກາດຕົວແປ ແລະ ກົດຂອງຊ່ອງປ້ອນທີ່ .acc-book-modal ມີໃຫ້ເອງ ----
+.hr-company {
+  --book-accent: #0b8a6a;
+  --book-accent-dark: #075c47;
+  --book-ink: #0f2a3d;
+  --book-muted: #6b7f90;
+  --book-line: #e6ecf1;
+  --book-field-h: 40px;
+  --rs-input-focus-border: var(--book-accent);
+  --rs-state-focus-shadow: 0 0 0 3px rgba(11, 138, 106, 0.14);
+  --rs-state-focus-outline: 3px solid rgba(11, 138, 106, 0.14);
+
+  width: 100%;
+  max-width: 1080px;
+
+  .acc-book-main { padding: 0; }
+  .rs-form-stack { display: block; }
+  .rs-form-group { width: auto; margin: 0 !important; }
+
+  .form-label {
+    display: block;
+    width: auto;
+    margin-bottom: 6px;
+    color: #3d5266;
+    font-size: 13px !important;
+    font-weight: 600;
+  }
+
+  .rs-input,
+  .rs-picker-toggle,
+  .rs-input-group { min-height: var(--book-field-h); border-radius: 10px; }
+  .rs-input-group .rs-input { border-radius: 9px; }
+  .rs-input-group-addon { color: var(--book-muted); font-weight: 700; }
+  .rs-input-group-addon i { font-size: 12px; }
+
+  .rs-form-error-message-wrapper { top: -25px; bottom: auto; inset-inline-start: auto; inset-inline-end: 0; }
+  .rs-form-error-message { position: static; padding: 0; border: 0; background: none; filter: none; color: #e5484d; font-size: 12px; }
+  .rs-form-error-message-arrow { display: none; }
+}
+
+.hr-profile-fields > .is-wide { grid-column: 1 / -1; }
+
+// ໂລໂກ້ — ສີ່ຫຼ່ຽມມົນ, ສະແດງເຕັມຮູບ (contain) ບໍ່ຕັດຂອບ
+.hr-photo-circle.is-logo {
+  border-radius: 24px;
+
+  img { padding: 10px; background: #fff; object-fit: contain; }
+}
+
+.hr-map-wrap {
+  overflow: hidden;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+}
+
+// isolation — z-index ຂອງ leaflet (400–1000) ບໍ່ທັບ dropdown ຂອງ rsuite / ໜ້າຕ່າງອື່ນ
+.hr-map {
+  position: relative;
+  z-index: 0;
+  height: 360px;
+  isolation: isolate;
+  background: #eef3f6;
+  font-family: inherit;
+}
+
+// ຄົ້ນຫາສະຖານທີ່ — ຢູ່ເທິງແຜນທີ່, ຜົນຄົ້ນຫາເປັນລາຍການລອຍທັບແຜນທີ່
+.hr-map-search {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: #f8fbfd;
+  border-bottom: 1px solid var(--book-line);
+
+  > .rs-input-group { flex: 1 1 auto; min-width: 0; }
+}
+
+.acc-rp-btn.hr-map-search-btn { height: 40px; flex: none; }
+
+.hr-map-results {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 10px;
+  left: 10px;
+  z-index: 5;
+  max-height: 280px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(15, 42, 61, 0.2);
+
+  button {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    text-align: start;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+
+    &:hover,
+    &:focus-visible { background: #f1faf6; }
+
+    > i { margin-top: 3px; color: #e5484d; }
+    > span { min-width: 0; }
+    b { display: block; color: var(--book-ink); font-size: 13px; }
+    small { display: block; overflow: hidden; color: #7b8a97; font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .is-empty { padding: 10px; color: #7b8a97; font-size: 12.5px; }
+}
+
+.hr-map-stage { position: relative; }
+
+// ສະຫຼັບ ດາວທຽມ ↔ ແຜນທີ່ — ມຸມຂວາເທິງຂອງແຜນທີ່
+.hr-map-base {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(15, 42, 61, 0.25);
+
+  button {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    color: #3d5266;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+
+    &:hover:not(.is-active) { background: #f1f5f8; }
+    &.is-active { color: #fff; background: var(--book-accent); }
+  }
+}
+
+.hr-map-pin {
+  background: none;
+  border: 0;
+
+  i {
+    display: block;
+    color: #e5484d;
+    font-size: 36px;
+    line-height: 40px;
+    text-align: center;
+    filter: drop-shadow(0 3px 3px rgba(15, 42, 61, 0.35));
+  }
+}
+
+.hr-map-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8fbfd;
+  border-top: 1px solid var(--book-line);
+
+  > span { color: #6b7f90; font-size: 12px; }
+  > span i { margin-right: 4px; color: var(--book-accent); }
+}
+
+.hr-field-hint { display: block; margin-top: 6px; color: #7b8a97; font-size: 12px; line-height: 1.5; }
+
+// ວັນໃນອາທິດ — ກົດເພື່ອສະຫຼັບ ມື້ເຮັດວຽກ (ຂຽວ) ↔ ວັນພັກ (ສົ້ມ)
+.hr-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+
+  > button,
+  > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    color: #0b6b53;
+    background: #f1faf6;
+    border: 1px solid #cdeadf;
+    border-radius: 12px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    > i { font-size: 15px; }
+    > span { display: flex; flex-direction: column; align-items: center; line-height: 1.3; }
+    b { font-size: 12.5px; }
+    small { color: inherit; font-size: 11px; opacity: 0.8; }
+
+    &:hover:not(:disabled) { border-color: var(--book-accent); }
+    &:disabled { cursor: default; }
+
+    &.is-off { color: #8a4b04; background: #fff4dc; border-color: #f5d79b; }
+    &.is-off:hover:not(:disabled) { border-color: #e0a641; }
+  }
+}
+
+// ---- ທີ່ຕັ້ງແບບຫຍໍ້ (LocationPreview) — ຮູບດາວທຽມນິ່ງ + ໝຸດ + ວົງມົນ, ຂໍ້ມູນ ແລະ ປຸ່ມ ທາງຂວາ ----
+.hr-loc {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.hr-loc-thumb {
+  position: relative;
+  display: grid;
+  width: 260px;
+  flex: none;
+  aspect-ratio: 480 / 300;
+  place-items: center;
+  overflow: hidden;
+  color: #9fb3c2;
+  background: #eef3f6;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+  font-size: 34px;
+
+  img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  &.is-empty { border-style: dashed; }
+}
+
+.hr-loc-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
+  background: rgba(22, 199, 154, 0.18);
+  border: 2px solid #16c79a;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// ປາຍລຸ່ມຂອງໝຸດຢູ່ກາງຮູບ (= ພິກັດ)
+.hr-loc-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #e5484d;
+  font-size: 30px;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 3px 3px rgba(15, 42, 61, 0.35));
+}
+
+.hr-loc-info {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+
+  dl { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+  dl > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; }
+  dt { color: #7b8a97; font-size: 12px; font-weight: 600; }
+  dd { margin: 0; color: var(--book-ink); font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+}
+
+.hr-loc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hr-loc-actions a.acc-rp-btn { text-decoration: none; }
+
+.acc-rp-btn.is-primary { color: #fff; background: var(--book-accent); border-color: var(--book-accent); }
+.acc-rp-btn.is-primary:hover:not(:disabled) { color: #fff; background: var(--book-accent-dark); border-color: var(--book-accent-dark); }
+
+// ---- Modal ແຜນທີ່ (LocationModal) ----
+.hr-map-modal {
+  .hr-map { height: 440px; }
+
+  .hr-map-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .rs-form-group.is-error .rs-input,
+  .rs-form-group.is-error .rs-input-group { border-color: #e5484d; }
+}
+
+// ---- ໜ້າສະແດງຂໍ້ມູນບໍລິສັດ (CompanyView) ----
+.hr-company-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f1faf6 100%);
+  border: 1px solid var(--book-line);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 42, 61, 0.04);
+
+  > .hr-company-save { flex: none; }
+}
+
+.hr-company-logo {
+  display: grid;
+  width: 84px;
+  height: 84px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  color: #604bd8;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 20px;
+  font-size: 32px;
+
+  img { width: 100%; height: 100%; padding: 8px; object-fit: contain; }
+}
+
+.hr-company-title {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+
+  h2 { margin: 0; color: var(--book-ink); font-size: 20px; font-weight: 800; line-height: 1.35; }
+  p { margin: 0; color: #3d5266; font-size: 14px; font-weight: 600; }
+  small { margin-top: 4px; color: #6b7f90; font-size: 12.5px; }
+  small i { margin-right: 4px; color: #e5484d; }
+}
+
+// ເບີໂທໃນຫົວໜ້າຂໍ້ມູນບໍລິສັດ — ກົດໂທໄດ້ (tel:)
+.hr-company-title .hr-company-phones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+
+  i { margin-right: 0; color: var(--book-accent); }
+  a { color: #3d5266; font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: none; }
+  a:hover { color: var(--book-accent); text-decoration: underline; }
+}
+
+// ໄລຍະຫ່າງມາຈາກ gap ຂອງ .acs-page — ຕັດ margin ຂອງ .acc-book-step + .acc-book-step
+.hr-company .acc-book-step.hr-company-card { margin: 0; }
+
+.hr-company-card-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  color: var(--book-accent);
+  background: #e7f5f0;
+  border: 1px solid #cdeadf;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.hr-company-hours {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 14px;
+
+  > div { display: flex; flex-direction: column; }
+  small { color: #6b7f90; font-size: 12px; font-weight: 600; }
+  b { color: var(--book-ink); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  > i { color: #9fb3c2; font-size: 18px; }
+}
+
+.hr-days.is-static > span { cursor: default; }
+
+.hr-company-updated { margin: 0; color: #7b8a97; font-size: 12px; text-align: end; }
+.hr-company-updated i { margin-right: 4px; }
+
+.hr-company-actions { display: flex; gap: 8px; }
+
+.rs-btn.hr-company-cancel {
+  min-width: 96px;
+  height: 40px;
+  color: #3d5266;
+  background: #fff;
+  border: 1px solid #d5dee6;
+  border-radius: 10px;
+  font-weight: 600;
+
+  &:hover:not(:disabled) { background: #f3f6f9; }
+}
+
+// ແຖບບັນທຶກ — ຕິດລຸ່ມໜ້າເວລາເລື່ອນ
+.hr-company-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px 10px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--book-line);
+  border-radius: 14px;
+  box-shadow: 0 -4px 16px rgba(15, 42, 61, 0.06);
+  backdrop-filter: blur(6px);
+
+  > span { color: #6b7f90; font-size: 12.5px; }
+  > span i { margin-right: 4px; }
+}
+
+.rs-btn.hr-company-save {
+  display: inline-flex;
+  min-width: 120px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  background: var(--book-accent);
+  border-radius: 10px;
+  font-weight: 700;
+
+  &:hover:not(:disabled) { background: var(--book-accent-dark); }
+}
+
+@media (max-width: 767.98px) {
+  .hr-days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hr-company-hero { flex-wrap: wrap; }
+  .hr-loc { flex-direction: column; align-items: stretch; }
+  .hr-loc-thumb { width: 100%; }
+  .hr-map-modal .hr-map { height: 320px; }
+  .hr-map-modal .hr-map-fields { grid-template-columns: minmax(0, 1fr); }
+  .hr-company-hero > .hr-company-save { width: 100%; }
+  .hr-map { height: 280px; }
+  .hr-map-search { flex-wrap: wrap; }
+  .hr-map-search-btn { width: 100%; justify-content: center; }
 }

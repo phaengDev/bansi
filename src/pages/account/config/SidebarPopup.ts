@@ -139,7 +139,7 @@ export const BUDGET_MENU: SidebarPopupGroup[] = [
   },
 ];
 
-/** ເມນູຂອງໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ຜູ້ໃຊ້ລະບົບ, ພະແນກ ແລະ ຕຳແໜ່ງ, ພະນັກງານ */
+/** ເມນູຂອງໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ຜູ້ໃຊ້ລະບົບ, ຂໍ້ມູນບໍລິສັດ, ພະແນກ ແລະ ຕຳແໜ່ງ, ພະນັກງານ */
 export const HR_MENU: SidebarPopupGroup[] = [
   {
     group: 'hrGroupSystem',
@@ -150,6 +150,7 @@ export const HR_MENU: SidebarPopupGroup[] = [
   {
     group: 'hrGroupOrg',
     items: [
+      { key: 'company', icon: 'fa-solid fa-building', label: 'hrCompany' },
       { key: 'departments', icon: 'fa-solid fa-sitemap', label: 'hrDepartmentsPositions' },
       { key: 'employees', icon: 'fa-solid fa-id-card', label: 'hrEmployees' },
     ],

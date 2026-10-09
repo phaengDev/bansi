@@ -3,18 +3,20 @@ import AppPage from '../../components/Elements/AppPage';
 import { useT } from '../../context/LanguageContext';
 import { HR_MENU, firstRailKey, toRailNav } from '../account/config/SidebarPopup';
 import UserPage from './UserPage';
+import CompanyPage from './CompanyPage';
 import DepartmentPage from './DepartmentPage';
 import EmployeePage from './EmployeePage';
 
 /** key ຂອງເມນູ (HR_MENU) → ໜ້າ */
 const HR_PAGES: Record<string, ReactNode> = {
   users: <UserPage />,
+  company: <CompanyPage />,
   departments: <DepartmentPage />,
   employees: <EmployeePage />,
 };
 
 /**
- * ໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ແຖບຊ້າຍ: ຜູ້ໃຊ້ລະບົບ, ພະແນກ ແລະ ຕຳແໜ່ງ, ພະນັກງານ.
+ * ໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ແຖບຊ້າຍ: ຜູ້ໃຊ້ລະບົບ, ຂໍ້ມູນບໍລິສັດ, ພະແນກ ແລະ ຕຳແໜ່ງ, ພະນັກງານ.
  * ເປືອກດຽວກັບໜ້າຕັ້ງຄ່າບັນຊີ (ຫົວ = ຊື່ເມນູທີ່ເລືອກ)
  */
 const HrWindow = () => {

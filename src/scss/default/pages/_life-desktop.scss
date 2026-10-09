@@ -240,9 +240,10 @@ $account-themes: (
 // taskbar's bottom-left corner instead — see .life-taskbar-left below.)
 .life-desktop-brand { position: relative; }
 
+// z 4: ເທິງພາບລວມ (.acc-glance z 3) ໃຫ້ເມນູຜູ້ໃຊ້ (ຕັ້ງຄ່າ / ອອກຈາກລະບົບ) ບໍ່ຖືກບັງ — ຍັງຢູ່ລຸ່ມໜ້າຕ່າງ (AppWindow z 12+)
 .life-desktop-toolbar {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: clamp(20px, 3.5vw, 52px);
   right: clamp(22px, 4vw, 64px);
   display: flex;
@@ -998,7 +999,8 @@ $account-themes: (
 // Filled rather than transparent: the taskbar itself is a light frosted bar, so a bare white icon
 // washed straight into it. The fill is the wallpaper theme's own dark chrome colour, so it stays
 // readable on every theme and reads as a real button next to the accent-filled home key.
-.life-taskbar-settings-btn {
+.life-taskbar-settings-btn,
+.life-taskbar-desktop-btn {
   display: grid;
   width: 40px;
   height: 40px;
@@ -1013,7 +1015,9 @@ $account-themes: (
 }
 
 .life-taskbar-settings-btn:hover,
-.life-taskbar-settings-btn:focus-visible {
+.life-taskbar-settings-btn:focus-visible,
+.life-taskbar-desktop-btn:hover:not(:disabled),
+.life-taskbar-desktop-btn:focus-visible {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.72);
   outline: none;
@@ -1029,6 +1033,13 @@ $account-themes: (
     0 0 0 2px rgba(94, 219, 255, 0.38),
     0 8px 18px rgba(0, 24, 70, 0.42);
   transform: translateY(-2px);
+}
+
+// ຫຍໍ້ໜ້າຕ່າງທັງໝົດ (ຂ້າງປຸ່ມຕັ້ງຄ່າ) — ບໍ່ມີໜ້າຕ່າງທີ່ເປີດຢູ່ = ຈາງລົງ ກົດບໍ່ໄດ້
+.life-taskbar-desktop-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+  box-shadow: none;
 }
 
 // Flyout list of settings — opens upward from the corner icon, same glass style as the other menus.
@@ -1591,6 +1602,12 @@ $account-themes: (
   button { font: inherit; cursor: pointer; }
 }
 
+.acc-glance.is-dragging {
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+
+  .acc-glance-head { cursor: grabbing; }
+}
+
 .acc-glance-pill {
   display: inline-flex;
   align-items: center;
@@ -1605,11 +1622,15 @@ $account-themes: (
   &:hover { background: rgba(6, 26, 30, 0.62); }
 }
 
+// ຫົວພາບລວມ = ບ່ອນຈັບລາກ (useGlanceDrag)
 .acc-glance-head {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 0 2px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
 
   > span { flex: 1 1 auto; min-width: 0; }
   b { display: block; font-size: 15px; font-weight: 700; }
@@ -1665,6 +1686,10 @@ $account-themes: (
   &.is-emerald { --glance-tone: #6ee7b7; --glance-tone-bg: rgba(52, 211, 153, 0.2); }
   &.is-gold { --glance-tone: #fcd34d; --glance-tone-bg: rgba(251, 191, 36, 0.2); }
   &.is-coral { --glance-tone: #fda4af; --glance-tone-bg: rgba(251, 113, 133, 0.2); }
+  &.is-violet { --glance-tone: #c4b5fd; --glance-tone-bg: rgba(167, 139, 250, 0.2); }
+
+  // ບັດກວ້າງເຕັມແຖວ (ງົບປະມານ)
+  &.is-wide { grid-column: 1 / -1; min-height: 0; }
 }
 
 .acc-glance-card-head {
@@ -1749,6 +1774,88 @@ $account-themes: (
   .is-warn { color: #fde68a; background: rgba(251, 191, 36, 0.18); }
   .is-good { color: #a7f3d0; background: rgba(52, 211, 153, 0.16); }
 }
+
+// ---- ບັດງົບປະມານ: ຍອດໃຊ້ / ງົບ + % (ສີຕາມສະຖານະ), ແຖບຄວາມຄືບໜ້າ, ໝວດທີ່ໃຊ້ຫຼາຍສຸດ ----
+.acc-glance-budget-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  > .acc-glance-money { flex: 1 1 auto; }
+}
+
+.acc-glance-pct {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #a7f3d0;
+  background: rgba(52, 211, 153, 0.16);
+
+  &.is-near,
+  &.is-full { color: #fde68a; background: rgba(251, 191, 36, 0.18); }
+  &.is-over { color: #fecaca; background: rgba(248, 113, 113, 0.22); }
+}
+
+// ແຖບຄວາມຄືບໜ້າ — i = ໃຊ້ໄປແລ້ວ, u = ເຄື່ອງໝາຍຕາມແຜນຮອດມື້ນີ້
+.acc-glance-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+
+  > i {
+    display: block;
+    height: 100%;
+    max-width: 100%;
+    background: #34d399;
+    border-radius: 6px;
+    transition: width 400ms ease;
+
+    &.is-near,
+    &.is-full { background: #fbbf24; }
+    &.is-over { background: #f87171; }
+  }
+
+  > u {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    margin-left: -1px;
+    background: #fff;
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.acc-glance-budget-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  > span {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  small { overflow: hidden; color: rgba(255, 255, 255, 0.75); font-size: 11.5px; white-space: nowrap; text-overflow: ellipsis; }
+  .acc-glance-bar { height: 5px; }
+  em { color: #a7f3d0; font-size: 11px; font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  em.is-near,
+  em.is-full { color: #fde68a; }
+  em.is-over { color: #fecaca; }
+}
+
+.acc-glance-chips .is-muted { color: rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.08); }
 
 .acc-glance-muted {
   color: rgba(255, 255, 255, 0.62);

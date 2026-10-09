@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import moment from 'moment';
 import { formatNumber, getApi, postApi } from '../../utils/configApi';
 import { useT } from '../../context/LanguageContext';
@@ -7,6 +7,7 @@ import { currencySymbol } from './ledger/currency';
 import { CASH_CLASS_CODE } from './journal/journalKit';
 import type { PartnerDoc } from './arap/arapApi';
 import { isNotReady, type Balance, type ChartAccount } from './gl/glApi';
+import { percentOf, percentText, planToDate, statusOf, type BudgetData } from './budget/budgetApi';
 import { useAccountMenusLoaded, type AccountMenu } from './accountMenus';
 import type { ShortcutId } from './DesktopShared';
 
@@ -22,12 +23,27 @@ type CashSummary = {
 type MonthSummary = { revenue: number; expense: number; prevRevenue: number; prevExpense: number; todayIn: number; todayOut: number } | null;
 type DebtDoc = { id: number; number: string; partner: string; due: string; days: number; amount: number };
 type DebtSummary = { total: number; docs: number; partners: number; overdue: DebtDoc[]; dueSoon: DebtDoc[] };
+type BudgetLine = { id: number; name: string; amount: number; used: number };
+/** null = ບໍ່ມີງົບທີ່ດຳເນີນງານ (ບໍ່ມີປີການເງິນ / ປີປິດບັນຊີແລ້ວ / ຍັງບໍ່ໄດ້ຕັ້ງງົບ) → ບໍ່ສະແດງບັດ */
+type BudgetSummary = {
+  name: string;
+  total: number;
+  used: number;
+  /** ງົບທີ່ຄວນໃຊ້ໄປແລ້ວຮອດມື້ນີ້ (ເຄື່ອງໝາຍ "ຕາມແຜນ" ເທິງແຖບ) */
+  plan: number;
+  lines: number;
+  over: number;
+  near: number;
+  /** ໝວດທີ່ໃຊ້ໄປຫຼາຍສຸດ (% ຂອງງົບ) */
+  top: BudgetLine[];
+} | null;
 
 type Glance = {
   cash?: CashSummary | Failed;
   month?: MonthSummary | Failed;
   ar?: DebtSummary | Failed;
   ap?: DebtSummary | Failed;
+  budget?: BudgetSummary | Failed;
   at: Date;
 };
 
@@ -35,9 +51,19 @@ type Glance = {
 const DUE_SOON_DAYS = 7;
 /** ລາຍການ "ຕ້ອງຕິດຕາມ" ທີ່ສະແດງ (ທີ່ເຫຼືອບອກເປັນຈຳນວນ) */
 const MAX_TODO = 5;
+/** ໝວດງົບທີ່ສະແດງໃນບັດງົບປະມານ */
+const MAX_BUDGET_LINES = 3;
+/** ປີການເງິນທີ່ປິດບັນຊີແລ້ວ — ງົບຂອງປີນີ້ບໍ່ສະແດງ */
+const FISCAL_CLOSED = 2;
 /** ໂຫຼດໃໝ່ເອງທຸກໆ 1 ນາທີ (ສະເພາະຕອນເບິ່ງ tab ນີ້ຢູ່) */
 const AUTO_REFRESH_MS = 60_000;
 const HIDDEN_KEY = 'accountGlanceHidden';
+/** ຕຳແໜ່ງທີ່ລາກໄປວາງ (px ຈາກມຸມຊ້າຍເທິງຂອງ desktop) — ບໍ່ມີ = ບ່ອນເດີມ (ຂວາ ໃຕ້ບັດຜູ້ໃຊ້) */
+const POSITION_KEY = 'accountGlancePosition';
+/** ໄລຍະຫ່າງຈາກຂອບ desktop ທີ່ລາກໄປໄດ້ສຸດ; ລຸ່ມສຸດເຫຼືອບ່ອນໃຫ້ taskbar + ພາບລວມຢ່າງໜ້ອຍ MIN_VISIBLE */
+const EDGE = 8;
+const TASKBAR_GAP = 72;
+const MIN_VISIBLE = 140;
 const BASE = '₭';
 
 const failOf = (error: unknown): Failed => (isNotReady(error) ? 'notReady' : 'error');
@@ -121,6 +147,37 @@ const loadDebt = async (kind: 1 | 2): Promise<DebtSummary> => {
   };
 };
 
+/**
+ * ງົບປະມານລາຍຈ່າຍຂອງປີການເງິນປັດຈຸບັນ (backend ເລືອກປີໃຫ້) — ສະເພາະປີທີ່ຍັງດຳເນີນງານ:
+ * ບໍ່ມີປີ (404), ປີປິດບັນຊີແລ້ວ ຫຼື ຍັງບໍ່ໄດ້ຕັ້ງງົບ = null (ບໍ່ສະແດງ)
+ */
+const loadBudget = async (): Promise<BudgetSummary> => {
+  let budget: BudgetData | undefined;
+  try {
+    budget = (await postApi('/budget/fetch', {})).data;
+  } catch (error) {
+    if ((error as { response?: { status?: number } })?.response?.status === 404) return null;
+    throw error;
+  }
+  if (!budget?.fiscal || Number(budget.fiscal.status) === FISCAL_CLOSED || !budget.data.length) return null;
+  const rows = budget.data;
+  const statuses = rows.map((r) => statusOf(r.amount, r.actual));
+  return {
+    name: budget.fiscal.fiscal_name || budget.fiscal.fiscal_code,
+    total: rows.reduce((n, r) => n + r.amount, 0),
+    used: rows.reduce((n, r) => n + r.actual, 0),
+    plan: rows.reduce((n, r) => n + planToDate(r, budget.fiscal), 0),
+    lines: rows.length,
+    over: statuses.filter((s) => s === 'over').length,
+    near: statuses.filter((s) => s === 'near').length,
+    top: rows
+      .filter((r) => r.actual > 0)
+      .sort((a, b) => percentOf(b.amount, b.actual) - percentOf(a.amount, a.actual))
+      .slice(0, MAX_BUDGET_LINES)
+      .map((r) => ({ id: r._uuid, name: r.category?.type_name ?? '', amount: r.amount, used: r.actual })),
+  };
+};
+
 const settle = <T,>(enabled: boolean, load: () => Promise<T>) =>
   enabled ? load().catch((error): Failed => failOf(error)) : Promise.resolve(undefined);
 
@@ -148,12 +205,105 @@ export const useGlanceHidden = () => {
   return [hidden, update] as const;
 };
 
+type Point = { x: number; y: number };
+
+const readPosition = (): Point | null => {
+  try {
+    const value = JSON.parse(localStorage.getItem(POSITION_KEY) ?? 'null');
+    return value && Number.isFinite(value.x) && Number.isFinite(value.y) ? { x: value.x, y: value.y } : null;
+  } catch {
+    return null;
+  }
+};
+
+const savePosition = (point: Point | null) => {
+  try {
+    if (point) localStorage.setItem(POSITION_KEY, JSON.stringify(point));
+    else localStorage.removeItem(POSITION_KEY);
+  } catch {
+    // storage ຖືກປິດ — ຈື່ສະເພາະໃນໜ້ານີ້
+  }
+};
+
+/**
+ * ລາກພາບລວມໄປວາງບ່ອນໃດກໍໄດ້ໃນ desktop (ຈັບທີ່ຫົວ) — ຈື່ໄວ້ໃນ browser ນີ້, ກົດສອງເທື່ອທີ່ຫົວ = ກັບບ່ອນເດີມ.
+ * ຢູ່ໃນຂອບ desktop ສະເໝີ (ຈໍປ່ຽນຂະໜາດກໍ່ດຶງກັບເຂົ້າມາ)
+ */
+const useGlanceDrag = () => {
+  const panelRef = useRef<HTMLElement>(null);
+  const dragRef = useRef<{ pointerId: number; dx: number; dy: number; last: Point | null } | null>(null);
+  const [position, setPosition] = useState<Point | null>(readPosition);
+  const [dragging, setDragging] = useState(false);
+
+  const clamp = useCallback((point: Point): Point => {
+    const panel = panelRef.current;
+    const stage = panel?.offsetParent as HTMLElement | null;
+    if (!panel || !stage) return point;
+    const maxX = Math.max(EDGE, stage.clientWidth - panel.offsetWidth - EDGE);
+    const maxY = Math.max(EDGE, stage.clientHeight - TASKBAR_GAP - MIN_VISIBLE);
+    return { x: Math.round(Math.min(Math.max(point.x, EDGE), maxX)), y: Math.round(Math.min(Math.max(point.y, EDGE), maxY)) };
+  }, []);
+
+  // desktop ປ່ຽນຂະໜາດ → ດຶງພາບລວມກັບເຂົ້າມາໃນຂອບ
+  useEffect(() => {
+    const stage = panelRef.current?.offsetParent;
+    if (!stage) return;
+    const observer = new ResizeObserver(() => setPosition((prev) => {
+      if (!prev) return prev;
+      const next = clamp(prev);
+      return next.x === prev.x && next.y === prev.y ? prev : next;
+    }));
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [clamp]);
+
+  const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    const panel = panelRef.current;
+    if (event.button !== 0 || !panel || (event.target as HTMLElement).closest('button')) return;
+    dragRef.current = { pointerId: event.pointerId, dx: event.clientX - panel.offsetLeft, dy: event.clientY - panel.offsetTop, last: null };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  };
+
+  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    drag.last = clamp({ x: event.clientX - drag.dx, y: event.clientY - drag.dy });
+    setPosition(drag.last);
+  };
+
+  const onPointerUp = (event: PointerEvent<HTMLElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (drag.last) savePosition(drag.last);
+    dragRef.current = null;
+    setDragging(false);
+  };
+
+  const reset = () => {
+    setPosition(null);
+    savePosition(null);
+  };
+
+  const style = position
+    ? { left: position.x, top: position.y, right: 'auto', maxHeight: `calc(100% - ${position.y}px - ${TASKBAR_GAP}px)` }
+    : undefined;
+
+  return {
+    panelRef,
+    dragging,
+    style,
+    handle: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onDoubleClick: reset },
+  };
+};
+
 type Todo = { key: string; tone: 'danger' | 'warn'; icon: string; title: string; sub: string; amount: string; target: ShortcutId };
 
 /**
- * ພາບລວມສິ່ງທີ່ຕ້ອງຮູ້ທັນທີ ຢູ່ຂວາຂອງ desktop: ເງິນທີ່ມີ, ກຳໄລເດືອນນີ້, ລູກໜີ້ ແລະ ເຈົ້າໜີ້ຄ້າງ + ລາຍການຕ້ອງຕິດຕາມ.
+ * ພາບລວມສິ່ງທີ່ຕ້ອງຮູ້ທັນທີ ຢູ່ຂວາຂອງ desktop: ເງິນທີ່ມີ, ກຳໄລເດືອນນີ້, ລູກໜີ້ ແລະ ເຈົ້າໜີ້ຄ້າງ,
+ * ງົບປະມານທີ່ກຳລັງດຳເນີນງານ (ປີປິດບັນຊີແລ້ວ ບໍ່ສະແດງ) + ລາຍການຕ້ອງຕິດຕາມ.
  * ແຕ່ລະບັດຜູກກັບເມນູຂອງມັນ: ບໍ່ມີເມນູ = ບໍ່ສະແດງ, ເມນູລັອກ = ບໍ່ດຶງຂໍ້ມູນ (ກົດແລ້ວຖາມລະຫັດ), ກົດບັດ = ເປີດເມນູນັ້ນ.
- * ໂຫຼດໃໝ່: ປິດໜ້າຕ່າງ, ທຸກ 1 ນາທີ ຫຼື ກົດປຸ່ມ
+ * ໂຫຼດໃໝ່: ປິດໜ້າຕ່າງ, ທຸກ 1 ນາທີ ຫຼື ກົດປຸ່ມ. ລາກທີ່ຫົວເພື່ອຍ້າຍ (useGlanceDrag)
  */
 const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   menus: AccountMenu[];
@@ -167,6 +317,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   const [loading, setLoading] = useState(false);
   const [tick, setTick] = useState(0);
   const lastWindows = useRef(openWindows);
+  const { panelRef, dragging, style, handle } = useGlanceDrag();
 
   const accessOf = (id: ShortcutId): Access => {
     const menu = menus.find((m) => m.id === id);
@@ -177,6 +328,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     month: accessOf('financialStatements'),
     ar: accessOf('receivables'),
     ap: accessOf('payables'),
+    budget: accessOf('budget'),
   };
   const accessKey = Object.values(access).join('|');
 
@@ -185,16 +337,17 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   useEffect(() => {
     if (!menusLoaded) return;
     let cancelled = false;
-    const [cash, month, ar, ap] = accessKey.split('|').map((a) => a === 'open');
+    const [cash, month, ar, ap, budget] = accessKey.split('|').map((a) => a === 'open');
     setLoading(true);
     Promise.all([
       settle(cash, loadCash),
       settle(month, loadMonth),
       settle(ar, () => loadDebt(1)),
       settle(ap, () => loadDebt(2)),
-    ]).then(([c, m, r, p]) => {
+      settle(budget, loadBudget),
+    ]).then(([c, m, r, p, b]) => {
       if (cancelled) return;
-      setData({ cash: c, month: m, ar: r, ap: p, at: new Date() });
+      setData({ cash: c, month: m, ar: r, ap: p, budget: b, at: new Date() });
       setLoading(false);
     });
     return () => {
@@ -218,11 +371,11 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   const muted = (text: string, icon = 'fa-circle-info') => <span className="acc-glance-muted"><i className={`fa-solid ${icon}`} /> {text}</span>;
   const failedText = (value: Failed) => muted(t(value === 'notReady' ? 'glanceNotReady' : 'glanceError'), 'fa-triangle-exclamation');
 
-  const card = (id: ShortcutId, key: keyof typeof access, tone: string, icon: string, title: string, body: () => ReactNode) => {
+  const card = (id: ShortcutId, key: keyof typeof access, tone: string, icon: string, title: string, body: () => ReactNode, wide = false) => {
     if (access[key] === 'none') return null;
     const value = data?.[key];
     return (
-      <button type="button" className={`acc-glance-card is-${tone}`} onClick={() => openShortcut(id)}>
+      <button type="button" className={`acc-glance-card is-${tone}${wide ? ' is-wide' : ''}`} onClick={() => openShortcut(id)}>
         <span className="acc-glance-card-head">
           <span className="acc-glance-card-icon"><i className={`fa-solid ${icon}`} /></span>
           <span className="acc-glance-card-title">{title}</span>
@@ -305,6 +458,48 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     );
   };
 
+  /** ງົບ: ໃຊ້ໄປແລ້ວ / ງົບທັງໝົດ, ແຖບຄວາມຄືບໜ້າ (ເຄື່ອງໝາຍ = ຕາມແຜນຮອດມື້ນີ້), ໝວດທີ່ໃຊ້ຫຼາຍສຸດ ແລະ ຈຳນວນທີ່ຕ້ອງລະວັງ */
+  const budgetBody = () => {
+    const budget = data?.budget as NonNullable<BudgetSummary>;
+    const status = statusOf(budget.total, budget.used);
+    const planPct = budget.total > 0 ? Math.min(100, (budget.plan / budget.total) * 100) : 0;
+    const bar = (amount: number, used: number, plan?: number) => (
+      <span className="acc-glance-bar">
+        <i className={`is-${statusOf(amount, used)}`} style={{ width: `${Math.min(100, percentOf(amount, used))}%` }} />
+        {!!plan && <u style={{ left: `${plan}%` }} title={t('glanceBudgetPlan')} />}
+      </span>
+    );
+    return (
+      <>
+        <span className="acc-glance-budget-head">
+          <span className="acc-glance-money">
+            <b>{money(BASE, budget.used)}</b>
+            <small>{t('glanceBudgetOf')} {money(BASE, budget.total)} · {t('budgetRemaining')} {formatNumber(Math.round(budget.total - budget.used))}</small>
+          </span>
+          <em className={`acc-glance-pct is-${status}`}>{percentText(budget.total, budget.used)}</em>
+        </span>
+        {bar(budget.total, budget.used, planPct)}
+        {!!budget.top.length && (
+          <span className="acc-glance-budget-lines">
+            {budget.top.map((line) => (
+              <span key={line.id}>
+                <small>{line.name}</small>
+                {bar(line.amount, line.used)}
+                <em className={`is-${statusOf(line.amount, line.used)}`}>{percentText(line.amount, line.used)}</em>
+              </span>
+            ))}
+          </span>
+        )}
+        <span className="acc-glance-chips">
+          {!!budget.over && <em className="is-bad"><i className="fa-solid fa-circle-exclamation" /> {t('glanceBudgetOver')} {budget.over}</em>}
+          {!!budget.near && <em className="is-warn"><i className="fa-solid fa-triangle-exclamation" /> {t('glanceBudgetNear')} {budget.near}</em>}
+          {!budget.over && !budget.near && <em className="is-good"><i className="fa-solid fa-circle-check" /> {t('glanceBudgetOk')}</em>}
+          <em className="is-muted">{budget.lines} {t('glanceBudgetLines')}</em>
+        </span>
+      </>
+    );
+  };
+
   // ---- ຕ້ອງຕິດຕາມ: ເກີນກຳນົດ (ແດງ) ກ່ອນ ແລ້ວໃກ້ຮອດກຳນົດ (ເຫຼືອງ) ----
   const todos: Todo[] = [];
   const daysText = (d: DebtDoc) => (d.days > 0
@@ -331,8 +526,8 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   const anyOpen = Object.values(access).some((a) => a === 'open');
 
   return (
-    <aside className="acc-glance" aria-label={t('glanceTitle')}>
-      <header className="acc-glance-head">
+    <aside ref={panelRef} className={`acc-glance${dragging ? ' is-dragging' : ''}`} style={style} aria-label={t('glanceTitle')}>
+      <header className="acc-glance-head" title={t('glanceDragHint')} {...handle}>
         <span>
           <b>{t('glanceTitle')}</b>
           <small>
@@ -352,6 +547,9 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
         {card('financialStatements', 'month', 'emerald', 'fa-chart-pie', `${t('glanceMonth')} ${moment().format('MM/YYYY')}`, monthBody)}
         {card('receivables', 'ar', 'gold', 'fa-hand-holding-dollar', t('glanceAr'), debtBody('ar'))}
         {card('payables', 'ap', 'coral', 'fa-file-invoice-dollar', t('glanceAp'), debtBody('ap'))}
+        {/* ງົບ: ບໍ່ມີງົບທີ່ດຳເນີນງານ (null) → ບໍ່ສະແດງບັດ */}
+        {data?.budget !== null && card('budget', 'budget', 'violet', 'fa-bullseye',
+          `${t('accountAppBudget')}${data?.budget && !isFailed(data.budget) ? ` ${data.budget.name}` : ''}`, budgetBody, true)}
       </div>
 
       {anyOpen && data && (

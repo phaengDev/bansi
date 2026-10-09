@@ -120,6 +120,13 @@ const AccountShell: React.FC = () => {
     calendar: calendarWindow,
     settings: settingsWindow,
   };
+  // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop
+  const shownWindows = Object.values(popupWindows).filter((popup) => popup?.open && !popup.minimized);
+  const minimizeAll = () => {
+    setStartOpen(false);
+    setSettingsMenuOpen(false);
+    shownWindows.forEach((popup) => popup?.windowRef.current?.minimize());
+  };
   // Shared minimize/maximize/restore/close labels for every <AppWindow> popup in this shell.
   const windowLabels = {
     minimize: t('lifeWindowMinimize'),
@@ -526,6 +533,16 @@ const AccountShell: React.FC = () => {
             </div>
           )}
           </div>
+          <button
+            type="button"
+            className="life-taskbar-desktop-btn"
+            disabled={!shownWindows.length}
+            onClick={minimizeAll}
+            title={t('lifeShowDesktop')}
+            aria-label={t('lifeShowDesktop')}
+          >
+            <i className="fa-solid fa-desktop" aria-hidden="true" />
+          </button>
         </div>
 
         <div className="life-taskbar-apps is-center">

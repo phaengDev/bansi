@@ -181,8 +181,8 @@ const EmployeePage = () => {
       )}
       {viewing && (
         <EmployeeDetail employee={viewing} onClose={() => setViewing(null)} onChanged={reload}
-          onEdit={() => {
-            setEditing(viewing);
+          onEdit={(current) => {
+            setEditing(current);
             setViewing(null);
           }}
         />

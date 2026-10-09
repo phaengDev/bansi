@@ -99,6 +99,66 @@ export type Employee = EmployeeRef & {
   user: { user_uuid: number; user_name: string; phones: string; status: number } | null;
 };
 
+/** "17.9757, 102.6331" — ພິກັດທີ່ສຳເນົາຈາກ Google Maps (ກົດຂວາທີ່ຈຸດ) → [, lat, lng] */
+export const LAT_LNG = /^\s*(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/;
+
+/** ໄລຍະສະແກນ (ແມັດ) — ກົງກັບ companyController ຂອງ api-bansi */
+export const MIN_RADIUS = 10;
+export const MAX_RADIUS = 1000;
+
+/** ຂໍ້ຄວາມ → ພິກັດ (|ຄ່າ| ≤ limit: 90 = latitude, 180 = longitude); ຫວ່າງ / ຜິດ = null */
+export const parseCoord = (value: unknown, limit: number) => {
+  const text = String(value ?? '').trim();
+  const n = Number(text);
+  return text && Number.isFinite(n) && Math.abs(n) <= limit ? n : null;
+};
+
+export const fixedCoord = (n: number) => n.toFixed(7);
+
+/**
+ * ຮູບດາວທຽມນິ່ງ (Esri World Imagery export, ຟຣີ) ກວ້າງ widthMeters ແມັດ ມີຈຸດຢູ່ກາງ — ຂະໜາດ 480×300.
+ * ຄິດ bbox ເປັນ Web Mercator (ແມັດໃນແຜນທີ່ = ແມັດແທ້ ÷ cos(lat))
+ */
+export const satelliteSnapshot = (lat: number, lng: number, widthMeters: number) => {
+  const R = 6378137;
+  const x = R * (lng * Math.PI / 180);
+  const y = R * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2));
+  const w = widthMeters / Math.cos(lat * Math.PI / 180);
+  const h = w * (300 / 480);
+  const bbox = [x - w / 2, y - h / 2, x + w / 2, y + h / 2].map((v) => v.toFixed(2)).join(',');
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=3857&imageSR=3857&size=480,300&format=jpg&f=image`;
+};
+
+/**
+ * ຂໍ້ມູນບໍລິສັດ (GET/PUT /company, ແຖວດຽວ) — ພິກັດ + scan_radius (ແມັດ) = ຂອບເຂດສະແກນເຂົ້າ-ອອກວຽກ.
+ * ທີ່ຢູ່ເກັບແຕ່ district_id — ແຂວງມາກັບເມືອງ (district.province)
+ */
+export type Company = {
+  _uuid: number;
+  name_la: string;
+  name_en: string | null;
+  logo_url: string | null;
+  phone1: string | null;
+  phone2: string | null;
+  district_id: number | null;
+  village: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  scan_radius: number;
+  /** "HH:mm" */
+  work_start: string;
+  work_end: string;
+  /** ວັນພັກປະຈຳອາທິດ — 0 ອາທິດ … 6 ເສົາ (Date.getDay()) */
+  days_off: number[];
+  district?: {
+    _uuid: number;
+    district_name: string;
+    province_id: number;
+    province?: { _uuid: number; province_name: string } | null;
+  } | null;
+  updatedAt: string;
+};
+
 export const fullName = (e: Pick<EmployeeRef, 'first_name' | 'last_name'> | null | undefined) =>
   e ? [e.first_name, e.last_name].filter(Boolean).join(' ') : '';
 
