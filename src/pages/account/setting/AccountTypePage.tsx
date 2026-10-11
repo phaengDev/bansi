@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Input, InputGroup, Loader } from 'rsuite';
+import { Loader } from 'rsuite';
 import { deleteApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
@@ -9,6 +9,7 @@ import { useT } from '../../../context/LanguageContext';
 import type { AccountClass } from './AccountClassForm';
 import AccountTypeForm, { type AccountType } from './AccountTypeForm';
 import { toneOf } from './accountTone';
+import { SearchBox } from './settingKit';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -158,15 +159,7 @@ const AccountTypePage = () => {
       {/* ---- ແຜງກັ່ນຕອງ ---- */}
       <div className="acc-type-filters">
         <div className="acc-type-filter-top">
-          <InputGroup inside className="acc-type-search">
-            <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-            <Input placeholder={t('accountTypeSearch')} value={keyword} onChange={setKeyword} />
-            {keyword && (
-              <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-                <i className="fa-solid fa-xmark" />
-              </InputGroup.Button>
-            )}
-          </InputGroup>
+          <SearchBox value={keyword} onChange={setKeyword} placeholder={t('accountTypeSearch')} grow />
           <div className="acc-type-segment" role="tablist">
             {statusTabs.map((s) => (
               <button key={s.key} type="button" role="tab" aria-selected={status === s.key}

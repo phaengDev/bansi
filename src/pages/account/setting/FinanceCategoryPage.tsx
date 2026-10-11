@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
-import { Form, Input, InputGroup, Loader, Textarea, Toggle } from 'rsuite';
+import { Form, Loader, Textarea, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { InputField } from '../../../utils/inputFields';
 import { createModel, requiredField } from '../../../utils/validate';
 import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
-import { FormSection, SettingModal } from './settingKit';
+import { FormSection, SearchBox, SettingModal } from './settingKit';
 import { nextCode, runSave, saveSetting, useSettingList } from './settingApi';
 
 /** 1 = ປະເພດລາຍຮັບ, 2 = ປະເພດລາຍຈ່າຍ (tbl_finance_categories.typestatus) */
@@ -168,15 +168,7 @@ const FinanceCategoryPage = ({ kind }: { kind: Kind }) => {
 
       {/* ---- ຄົ້ນຫາ + ສະຖານະ ---- */}
       <div className="acc-fc-toolbar">
-        <InputGroup inside className="acc-type-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={t('accountTypeSearch')} value={keyword} onChange={setKeyword} />
-          {keyword && (
-            <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-              <i className="fa-solid fa-xmark" />
-            </InputGroup.Button>
-          )}
-        </InputGroup>
+        <SearchBox value={keyword} onChange={setKeyword} placeholder={t('accountTypeSearch')} grow />
         <div className="acc-type-segment" role="tablist">
           {statusTabs.map((s) => (
             <button key={s.key} type="button" role="tab" aria-selected={status === s.key}

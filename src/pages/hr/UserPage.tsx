@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Checkbox, Form, Schema } from 'rsuite';
+import { Checkbox, Form, Schema, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { InputField } from '../../utils/inputFields';
 import { deleteApi, putApi } from '../../utils/configApi';
@@ -8,19 +8,12 @@ import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import { useEmployees, useUserTypes, type EmployeeOption } from '../../utils/selectOption';
-import {
-  CardAction, 
-  ChoiceTiles, 
-  FormSection, 
-  ListState, 
-  MetaChip, 
-  PickerField, 
-  SettingCard, 
-  SettingModal, 
-  SettingToolbar,
-} from '../account/setting/settingKit';
+import { ChoiceTiles, FormSection, ListState, PickerField, SettingModal, SettingToolbar } from '../account/setting/settingKit';
 import { runSave, saveSetting, useStatusToggle } from '../account/setting/settingApi';
-import { ALLOW, DENY, PERMISSIONS, fullName, selfId, useHrList, type PermissionKey, type User, type UserType } from './hrApi';
+import {
+  ALLOW, DEFAULT_USER_LEVEL, DENY, PERMISSIONS, fullName, selfId, useHrList, userLevelIcon,
+  type PermissionKey, type User, type UserType,
+} from './hrApi';
 import { HrAvatar } from './hrKit';
 
 const { StringType, NumberType } = Schema.Types;
@@ -51,7 +44,9 @@ const UserForm = ({ data, types, onClose, onSaved }: {
   const isSelf = !!data && data.user_uuid === selfId();
   const [saving, setSaving] = useState(false);
   const employees = useEmployees();
-  const [type, setType] = useState<number>(data?.type_user ?? types.find((x) => x._uuid !== 1)?._uuid ?? types[0]?._uuid ?? 2);
+  const [type, setType] = useState<number>(
+    data?.type_user ?? types.find((x) => x._uuid === DEFAULT_USER_LEVEL)?._uuid ?? types[types.length - 1]?._uuid ?? DEFAULT_USER_LEVEL
+  );
   const [perms, setPerms] = useState<Record<PermissionKey, boolean>>({
     creates: data ? Number(data.creates) === ALLOW : true,
     updates: data ? Number(data.updates) === ALLOW : true,
@@ -150,7 +145,7 @@ const UserForm = ({ data, types, onClose, onSaved }: {
             label={t('hrUserType')}
             value={type}
             onChange={setType}
-            options={types.map((x) => ({ value: x._uuid, label: x.names, icon: x._uuid === 1 ? 'fa-user-gear' : 'fa-user' }))}
+            options={types.map((x) => ({ value: x._uuid, label: x.names, icon: userLevelIcon(x._uuid) }))}
           />
         </FormSection>
         <FormSection title={t('hrPermissions')} note={isSelf && <><i className="fa-solid fa-circle-info" /> {t('hrSelfPermNote')}</>}>
@@ -216,6 +211,92 @@ const PasswordForm = ({ user, onClose }: { user: User; onClose: () => void }) =>
 };
 
 /**
+ * ບັດຜູ້ໃຊ້ — ແຖບສີຕາມລະດັບ (1 ສູງສຸດ = ມ່ວງ, 2 ທຳມະດາ = ຟ້າ, 3 ທົ່ວໄປ = ຂຽວ) + ຮູບໃຫຍ່, ຊື່ / ປະເພດ, ເບີເຂົ້າລະບົບ + ພະນັກງານທີ່ຜູກ,
+ * ສິດ 3 ຊ່ອງ (ເພີ່ມ / ແກ້ໄຂ / ລຶບ) ແລະ ປຸ່ມ ແກ້ໄຂ · ປ່ຽນລະຫັດຜ່ານ · ລຶບ. ເປີດ/ປິດບັນຊີຢູ່ມຸມຂວາເທິງ (ບັນຊີຕົນເອງປິດບໍ່ໄດ້)
+ */
+const UserCard = ({ user, isSelf, toggling, onToggle, onEdit, onPassword, onDelete }: {
+  user: User;
+  isSelf: boolean;
+  toggling: boolean;
+  onToggle: (on: boolean) => void;
+  onEdit: () => void;
+  onPassword: () => void;
+  onDelete: () => void;
+}) => {
+  const t = useT();
+  const active = Number(user.status) === 1;
+  const level = Number(user.type_user);
+  const employee = user.employee;
+  const employeeText = employee ? `${employee.emp_code} · ${fullName(employee)}` : '';
+
+  return (
+    <article className={`hr-user is-level-${level}${active ? '' : ' is-off'}`}>
+      <div className="hr-user-cover">
+        <span className={`hr-user-state${active ? ' is-on' : ''}`}>
+          {isSelf ? (
+            <><i className="hr-user-dot" /> {t('active')}</>
+          ) : (
+            <label title={t(active ? 'statusTurnOff' : 'statusTurnOn')}>
+              <Toggle size="sm" checked={active} loading={toggling} disabled={!canEdit || toggling} onChange={onToggle} />
+              {t(active ? 'active' : 'inactive')}
+            </label>
+          )}
+        </span>
+      </div>
+
+      <div className="hr-user-id">
+        <span className="hr-user-photo"><HrAvatar url={employee?.profile_url} name={user.user_name} size="lg" /></span>
+        <span className="hr-user-name">
+          <b title={user.user_name}>{user.user_name}</b>
+          <span>
+            <em className="hr-user-type"><i className={`fa-solid ${userLevelIcon(level)}`} /> {user.typeuser?.names ?? '—'}</em>
+            {isSelf && <span className="hr-self">{t('hrYou')}</span>}
+          </span>
+        </span>
+      </div>
+
+      <dl className="hr-user-info">
+        <div>
+          <dt><i className="fa-solid fa-phone" /></dt>
+          <dd><small>{t('hrLoginPhone')}</small><b>{user.phones}</b></dd>
+        </div>
+        <div>
+          <dt><i className="fa-solid fa-id-card" /></dt>
+          <dd>
+            <small>{t('hrLinkEmployee')}</small>
+            {employee ? <b title={employeeText}>{employeeText}</b> : <b className="is-muted">{t('hrNoEmployee')}</b>}
+            {employee?.department && <span>{employee.department.depart_name}</span>}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="hr-user-perms" role="list" aria-label={t('hrPermissions')}>
+        {PERMISSIONS.map((p) => {
+          const on = Number(user[p.key]) === ALLOW;
+          return (
+            <span key={p.key} role="listitem" className={on ? 'is-on' : ''} title={`${t(p.label)}: ${t(on ? 'active' : 'inactive')}`}>
+              <i className={`fa-solid ${p.icon}`} />
+              <small>{t(p.label)}</small>
+              <em><i className={`fa-solid ${on ? 'fa-check' : 'fa-xmark'}`} /></em>
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="hr-user-actions">
+        <button type="button" disabled={!canEdit} onClick={onEdit}><i className="fa-solid fa-pen" /> {t('edit')}</button>
+        <button type="button" disabled={!isSelf && !canEdit} onClick={onPassword}><i className="fa-solid fa-key" /> {t('hrChangePassword')}</button>
+        {!isSelf && (
+          <button type="button" className="is-danger" disabled={!canDelete} title={t('delete')} aria-label={t('delete')} onClick={onDelete}>
+            <i className="fa-solid fa-trash" />
+          </button>
+        )}
+      </div>
+    </article>
+  );
+};
+
+/**
  * ຜູ້ໃຊ້ລະບົບ — ບັນຊີເຂົ້າລະບົບ (ເບີໂທ + ລະຫັດຜ່ານ), ປະເພດ, ພະນັກງານທີ່ຜູກ ແລະ ສິດ ເພີ່ມ/ແກ້/ລຶບ.
  * ເປີດ/ປິດບັນຊີຈາກບັດ (ບັນຊີຕົນເອງປິດບໍ່ໄດ້), ປ່ຽນລະຫັດຜ່ານ, ລຶບ
  */
@@ -259,41 +340,16 @@ const UserPage = () => {
       />
 
       <ListState loading={loading} empty={!shown.length} icon="fa-user-shield">
-        <div className="acs-grid">
+        <div className="hr-users">
           {shown.map((r) => {
             const isSelf = r.user_uuid === me;
             return (
-              <SettingCard
-                key={r.user_uuid}
-                tone={Number(r.type_user) === 1 ? 'is-violet' : 'is-blue'}
-                badge={<HrAvatar url={r.employee?.profile_url} name={r.user_name} />}
-                title={<>{r.user_name} {isSelf && <span className="hr-self">{t('hrYou')}</span>}</>}
-                subtitle={<><i className="fa-solid fa-phone" /> {r.phones} · {r.typeuser?.names ?? '—'}</>}
-                meta={
-                  <>
-                    {r.employee
-                      ? <MetaChip icon="fa-id-card">{r.employee.emp_code} {fullName(r.employee)}{r.employee.department ? ` · ${r.employee.department.depart_name}` : ''}</MetaChip>
-                      : <MetaChip icon="fa-user-slash">{t('hrNoEmployee')}</MetaChip>}
-                    {PERMISSIONS.map((p) => (
-                      <MetaChip key={p.key} icon={Number(r[p.key]) === ALLOW ? 'fa-check' : 'fa-xmark'} tone={Number(r[p.key]) === ALLOW ? 'green' : undefined}>
-                        {t(p.label)}
-                      </MetaChip>
-                    ))}
-                  </>
-                }
-                active={Number(r.status) === 1}
-                onToggle={isSelf ? undefined : (on) => statusToggle.toggle(r.user_uuid, on)}
+              <UserCard key={r.user_uuid} user={r} isSelf={isSelf}
                 toggling={statusToggle.busyId === r.user_uuid}
-                canEdit={canEdit}
+                onToggle={(on) => statusToggle.toggle(r.user_uuid, on)}
                 onEdit={() => setEditing(r)}
-                actions={
-                  <>
-                    <CardAction text icon="fa-key" label={t('hrChangePassword')} disabled={!isSelf && !canEdit} onClick={() => setPassword(r)} />
-                    {!isSelf && (
-                      <CardAction text icon="fa-trash" label={t('delete')} tone="danger" disabled={!canDelete} onClick={() => remove(r)} />
-                    )}
-                  </>
-                }
+                onPassword={() => setPassword(r)}
+                onDelete={() => remove(r)}
               />
             );
           })}

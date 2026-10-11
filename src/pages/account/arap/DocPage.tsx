@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, InputGroup, Loader, Modal } from 'rsuite';
+import { Loader, Modal } from 'rsuite';
 import moment from 'moment';
 import { putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -15,6 +15,7 @@ import {
 } from './arapApi';
 import DocForm from './DocForm';
 import PaymentForm from './PaymentForm';
+import { SearchBox } from '../setting/settingKit';
 
 type Period = 'month' | 'year' | 'all';
 type StatusFilter = 'all' | 'unpaid' | 'overdue' | 'paid' | 'cancelled';
@@ -193,10 +194,7 @@ const DocPage = ({ kind }: { kind: Kind }) => {
             </button>
           ))}
         </div>
-        <InputGroup inside size="sm" className="acs-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={t('search')} value={keyword} onChange={setKeyword} />
-        </InputGroup>
+        <SearchBox value={keyword} onChange={setKeyword} placeholder={t('search')} />
         <button type="button" className="acc-rp-btn" onClick={exportRows} disabled={!shown.length}>
           <i className="fa-solid fa-file-excel" /> Excel
         </button>

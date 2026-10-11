@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Input, InputGroup, Loader } from 'rsuite';
+import { Loader } from 'rsuite';
 import { formatNumber, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
@@ -14,6 +14,7 @@ import { currencySymbol } from './currency';
 import { toneOf } from '../setting/accountTone';
 import { toneStyle, useLogoTones } from './logoTone';
 import { CASH_CLASS_CODE } from '../journal/journalKit';
+import { SearchBox } from '../setting/settingKit';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type Currency = NonNullable<AccountType['currency']>;
@@ -245,15 +246,7 @@ const TreasuryAccountPage = () => {
       {/* ---- ແຜງກັ່ນຕອງ ---- */}
       <div className="acc-type-filters">
         <div className="acc-type-filter-top">
-          <InputGroup inside className="acc-type-search">
-            <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-            <Input placeholder={t('treasurySearch')} value={keyword} onChange={setKeyword} />
-            {keyword && (
-              <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-                <i className="fa-solid fa-xmark" />
-              </InputGroup.Button>
-            )}
-          </InputGroup>
+          <SearchBox value={keyword} onChange={setKeyword} placeholder={t('treasurySearch')} grow />
           <div className="acc-type-segment" role="tablist">
             {statusTabs.map((s) => (
               <button key={s.key} type="button" role="tab" aria-selected={status === s.key}

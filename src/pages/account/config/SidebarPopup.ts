@@ -157,6 +157,40 @@ export const HR_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ເມນູຂອງໜ້າຕ່າງ ການເຂົ້າ-ອອກວຽກ — ລາຍວັນ, ລາຍເດືອນ, ຄຳຂໍລາພັກ ແລະ ວັນພັກລັດຖະການ */
+export const ATTENDANCE_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppAttendance',
+    items: [
+      { key: 'daily', icon: 'fa-solid fa-calendar-day', label: 'attDaily' },
+      { key: 'monthly', icon: 'fa-solid fa-table-cells', label: 'attMonthly' },
+      { key: 'leaves', icon: 'fa-solid fa-plane-departure', label: 'attLeaveRequests' },
+    ],
+  },
+  {
+    group: 'attGroupSettings',
+    items: [
+      { key: 'holidays', icon: 'fa-solid fa-umbrella-beach', label: 'attHolidays' },
+    ],
+  },
+];
+
+/** ເມນູຂອງໜ້າຕ່າງ ເງິນເດືອນ — ໃບເງິນເດືອນປະຈຳເດືອນ ແລະ ຕັ້ງຄ່າ (ປກສ, ອາກອນ, ການຫັກ) */
+export const PAYROLL_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppPayroll',
+    items: [
+      { key: 'runs', icon: 'fa-solid fa-money-check-dollar', label: 'payRuns' },
+    ],
+  },
+  {
+    group: 'attGroupSettings',
+    items: [
+      { key: 'settings', icon: 'fa-solid fa-sliders', label: 'paySettings' },
+    ],
+  },
+];
+
 /** ເມນູຂອງໜ້າຕ່າງ ຜັງບັນຊີ — ຜັງບັນຊີ, ຜູກບັນຊີ ແລະ ການເປີດໃຊ້ລະບົບບັນຊີຄູ່ */
 export const CHART_MENU: SidebarPopupGroup[] = [
   {

@@ -511,7 +511,6 @@
 
   .acs-stats { flex: 1; }
   .acc-gl-range { width: 230px; }
-  .acs-search { width: 260px; }
 }
 
 .acc-gl-source-filter { margin-bottom: 12px; }
@@ -1081,7 +1080,7 @@
   border: 1px solid var(--gl-line);
   border-radius: 12px;
 
-  .acc-type-search { flex: none; width: 100%; }
+  .app-search.is-grow { flex: none; width: 100%; max-width: none; }
 }
 
 .acc-gl-book-filter {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Input, InputGroup, Loader } from 'rsuite';
+import { Loader } from 'rsuite';
 import moment from 'moment';
 import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -11,6 +11,7 @@ import { currencySymbol } from '../ledger/currency';
 import IncomeForm, { TRANSFER, incomeDateOf, type Income } from './IncomeForm';
 import IncomeDetail from './IncomeDetail';
 import { DailyChart, DayHead, MonthSwitch } from './JournalParts';
+import { SearchBox } from '../setting/settingKit';
 
 type StatusFilter = 'all' | 'active' | 'cancelled';
 type Summary = { currency: string; genus: string | null; total: number; tax: number; count: number };
@@ -182,15 +183,7 @@ const IncomePage = () => {
 
       {/* ---- ຄົ້ນຫາ + ສະຖານະ + ມື້ທີ່ກັ່ນ ---- */}
       <div className="acc-fc-toolbar acc-tone is-emerald">
-        <InputGroup inside className="acc-type-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={t('incomeSearch')} value={keyword} onChange={setKeyword} />
-          {keyword && (
-            <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-              <i className="fa-solid fa-xmark" />
-            </InputGroup.Button>
-          )}
-        </InputGroup>
+        <SearchBox value={keyword} onChange={setKeyword} placeholder={t('incomeSearch')} grow />
         <div className="acc-type-segment" role="tablist">
           {statusTabs.map((s) => (
             <button key={s.key} type="button" role="tab" aria-selected={status === s.key}

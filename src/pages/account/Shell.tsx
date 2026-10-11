@@ -19,6 +19,8 @@ import TrialBalancePage from './gl/TrialBalancePage';
 import ArApWindow from './arap/ArApWindow';
 import BudgetWindow from './budget/BudgetWindow';
 import HrWindow from '../hr/HrWindow';
+import AttendanceWindow from '../hr/attendance/AttendanceWindow';
+import PayrollWindow from '../hr/payroll/PayrollWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import MenuContextMenu from './MenuContextMenu';
 import { MenuLockForm, type MenuLockMode } from './setting/MenuLockPage';
@@ -29,8 +31,8 @@ import {
   shortcutDescKeys,
   shortcutNameKeys,
   shortcuts,
+  useDesktopLayout,
   usePopupWindow,
-  useShortcutPositions,
   useWallpaper,
   type LifeOutletContext,
   type ShortcutId,
@@ -51,6 +53,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   payables: <ArApWindow kind={2} />,
   budget: <BudgetWindow />,
   hr: <HrWindow />,
+  attendance: <AttendanceWindow />,
+  payroll: <PayrollWindow />,
 };
 
 /**
@@ -83,10 +87,11 @@ const AccountShell: React.FC = () => {
   const [taskbarRevealed, setTaskbarRevealed] = useState(false);
   const taskbarVisible = taskbarPinned || taskbarRevealed;
   const userName = localStorage.getItem('user_name');
-  const iconPositions = useShortcutPositions();
   const { wallpaper, setWallpaper } = useWallpaper();
   /** ເມນູບັນຊີຈາກ GET /menu/main (ລຳດັບ, ຊື່, ໄອຄອນ, ລັອກ) — ຍັງບໍ່ມີກໍ່ໃຊ້ shortcuts ຂອງໜ້າເວັບ */
   const menus = useAccountMenus();
+  /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop */
+  const desktopLayout = useDesktopLayout(menus.map((menu) => menu.id));
   const menuOf = (id: ShortcutId) => menus.find((menu) => menu.id === id);
   const menuName = (id: ShortcutId) => menuOf(id)?.name ?? t(shortcutNameKeys[id]);
   /** ເມນູທີ່ກຳລັງຖາມລະຫັດຜ່ານ (null = ບໍ່ມີ) */
@@ -104,6 +109,8 @@ const AccountShell: React.FC = () => {
   const statementsWindow = usePopupWindow();
   const budgetWindow = usePopupWindow();
   const hrWindow = usePopupWindow();
+  const attendanceWindow = usePopupWindow();
+  const payrollWindow = usePopupWindow();
   const calendarWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
@@ -117,6 +124,8 @@ const AccountShell: React.FC = () => {
     financialStatements: statementsWindow,
     budget: budgetWindow,
     hr: hrWindow,
+    attendance: attendanceWindow,
+    payroll: payrollWindow,
     calendar: calendarWindow,
     settings: settingsWindow,
   };
@@ -282,7 +291,7 @@ const AccountShell: React.FC = () => {
     `${phaseLabel(lunar.phase)} ${lunar.phaseDay} ${t('lunarNightUnit')} · ${t('lunarMonthShort')} ${lunarMonthLabel(lunar)}`;
 
   const openWindows = Object.values(popupWindows).filter((popup) => popup?.open).length;
-  const outletContext: LifeOutletContext = { openShortcut, iconPositions, menus, openWindows };
+  const outletContext: LifeOutletContext = { openShortcut, desktopLayout, menus, openWindows };
 
   return (
     <main
@@ -526,7 +535,7 @@ const AccountShell: React.FC = () => {
               <DesktopSettings
                 taskbarPinned={taskbarPinned}
                 onToggleTaskbarPinned={setTaskbarPinned}
-                onArrangeIcons={iconPositions.resetPositions}
+                onArrangeIcons={desktopLayout.resetPositions}
                 wallpaper={wallpaper}
                 onSelectWallpaper={setWallpaper}
               />

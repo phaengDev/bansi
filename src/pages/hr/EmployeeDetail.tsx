@@ -7,7 +7,8 @@ import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import {
-  GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, downloadWithAuth, fileSizeText, fullName, type Employee, type EmployeeDocument,
+  DEFAULT_APP_PASSWORD, GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, downloadWithAuth, fileSizeText, fullName,
+  type Employee, type EmployeeDocument,
 } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
 
@@ -110,9 +111,25 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
   const [employee, setEmployee] = useState(initial);
   const [uploading, setUploading] = useState(false);
   const [resigning, setResigning] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const resigned = Number(employee.work_status) === RESIGNED;
   const gender = GENDERS.find((g) => g.value === Number(employee.gender));
-  const address = [employee.village, employee.district?.district_name, employee.province?.province_name].filter(Boolean).join(', ');
+  const address = [employee.village, employee.district?.district_name, employee.district?.province?.province_name].filter(Boolean).join(', ');
+
+  /** ລະຫັດຜ່ານ app ກັບເປັນຄ່າເລີ່ມຕົ້ນ — ພະນັກງານລືມລະຫັດ (ຍັງບໍ່ມີ OTP) */
+  const resetAppPassword = () => Notific.confirm(`${t('hrAppPasswordResetConfirm')} ${DEFAULT_APP_PASSWORD}`, async () => {
+    try {
+      setResetting(true);
+      const res = await putApi(`/employee/app-password/${btoa(String(employee._uuid))}`);
+      if (res.data?.data) setEmployee(res.data.data);
+      Notific.success('hrAppPasswordResetDone');
+      onChanged();
+    } catch (error) {
+      Notific.error(getErrorMessage(error));
+    } finally {
+      setResetting(false);
+    }
+  });
 
   const upload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -177,6 +194,21 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
     ['hrGender', gender ? <><i className={`fa-solid ${gender.icon}`} /> {t(gender.label)}</> : '—'],
     ['hrBirthday', <>{showDate(employee.birthday)} <small>{employee.birthday ? `${moment().diff(moment(employee.birthday), 'years')} ${t('hrYears')}` : ''}</small></>],
     ['hrPhone', employee.phone || '—'],
+    ['hrAppLogin', (
+      <span className="hr-app-login">
+        <span>
+          <b><i className="fa-solid fa-mobile-screen" /> {employee.phone || '—'}</b>
+          <small className={Number(employee.must_change_password) === 1 ? 'is-warn' : 'is-ok'}>
+            {Number(employee.must_change_password) === 1 ? `${t('hrAppDefaultPassword')} ${DEFAULT_APP_PASSWORD}` : t('hrAppPasswordChanged')}
+          </small>
+        </span>
+        {canEdit && (
+          <button type="button" className="acc-rp-btn" disabled={resetting} onClick={resetAppPassword}>
+            <i className={`fa-solid ${resetting ? 'fa-spinner fa-spin' : 'fa-key'}`} /> {t('hrAppPasswordReset')}
+          </button>
+        )}
+      </span>
+    ), true],
     ['hrEmail', employee.email || '—'],
     ['hrAddress', address || '—'],
     ['hrAccount', employee.user

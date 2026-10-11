@@ -12,6 +12,7 @@ import { useDistricts, useProvinces } from '../../utils/selectOption';
 import { FormStep, PickerField } from '../account/setting/settingKit';
 import { MAX_FILE, type Company } from './hrApi';
 import { LocationModal, LocationPreview, type CompanyLocationValue } from './CompanyLocation';
+import CompanyScanQr from './CompanyScanQr';
 
 const { StringType } = Schema.Types;
 const IMAGE = /^image\/(jpeg|png|webp)$/;
@@ -231,64 +232,70 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
   return (
     <>
       <Form fluid ref={formRef} model={model} formValue={inputs} onChange={handleChange} className="acc-book-main">
-        {/* ---- 1: ໂລໂກ້ + ຊື່ + ເບີໂທ ---- */}
-        <FormStep no={1} done={!!String(inputs.name_la).trim()} title={t('hrCompanyInfo')} hint={t('hrCompanyInfoHint')}>
-          <div className="is-wide hr-profile">
-            <LogoPicker url={logoUrl} onPick={pickLogo} onClear={clearLogo} />
-            <div className="hr-profile-fields">
-              <div className="is-wide">
-                <InputField name="name_la" label={t('hrCompanyNameLa')} icon={<i className="fa-solid fa-building" />} placeholder="ບໍລິສັດ … ຈຳກັດ" />
+        {/* ຈໍກວ້າງ 2 ຖັນ: ຊ້າຍ ຂໍ້ມູນ + ທີ່ຢູ່, ຂວາ ທີ່ຕັ້ງ + ເວລາເຮັດວຽກ */}
+        <div className="hr-company-grid">
+          <div className="hr-company-col">
+            {/* ---- 1: ໂລໂກ້ + ຊື່ + ເບີໂທ ---- */}
+            <FormStep no={1} done={!!String(inputs.name_la).trim()} title={t('hrCompanyInfo')} hint={t('hrCompanyInfoHint')}>
+              <div className="is-wide hr-profile">
+                <LogoPicker url={logoUrl} onPick={pickLogo} onClear={clearLogo} />
+                <div className="hr-profile-fields">
+                  <div className="is-wide">
+                    <InputField name="name_la" label={t('hrCompanyNameLa')} icon={<i className="fa-solid fa-building" />} placeholder="ບໍລິສັດ … ຈຳກັດ" />
+                  </div>
+                  <div className="is-wide">
+                    <InputField name="name_en" label={t('hrCompanyNameEn')} required={false} icon={<i className="fa-solid fa-globe" />}
+                      placeholder="… Co., Ltd."
+                    />
+                  </div>
+                  <InputField name="phone1" label={t('hrCompanyPhone1')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="021 xxx xxx" />
+                  <InputField name="phone2" label={t('hrCompanyPhone2')} required={false} icon={<i className="fa-solid fa-mobile-screen" />} placeholder="020 xxxx xxxx" />
+                </div>
               </div>
+            </FormStep>
+
+            {/* ---- 2: ທີ່ຢູ່ (ບັນທຶກແຕ່ເມືອງ + ບ້ານ) ---- */}
+            <FormStep no={2} done={!!inputs.district_id} title={t('hrAddress')} hint={t('hrAddressHint')}>
+              <PickerField name="province_id" label={t('hrProvince')} data={provinces} required={false} placeholder={t('select')} />
+              <PickerField name="district_id" label={t('hrDistrict')} data={districts} required={!!inputs.province_id}
+                placeholder={inputs.province_id ? t('select') : t('hrPickProvinceFirst')} disabled={!inputs.province_id}
+              />
               <div className="is-wide">
-                <InputField name="name_en" label={t('hrCompanyNameEn')} required={false} icon={<i className="fa-solid fa-globe" />}
-                  placeholder="… Co., Ltd."
-                />
+                <InputField name="village" label={t('hrVillage')} required={false} icon={<i className="fa-solid fa-location-dot" />} />
               </div>
-              <InputField name="phone1" label={t('hrCompanyPhone1')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="021 xxx xxx" />
-              <InputField name="phone2" label={t('hrCompanyPhone2')} required={false} icon={<i className="fa-solid fa-mobile-screen" />} placeholder="020 xxxx xxxx" />
-            </div>
+            </FormStep>
           </div>
-        </FormStep>
+          <div className="hr-company-col">
+            {/* ---- 3: ທີ່ຕັ້ງ + ໄລຍະສະແກນ — ແກ້ໃນ modal ແຜນທີ່ ---- */}
+            <FormStep no={3} done={pinned} title={t('hrCompanyLocation')} hint={t('hrCompanyLocationHint')}
+              note={pinned ? <><i className="fa-solid fa-circle-dot" /> {t('hrCompanyRadiusNote')} {location.radius} {t('hrMeters')}</> : undefined}
+            >
+              <div className="is-wide">
+                <LocationPreview {...location}>
+                  <button type="button" className="acc-rp-btn is-primary" onClick={() => setMapOpen(true)}>
+                    <i className="fa-solid fa-map-location-dot" /> {t(pinned ? 'hrCompanyEditLocation' : 'hrCompanyPickOnMap')}
+                  </button>
+                </LocationPreview>
+              </div>
+            </FormStep>
 
-        {/* ---- 2: ທີ່ຢູ່ (ບັນທຶກແຕ່ເມືອງ + ບ້ານ) ---- */}
-        <FormStep no={2} done={!!inputs.district_id} title={t('hrAddress')} hint={t('hrAddressHint')}>
-          <PickerField name="province_id" label={t('hrProvince')} data={provinces} required={false} placeholder={t('select')} />
-          <PickerField name="district_id" label={t('hrDistrict')} data={districts} required={!!inputs.province_id}
-            placeholder={inputs.province_id ? t('select') : t('hrPickProvinceFirst')} disabled={!inputs.province_id}
-          />
-          <div className="is-wide">
-            <InputField name="village" label={t('hrVillage')} required={false} icon={<i className="fa-solid fa-location-dot" />} />
+            {/* ---- 4: ເວລາເຮັດວຽກ + ວັນພັກ ---- */}
+            <FormStep no={4} done={hours > 0} title={t('hrCompanyWorkTime')} hint={t('hrCompanyWorkTimeHint')}
+              note={hours > 0 ? <><i className="fa-solid fa-clock" /> {7 - daysOff.length} {t('hrCompanyDaysPerWeek')} · {hours} {t('hrCompanyHoursPerDay')}</> : undefined}
+            >
+              <ControlField name="work_start" label={t('hrCompanyWorkStart')} accepter={TimePicker} format="HH:mm" block cleanable={false}
+                hideMinutes={(minute: number) => minute % 5 !== 0}
+              />
+              <ControlField name="work_end" label={t('hrCompanyWorkEnd')} accepter={TimePicker} format="HH:mm" block cleanable={false}
+                hideMinutes={(minute: number) => minute % 5 !== 0}
+              />
+              <div className="is-wide rs-form-group">
+                <label className="form-label">{t('hrCompanyDaysOff')}</label>
+                <WeekDays daysOff={daysOff} onToggle={toggleDay} />
+              </div>
+            </FormStep>
           </div>
-        </FormStep>
-
-        {/* ---- 3: ທີ່ຕັ້ງ + ໄລຍະສະແກນ — ແກ້ໃນ modal ແຜນທີ່ ---- */}
-        <FormStep no={3} done={pinned} title={t('hrCompanyLocation')} hint={t('hrCompanyLocationHint')}
-          note={pinned ? <><i className="fa-solid fa-circle-dot" /> {t('hrCompanyRadiusNote')} {location.radius} {t('hrMeters')}</> : undefined}
-        >
-          <div className="is-wide">
-            <LocationPreview {...location}>
-              <button type="button" className="acc-rp-btn is-primary" onClick={() => setMapOpen(true)}>
-                <i className="fa-solid fa-map-location-dot" /> {t(pinned ? 'hrCompanyEditLocation' : 'hrCompanyPickOnMap')}
-              </button>
-            </LocationPreview>
-          </div>
-        </FormStep>
-
-        {/* ---- 4: ເວລາເຮັດວຽກ + ວັນພັກ ---- */}
-        <FormStep no={4} done={hours > 0} title={t('hrCompanyWorkTime')} hint={t('hrCompanyWorkTimeHint')}
-          note={hours > 0 ? <><i className="fa-solid fa-clock" /> {7 - daysOff.length} {t('hrCompanyDaysPerWeek')} · {hours} {t('hrCompanyHoursPerDay')}</> : undefined}
-        >
-          <ControlField name="work_start" label={t('hrCompanyWorkStart')} accepter={TimePicker} format="HH:mm" block cleanable={false}
-            hideMinutes={(minute: number) => minute % 5 !== 0}
-          />
-          <ControlField name="work_end" label={t('hrCompanyWorkEnd')} accepter={TimePicker} format="HH:mm" block cleanable={false}
-            hideMinutes={(minute: number) => minute % 5 !== 0}
-          />
-          <div className="is-wide rs-form-group">
-            <label className="form-label">{t('hrCompanyDaysOff')}</label>
-            <WeekDays daysOff={daysOff} onToggle={toggleDay} />
-          </div>
-        </FormStep>
+        </div>
 
         <div className="hr-company-bar">
           <span>
@@ -360,38 +367,46 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
         </Button>
       </section>
 
-      <section className="acc-book-step hr-company-card">
-        <header>
-          <span className="hr-company-card-icon"><i className="fa-solid fa-map-location-dot" /></span>
-          <span className="acc-book-step-title"><b>{t('hrCompanyLocation')}</b><small>{t('hrCompanyLocationHint')}</small></span>
-        </header>
-        <LocationPreview lat={lat} lng={lng} radius={company.scan_radius}>
-          {canEdit && (
-            <button type="button" className="acc-rp-btn is-primary" onClick={() => setMapOpen(true)}>
-              <i className="fa-solid fa-map-location-dot" /> {t(lat !== null ? 'hrCompanyEditLocation' : 'hrCompanyPickOnMap')}
-            </button>
-          )}
-          {lat !== null && lng !== null && (
-            <a className="acc-rp-btn" href={googleMapsUrl(lat, lng)} target="_blank" rel="noreferrer">
-              <i className="fa-solid fa-arrow-up-right-from-square" /> {t('hrCompanyOpenGoogle')}
-            </a>
-          )}
-        </LocationPreview>
-      </section>
+      {/* ຈໍກວ້າງ 2 ຖັນ: ຊ້າຍ ທີ່ຕັ້ງ + ເວລາເຮັດວຽກ, ຂວາ QR ສະແກນເຂົ້າ-ອອກວຽກ */}
+      <div className="hr-company-grid">
+        <div className="hr-company-col">
+        <section className="acc-book-step hr-company-card">
+          <header>
+            <span className="hr-company-card-icon"><i className="fa-solid fa-map-location-dot" /></span>
+            <span className="acc-book-step-title"><b>{t('hrCompanyLocation')}</b><small>{t('hrCompanyLocationHint')}</small></span>
+          </header>
+          <LocationPreview lat={lat} lng={lng} radius={company.scan_radius}>
+            {canEdit && (
+              <button type="button" className="acc-rp-btn is-primary" onClick={() => setMapOpen(true)}>
+                <i className="fa-solid fa-map-location-dot" /> {t(lat !== null ? 'hrCompanyEditLocation' : 'hrCompanyPickOnMap')}
+              </button>
+            )}
+            {lat !== null && lng !== null && (
+              <a className="acc-rp-btn" href={googleMapsUrl(lat, lng)} target="_blank" rel="noreferrer">
+                <i className="fa-solid fa-arrow-up-right-from-square" /> {t('hrCompanyOpenGoogle')}
+              </a>
+            )}
+          </LocationPreview>
+        </section>
 
-      <section className="acc-book-step hr-company-card">
-        <header>
-          <span className="hr-company-card-icon"><i className="fa-solid fa-clock" /></span>
-          <span className="acc-book-step-title"><b>{t('hrCompanyWorkTime')}</b></span>
-          <em><i className="fa-solid fa-briefcase" /> {7 - company.days_off.length} {t('hrCompanyDaysPerWeek')} · {hours} {t('hrCompanyHoursPerDay')}</em>
-        </header>
-        <div className="hr-company-hours">
-          <div><small>{t('hrCompanyWorkStart')}</small><b>{company.work_start}</b></div>
-          <i className="fa-solid fa-arrow-right-long" />
-          <div><small>{t('hrCompanyWorkEnd')}</small><b>{company.work_end}</b></div>
+        <section className="acc-book-step hr-company-card">
+          <header>
+            <span className="hr-company-card-icon"><i className="fa-solid fa-clock" /></span>
+            <span className="acc-book-step-title"><b>{t('hrCompanyWorkTime')}</b></span>
+            <em><i className="fa-solid fa-briefcase" /> {7 - company.days_off.length} {t('hrCompanyDaysPerWeek')} · {hours} {t('hrCompanyHoursPerDay')}</em>
+          </header>
+          <div className="hr-company-hours">
+            <div><small>{t('hrCompanyWorkStart')}</small><b>{company.work_start}</b></div>
+            <i className="fa-solid fa-arrow-right-long" />
+            <div><small>{t('hrCompanyWorkEnd')}</small><b>{company.work_end}</b></div>
+          </div>
+          <WeekDays daysOff={company.days_off} />
+        </section>
         </div>
-        <WeekDays daysOff={company.days_off} />
-      </section>
+        <div className="hr-company-col">
+          <CompanyScanQr company={company} />
+        </div>
+      </div>
 
       <p className="hr-company-updated">
         <i className="fa-regular fa-clock" /> {t('hrCompanyUpdated')} {moment(company.updatedAt).format('DD/MM/YYYY HH:mm')}

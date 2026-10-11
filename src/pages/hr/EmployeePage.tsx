@@ -67,7 +67,7 @@ const EmployeePage = () => {
       [t('hrBank')]: r.bank ? `${r.bank.abbr} ${r.bank.name_la}` : '',
       [t('hrBankAccountNo')]: r.bank_account_no ?? '',
       [t('hrBankAccountName')]: r.bank_account_name ?? '',
-      [t('hrAddress')]: [r.village, r.district?.district_name, r.province?.province_name].filter(Boolean).join(', '),
+      [t('hrAddress')]: [r.village, r.district?.district_name, r.district?.province?.province_name].filter(Boolean).join(', '),
       [t('hrWorkStatus')]: t(Number(r.work_status) === RESIGNED ? 'hrResigned' : 'hrWorking'),
     })), `employees_${moment().format('YYYY-MM-DD')}`, t('hrEmployees'));
   };

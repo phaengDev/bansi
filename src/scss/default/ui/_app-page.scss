@@ -254,13 +254,15 @@
   display: block;
   width: 100%;
   height: auto;
-  padding: 12px 8px 4px;
+  // ຄວາມສູງລວມ 30px ຄືເກົ່າ — ແຖວ 20px ໃຫ້ອັກສອນລາວ (ສະຫຼະ/ວັນນະຍຸດ ຢູ່ເທິງ-ລຸ່ມ) ບໍ່ຖືກ overflow ຕັດ;
+  // ແຖວ 14px ເກົ່າ ບາງ browser (Safari) ວາງຕົວອັກສອນຕ່ຳລົງ ຈົນເຫັນແຕ່ສະຫຼະເທິງ
+  padding: 8px 8px 2px;
   border-radius: 0;
   overflow: hidden;
   color: rgba(190, 224, 248, 0.6);
   font-size: 11px;
   font-weight: 700;
-  line-height: 14px;
+  line-height: 20px;
   letter-spacing: 0.04em;
   white-space: nowrap;
   text-align: start;

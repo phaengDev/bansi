@@ -244,15 +244,6 @@
   gap: 10px;
 }
 
-.acc-type-search {
-  flex: 1 1 260px;
-  max-width: 420px;
-  border-radius: 10px !important;
-  background: #f5f8fb;
-
-  .rs-input { background: transparent; }
-}
-
 // ສະຖານະ — ປຸ່ມແບບ segmented
 .acc-type-segment {
   display: inline-flex;
@@ -671,7 +662,7 @@
   }
 
   .acc-fc-hero .acc-fc-add { width: 100%; justify-content: center; }
-  .acc-fc-toolbar .acc-type-search { max-width: none; }
+  .acc-fc-toolbar .app-search.is-grow { max-width: none; }
 }
 
 // ບັດປະເພດບັນຊີ — ແຖບສີໝວດຢູ່ຊ້າຍ, ລະຫັດ + ສະຖານະ + ແກ້ໄຂ ຢູ່ເທິງ, ລາຍລະອຽດໝວດ/ສະກຸນເງິນ ຢູ່ລຸ່ມ
@@ -1871,6 +1862,13 @@
     border: 1px solid var(--book-accent);
 
     &:hover { background: var(--book-accent-dark); border-color: var(--book-accent-dark); }
+
+    &.is-danger {
+      background: #e5484d;
+      border-color: #e5484d;
+
+      &:hover { background: #c93a3f; border-color: #c93a3f; }
+    }
   }
 
   // ລຶບ — ຢູ່ຊ້າຍສຸດຂອງ footer, ແຍກຈາກ ຍົກເລີກ/ບັນທຶກ ທາງຂວາ
@@ -1906,7 +1904,7 @@
 @media (max-width: 575.98px) {
   .acc-type-head .acc-class-add { width: 100%; justify-content: center; margin-left: 0; }
   .acc-type-kpi { min-width: 0; flex: 1 1 0; }
-  .acc-type-search { max-width: none; }
+  .app-search.is-grow { max-width: none; }
   .acc-type-filter-row { flex-direction: column; align-items: stretch; gap: 6px; }
   .acc-type-filter-label { width: auto; }
   .acc-type-grid { grid-template-columns: 1fr; }
@@ -1925,7 +1923,7 @@
   align-items: center;
   gap: 10px;
 
-  .acc-class-add { height: 34px; }
+  .acc-class-add { height: 38px; }
 }
 
 .acs-stats {
@@ -1943,7 +1941,137 @@
   .is-gold b { color: #c9770a; }
 }
 
-.acs-search { width: 240px !important; }
+// ເລືອກປີ ‹ 📅 2026 ປີນີ້ › (YearStepper ໃນ settingKit)
+.year-stepper {
+  display: inline-flex;
+  height: 40px;
+  flex: none;
+  align-items: stretch;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dbe4ec;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(20, 49, 77, 0.06);
+
+  > button {
+    display: inline-flex;
+    width: 38px;
+    align-items: center;
+    justify-content: center;
+    color: #5b6b78;
+    background: transparent;
+    border: 0;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover:not(:disabled) { color: #0f7a5c; background: #eef7f3; }
+    &:disabled { color: #c7d1d9; cursor: not-allowed; }
+  }
+}
+
+.year-stepper-value {
+  display: inline-flex;
+  min-width: 168px; // ກວ້າງເທົ່າກັນ ທັງປ້າຍ "ປີນີ້" ແລະ ປຸ່ມກັບປີນີ້ — ບໍ່ໃຫ້ກະໂດດ
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-right: 1px solid #edf1f5;
+  border-left: 1px solid #edf1f5;
+
+  > i { color: #0f7a5c; font-size: 14px; }
+  b { color: #14314d; font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
+
+  em,
+  .year-stepper-back {
+    padding: 2px 8px;
+    font-size: 11.5px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+    border-radius: 999px;
+  }
+
+  em { color: #0f7a5c; background: #e3f5ee; }
+
+  .year-stepper-back {
+    color: #8a5a00;
+    background: #fff4dc;
+    border: 0;
+    cursor: pointer;
+
+    &:hover { background: #ffe9b8; }
+    i { font-size: 10px; }
+  }
+}
+
+// ---- ຊ່ອງຄົ້ນຫາມາດຕະຖານ (SearchBox ໃນ settingKit) — ທຸກໜ້າໃຊ້ອັນດຽວກັນ: ສູງເທົ່າປຸ່ມ, ກວ້າງ 320px ----
+.app-search {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  width: 320px;
+  max-width: 100%;
+  height: 38px;
+  margin: 0;
+  padding: 0 8px 0 12px;
+  color: #8a99a6;
+  background: #fff;
+  border: 1px solid #d5dee6;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15, 42, 61, 0.04);
+  cursor: text;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+
+  > i { flex: none; font-size: 13px; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    color: #14314d;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    font: inherit;
+    font-size: 13.5px;
+
+    &::placeholder { color: #9aa7b3; }
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration { display: none; appearance: none; }
+  }
+
+  // ລ້າງຄຳຄົ້ນ
+  button {
+    display: grid;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    padding: 0;
+    color: #7b8a97;
+    background: #eef2f5;
+    border: 0;
+    border-radius: 50%;
+    font-size: 11px;
+
+    &:hover { color: #fff; background: #7b8a97; }
+  }
+
+  &:hover { border-color: #b9c6d2; }
+
+  &:focus-within {
+    color: #1d7fc4;
+    border-color: #1d8fd6;
+    box-shadow: 0 0 0 3px rgba(29, 143, 214, 0.15);
+  }
+
+  // ຢືດຕາມພື້ນທີ່ເຫຼືອ (ແຖບເຄື່ອງມືທີ່ມີຕົວກັ່ນຫຼາຍ)
+  &.is-grow { flex: 1 1 260px; width: auto; max-width: 420px; }
+}
+
 .acs-toolbar-select { width: 240px; }
 
 .acs-btn-ghost {
@@ -2951,8 +3079,8 @@
 }
 
 @media (max-width: 575.98px) {
-  .acs-search,
-  .acs-toolbar-select { width: 100% !important; }
+  .app-search,
+  .acs-toolbar-select { width: 100% !important; max-width: none; }
   .acs-grid,
   .acs-grid.is-wide { grid-template-columns: 1fr; }
 }

@@ -12,6 +12,15 @@ import type { Bank, Province, UserType } from '../../utils/selectOption';
 /** ສິດ 1 = ອະນຸຍາດ, 2 = ບໍ່ອະນຸຍາດ (ຄືກັບ utils/localStorage getPermission) */
 export const ALLOW = 1;
 export const DENY = 2;
+
+/** ລະດັບຜູ້ໃຊ້ (tbl_typeuser._uuid) — 1 ສູງສຸດ, 2 ທຳມະດາ, 3 ທົ່ວໄປ; ຜູ້ໃຊ້ໃໝ່ເລີ່ມທີ່ທົ່ວໄປ */
+export const USER_LEVELS: Record<number, { icon: string }> = {
+  1: { icon: 'fa-crown' },
+  2: { icon: 'fa-user-tie' },
+  3: { icon: 'fa-user' },
+};
+export const DEFAULT_USER_LEVEL = 3;
+export const userLevelIcon = (level: number) => USER_LEVELS[Number(level)]?.icon ?? 'fa-user';
 export const PERMISSIONS = [
   { key: 'creates', label: 'hrPermCreate', icon: 'fa-plus' },
   { key: 'updates', label: 'hrPermUpdate', icon: 'fa-pen' },
@@ -69,6 +78,14 @@ export type Department = {
   positions: Position[];
 };
 
+/** ເມືອງ + ແຂວງຂອງເມືອງ — ບໍລິສັດ ແລະ ພະນັກງານເກັບແຕ່ district_id (ແຂວງມາກັບເມືອງ) */
+export type DistrictRef = {
+  _uuid: number;
+  district_name: string;
+  province_id: number;
+  province?: { _uuid: number; province_name: string } | null;
+};
+
 export type EmployeeDocument = { _uuid: number; original_name: string; mime_type: string | null; file_size: number; createdAt: string };
 
 export type Employee = EmployeeRef & {
@@ -86,18 +103,23 @@ export type Employee = EmployeeRef & {
   bank_account_name: string | null;
   bank_account_no: string | null;
   bank?: Bank | null;
-  province_id: number | null;
   district_id: number | null;
   village: string | null;
   profile: string | null;
   description: string | null;
   position?: { _uuid: number; position_name: string } | null;
-  province?: { _uuid: number; province_name: string } | null;
-  district?: { _uuid: number; district_name: string } | null;
+  district?: DistrictRef | null;
   documents: EmployeeDocument[];
+  /** 1 = ຍັງໃຊ້ລະຫັດ app ເລີ່ມຕົ້ນ (123) — ພະນັກງານຍັງບໍ່ໄດ້ປ່ຽນ */
+  must_change_password: number;
   /** ບັນຊີຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານນີ້ */
   user: { user_uuid: number; user_name: string; phones: string; status: number } | null;
 };
+
+/** ເບີໂທພະນັກງານ = ຊື່ເຂົ້າ app ແລະ ເບີຮັບ OTP — ຕ້ອງປ້ອນ 20 + 8 ຕົວເລກ (ກົງກັບ APP_PHONE ຂອງ api-bansi) */
+export const APP_PHONE = /^20\d{8}$/;
+/** ລະຫັດຜ່ານ app ຕອນສ້າງພະນັກງານ / HR ຕັ້ງຄືນ */
+export const DEFAULT_APP_PASSWORD = '123';
 
 /** "17.9757, 102.6331" — ພິກັດທີ່ສຳເນົາຈາກ Google Maps (ກົດຂວາທີ່ຈຸດ) → [, lat, lng] */
 export const LAT_LNG = /^\s*(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/;
@@ -150,12 +172,7 @@ export type Company = {
   work_end: string;
   /** ວັນພັກປະຈຳອາທິດ — 0 ອາທິດ … 6 ເສົາ (Date.getDay()) */
   days_off: number[];
-  district?: {
-    _uuid: number;
-    district_name: string;
-    province_id: number;
-    province?: { _uuid: number; province_name: string } | null;
-  } | null;
+  district?: DistrictRef | null;
   updatedAt: string;
 };
 

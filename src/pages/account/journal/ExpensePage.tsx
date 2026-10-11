@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Input, InputGroup, Loader } from 'rsuite';
+import { Loader } from 'rsuite';
 import moment from 'moment';
 import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -12,6 +12,7 @@ import ExpenseForm, { expenseDateOf, type Expense } from './ExpenseForm';
 import ExpenseDetail from './ExpenseDetail';
 import { DailyChart, DayHead, MonthSwitch } from './JournalParts';
 import { TRANSFER, formatQty } from './journalKit';
+import { SearchBox } from '../setting/settingKit';
 
 type StatusFilter = 'all' | 'active' | 'cancelled';
 type Summary = { currency: string; genus: string | null; total: number; tax: number; count: number };
@@ -187,15 +188,7 @@ const ExpensePage = () => {
 
       {/* ---- ຄົ້ນຫາ + ສະຖານະ + ມື້ທີ່ກັ່ນ ---- */}
       <div className="acc-fc-toolbar acc-tone is-coral">
-        <InputGroup inside className="acc-type-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={t('expenseSearch')} value={keyword} onChange={setKeyword} />
-          {keyword && (
-            <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-              <i className="fa-solid fa-xmark" />
-            </InputGroup.Button>
-          )}
-        </InputGroup>
+        <SearchBox value={keyword} onChange={setKeyword} placeholder={t('expenseSearch')} grow />
         <div className="acc-type-segment" role="tablist">
           {statusTabs.map((s) => (
             <button key={s.key} type="button" role="tab" aria-selected={status === s.key}

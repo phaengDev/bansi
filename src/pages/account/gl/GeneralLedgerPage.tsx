@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Input, InputGroup, Loader, Toggle } from 'rsuite';
+import { Loader, Toggle } from 'rsuite';
 import AppPage from '../../../components/Elements/AppPage';
 import { useLangField, useT } from '../../../context/LanguageContext';
 import { GROUPS, defaultLedgerRange, groupOf, money, naturalOf, type ChartAccount } from './glApi';
 import { AccountCode, GlNotReady, useChartAccounts } from './glKit';
 import { AccountLedgerView } from './AccountLedgerModal';
+import { SearchBox } from '../setting/settingKit';
 
 const hasLines = (a: ChartAccount) => Number(a.lines) > 0;
 
@@ -50,15 +51,7 @@ const GeneralLedgerPage = () => {
       <div className="acc-gl acc-gl-book">
         {/* ---- ຊ້າຍ: ເລືອກບັນຊີ ---- */}
         <aside className="acc-gl-book-list">
-          <InputGroup inside className="acc-type-search">
-            <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-            <Input placeholder={t('glSearchAccount')} value={keyword} onChange={setKeyword} />
-            {keyword && (
-              <InputGroup.Button onClick={() => setKeyword('')} aria-label={t('cancel')}>
-                <i className="fa-solid fa-xmark" />
-              </InputGroup.Button>
-            )}
-          </InputGroup>
+          <SearchBox value={keyword} onChange={setKeyword} placeholder={t('glSearchAccount')} grow />
           <label className="acc-gl-book-filter">
             <Toggle size="sm" checked={activeOnly} onChange={setActiveOnly} />
             <span>{t('glBookActiveOnly')}</span>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Button, Form, Input, InputGroup, Loader, Modal, SelectPicker, Toggle } from 'rsuite';
+import { Button, Form, Loader, Modal, SelectPicker, Toggle } from 'rsuite';
 import { useT } from '../../../context/LanguageContext';
 
 /**
@@ -8,6 +8,58 @@ import { useT } from '../../../context/LanguageContext';
  */
 
 export type ToolbarStat = { label: string; value: ReactNode; tone?: 'green' | 'violet' | 'gold' };
+
+/**
+ * ຊ່ອງຄົ້ນຫາມາດຕະຖານຂອງທຸກໜ້າ — ສູງເທົ່າປຸ່ມ (38px), ໄອຄອນຄົ້ນຫາ, ປຸ່ມ × ລ້າງ (ເມື່ອມີຄຳຄົ້ນ).
+ * ກວ້າງ 320px; grow = ຢືດຕາມພື້ນທີ່ເຫຼືອ (ສູງສຸດ 420px) ໃນແຖບເຄື່ອງມືທີ່ມີຕົວກັ່ນຫຼາຍ
+ */
+export const SearchBox = ({ value, onChange, placeholder, grow, className = '' }: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  grow?: boolean;
+  className?: string;
+}) => {
+  const t = useT();
+  return (
+    <label className={`app-search${grow ? ' is-grow' : ''}${className ? ` ${className}` : ''}`}>
+      <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
+      <input type="search" value={value} placeholder={placeholder ?? t('search')} onChange={(e) => onChange(e.target.value)} />
+      {value && (
+        <button type="button" aria-label={t('searchClear')} title={t('searchClear')} onClick={() => onChange('')}>
+          <i className="fa-solid fa-xmark" />
+        </button>
+      )}
+    </label>
+  );
+};
+
+/** ເລືອກປີ ‹ 2026 › — ປ້າຍ "ປີນີ້" ເມື່ອເປັນປີປັດຈຸບັນ, ຖ້າບໍ່ແມ່ນ ກົດປ້າຍເພື່ອກັບມາປີນີ້; max = ປີສຸດທ້າຍທີ່ເລືອກໄດ້ */
+export const YearStepper = ({ year, onChange, max }: { year: number; onChange: (year: number) => void; max?: number }) => {
+  const t = useT();
+  const current = new Date().getFullYear();
+  return (
+    <div className="year-stepper">
+      <button type="button" aria-label={t('previous')} onClick={() => onChange(year - 1)}>
+        <i className="fa-solid fa-chevron-left" />
+      </button>
+      <span className="year-stepper-value">
+        <i className="fa-regular fa-calendar" />
+        <b>{year}</b>
+        {year === current ? (
+          <em>{t('thisYear')}</em>
+        ) : (
+          <button type="button" className="year-stepper-back" onClick={() => onChange(current)}>
+            <i className="fa-solid fa-rotate-left" /> {t('thisYear')}
+          </button>
+        )}
+      </span>
+      <button type="button" aria-label={t('next')} disabled={max !== undefined && year >= max} onClick={() => onChange(year + 1)}>
+        <i className="fa-solid fa-chevron-right" />
+      </button>
+    </div>
+  );
+};
 
 export const SettingToolbar = ({ stats, keyword, onKeyword, placeholder, addLabel, onAdd, canAdd = true, children }: {
   stats: ToolbarStat[];
@@ -19,32 +71,24 @@ export const SettingToolbar = ({ stats, keyword, onKeyword, placeholder, addLabe
   canAdd?: boolean;
   /** ຕົວກັ່ນຕອງເພີ່ມເຕີມ (segment, select) ລະຫວ່າງສະຖິຕິ ແລະ ຊ່ອງຄົ້ນຫາ */
   children?: ReactNode;
-}) => {
-  const t = useT();
-  return (
-    <div className="acs-toolbar">
-      <div className="acs-stats">
-        {stats.map((s) => (
-          <span key={s.label} className={s.tone ? `is-${s.tone}` : ''}>
-            <b>{s.value}</b> {s.label}
-          </span>
-        ))}
-      </div>
-      {children}
-      {onKeyword && (
-        <InputGroup inside size="sm" className="acs-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={placeholder ?? t('search')} value={keyword} onChange={onKeyword} />
-        </InputGroup>
-      )}
-      {onAdd && (
-        <button type="button" className="acc-class-add" disabled={!canAdd} onClick={onAdd}>
-          <i className="fa-solid fa-plus" /> {addLabel}
-        </button>
-      )}
+}) => (
+  <div className="acs-toolbar">
+    <div className="acs-stats">
+      {stats.map((s) => (
+        <span key={s.label} className={s.tone ? `is-${s.tone}` : ''}>
+          <b>{s.value}</b> {s.label}
+        </span>
+      ))}
     </div>
-  );
-};
+    {children}
+    {onKeyword && <SearchBox value={keyword ?? ''} onChange={onKeyword} placeholder={placeholder} />}
+    {onAdd && (
+      <button type="button" className="acc-class-add" disabled={!canAdd} onClick={onAdd}>
+        <i className="fa-solid fa-plus" /> {addLabel}
+      </button>
+    )}
+  </div>
+);
 
 /** ສະຖານະ ໂຫຼດ / ບໍ່ມີຂໍ້ມູນ ຂອງລາຍການ */
 export const ListState = ({ loading, empty, icon, children }: {
@@ -140,7 +184,7 @@ export const MetaChip = ({ icon, children, tone }: { icon?: string; children: Re
  * ກອບຟອມ popup ມາດຕະຖານ — ຫົວ (ໄອຄອນ + ຫົວຂໍ້ + ຄຳແນະນຳ), ເນື້ອໃນ, ທ້າຍ (ຍົກເລີກ / ບັນທຶກ).
  * ເນື້ອໃນແບ່ງກຸ່ມດ້ວຍ <FormSection> ທີ່ເປັນຕາລາງ 2 ຖັນ
  */
-export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, children, wide, compact }: {
+export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, children, wide, compact, className, submit }: {
   title: string;
   hint?: string;
   icon: string;
@@ -151,10 +195,14 @@ export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, chi
   wide?: boolean;
   /** ຟອມນ້ອຍ 1–2 ຊ່ອງ (ເຊັ່ນ ຍົກເລີກລະຫັດຜ່ານເມນູ) — ແຄບລົງ, ຖັນດຽວ, ບໍ່ມີໝາຍເຫດ * */
   compact?: boolean;
+  /** class ເພີ່ມຂອງ modal — ເຊັ່ນ ກຳນົດຄວາມກວ້າງເອງ (--rs-modal-size) */
+  className?: string;
+  /** ປຸ່ມຢືນຢັນແທນ "ບັນທຶກ" — ເຊັ່ນ ອະນຸມັດ / ປະຕິເສດ (danger = ສີແດງ) */
+  submit?: { label: string; icon?: string; danger?: boolean };
 }) => {
   const t = useT();
   return (
-    <Modal open onClose={onClose} size="md" className={`acc-book-modal acs-modal${wide ? ' is-wide' : ''}${compact ? ' is-compact' : ''}`}>
+    <Modal open onClose={onClose} size="md" className={`acc-book-modal acs-modal${wide ? ' is-wide' : ''}${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}>
       <Modal.Header>
         <div className="acc-book-modal-head">
           <span className="acc-book-modal-icon"><i className={`fa-solid ${icon}`} /></span>
@@ -170,8 +218,8 @@ export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, chi
       <Modal.Footer>
         <span className="acc-book-footnote"><span className="text-danger">*</span> {t('requiredFieldsNote')}</span>
         <Button appearance="default" className="acc-book-btn is-cancel" onClick={onClose}>{t('cancel')}</Button>
-        <Button appearance="primary" className="acc-book-btn is-save" loading={saving} onClick={onSubmit}>
-          <i className="fa-solid fa-check" /> {t('save')}
+        <Button appearance="primary" className={`acc-book-btn is-save${submit?.danger ? ' is-danger' : ''}`} loading={saving} onClick={onSubmit}>
+          <i className={`fa-solid ${submit?.icon ?? 'fa-check'}`} /> {submit?.label ?? t('save')}
         </Button>
       </Modal.Footer>
     </Modal>

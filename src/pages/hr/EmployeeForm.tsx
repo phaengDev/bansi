@@ -10,9 +10,12 @@ import { useT } from '../../context/LanguageContext';
 import { amountFormatter } from '../account/gl/glKit';
 import { FormStep, PickerField } from '../account/setting/settingKit';
 import { fromApiDate } from '../account/setting/settingApi';
-import { GENDERS, MAX_FILE, fileSizeText, fullName, type Employee } from './hrApi';
+import { APP_PHONE, GENDERS, MAX_FILE, fileSizeText, fullName, type Employee } from './hrApi';
 import { useBanks, useDepartments, useDistricts, usePositions, useProvinces } from '../../utils/selectOption';
 import { bankLabel } from './hrKit';
+
+/** TextFieldProps ຂອງ InputField ບໍ່ໄດ້ປະກາດ — ສົ່ງຕໍ່ໃຫ້ Input: ເບີ 20 + 8 ຕົວເລກ = 10 ຕົວ, ແປ້ນຕົວເລກໃນມືຖື */
+const phoneProps = { maxLength: 10, inputMode: 'numeric' } as object;
 
 const { StringType, NumberType } = Schema.Types;
 const IMAGE = /^image\/(jpeg|png|webp)$/;
@@ -134,7 +137,8 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     bank_id: data?.bank_id ?? null,
     bank_account_no: data?.bank_account_no ?? '',
     bank_account_name: data?.bank_account_name ?? '',
-    province_id: data?.province_id ?? null,
+    // ແຂວງບໍ່ໄດ້ບັນທຶກ — ໃຊ້ກັ່ນລາຍການເມືອງເທົ່ານັ້ນ (ເອົາມາຈາກເມືອງທີ່ບັນທຶກໄວ້)
+    province_id: data?.district?.province_id ?? null,
     district_id: data?.district_id ?? null,
     village: data?.village ?? '',
     description: data?.description ?? '',
@@ -155,6 +159,8 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   const model = Schema.Model<any>({
     first_name: StringType().isRequired(t('inputRequired')),
     email: StringType().isEmail(t('hrEmailInvalid')),
+    // ເບີໂທ = ຊື່ເຂົ້າ app ພະນັກງານ — ບັງຄັບ 20 + 8 ຕົວເລກ
+    phone: StringType().isRequired(t('inputRequired')).addRule((value) => APP_PHONE.test(String(value).replace(/\D/g, '')), t('hrPhone20')),
     bank_account_no: StringType().pattern(/^\d[\d\s-]{3,60}\d$/, t('hrBankAccountNoInvalid')),
     department_id: NumberType().isRequired(t('selectRequired')),
   });
@@ -213,6 +219,8 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     if (!formRef.current?.check()) return;
     // ເລືອກທະນາຄານແລ້ວ ຕ້ອງມີເລກບັນຊີ (schema ບໍ່ກວດຊ່ອງຫວ່າງທີ່ບໍ່ບັງຄັບ)
     if (inputs.bank_id && !String(inputs.bank_account_no ?? '').trim()) return Notific.warning('hrBankAccountNoRequired');
+    // ແຂວງບໍ່ໄດ້ບັນທຶກແຍກ — ເລືອກແຂວງແລ້ວຕ້ອງເລືອກເມືອງນຳ ບໍ່ດັ່ງນັ້ນແຂວງຈະຫາຍ
+    if (inputs.province_id && !inputs.district_id) return Notific.warning('hrCompanyDistrictRequired');
     const body = new FormData();
     const text = (value: unknown) => String(value ?? '').trim();
     body.append('emp_code', text(inputs.emp_code).toUpperCase());
@@ -220,7 +228,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     body.append('last_name', text(inputs.last_name));
     body.append('gender', String(gender));
     body.append('birthday', apiDate(inputs.birthday));
-    body.append('phone', text(inputs.phone));
+    body.append('phone', String(inputs.phone ?? '').replace(/\D/g, ''));
     body.append('email', text(inputs.email));
     body.append('department_id', String(inputs.department_id));
     body.append('position_id', inputs.position_id ? String(inputs.position_id) : '');
@@ -229,7 +237,6 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     body.append('bank_id', inputs.bank_id ? String(inputs.bank_id) : '');
     body.append('bank_account_no', inputs.bank_id ? text(inputs.bank_account_no) : '');
     body.append('bank_account_name', inputs.bank_id ? text(inputs.bank_account_name) : '');
-    body.append('province_id', inputs.province_id ? String(inputs.province_id) : '');
     body.append('district_id', inputs.district_id ? String(inputs.district_id) : '');
     body.append('village', text(inputs.village));
     body.append('description', text(inputs.description));
@@ -257,7 +264,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   const personalDone = !!String(inputs.first_name).trim();
   const workDone = !!inputs.department_id;
   const bankDone = !!inputs.bank_id && !!String(inputs.bank_account_no).trim();
-  const addressDone = !!inputs.province_id;
+  const addressDone = !!inputs.district_id;
 
   return (
     <Modal open onClose={onClose} size="lg" className="acc-book-modal is-steps hr-employee-form">
@@ -287,7 +294,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
                 />
                 <NameWithGender gender={gender} onGender={setGender} />
                 <InputField name="last_name" label={t('hrLastName')} required={false} placeholder={t('hrLastName')} />
-                <InputField name="phone" label={t('hrPhone')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="020 xxxx xxxx" />
+                <InputField name="phone" label={t('hrPhoneApp')} icon={<i className="fa-solid fa-phone" />} placeholder="20XXXXXXXX" {...phoneProps} />
                 <InputField name="email" label={t('hrEmail')} required={false} icon={<i className="fa-solid fa-envelope" />} placeholder="name@example.com" />
               </div>
             </div>
@@ -331,7 +338,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
               required={false} placeholder={t('select')}
             />
             <PickerField name="district_id" label={t('hrDistrict')} data={districts}
-              required={false} placeholder={inputs.province_id ? t('select') : t('hrPickProvinceFirst')} disabled={!inputs.province_id}
+              required={!!inputs.province_id} placeholder={inputs.province_id ? t('select') : t('hrPickProvinceFirst')} disabled={!inputs.province_id}
             />
             <div className="is-wide">
               <InputField name="village" label={t('hrVillage')} required={false} icon={<i className="fa-solid fa-location-dot" />} />

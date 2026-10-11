@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DateRangePicker, Input, InputGroup, Loader } from 'rsuite';
+import { DateRangePicker, Loader } from 'rsuite';
 import moment from 'moment';
 import { postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -10,6 +10,7 @@ import { useLangField, useT } from '../../../context/LanguageContext';
 import { SOURCES, isNotReady, money, type JournalEntry } from './glApi';
 import { AccountCode, GlNotReady, SourceChip, useChartAccounts } from './glKit';
 import JournalEntryForm from './JournalEntryForm';
+import { SearchBox } from '../setting/settingKit';
 
 /**
  * ສະໝຸດລາຍວັນ (General Journal) — ທຸກໃບບັນທຶກບັນຊີຕາມວັນທີ, ແຕ່ລະໃບສະແດງແຖວໜີ້/ມີ.
@@ -93,10 +94,7 @@ const GeneralJournalPage = ({ manualOnly = false }: { manualOnly?: boolean }) =>
         <DateRangePicker className="acc-gl-range" format="dd/MM/yyyy" character=" – " cleanable={false} value={dates}
           onChange={(value) => value && setDates(value as [Date, Date])} placement="bottomEnd"
         />
-        <InputGroup inside size="sm" className="acs-search">
-          <InputGroup.Addon><i className="fa-solid fa-magnifying-glass" /></InputGroup.Addon>
-          <Input placeholder={t('glSearchEntry')} value={keyword} onChange={setKeyword} />
-        </InputGroup>
+        <SearchBox value={keyword} onChange={setKeyword} placeholder={t('glSearchEntry')} />
         <button type="button" className="acc-rp-btn" onClick={exportRows} disabled={!entries.length}>
           <i className="fa-solid fa-file-excel" /> Excel
         </button>

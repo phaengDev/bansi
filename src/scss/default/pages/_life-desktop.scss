@@ -460,6 +460,175 @@ $account-themes: (
 .life-desktop-shortcut-icon.is-slate { background: linear-gradient(145deg, #a9c7dc, #42647f); }
 .life-desktop-shortcut-icon.is-sky { background: linear-gradient(145deg, #8fd3ff, #2f8fd0); }
 
+// ໄອຄອນທີ່ເກີດຫຼັງເປີດໜ້າ (ກຸ່ມໃໝ່, ໄອຄອນທີ່ອອກຈາກກຸ່ມ) ຂຶ້ນທັນທີ ບໍ່ລໍຖ້າຕາມລຳດັບ --shortcut-order
+.life-desktop-shortcuts.is-settled .life-desktop-shortcut { animation-delay: 0ms; }
+
+// ---- ກຸ່ມໄອຄອນ — ລາກປຸ່ມລັດໄປທັບກັນ ຄືໜ້າຫຼັກຂອງໂທລະສັບ (DesktopMenu) ----
+.life-desktop-shortcut > .life-desktop-shortcut-icon {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+// ຂະຫຍາຍບ່ອນທີ່ນັບວ່າ "ທັບ" ອອກຈາກກ່ອງໄອຄອນເລັກໜ້ອຍ (elementsFromPoint ນັບ pseudo-element ນຳ)
+.life-desktop-shortcut-icon[data-drop-id]::after {
+  position: absolute;
+  inset: -8px;
+  content: '';
+}
+
+// ມີໄອຄອນລາກມາທັບ — ຂະຫຍາຍ ແລະ ມີວົງແກ້ວອ້ອມ: ປ່ອຍຕອນນີ້ = ລວມເປັນກຸ່ມ
+.life-desktop-shortcut.is-drop-target > .life-desktop-shortcut-icon {
+  transform: scale(1.14);
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.2),
+    0 0 0 7px rgba(255, 255, 255, 0.45),
+    0 12px 24px rgba(0, 15, 66, 0.35);
+}
+
+// ອັນທີ່ລາກຢູ່ຫົດລົງ ຄືກຳລັງຈະລົງໄປໃນກຸ່ມ
+.life-desktop-shortcut.is-merging > .life-desktop-shortcut-icon { transform: scale(0.84); }
+
+// ໄອຄອນກຸ່ມ: ແກ້ວໃສ ມີໄອຄອນນ້ອຍຂອງສະມາຊິກ 3×3
+.life-desktop-shortcut-icon.is-folder {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  padding: 5px;
+  place-items: stretch;
+  background: rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(14px) saturate(140%);
+
+  > .life-desktop-shortcut-icon {
+    width: auto;
+    height: auto;
+    border: 0;
+    border-radius: 3px;
+    font-size: 6px;
+    box-shadow: none;
+  }
+}
+
+.life-desktop-folder-backdrop {
+  position: absolute;
+  z-index: 5; // ເທິງໄອຄອນ (2) ແລະ ພາບລວມ (3)
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 8, 20, 0.32);
+  backdrop-filter: blur(8px);
+  animation: life-folder-fade 160ms ease-out both;
+}
+
+.life-desktop-folder {
+  display: flex;
+  width: min(460px, 100%);
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px 12px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  background: var(--desktop-glass-strong);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(28px) saturate(150%);
+  animation: life-folder-open 220ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+// ຊື່ກຸ່ມ — ກົດແລ້ວພິມປ່ຽນໄດ້ເລີຍ ຄືໂທລະສັບ
+.life-desktop-folder-name {
+  width: 100%;
+  padding: 6px 10px;
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+
+  &::placeholder { color: rgba(255, 255, 255, 0.6); }
+  &:hover { background: rgba(255, 255, 255, 0.06); }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.life-desktop-folder-apps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.life-desktop-folder-app {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 4px 8px;
+  color: #fff;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  transition: background 160ms ease, border-color 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  > span:last-child {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  // ລາກຢູ່ໃນກອບ = ສະລັບລຳດັບ; ອອກນອກກອບ = ອອກຈາກກຸ່ມ
+  &.is-dragging {
+    z-index: 1;
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 0.14);
+    transition: none;
+  }
+
+  &.is-drop-target {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.16);
+  }
+}
+
+.life-desktop-folder-hint {
+  margin: 0;
+  color: var(--desktop-muted);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+@keyframes life-folder-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes life-folder-open {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: none; }
+}
+
 // ກະແຈນ້ອຍມຸມລຸ່ມຂວາ — ເມນູນີ້ຕັ້ງລະຫັດຜ່ານໄວ້ (account/menuLock.ts)
 .life-desktop-shortcut-lock {
   position: absolute;
@@ -1513,6 +1682,9 @@ $account-themes: (
   .life-desktop-shortcut { width: 92px; gap: 5px; padding: 6px 4px; }
   .life-desktop-shortcut-icon { width: 44px; height: 44px; font-size: 19px; }
   .life-desktop-shortcut > span:last-child { font-size: 10px; }
+  .life-desktop-shortcut-icon.is-folder { padding: 4px; }
+  .life-desktop-folder-apps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .life-desktop-folder-app > span:last-child { font-size: 11px; }
   .life-desktop-bloom { left: 72%; width: 115vw; }
   .life-desktop-bloom--middle { width: 92vw; }
   .life-desktop-bloom--front { width: 70vw; }
@@ -1550,6 +1722,8 @@ $account-themes: (
   .settings-menu,
   .life-desktop-shortcuts,
   .life-desktop-shortcut,
+  .life-desktop-folder-backdrop,
+  .life-desktop-folder,
   .life-start {
     animation: none;
   }

@@ -396,8 +396,9 @@
   --rs-state-focus-shadow: 0 0 0 3px rgba(11, 138, 106, 0.14);
   --rs-state-focus-outline: 3px solid rgba(11, 138, 106, 0.14);
 
+  // ເຕັມຄວາມກວ້າງຂອງໜ້າຕ່າງ — ຈັດເປັນ 2 ຖັນ (.hr-company-grid) ຕາມພື້ນທີ່ຂອງໜ້າຕ່າງ (container)
   width: 100%;
-  max-width: 1080px;
+  container: hr-company / inline-size;
 
   .acc-book-main { padding: 0; }
   .rs-form-stack { display: block; }
@@ -737,6 +738,26 @@
 // ໄລຍະຫ່າງມາຈາກ gap ຂອງ .acs-page — ຕັດ margin ຂອງ .acc-book-step + .acc-book-step
 .hr-company .acc-book-step.hr-company-card { margin: 0; }
 
+// 2 ຖັນ: ໜ້າສະແດງ (ທີ່ຕັ້ງ + ເວລາ | QR) ແລະ ຟອມ (ຂໍ້ມູນ + ທີ່ຢູ່ | ທີ່ຕັ້ງ + ເວລາ); ແຄບ = ຖັນດຽວ
+.hr-company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+
+  @container hr-company (max-width: 1000px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.hr-company-col {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  container: hr-company-col / inline-size;
+
+  .acc-book-step + .acc-book-step { margin-top: 0; }
+}
+
 .hr-company-card-icon {
   display: grid;
   width: 28px;
@@ -828,4 +849,437 @@
   .hr-map { height: 280px; }
   .hr-map-search { flex-wrap: wrap; }
   .hr-map-search-btn { width: 100%; justify-content: center; }
+}
+
+// ---- ຜູ້ໃຊ້ລະບົບ (UserPage) — ບັດຜູ້ໃຊ້: ແຖບສີຕາມປະເພດ + ຮູບໃຫຍ່, ຂໍ້ມູນເຂົ້າລະບົບ, ສິດ 3 ຊ່ອງ, ປຸ່ມຄຳສັ່ງ ----
+.hr-users {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.hr-user {
+  --user-tone: #1d7fc4;
+  --user-soft: #e6f2fb;
+  --user-cover: linear-gradient(120deg, #cfe6fa 0%, #e8f3fd 55%, #f6fbff 100%);
+
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(27, 62, 94, 0.06);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover { box-shadow: 0 12px 28px rgba(27, 62, 94, 0.12); transform: translateY(-2px); }
+
+  // ສີຕາມລະດັບ: 1 ສູງສຸດ = ມ່ວງ, 2 ທຳມະດາ = ຟ້າ (ຄ່າເລີ່ມຕົ້ນຂ້າງເທິງ), 3 ທົ່ວໄປ = ຂຽວ
+  &.is-level-1 {
+    --user-tone: #604bd8;
+    --user-soft: #efeaff;
+    --user-cover: linear-gradient(120deg, #ddd3ff 0%, #efeaff 55%, #faf8ff 100%);
+  }
+
+  &.is-level-3 {
+    --user-tone: #0b7a5e;
+    --user-soft: #e3f5ef;
+    --user-cover: linear-gradient(120deg, #cdeee2 0%, #e7f7f1 55%, #f6fcf9 100%);
+  }
+
+  // ບັນຊີທີ່ປິດໃຊ້ງານ — ສີຈາງລົງ
+  &.is-off {
+    .hr-user-cover { filter: grayscale(1); opacity: 0.7; }
+    .hr-user-photo,
+    .hr-user-name b { opacity: 0.6; }
+  }
+}
+
+.hr-user-cover {
+  position: relative;
+  height: 66px;
+  overflow: hidden;
+  background: var(--user-cover);
+
+  // ວົງມົນຕົກແຕ່ງ
+  &::before,
+  &::after {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    content: '';
+  }
+
+  &::before { top: -48px; right: -26px; width: 140px; height: 140px; }
+  &::after { top: 18px; right: 96px; width: 46px; height: 46px; background: rgba(255, 255, 255, 0.28); }
+}
+
+.hr-user-state {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  color: #7b8a97;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(15, 42, 61, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+
+  label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; }
+  &.is-on { color: #0e7a52; }
+}
+
+.hr-user-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 4px;
+  background: #0e9460;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(14, 148, 96, 0.18);
+}
+
+.hr-user-id {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: -36px;
+  padding: 0 18px;
+}
+
+.hr-user-photo {
+  flex: none;
+  padding: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(27, 62, 94, 0.16);
+
+  .hr-avatar { display: grid; }
+  .hr-avatar.is-lg { width: 68px; height: 68px; }
+}
+
+.hr-user-name {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  // ເລີ່ມໃຕ້ແຖບສີ (ຮູບຊ້ອນຂຶ້ນໄປ 36px) — ຊື່ບໍ່ທັບຂອບແຖບສີ
+  padding-top: 42px;
+
+  > b {
+    overflow: hidden;
+    color: #14314d;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .hr-self { margin-left: 0; }
+}
+
+.hr-user-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  color: var(--user-tone);
+  background: var(--user-soft);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.hr-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 18px 0;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f5;
+
+  > div { display: flex; min-width: 0; align-items: center; gap: 10px; }
+
+  dt {
+    display: grid;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    margin: 0;
+    color: var(--user-tone);
+    background: var(--user-soft);
+    border-radius: 10px;
+    font-size: 12.5px;
+  }
+
+  dd {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    margin: 0;
+    line-height: 1.35;
+
+    small { color: #7b8a97; font-size: 11px; font-weight: 600; }
+    b { overflow: hidden; color: #14314d; font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap; }
+    b.is-muted { color: #9aa7b3; font-weight: 600; }
+    span { overflow: hidden; color: #5b6f80; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  }
+}
+
+// ສິດ — 3 ຊ່ອງເທົ່າກັນ: ອະນຸຍາດ = ຂຽວ ✓, ບໍ່ອະນຸຍາດ = ເທົາ ✕
+.hr-user-perms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 18px 0;
+
+  > span {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px 8px;
+    color: #9aa7b3;
+    text-align: center;
+    background: #f6f8fa;
+    border: 1px solid #eef2f5;
+    border-radius: 12px;
+
+    > i { font-size: 14px; }
+
+    small {
+      max-width: 100%;
+      overflow: hidden;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    em {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      color: #fff;
+      background: #c3ccd4;
+      border-radius: 50%;
+      font-size: 9px;
+      font-style: normal;
+    }
+
+    &.is-on {
+      color: #0e7a52;
+      background: #effaf5;
+      border-color: #cdeedd;
+
+      em { background: #0e9460; }
+    }
+  }
+}
+
+.hr-user-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 18px 16px;
+  border-top: 1px dashed #e3eaf0;
+
+  button {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 10px;
+    color: #3d5266;
+    background: #fff;
+    border: 1px solid #d5dee6;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+
+    &:hover:not(:disabled) { color: var(--user-tone); background: var(--user-soft); border-color: var(--user-tone); }
+    &:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    &.is-danger {
+      flex: none;
+      width: 36px;
+      padding: 0;
+      color: #c4343a;
+
+      &:hover:not(:disabled) { color: #fff; background: #e5484d; border-color: #e5484d; }
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hr-users { grid-template-columns: minmax(0, 1fr); }
+}
+
+// ---- QR ສະແກນເຂົ້າ-ອອກວຽກ (CompanyScanQr) — ໂປສເຕີ (ອັນດຽວກັບທີ່ດາວໂຫຼດ/ພິມ) + ປຸ່ມ ແລະ ການຕັ້ງຄ່າ ----
+.hr-qr {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.hr-qr-poster {
+  display: flex;
+  width: 320px;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 20px 18px;
+  color: #0f2a3d;
+  text-align: center;
+  background: linear-gradient(180deg, #e9f7f2 0, #fff 120px);
+  border: 1px solid #d7ebe3;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(15, 42, 61, 0.08);
+}
+
+.hr-qr-poster-head {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+
+  img { width: 44px; height: 44px; flex: none; padding: 3px; object-fit: contain; background: #fff; border-radius: 10px; }
+  span { display: flex; min-width: 0; flex-direction: column; text-align: left; line-height: 1.3; }
+  b { font-size: 15px; font-weight: 800; }
+  small { overflow: hidden; color: #5b6f80; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.hr-qr-poster-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+
+  b { color: #0b6b53; font-size: 20px; font-weight: 800; }
+  small { color: #7b8a97; font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em; }
+}
+
+.hr-qr-poster-code {
+  display: grid;
+  width: 236px;
+  height: 236px;
+  place-items: center;
+  padding: 10px;
+  background: #fff;
+  border: 2px solid #0b8a6a;
+  border-radius: 16px;
+
+  img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+}
+
+.hr-qr-poster-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span { color: #0f2a3d; font-size: 12.5px; font-weight: 700; }
+  span i { margin-right: 4px; color: #0b8a6a; }
+  small { color: #5b6f80; font-size: 11.5px; }
+}
+
+.hr-qr-side {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hr-qr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+// ບັງຄັບສະແກນ QR — ສະວິດ + ຄຳອະທິບາຍ
+.hr-qr-require {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  background: #f7f9fb;
+  border: 1px solid #e3eaf0;
+  border-radius: 12px;
+  cursor: pointer;
+
+  > span { display: flex; flex-direction: column; gap: 2px; }
+  b { color: #14314d; font-size: 13.5px; }
+  small { color: #7b8a97; font-size: 12px; }
+
+  &.is-on { background: #effaf5; border-color: #cdeedd; }
+}
+
+.hr-qr-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  color: #5b6f80;
+  font-size: 12.5px;
+  list-style: none;
+
+  i { width: 16px; margin-right: 6px; color: #0b8a6a; text-align: center; }
+}
+
+.hr-qr-regen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #e3eaf0;
+
+  small { color: #7b8a97; font-size: 12px; }
+}
+
+// ຖັນແຄບ — ໂປສເຕີ QR ຢູ່ເທິງ ປຸ່ມ/ຕັ້ງຄ່າຢູ່ລຸ່ມ; ຮູບແຜນທີ່ຢູ່ເທິງ ລາຍລະອຽດຢູ່ລຸ່ມ; ວັນໃນອາທິດ 4 ຖັນ
+@container hr-company-col (max-width: 640px) {
+  .hr-qr { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .hr-qr-side { width: 100%; }
+  .hr-days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@container hr-company-col (max-width: 520px) {
+  .hr-loc { flex-direction: column; align-items: stretch; }
+  .hr-loc-thumb { width: 100%; }
+}
+
+// ລາຍລະອຽດພະນັກງານ — ເຂົ້າ app (ເບີໂທ + ສະຖານະລະຫັດ + ຕັ້ງລະຫັດຄືນ)
+.hr-app-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+
+  > span { display: flex; flex-direction: column; gap: 2px; }
+  b i { margin-right: 4px; color: var(--book-accent, #0b8a6a); }
+  small { font-size: 12px; font-weight: 600; }
+  small.is-warn { color: #a8620a; }
+  small.is-ok { color: #0e7a52; }
 }
