@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import moment from 'moment';
 import { useT } from '../../../context/LanguageContext';
-import { minutesText, periodLabel } from '../attendance/attendanceApi';
+import { hoursText, minutesText, periodLabel } from '../attendance/attendanceApi';
 import type { Company } from '../hrApi';
 import { kip, type Payroll, type PayrollLine } from './payrollApi';
 
@@ -58,7 +58,7 @@ export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: Payr
             {item(t('payAbsenceDeduction'), -line.absence_deduction)}
             {item(t('payLateDeduction'), -line.late_deduction)}
             {item(t('payAllowance'), line.allowance)}
-            {item(t('payOvertime'), line.overtime)}
+            {item(t('payOvertime'), line.overtime, line.ot_hours > 0 ? hoursText(line.ot_hours, t) : undefined)}
             {item(t('payBonus'), line.bonus)}
             <div className="pay-slip-row is-total"><span>{t('payGross')}</span><b>{kip(line.gross)}</b></div>
           </div>

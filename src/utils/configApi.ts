@@ -1,6 +1,7 @@
 export const CONFIG = {
   // api-bansi — ຕັ້ງ VITE_API_URL ໃນ .env ເພື່ອຊີ້ໄປ server ອື່ນ
-  URLAPI: import.meta.env.VITE_API_URL || "http://localhost:8888/api",
+  URLAPI: import.meta.env.VITE_API_URL || "https://api-bansi.info-oac-centre.net/api",
+//   URLAPI: import.meta.env.VITE_API_URL || "http://localhost:8888/api",
 };
 
 import axios, { type AxiosRequestConfig } from "axios";

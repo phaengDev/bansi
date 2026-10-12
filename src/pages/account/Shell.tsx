@@ -326,7 +326,7 @@ const AccountShell: React.FC = () => {
             }}
           >
             <span className="life-desktop-brand-logo">
-              <img src="/assets/img/logo/plc2.png" alt="PL Lao Development" />
+              <img src="/assets/img/logo/logo.png" alt="PL Lao Development" />
             </span>
             <span>
               <strong>{userName || 'PLC'}</strong>
@@ -488,7 +488,7 @@ const AccountShell: React.FC = () => {
           )}
 
           <div className="life-start-footer">
-            <img src="/assets/img/logo/plc2.png" alt="" />
+            <img src="/assets/img/logo/logo.png" alt="" />
             <span>
               <strong>PL Lao Development</strong>
               <small>{t('accountWorkspaceTitle')}</small>

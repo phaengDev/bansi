@@ -114,7 +114,113 @@ export type EmployeeMonthData = {
   summary: MonthStats;
 };
 
-export type Holiday = { _uuid: number; holiday_date: string; name: string };
+/** ປະເພດວັນພັກ (tbl_holiday.kind) — ທາງການ = ລັດຖະການກຳນົດ, ບໍ່ເປັນທາງການ = ບໍລິສັດປະກາດເອງ (ໄປທ່ຽວ, ພັກພິເສດ) */
+export const HOLIDAY_OFFICIAL = 1;
+export const HOLIDAY_COMPANY = 2;
+export type Holiday = { _uuid: number; holiday_date: string; name: string; kind: number };
+
+/**
+ * ປະເພດການລາພັກ (tbl_leave_type) — paid 1 = ໄດ້ເງິນເດືອນ; max_per_year / max_per_request = ມື້ເຮັດວຽກສູງສຸດ,
+ * null = ບໍ່ຈຳກັດ (backend ກວດຕອນພະນັກງານຂໍ ແລະ ຕອນອະນຸມັດ, ນັບຄຳຂໍທີ່ລໍຖ້າ + ອະນຸມັດແລ້ວ)
+ */
+export type LeaveType = {
+  _uuid: number;
+  name: string;
+  paid: number;
+  max_per_year: number | null;
+  max_per_request: number | null;
+  description: string | null;
+  sort: number;
+  status: number;
+  /** ຈຳນວນຄຳຂໍທີ່ອ້າງອີງ — ມີ = ລຶບບໍ່ໄດ້ (ປິດໃຊ້ງານແທນ) */
+  request_count?: number;
+};
+
+/** ມື້ຂອງປະເພດໃນປີ: used ອະນຸມັດແລ້ວ, pending ລໍຖ້າ, remaining null = ບໍ່ຈຳກັດ */
+export type LeaveBalance = Pick<LeaveType, '_uuid' | 'name' | 'paid' | 'description' | 'max_per_year' | 'max_per_request'> & {
+  used: number;
+  pending: number;
+  remaining: number | null;
+};
+
+/** ສີ/ໄອຄອນຕາມ ໄດ້-ບໍ່ໄດ້ເງິນເດືອນ — ຄືສີ att-state (is-leave / is-unpaid) */
+export const leaveTone = (paid: number | boolean) => (Number(paid) === 1
+  ? { tone: 'is-leave', card: 'is-sky', icon: 'fa-umbrella-beach', label: 'leavePaid', hint: 'leavePaidHint' }
+  : { tone: 'is-unpaid', card: 'is-violet', icon: 'fa-money-bill-transfer', label: 'leaveUnpaid', hint: 'leaveUnpaidHint' });
+
+/**
+ * ປະເພດ OT (tbl_overtime.kind) — ອັດຕາ % ຂອງຄ່າແຮງຕໍ່ຊົ່ວໂມງຕັ້ງຢູ່ ຕັ້ງຄ່າເງິນເດືອນ (ກົດໝາຍແຮງງານ: 150 / 200 / 250 / 300%).
+ * ກາງຄືນ = 22:00–05:00; ວັນພັກ = ວັນພັກປະຈຳອາທິດ ຫຼື ວັນພັກ
+ */
+export const OT_KINDS: Record<number, { label: string; icon: string; tone: string }> = {
+  1: { label: 'otKindNormal', icon: 'fa-sun', tone: 'is-normal' },
+  2: { label: 'otKindNight', icon: 'fa-moon', tone: 'is-night' },
+  3: { label: 'otKindDayoff', icon: 'fa-umbrella-beach', tone: 'is-dayoff' },
+  4: { label: 'otKindDayoffNight', icon: 'fa-star-and-crescent', tone: 'is-dayoff-night' },
+};
+
+/** ວິທີຈ່າຍ OT (tbl_overtime.pay_type) — ຕາມອັດຕາ (ເງິນເດືອນ × %), ກຳນົດເງິນຕໍ່ຊົ່ວໂມງ, ເໝົາຈ່າຍ (ບໍ່ກ່ຽວກັບຊົ່ວໂມງ) */
+export const OT_PAY_RATE = 1;
+export const OT_PAY_HOURLY = 2;
+export const OT_PAY_LUMP = 3;
+export const OT_PAY_TYPES: Record<number, { label: string; hint: string; icon: string }> = {
+  [OT_PAY_RATE]: { label: 'otPayRate', hint: 'otPayRateHint', icon: 'fa-percent' },
+  [OT_PAY_HOURLY]: { label: 'otPayHourly', hint: 'otPayHourlyHint', icon: 'fa-clock' },
+  [OT_PAY_LUMP]: { label: 'otPayLump', hint: 'otPayLumpHint', icon: 'fa-sack-dollar' },
+};
+
+/** ປະເພດທີ່ແນະນຳ ຈາກມື້ (ມື້ເຮັດວຽກ / ວັນພັກ) ແລະ ເວລາເລີ່ມ (ເລີ່ມ 22:00–05:00 = ກາງຄືນ) */
+export const suggestOtKind = (workday: boolean, start: string) => {
+  const night = !!start && (start >= '22:00' || start < '05:00');
+  return workday ? (night ? 2 : 1) : (night ? 4 : 3);
+};
+
+export type Overtime = {
+  _uuid: number;
+  employee_id: number;
+  work_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  hours: number;
+  kind: number;
+  pay_type: number;
+  /** ຕໍ່ຊົ່ວໂມງ (pay_type 2) ຫຼື ຍອດເໝົາ (3); ຕາມອັດຕາ = 0 */
+  amount: number;
+  /** ເງິນຂອງລາຍການທີ່ກຳນົດເງິນເອງ — ຕາມອັດຕາ = 0 (ຄິດຕອນເຮັດເງິນເດືອນ) */
+  fixed_amount: number;
+  /** ເງິນຂອງລາຍການ (ຕາມອັດຕາ = ໂດຍປະມານຈາກເງິນເດືອນພື້ນຖານ) */
+  pay: number;
+  note: string | null;
+  employee: EmployeeRef | null;
+};
+
+export type OvertimeSummary = {
+  employee_id: number;
+  employee: EmployeeRef | null;
+  records: number;
+  hours: number;
+  /** Σ ຊົ່ວໂມງ × % ÷ 100 */
+  weighted_hours: number;
+  by_kind: Record<number, number>;
+  /** ເງິນທີ່ກຳນົດເອງ (ຕໍ່ຊົ່ວໂມງ + ເໝົາຈ່າຍ) */
+  fixed_amount: number;
+  /** ຄ່າ OT ໂດຍປະມານ (ກີບ) ຕາມເງິນເດືອນພື້ນຖານ ແລະ ຕັ້ງຄ່າປັດຈຸບັນ */
+  estimate: number;
+};
+
+export type OvertimeData = {
+  period: string;
+  /** ເດືອນນີ້ຈ່າຍເງິນເດືອນແລ້ວ — ບັນທຶກ/ແກ້ບໍ່ໄດ້ */
+  paid: boolean;
+  data: Overtime[];
+  summary: OvertimeSummary[];
+  days: DayInfo[];
+  rates: Record<number, number>;
+  hours_per_day: number;
+};
+
+/** ຊົ່ວໂມງ (ທົດສະນິຍົມ) → "3 ຊມ 30 ນທ" */
+export const hoursText = (hours: number, t: (key: string) => string) => minutesText(Math.round((Number(hours) || 0) * 60), t);
 
 /** POST ທີ່ຂຶ້ນກັບ body (ວັນທີ / ເດືອນ) — ປ່ຽນ body = ໂຫຼດໃໝ່; ຂໍ້ມູນເກົ່າຍັງສະແດງລະຫວ່າງໂຫຼດ */
 export const usePostData = <T,>(path: string, body: Record<string, unknown> | null) => {

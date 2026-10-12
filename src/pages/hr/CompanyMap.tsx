@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Notific } from '../../utils/Notification';
 import { useT } from '../../context/LanguageContext';
-import { LAT_LNG } from './hrApi';
+import { parseLatLng } from './hrApi';
 
 /** ນະຄອນຫຼວງວຽງຈັນ — ຈຸດເລີ່ມຕົ້ນຂອງແຜນທີ່ເມື່ອຍັງບໍ່ໄດ້ປັກໝຸດ */
 const VIENTIANE: L.LatLngTuple = [17.9757, 102.6331];
@@ -160,8 +160,8 @@ const CompanyMap = ({ lat, lng, radius, onPick }: Props) => {
   const search = async () => {
     const q = query.trim();
     if (!q || searching) return;
-    const pair = q.match(LAT_LNG);
-    if (pair && Math.abs(Number(pair[1])) <= 90 && Math.abs(Number(pair[2])) <= 180) return goTo(Number(pair[1]), Number(pair[2]));
+    const point = parseLatLng(q);
+    if (point) return goTo(point.lat, point.lng);
     try {
       setSearching(true);
       setResults(await searchPlaces(q));

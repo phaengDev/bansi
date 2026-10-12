@@ -4,18 +4,24 @@ import { useT } from '../../../context/LanguageContext';
 import { ATTENDANCE_MENU, firstRailKey, toRailNav } from '../../account/config/SidebarPopup';
 import AttendanceDaily from './AttendanceDaily';
 import AttendanceMonthly from './AttendanceMonthly';
+import CorrectionPage from './CorrectionPage';
 import HolidayPage from './HolidayPage';
 import LeavePage from './LeavePage';
+import LeaveTypePage from './LeaveTypePage';
+import OvertimePage from './OvertimePage';
 
 const PAGES: Record<string, ReactNode> = {
   daily: <AttendanceDaily />,
   monthly: <AttendanceMonthly />,
   leaves: <LeavePage />,
+  corrections: <CorrectionPage />,
+  overtime: <OvertimePage />,
   holidays: <HolidayPage />,
+  leaveTypes: <LeaveTypePage />,
 };
 
 /**
- * ໜ້າຕ່າງ ການເຂົ້າ-ອອກວຽກ — ແຖບຊ້າຍ: ລາຍວັນ, ລາຍເດືອນ, ຄຳຂໍລາພັກ, ວັນພັກລັດຖະການ.
+ * ໜ້າຕ່າງ ການເຂົ້າ-ອອກວຽກ — ແຖບຊ້າຍ: ລາຍວັນ, ລາຍເດືອນ, ຄຳຂໍລາພັກ, ລ່ວງເວລາ (OT), ວັນພັກ, ປະເພດການລາພັກ.
  * ພະນັກງານສະແກນຜ່ານ app ມືຖື (POST /attendance/scan) ພາຍໃນໄລຍະຂອງບໍລິສັດ (ຂໍ້ມູນບໍລິສັດ → ທີ່ຕັ້ງ)
  */
 const AttendanceWindow = () => {

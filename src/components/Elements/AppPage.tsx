@@ -68,7 +68,7 @@ export type AppPageProps = {
  *   title="ລາຍງານ"
  *   subtitle="ຕົວຢ່າງໜ້າ"
  *   badge={<span className="app-page-badge"><i className="fa-solid fa-pen-ruler" /> ສະບັບຮ່າງ</span>}
- *   rail={<img src="/assets/img/logo/plc2.png" alt="" />}
+ *   rail={<img src="/assets/img/logo/logo.png" alt="" />}
  *   railNav={[
  *     { key: 'customer', icon: 'fa-solid fa-user', label: 'ຂໍ້ມູນລູກຄ້າ' },
  *     { key: 'confirm', icon: 'fa-solid fa-circle-check', label: 'ຢືນຢັນ' },

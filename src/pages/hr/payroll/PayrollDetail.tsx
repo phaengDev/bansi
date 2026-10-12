@@ -96,6 +96,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
     [t('payAbsenceDeduction')]: l.absence_deduction,
     [t('payLateDeduction')]: l.late_deduction,
     [t('payAllowance')]: l.allowance,
+    [t('otHours')]: l.ot_hours,
     [t('payOvertime')]: l.overtime,
     [t('payBonus')]: l.bonus,
     [t('payGross')]: l.gross,
@@ -292,7 +293,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
         {lines.map((l) => <Payslip key={l._uuid} payroll={data} line={l} company={company} />)}
       </div>
 
-      {editing && <PayrollLineForm line={editing} settings={settings} onClose={() => setEditing(null)} onSaved={updated} />}
+      {editing && <PayrollLineForm line={editing} period={data.period} settings={settings} onClose={() => setEditing(null)} onSaved={updated} />}
       {paying && <PayrollPayModal payroll={data} onClose={() => setPaying(false)} onPaid={updated} />}
       {slip && (
         <Modal open onClose={() => setSlip(null)} size="sm" className="pay-slip-modal">

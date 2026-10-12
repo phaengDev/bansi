@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { Button, Input, Loader, Modal, NumberInput } from 'rsuite';
+import { Button, Input, InputGroup, Loader, Modal, NumberInput } from 'rsuite';
 import { Notific } from '../../utils/Notification';
 import { useT } from '../../context/LanguageContext';
 import CompanyMap from './CompanyMap';
-import { LAT_LNG, MAX_RADIUS, MIN_RADIUS, fixedCoord, parseCoord, satelliteSnapshot } from './hrApi';
+import { LAT_LNG, MAX_RADIUS, MIN_RADIUS, MAP_SHORT_LINK, fixedCoord, parseCoord, parseLatLng, resolveMapLink, satelliteSnapshot } from './hrApi';
+import { getErrorMessage } from '../../utils/useCRUD';
 
 export type CompanyLocationValue = { lat: number | null; lng: number | null; radius: number };
 
@@ -59,6 +60,9 @@ export const LocationModal = ({ value, applyLabel, onClose, onApply }: {
   const [latText, setLatText] = useState(value.lat !== null ? fixedCoord(value.lat) : '');
   const [lngText, setLngText] = useState(value.lng !== null ? fixedCoord(value.lng) : '');
   const [radius, setRadius] = useState<number | string>(value.radius);
+  const [pasteText, setPasteText] = useState('');
+  const [pasteError, setPasteError] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -78,6 +82,45 @@ export const LocationModal = ({ value, applyLabel, onClose, onApply }: {
     const pair = text.match(LAT_LNG);
     if (pair) pick(Number(pair[1]), Number(pair[2]));
     else setLatText(text);
+  };
+
+  /**
+   * ຊ່ອງວາງພິກັດ / ລິ້ງ Google Maps → ປັກໝຸດ ແລະ ລ້າງຊ່ອງ; ຜິດ = ຄ້າງໄວ້ໃຫ້ແກ້ (ຂອບແດງ).
+   * ລິ້ງສັ້ນ (Share → Copy link) ບໍ່ມີພິກັດໃນຕົວ → ໃຫ້ api-bansi ຕາມ redirect ຫາລິ້ງເຕັມກ່ອນ
+   */
+  const applyPasted = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || resolving) return;
+    setPasteText(trimmed);
+    let point = parseLatLng(trimmed);
+    if (!point && MAP_SHORT_LINK.test(trimmed)) {
+      try {
+        setResolving(true);
+        point = await resolveMapLink(trimmed);
+      } catch (error) {
+        console.error(error);
+        setPasteError(true);
+        return Notific.error(getErrorMessage(error));
+      } finally {
+        setResolving(false);
+      }
+    }
+    if (!point) {
+      setPasteError(true);
+      return Notific.warning('hrCompanyPasteInvalid');
+    }
+    pick(point.lat, point.lng);
+    setPasteText('');
+  };
+
+  const pasteClipboard = async () => {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      return Notific.warning('hrCompanyPasteDenied');
+    }
+    applyPasted(text);
   };
 
   /** ຕຳແໜ່ງຂອງເຄື່ອງນີ້ — ຄອມພິວເຕີມັກໃຊ້ Wi-Fi/IP ຈຶ່ງອາດຄາດເຄື່ອນ ໃຫ້ກວດໝຸດໃນແຜນທີ່ອີກເທື່ອ */
@@ -130,6 +173,38 @@ export const LocationModal = ({ value, applyLabel, onClose, onApply }: {
               <button type="button" className="acc-rp-btn" disabled={locating} onClick={locate}>
                 {locating ? <Loader size="xs" /> : <i className="fa-solid fa-location-crosshairs" />} {t('hrCompanyLocateMe')}
               </button>
+            </div>
+          </div>
+
+          <div className={`hr-map-paste${pasteError ? ' is-error' : ''}`}>
+            <span className="hr-map-paste-icon"><i className="fa-solid fa-map-pin" /></span>
+            <div className="hr-map-paste-body">
+              <label className="form-label" htmlFor="hr-map-paste-input">{t('hrCompanyPasteCoords')}</label>
+              <div className="hr-map-paste-row">
+                <InputGroup inside>
+                  <InputGroup.Addon>{resolving ? <Loader size="xs" /> : <i className="fa-solid fa-paste" />}</InputGroup.Addon>
+                  <Input id="hr-map-paste-input" value={pasteText} disabled={resolving} placeholder={t('hrCompanyPastePlaceholder')}
+                    onChange={(next) => {
+                      setPasteText(next);
+                      setPasteError(false);
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      applyPasted(e.clipboardData.getData('text'));
+                    }}
+                    onKeyDown={(e) => {
+                      // Enter ໃນ modal — ໃຊ້ພິກັດ ບໍ່ submit ຟອມບໍລິສັດ
+                      if (e.key !== 'Enter') return;
+                      e.preventDefault();
+                      applyPasted(pasteText);
+                    }}
+                  />
+                </InputGroup>
+                <button type="button" className="acc-rp-btn is-primary" disabled={resolving} onClick={pasteClipboard}>
+                  <i className="fa-solid fa-clipboard" /> {t('hrCompanyPaste')}
+                </button>
+              </div>
+              <small className="hr-field-hint">{t('hrCompanyPasteHint')}</small>
             </div>
           </div>
 

@@ -9,6 +9,12 @@ import { useT } from '../../../context/LanguageContext';
 import { FormStep } from '../../account/setting/settingKit';
 import { runSave } from '../../account/setting/settingApi';
 import { kip, kipFormatter, type PayrollSettings, type TaxBracket } from './payrollApi';
+import { OT_KINDS } from '../attendance/attendanceApi';
+
+/** ຖັນອັດຕາ OT ໃນຕັ້ງຄ່າ ↔ ປະເພດ OT (tbl_overtime.kind) */
+const OT_RATE_FIELDS = [
+  ['ot_rate_normal', 1], ['ot_rate_night', 2], ['ot_rate_dayoff', 3], ['ot_rate_dayoff_night', 4],
+] as const;
 
 type Bracket = TaxBracket & { key: number };
 let seq = 0;
@@ -50,7 +56,7 @@ const PolicyRow = ({ on, onChange, title, hint }: { on: boolean; onChange: (on: 
 
 /**
  * ຕັ້ງຄ່າເງິນເດືອນ — ນະໂຍບາຍເປີດ/ປິດ ການຫັກ (ປກສ, ອາກອນ, ຂາດວຽກ, ມາຊ້າ), ອັດຕາປະກັນສັງຄົມ, ຂັ້ນອາກອນລາຍໄດ້,
- * ຄ່າລ່ວງເວລາທີ່ບໍ່ເສຍອາກອນ ແລະ ນາທີຜ່ອນຜັນມາຊ້າ. ປິດ = ລະບົບຄິດເປັນ 0 (ແຕ່ລະຄົນຍັງກຳນົດເອງໄດ້ໃນໃບເງິນເດືອນ).
+ * ຄ່າລ່ວງເວລາທີ່ບໍ່ເສຍອາກອນ, ນາທີຜ່ອນຜັນມາຊ້າ ແລະ ອັດຕາຄ່າລ່ວງເວລາ (OT) ຕາມປະເພດ. ປິດ = ລະບົບຄິດເປັນ 0 (ແຕ່ລະຄົນຍັງກຳນົດເອງໄດ້ໃນໃບເງິນເດືອນ).
  * ໃຊ້ກັບໃບເງິນເດືອນທີ່ສ້າງ / ຄິດໄລ່ໃໝ່ ຫຼັງບັນທຶກ (ໃບທີ່ຈ່າຍແລ້ວບໍ່ປ່ຽນ)
  */
 const PayrollSettingPage = () => {
@@ -131,9 +137,25 @@ const PayrollSettingPage = () => {
                 />
               </Field>
             </FormStep>
+
+            <FormStep no={3} done title={t('payOtSetting')} hint={t('payOtSettingHint')}>
+              <Field label={t('payOtHoursPerDay')} hint={t('payOtHoursPerDayHint')}>
+                <NumberInput value={values.ot_hours_per_day} onChange={(v) => set('ot_hours_per_day', num(v))}
+                  postfix={t('attHour')} min={1} max={24} step={0.5} disabled={!canEdit}
+                />
+              </Field>
+              <div className="is-wide pay-ot-rates">
+                {OT_RATE_FIELDS.map(([key, kind]) => (
+                  <label key={key} className={`pay-ot-rate ${OT_KINDS[kind].tone}`}>
+                    <span><i className={`fa-solid ${OT_KINDS[kind].icon}`} /> {t(OT_KINDS[kind].label)}</span>
+                    <NumberInput value={values[key]} onChange={(v) => set(key, num(v))} postfix="%" min={0} max={1000} step={10} disabled={!canEdit} />
+                  </label>
+                ))}
+              </div>
+            </FormStep>
           </div>
           <div className="pay-settings-col">
-            <FormStep no={3} done={values.tax_enabled} title={t('payTaxBrackets')} hint={t('payTaxBracketsHint')}
+            <FormStep no={4} done={values.tax_enabled} title={t('payTaxBrackets')} hint={t('payTaxBracketsHint')}
               note={<PolicySwitch on={values.tax_enabled} onChange={(on) => set('tax_enabled', on)} />}
             >
               {!values.tax_enabled && offNote(t('payTaxOffNote'))}

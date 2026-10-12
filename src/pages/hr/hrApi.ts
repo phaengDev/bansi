@@ -138,6 +138,36 @@ export const parseCoord = (value: unknown, limit: number) => {
 export const fixedCoord = (n: number) => n.toFixed(7);
 
 /**
+ * ຂໍ້ຄວາມທີ່ສຳເນົາຈາກ Google Maps → { lat, lng }; ບໍ່ພົບ / ເກີນຂອບເຂດ = null.
+ * ຮັບ "17.97, 102.64" ຫຼື ລິ້ງເຕັມ: ໝຸດສະຖານທີ່ (!3d…!4d…), /search/lat,+lng, /place/lat,lng, ?q=lat,lng,
+ * ຈຸດກາງຈໍ (/@lat,lng,17z). ລິ້ງສັ້ນ maps.app.goo.gl ບໍ່ມີພິກັດ — ໃຊ້ resolveMapLink ກ່ອນ
+ */
+export const parseLatLng = (text: string) => {
+  let s = text.trim();
+  try {
+    s = decodeURIComponent(s);
+  } catch {
+    // ລິ້ງມີ % ທີ່ຖອດບໍ່ໄດ້ — ໃຊ້ຂໍ້ຄວາມເດີມ
+  }
+  const m = s.match(LAT_LNG)
+    ?? s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
+    ?? s.match(/[@=/](-?\d{1,2}\.\d+),[\s+]*(-?\d{1,3}\.\d+)/);
+  if (!m) return null;
+  const lat = parseCoord(m[1], 90);
+  const lng = parseCoord(m[2], 180);
+  return lat !== null && lng !== null ? { lat, lng } : null;
+};
+
+/** ລິ້ງສັ້ນ Google Maps (ປຸ່ມ Share → Copy link) — ມີແຕ່ລະຫັດ ບໍ່ມີພິກັດ */
+export const MAP_SHORT_LINK = /https:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps)\/[A-Za-z0-9_-]+/;
+
+/** ລິ້ງສັ້ນ → ລິ້ງເຕັມຜ່ານ api-bansi (browser ຕາມ redirect ຂ້າມໂດເມນບໍ່ໄດ້) → { lat, lng } | null */
+export const resolveMapLink = async (text: string) => {
+  const res = await postApi('/company/map-link', { url: text });
+  return parseLatLng(String(res.data?.data?.url ?? ''));
+};
+
+/**
  * ຮູບດາວທຽມນິ່ງ (Esri World Imagery export, ຟຣີ) ກວ້າງ widthMeters ແມັດ ມີຈຸດຢູ່ກາງ — ຂະໜາດ 480×300.
  * ຄິດ bbox ເປັນ Web Mercator (ແມັດໃນແຜນທີ່ = ແມັດແທ້ ÷ cos(lat))
  */

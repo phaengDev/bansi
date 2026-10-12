@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import moment from 'moment';
 import { Input, NumberInput } from 'rsuite';
 import { postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { useT } from '../../../context/LanguageContext';
 import { FormSection, SettingModal } from '../../account/setting/settingKit';
 import { runSave } from '../../account/setting/settingApi';
-import { minutesText } from '../attendance/attendanceApi';
+import { OT_KINDS, OT_PAY_TYPES, hoursText, minutesText, weekdayKey, type Overtime } from '../attendance/attendanceApi';
 import {
   MODE_ALWAYS, MODE_MANUAL, MODE_NONE, MODE_POLICY, kip, kipFormatter,
   type LineResult, type ModeKey, type Payroll, type PayrollLine, type PayrollSettings,
@@ -13,13 +14,13 @@ import {
 
 type Values = Pick<PayrollLine,
   'allowance' | 'overtime' | 'bonus' | 'other_deduction' | 'absence_deduction' | 'late_deduction' | 'sso_employee'
-  | 'sso_employer' | 'tax' | ModeKey> & { note: string };
+  | 'sso_employer' | 'tax' | 'overtime_mode' | ModeKey> & { note: string };
 type Amount = keyof LineResult & keyof Values;
 
 const PREVIEW_DELAY = 300;
 
 const MoneyInput = ({ label, value, onChange, disabled, hint }: {
-  label: string;
+  label: ReactNode;
   value: number;
   onChange: (value: number) => void;
   disabled?: boolean;
@@ -33,6 +34,93 @@ const MoneyInput = ({ label, value, onChange, disabled, hint }: {
     {hint && <small className="pay-field-hint" title={typeof hint === 'string' ? hint : undefined}>{hint}</small>}
   </div>
 );
+
+/** ຄ່າລ່ວງເວລາ: ຄິດຈາກບັນທຶກ OT (ໜ້າ ການເຂົ້າ-ອອກວຽກ → OT) ຫຼື ປ້ອນເອງ */
+const OtSwitch = ({ value, onChange }: { value: number; onChange: (mode: number) => void }) => {
+  const t = useT();
+  return (
+    <span className="pay-mode is-mini" role="radiogroup">
+      {[
+        { mode: MODE_POLICY, icon: 'fa-business-time', label: t('payOtFromRecords') },
+        { mode: MODE_MANUAL, icon: 'fa-pen', label: t('payManual') },
+      ].map((o) => (
+        <button key={o.mode} type="button" role="radio" aria-checked={value === o.mode}
+          className={`is-mode-${o.mode}${value === o.mode ? ' is-active' : ''}`} onClick={() => onChange(o.mode)}
+        >
+          <i className={`fa-solid ${o.icon}`} /> {o.label}
+        </button>
+      ))}
+    </span>
+  );
+};
+
+/**
+ * ຄ່າລ່ວງເວລາ — ແຖວເຕັມ: ສະວິດ (ຕາມບັນທຶກ OT / ປ້ອນເອງ) + ຍອດ, ແລະ ລາຍການ OT ຂອງເດືອນ (ວັນທີ, ເວລາ, ປະເພດ, ວິທີຈ່າຍ, ເງິນ).
+ * ຕາມບັນທຶກ OT = ຍອດມາຈາກລາຍການທັນທີ (ບັນທຶກ OT ໃໝ່ກໍ່ຂຶ້ນເອງ); ປ້ອນເອງ = ກຳນົດຍອດເອງ ບໍ່ສົນລາຍການ
+ */
+const OtBlock = ({ records, mode, manualValue, computed, onMode, onManual }: {
+  records: Overtime[] | null;
+  mode: number;
+  manualValue: number;
+  computed: number;
+  onMode: (mode: number) => void;
+  onManual: (value: number) => void;
+}) => {
+  const t = useT();
+  const manual = mode === MODE_MANUAL;
+  const list = records ?? [];
+  const hours = list.reduce((n, r) => n + r.hours, 0);
+  const total = list.reduce((n, r) => n + r.pay, 0);
+  return (
+    <div className={`is-wide pay-ot-block${manual ? ' is-manual' : ''}`}>
+      <div className="rs-form-group">
+        <label className="form-label">{t('payOvertime')}</label>
+        <div className="pay-ot-control">
+          <OtSwitch value={mode} onChange={onMode} />
+          <NumberInput value={manual ? manualValue : computed} onChange={(v) => onManual(Math.max(0, Number(v) || 0))} formatter={kipFormatter}
+            controls={false} prefix="₭" min={0} disabled={!manual}
+          />
+        </div>
+        <small className="pay-field-hint">
+          {manual
+            ? (list.length ? `${t('payOtManualHint')} · ${t('payOtRecordsTotal')} ₭${kip(total)}` : t('payOtManualHint'))
+            : (list.length ? `${list.length} ${t('otRecords')} · ${hoursText(hours, t)}` : t('payOtNone'))}
+        </small>
+      </div>
+
+      {records === null ? null : list.length > 0 && (
+        <div className="pay-ot-records">
+          {list.map((r) => {
+            const kind = OT_KINDS[r.kind] ?? OT_KINDS[1];
+            const pay = OT_PAY_TYPES[r.pay_type] ?? OT_PAY_TYPES[1];
+            return (
+              <div key={r._uuid} className="pay-ot-record">
+                <span className="pay-ot-date">
+                  <b>{moment(r.work_date).format('DD/MM')}</b>
+                  <small>{t(weekdayKey(r.work_date))}</small>
+                </span>
+                <span className="pay-ot-time">
+                  <b>{r.start_time && r.end_time ? `${r.start_time}–${r.end_time}` : '—'}</b>
+                  <small>{hoursText(r.hours, t)}</small>
+                </span>
+                <span className={`ot-pill ${kind.tone}`}><i className={`fa-solid ${kind.icon}`} /> {t(kind.label)}</span>
+                <span className="pay-ot-method">
+                  <i className={`fa-solid ${pay.icon}`} /> {t(pay.label)}
+                  {r.pay_type === 2 && <small> · {kip(r.amount)}/{t('attHour')}</small>}
+                </span>
+                <b className="pay-ot-amount">₭ {kip(r.pay)}</b>
+              </div>
+            );
+          })}
+          <div className="pay-ot-record is-total">
+            <span>{t('payOtRecordsTotal')}</span>
+            <b className="pay-ot-amount">₭ {kip(total)}</b>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
  * ນະໂຍບາຍສະເພາະຄົນ ທີ່ຫົວຂອງກຸ່ມ: ຕາມບໍລິສັດ (ບອກວ່າບໍລິສັດຫັກ ຫຼື ບໍ່) / ຫັກ (ເຖິງບໍລິສັດປິດໄວ້) / ບໍ່ຫັກ / ກຳນົດເອງ.
@@ -65,8 +153,10 @@ const ModeSwitch = ({ value, policy, onChange }: { value: number; policy: 'on' |
  * ແກ້ເງິນເດືອນລາຍຄົນ (ໃບຮ່າງ) — ເງິນເພີ່ມ, ຫັກຕາມການເຂົ້າວຽກ, ປກສ, ອາກອນ, ຫັກອື່ນ. ແຕ່ລະກຸ່ມການຫັກມີນະໂຍບາຍ
  * ສະເພາະຄົນ (ຕາມບໍລິສັດ / ຫັກ / ບໍ່ຫັກ / ກຳນົດເອງ); ຜົນລວມດ້ານຂວາມາຈາກ backend (preview) ທຸກຄັ້ງທີ່ປ່ຽນ
  */
-const PayrollLineForm = ({ line, settings, onClose, onSaved }: {
+const PayrollLineForm = ({ line, period, settings, onClose, onSaved }: {
   line: PayrollLine;
+  /** ເດືອນຂອງໃບເງິນເດືອນ "YYYY-MM" — ດຶງບັນທຶກ OT ຂອງຄົນນີ້ */
+  period: string;
   /** ຕັ້ງຄ່າເງິນເດືອນປັດຈຸບັນ — ສະແດງວ່ານະໂຍບາຍໃດປິດໄວ້ */
   settings: PayrollSettings | null;
   onClose: () => void;
@@ -77,6 +167,7 @@ const PayrollLineForm = ({ line, settings, onClose, onSaved }: {
   const [values, setValues] = useState<Values>({
     allowance: line.allowance,
     overtime: line.overtime,
+    overtime_mode: line.overtime_mode,
     bonus: line.bonus,
     other_deduction: line.other_deduction,
     absence_deduction: line.absence_deduction,
@@ -92,6 +183,13 @@ const PayrollLineForm = ({ line, settings, onClose, onSaved }: {
   const [result, setResult] = useState<LineResult>(line);
   const [warning, setWarning] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [otRecords, setOtRecords] = useState<Overtime[] | null>(null);
+
+  useEffect(() => {
+    postApi('/overtime/fetch', { period, employee_id: line.employee_id })
+      .then((res) => setOtRecords(res.data?.data ?? []))
+      .catch(() => setOtRecords([]));
+  }, [period, line.employee_id]);
 
   const set = <K extends keyof Values>(key: K, value: Values[K]) => setValues((v) => ({ ...v, [key]: value }));
 
@@ -163,8 +261,11 @@ const PayrollLineForm = ({ line, settings, onClose, onSaved }: {
 
           <FormSection title={t('payAdditions')}>
             <MoneyInput label={t('payAllowance')} value={values.allowance} onChange={(v) => set('allowance', v)} />
-            <MoneyInput label={t('payOvertime')} value={values.overtime} onChange={(v) => set('overtime', v)} />
             <MoneyInput label={t('payBonus')} value={values.bonus} onChange={(v) => set('bonus', v)} />
+            <OtBlock records={otRecords} mode={values.overtime_mode} manualValue={values.overtime} computed={result.overtime}
+              onMode={(mode) => setValues((v) => ({ ...v, overtime_mode: mode, ...(mode === MODE_MANUAL ? { overtime: result.overtime } : {}) }))}
+              onManual={(v) => set('overtime', v)}
+            />
           </FormSection>
 
           <FormSection title={t('payAttendanceDeduction')} note={
@@ -214,7 +315,7 @@ const PayrollLineForm = ({ line, settings, onClose, onSaved }: {
           {row(t('payAbsenceDeduction'), result.absence_deduction, 'minus')}
           {row(t('payLateDeduction'), result.late_deduction, 'minus')}
           {row(t('payAllowance'), result.allowance, 'plus')}
-          {row(t('payOvertime'), result.overtime, 'plus')}
+          {row(<>{t('payOvertime')}{values.overtime_mode !== MODE_MANUAL && !!otRecords?.length && <small> · {hoursText(otRecords.reduce((n, r) => n + r.hours, 0), t)}</small>}</>, result.overtime, 'plus')}
           {row(t('payBonus'), result.bonus, 'plus')}
           {row(t('payGross'), result.gross, 'total')}
           {row(t('paySsoEmployee'), result.sso_employee, 'minus')}

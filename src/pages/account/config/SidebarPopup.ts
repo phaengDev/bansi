@@ -157,7 +157,7 @@ export const HR_MENU: SidebarPopupGroup[] = [
   },
 ];
 
-/** ເມນູຂອງໜ້າຕ່າງ ການເຂົ້າ-ອອກວຽກ — ລາຍວັນ, ລາຍເດືອນ, ຄຳຂໍລາພັກ ແລະ ວັນພັກລັດຖະການ */
+/** ເມນູຂອງໜ້າຕ່າງ ການເຂົ້າ-ອອກວຽກ — ລາຍວັນ, ລາຍເດືອນ, ຄຳຂໍລາພັກ, OT, ວັນພັກ ແລະ ປະເພດການລາພັກ */
 export const ATTENDANCE_MENU: SidebarPopupGroup[] = [
   {
     group: 'accountAppAttendance',
@@ -165,12 +165,15 @@ export const ATTENDANCE_MENU: SidebarPopupGroup[] = [
       { key: 'daily', icon: 'fa-solid fa-calendar-day', label: 'attDaily' },
       { key: 'monthly', icon: 'fa-solid fa-table-cells', label: 'attMonthly' },
       { key: 'leaves', icon: 'fa-solid fa-plane-departure', label: 'attLeaveRequests' },
+      { key: 'corrections', icon: 'fa-solid fa-fingerprint', label: 'attCorrections' },
+      { key: 'overtime', icon: 'fa-solid fa-business-time', label: 'attOvertime' },
     ],
   },
   {
     group: 'attGroupSettings',
     items: [
       { key: 'holidays', icon: 'fa-solid fa-umbrella-beach', label: 'attHolidays' },
+      { key: 'leaveTypes', icon: 'fa-solid fa-plane-departure', label: 'lvTypes' },
     ],
   },
 ];

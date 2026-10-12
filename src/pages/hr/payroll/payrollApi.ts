@@ -48,6 +48,13 @@ export type PayrollLine = {
   late_deduction: number;
   allowance: number;
   overtime: number;
+  /** ຊົ່ວໂມງ OT ຂອງເດືອນ ແລະ ຊົ່ວໂມງຄູນອັດຕາ (ຕອນສ້າງ / ຄິດໄລ່ໃໝ່) */
+  ot_hours: number;
+  ot_weighted_hours: number;
+  /** OT ທີ່ກຳນົດເງິນເອງ (ຕໍ່ຊົ່ວໂມງ + ເໝົາຈ່າຍ) */
+  ot_fixed_amount: number;
+  /** MODE_POLICY = ຄິດຈາກບັນທຶກ OT, MODE_MANUAL = ປ້ອນເອງ */
+  overtime_mode: number;
   bonus: number;
   gross: number;
   sso_base: number;
@@ -110,6 +117,12 @@ export type PayrollSettings = {
   late_grace_minutes: number;
   deduct_absent: boolean;
   deduct_late: boolean;
+  /** ຊົ່ວໂມງເຮັດວຽກຕໍ່ມື້ (ຄ່າແຮງຕໍ່ຊົ່ວໂມງຂອງ OT) + % ຕາມປະເພດ OT */
+  ot_hours_per_day: number;
+  ot_rate_normal: number;
+  ot_rate_night: number;
+  ot_rate_dayoff: number;
+  ot_rate_dayoff_night: number;
   updatedAt: string | null;
 };
 

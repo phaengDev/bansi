@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input, Loader } from 'rsuite';
 import moment from 'moment';
-import { putApi } from '../../../utils/configApi';
+import { postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { fullName, type EmployeeRef } from '../hrApi';
 import { HrAvatar } from '../hrKit';
-import { PAID_LEAVE, UNPAID_LEAVE, dayLabel, usePostData } from './attendanceApi';
+import { PAID_LEAVE, dayLabel, leaveTone, usePostData, type LeaveBalance, type LeaveType } from './attendanceApi';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 
 /** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ພະນັກງານຍົກເລີກ (ສີຢືມ .att-state) */
@@ -20,16 +20,14 @@ const LEAVE_STATUSES: Record<number, { label: string; tone: string; icon: string
   4: { label: 'leaveStatusCancelled', tone: 'is-off', icon: 'fa-ban' },
 };
 
-/** ປະເພດ = status ຂອງ tbl_attendance ທີ່ບັນທຶກຕອນອະນຸມັດ */
-const LEAVE_TYPES: Record<number, { label: string; tone: string }> = {
-  [PAID_LEAVE]: { label: 'leavePaid', tone: 'is-leave' },
-  [UNPAID_LEAVE]: { label: 'leaveUnpaid', tone: 'is-unpaid' },
-};
-
 type LeaveRequest = {
   _uuid: number;
   employee_id: number;
+  /** null = ຄຳຂໍເກົ່າກ່ອນມີປະເພດ — ສະແດງຕາມ leave_type (ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ) */
+  leave_type_id: number | null;
+  /** status ຂອງ tbl_attendance ທີ່ບັນທຶກຕອນອະນຸມັດ: 2 ໄດ້ເງິນເດືອນ, 3 ບໍ່ໄດ້ */
   leave_type: number;
+  type: Pick<LeaveType, '_uuid' | 'name' | 'paid' | 'max_per_year' | 'max_per_request'> | null;
   start_date: string;
   end_date: string;
   /** ມື້ເຮັດວຽກໃນຊ່ວງ (ຕອນຂໍ) / ມື້ທີ່ບັນທຶກແທ້ (ຕອນອະນຸມັດ) */
@@ -51,16 +49,89 @@ type LeaveData = {
 const rangeLabel = (row: LeaveRequest) =>
   row.start_date === row.end_date ? dayLabel(row.start_date) : `${dayLabel(row.start_date)} – ${dayLabel(row.end_date)}`;
 
-/** ປະເພດການລາຕອນອະນຸມັດ — ບັດເລືອກ 2 ອັນ (ໄອຄອນ + ຜົນຕໍ່ເງິນເດືອນ) */
-const TYPE_TILES = [
-  { value: PAID_LEAVE, icon: 'fa-sack-dollar', hint: 'leavePaidHint' },
-  { value: UNPAID_LEAVE, icon: 'fa-money-bill-transfer', hint: 'leaveUnpaidHint' },
-];
+/** ຊື່ປະເພດຂອງຄຳຂໍ + ສີຕາມ ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ (ຄຳຂໍເກົ່າບໍ່ມີປະເພດ = ປ້າຍ ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ) */
+const typeLabel = (row: LeaveRequest, t: (key: string) => string) => {
+  const meta = leaveTone(row.type ? row.type.paid : row.leave_type === PAID_LEAVE);
+  return { tone: meta.tone, label: row.type?.name ?? t(meta.label) };
+};
+
+/**
+ * ປະເພດການລາ (ບັດ) + ມື້ທີ່ເຫຼືອຂອງພະນັກງານໃນປີ (ບໍ່ນັບຄຳຂໍນີ້) — ຄຳຂໍນີ້ເກີນຂີດຈຳກັດ = ບັດສີແດງ
+ * (ຍັງອະນຸມັດໄດ້ — HR ເລືອກ ໄດ້ເງິນເດືອນ / ຕັດເງິນເດືອນ ຂ້າງລຸ່ມ)
+ */
+const LeaveTypeTiles = ({ balances, days, value, onChange }: {
+  balances: LeaveBalance[];
+  days: number;
+  value: number | null;
+  onChange: (value: number) => void;
+}) => {
+  const t = useT();
+  return (
+    <div className="lv-review-types" role="radiogroup">
+      {balances.map((b) => {
+        const meta = leaveTone(b.paid);
+        const on = value === b._uuid;
+        const overRequest = !!b.max_per_request && days > b.max_per_request;
+        const overYear = b.remaining !== null && days > b.remaining;
+        return (
+          <button
+            key={b._uuid} type="button" role="radio" aria-checked={on}
+            className={`lv-type ${meta.tone}${on ? ' is-on' : ''}${overRequest || overYear ? ' is-over' : ''}`} onClick={() => onChange(b._uuid)}
+          >
+            <span className="lv-type-icon"><i className={`fa-solid ${meta.icon}`} /></span>
+            <span>
+              <b>{b.name}</b>
+              <small>
+                {t(meta.label)} · {b.max_per_year
+                  ? `${t('lvBalanceLeft')} ${b.remaining} / ${b.max_per_year} ${t('leaveDayUnit')}`
+                  : t('lvTypeUnlimited')}
+              </small>
+              {(overRequest || overYear) && (
+                <small className="lv-type-over">
+                  <i className="fa-solid fa-triangle-exclamation" />{' '}
+                  {overRequest ? `${t('lvOverRequest')} ${b.max_per_request} ${t('leaveDayUnit')}` : t('lvOverYear')}
+                </small>
+              )}
+            </span>
+            <i className={`lv-type-check fa-${on ? 'solid fa-circle-check' : 'regular fa-circle'}`} />
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 /**
  * ອະນຸມັດ (ເລືອກປະເພດຄືນໄດ້) / ປະຕິເສດ + ໝາຍເຫດຂອງ HR — ສະແດງຄຳຂໍເປັນບັດ: ພະນັກງານ, ຊ່ວງວັນທີ / ຈຳນວນມື້ / ວັນສົ່ງ,
  * ເຫດຜົນ; ປຸ່ມຢືນຢັນເປັນ "ອະນຸມັດ" (ຂຽວ) ຫຼື "ປະຕິເສດ" (ແດງ)
  */
+/** ຄຳຂໍນີ້ເກີນຂີດຈຳກັດຂອງປະເພດ (ຕໍ່ຄັ້ງ / ມື້ທີ່ເຫຼືອຂອງປີ) */
+const isOver = (b: LeaveBalance | undefined, days: number) =>
+  !!b && ((!!b.max_per_request && days > b.max_per_request) || (b.remaining !== null && days > b.remaining));
+
+/** HR ເລືອກ ໄດ້ເງິນເດືອນ / ຕັດເງິນເດືອນ ຂອງມື້ລາ */
+const PayTiles = ({ value, onChange }: { value: boolean; onChange: (paid: boolean) => void }) => {
+  const t = useT();
+  return (
+    <div className="lv-review-types" role="radiogroup">
+      {[true, false].map((paid) => {
+        const meta = leaveTone(paid);
+        const on = value === paid;
+        return (
+          <button key={String(paid)} type="button" role="radio" aria-checked={on} className={`lv-type ${meta.tone}${on ? ' is-on' : ''}`} onClick={() => onChange(paid)}>
+            <span className="lv-type-icon"><i className={`fa-solid ${paid ? 'fa-sack-dollar' : meta.icon}`} /></span>
+            <span>
+              <b>{t(paid ? 'leavePaid' : 'lvPayCut')}</b>
+              <small>{t(meta.hint)}</small>
+            </span>
+            <i className={`lv-type-check fa-${on ? 'solid fa-circle-check' : 'regular fa-circle'}`} />
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const ReviewModal = ({ row, mode, onClose, onSaved }: {
   row: LeaveRequest;
   mode: 'approve' | 'reject';
@@ -69,18 +140,51 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
 }) => {
   const t = useT();
   const approve = mode === 'approve';
-  const [leaveType, setLeaveType] = useState(row.leave_type);
+  const [leaveTypeId, setLeaveTypeId] = useState<number | null>(row.leave_type_id);
+  /** null = ກຳລັງໂຫຼດ */
+  const [balances, setBalances] = useState<LeaveBalance[] | null>(approve ? null : []);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  /** null = ຕາມຄ່າເລີ່ມຕົ້ນ (ປະເພດໄດ້ເງິນເດືອນ ແລະ ບໍ່ເກີນສິດ = ໄດ້, ອື່ນໆ = ຕັດ); ປ່ຽນປະເພດ = ກັບຄ່າເລີ່ມຕົ້ນ */
+  const [paidPick, setPaidPick] = useState<boolean | null>(null);
   const employee = row.employee;
   const state = LEAVE_STATUSES[row.status] ?? LEAVE_STATUSES[PENDING];
+  const selected = balances?.find((b) => b._uuid === leaveTypeId);
+  const over = isOver(selected, row.days);
+  const defaultPaid = selected ? Number(selected.paid) === 1 && !over : row.leave_type === PAID_LEAVE;
+  const paid = paidPick ?? defaultPaid;
+
+  // ມື້ທີ່ເຫຼືອຂອງແຕ່ລະປະເພດ — ຄຳຂໍເກົ່າບໍ່ມີປະເພດ (ຫຼື ປະເພດຖືກປິດ) ເລືອກປະເພດທຳອິດທີ່ ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ ກົງກັນ
+  useEffect(() => {
+    if (!approve) return;
+    let alive = true;
+    postApi('/leave/balance', { leave_id: row._uuid })
+      .then((res) => {
+        if (!alive) return;
+        const list: LeaveBalance[] = res.data?.data ?? [];
+        setBalances(list);
+        setLeaveTypeId((current) => {
+          if (current && list.some((b) => b._uuid === current)) return current;
+          const paid = row.type ? Number(row.type.paid) : row.leave_type === PAID_LEAVE ? 1 : 0;
+          return list.find((b) => Number(b.paid) === paid)?._uuid ?? list[0]?._uuid ?? null;
+        });
+      })
+      .catch((error) => {
+        if (!alive) return;
+        setBalances([]);
+        Notific.error(getErrorMessage(error));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [approve, row]);
 
   const submit = async () => {
     try {
       setSaving(true);
       const id = btoa(String(row._uuid));
       const res = approve
-        ? await putApi(`/leave/approve/${id}`, { leave_type: leaveType, note: note.trim() })
+        ? await putApi(`/leave/approve/${id}`, { leave_type_id: leaveTypeId, paid: paid ? 1 : 0, note: note.trim() })
         : await putApi(`/leave/reject/${id}`, { note: note.trim() });
       Notific.success(res.data?.message ?? 'saveSuccessDone');
       onSaved();
@@ -141,25 +245,27 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
         {approve && (
           <div className="lv-review-field">
             <label>{t('leaveType')}</label>
-            <div className="lv-review-types" role="radiogroup">
-              {TYPE_TILES.map((tile) => {
-                const meta = LEAVE_TYPES[tile.value];
-                const on = leaveType === tile.value;
-                return (
-                  <button
-                    key={tile.value} type="button" role="radio" aria-checked={on}
-                    className={`lv-type ${meta.tone}${on ? ' is-on' : ''}`} onClick={() => setLeaveType(tile.value)}
-                  >
-                    <span className="lv-type-icon"><i className={`fa-solid ${tile.icon}`} /></span>
-                    <span>
-                      <b>{t(meta.label)}</b>
-                      <small>{t(tile.hint)}</small>
-                    </span>
-                    <i className={`lv-type-check fa-${on ? 'solid fa-circle-check' : 'regular fa-circle'}`} />
-                  </button>
-                );
-              })}
-            </div>
+            {!balances ? (
+              <Loader size="sm" content={t('loadingDots')} />
+            ) : balances.length ? (
+              <LeaveTypeTiles
+                balances={balances} days={row.days} value={leaveTypeId}
+                onChange={(id) => {
+                  setLeaveTypeId(id);
+                  setPaidPick(null);
+                }}
+              />
+            ) : (
+              <p className="hr-note"><i className="fa-solid fa-circle-info" /> {t('lvNoTypes')}</p>
+            )}
+          </div>
+        )}
+
+        {approve && (
+          <div className="lv-review-field">
+            <label>{t('lvPayChoice')}</label>
+            <PayTiles value={paid} onChange={setPaidPick} />
+            {over && <p className="hr-note"><i className="fa-solid fa-triangle-exclamation" /> {t('lvPayOverHint')}</p>}
           </div>
         )}
 
@@ -249,7 +355,7 @@ const LeavePage = () => {
                   </thead>
                   <tbody>
                     {shown.map((r) => {
-                      const type = LEAVE_TYPES[r.leave_type] ?? LEAVE_TYPES[PAID_LEAVE];
+                      const type = typeLabel(r, t);
                       const state = LEAVE_STATUSES[r.status] ?? LEAVE_STATUSES[PENDING];
                       const pending = r.status === PENDING;
                       return (
@@ -265,7 +371,7 @@ const LeavePage = () => {
                               </span>
                             </span>
                           </td>
-                          <td><span className={`att-state ${type.tone}`}>{t(type.label)}</span></td>
+                          <td><span className={`att-state ${type.tone}`}>{type.label}</span></td>
                           <td>
                             <b>{rangeLabel(r)}</b>
                             <small className="acc-gl-ref d-block">{r.days} {t('attWorkdays')} · {t('leaveRequestedAt')} {moment(r.createdAt).format('DD/MM/YYYY HH:mm')}</small>

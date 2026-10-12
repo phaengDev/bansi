@@ -109,7 +109,7 @@ const LoginPage: React.FC = () => {
         <div className="bansi-login">
             <header className="bansi-login-top">
                 <span className="bansi-login-mark">
-                    <img src="/assets/img/logo/plc2.png" alt="" />
+                    <img src="/assets/img/logo/logo.png" alt="" />
                 </span>
                 <span>
                     <strong>PL Lao Development</strong>
@@ -133,7 +133,7 @@ const LoginPage: React.FC = () => {
             <main className="bansi-login-panel">
                 <form className="bansi-login-card" onSubmit={handleLogin} aria-busy={loading}>
                     <span className="bansi-login-avatar">
-                        <img src="/assets/img/logo/plc2.png" alt="PL Lao Development" />
+                        <img src="/assets/img/logo/logo.png" alt="PL Lao Development" />
                     </span>
                     <h1>{t('login.welcome')}</h1>
                     <p className="bansi-login-subtitle">{t('login.subtitle')}</p>
