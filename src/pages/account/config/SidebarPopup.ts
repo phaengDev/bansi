@@ -152,7 +152,6 @@ export const HR_MENU: SidebarPopupGroup[] = [
     items: [
       { key: 'company', icon: 'fa-solid fa-building', label: 'hrCompany' },
       { key: 'departments', icon: 'fa-solid fa-sitemap', label: 'hrDepartmentsPositions' },
-      { key: 'employees', icon: 'fa-solid fa-id-card', label: 'hrEmployees' },
     ],
   },
 ];

@@ -111,14 +111,21 @@ export const getToken = (): string | null => {
     return getCurrentToken();
 };
 
-/** ກວດສອບ token ໝົດອາຍຸ (ອ່ານ exp ຈາກ JWT ຝັ່ງໜ້າເວັບ — ບໍ່ຍິງ api) */
-export const isTokenExpired = (): boolean => {
+/** ເວລາໝົດອາຍຸຂອງ token (ms — ອ່ານ exp ຈາກ JWT ຝັ່ງໜ້າເວັບ, ບໍ່ຍິງ api); ບໍ່ມີ / ອ່ານບໍ່ໄດ້ = null */
+export const tokenExpiresAt = (): number | null => {
     const t = getToken();
-    if (!t) return true;
+    if (!t) return null;
     try {
-        const payload = JSON.parse(atob(t.split('.')[1]));
-        return payload.exp * 1000 < Date.now();
+        // JWT ເປັນ base64url — ແປງເປັນ base64 ກ່ອນ atob
+        const payload = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
     } catch {
-        return true;
+        return null;
     }
+};
+
+/** ກວດສອບ token ໝົດອາຍຸ (ຝັ່ງໜ້າເວັບ) — ກວດກັບ api ແທ້ຢູ່ App.tsx (GET /user/session) */
+export const isTokenExpired = (): boolean => {
+    const at = tokenExpiresAt();
+    return at === null || at < Date.now();
 };

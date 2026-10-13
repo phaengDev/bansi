@@ -19,6 +19,7 @@ import TrialBalancePage from './gl/TrialBalancePage';
 import ArApWindow from './arap/ArApWindow';
 import BudgetWindow from './budget/BudgetWindow';
 import HrWindow from '../hr/HrWindow';
+import EmployeePage from '../hr/EmployeePage';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import MenuUnlockModal from './MenuUnlockModal';
@@ -52,6 +53,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   receivables: <ArApWindow kind={1} />,
   payables: <ArApWindow kind={2} />,
   budget: <BudgetWindow />,
+  employees: <AppPage showHeader={false}><EmployeePage /></AppPage>,
   hr: <HrWindow />,
   attendance: <AttendanceWindow />,
   payroll: <PayrollWindow />,
@@ -108,6 +110,7 @@ const AccountShell: React.FC = () => {
   const trialBalanceWindow = usePopupWindow();
   const statementsWindow = usePopupWindow();
   const budgetWindow = usePopupWindow();
+  const employeesWindow = usePopupWindow();
   const hrWindow = usePopupWindow();
   const attendanceWindow = usePopupWindow();
   const payrollWindow = usePopupWindow();
@@ -123,6 +126,7 @@ const AccountShell: React.FC = () => {
     trialBalance: trialBalanceWindow,
     financialStatements: statementsWindow,
     budget: budgetWindow,
+    employees: employeesWindow,
     hr: hrWindow,
     attendance: attendanceWindow,
     payroll: payrollWindow,
