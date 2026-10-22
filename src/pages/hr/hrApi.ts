@@ -202,6 +202,8 @@ export type Company = {
   work_end: string;
   /** ວັນພັກປະຈຳອາທິດ — 0 ອາທິດ … 6 ເສົາ (Date.getDay()) */
   days_off: number[];
+  /** ເຄື່ອງແບບປະຈຳວັນ 7 ຄ່າ (ດັດຊະນີ = Date.getDay()) — 0 ບໍ່ກຳນົດ, 1 ໂປໂລບໍລິສັດ, 2 ເສື້ອເຊີດ, 3 ເສື້ອທຳມະດາ */
+  uniform_days: number[];
   district?: DistrictRef | null;
   updatedAt: string;
 };

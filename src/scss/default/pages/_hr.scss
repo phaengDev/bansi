@@ -839,6 +839,66 @@
 
 .hr-days.is-static > span { cursor: default; }
 
+// ເຄື່ອງແບບປະຈຳວັນ — ສີຕາມປະເພດ: ໂປໂລບໍລິສັດ = ຂຽວ (ສີຂອງ .hr-days), ເສື້ອເຊີດ = ຟ້າ, ທຳມະດາ = ມ່ວງ; ບໍ່ກຳນົດ = ເທົາ
+.hr-uniform-icon { width: 1.4em; height: 1.4em; flex: none; }
+
+.hr-uniform-days > span {
+  small { text-align: center; }
+
+  &.is-uniform-2 { color: #1f5fa8; background: #eef4fc; border-color: #cfe0f5; }
+  &.is-uniform-3 { color: #6b3fa0; background: #f5effc; border-color: #e2d4f5; }
+  &.is-unset { color: #7b8a97; background: #f6f8fa; border-style: dashed; border-color: #d5dde4; }
+}
+
+.hr-uniform-rows { display: flex; flex-direction: column; gap: 6px; }
+
+.hr-uniform-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+
+  > b { color: var(--book-ink); font-size: 13px; }
+  &.is-off > b { color: #8a4b04; }
+}
+
+.hr-uniform-off {
+  color: #8a4b04;
+  font-size: 12.5px;
+
+  i { margin-right: 4px; }
+}
+
+.hr-uniform-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+
+  > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 4px 8px;
+    color: #5b6b78;
+    background: #fff;
+    border: 1px solid var(--book-line);
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.25;
+    text-align: center;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover { border-color: var(--book-accent); }
+
+    &.is-active { font-weight: 700; }
+    &.is-active.is-uniform-1 { color: #0b6b53; background: #f1faf6; border-color: #16a37f; }
+    &.is-active.is-uniform-2 { color: #1f5fa8; background: #eef4fc; border-color: #5b8fd6; }
+    &.is-active.is-uniform-3 { color: #6b3fa0; background: #f5effc; border-color: #a77fd8; }
+  }
+}
+
 .hr-company-updated { margin: 0; color: #7b8a97; font-size: 12px; text-align: end; }
 .hr-company-updated i { margin-right: 4px; }
 
@@ -1319,6 +1379,7 @@
 }
 
 @container hr-company-col (max-width: 520px) {
+  .hr-uniform-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .hr-loc { flex-direction: column; align-items: stretch; }
   .hr-loc-thumb { width: 100%; }
 }
