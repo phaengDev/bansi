@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useRef, type ChangeEvent, type ReactN
 import { Button, Form, Loader, Schema, TimePicker } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import moment from 'moment';
-import { getApi, putApi } from '../../utils/configApi';
+import { deleteApi, getApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { InputField } from '../../utils/inputFields';
@@ -64,6 +64,12 @@ const UniformIcon = ({ id }: { id: number }) => (
     {UNIFORMS.find((u) => u.id === id)?.shape}
   </svg>
 );
+
+/** ຮູບເສື້ອແທ້ (HR ອັບໂຫຼດ) — ຍັງບໍ່ມີ = ໄອຄອນ */
+const UniformImage = ({ id, photos }: { id: number; photos?: (string | null)[] }) => {
+  const url = photos?.[id - 1];
+  return url ? <img className="hr-uniform-photo" src={url} alt="" /> : <UniformIcon id={id} />;
+};
 
 const toTime = (value: string | undefined, fallback: string) => moment(value || fallback, 'HH:mm').toDate();
 const toHHmm = (value: Date | null | undefined) => (value ? moment(value).format('HH:mm') : '');
@@ -166,7 +172,7 @@ const WeekDays = ({ daysOff, onToggle }: { daysOff: number[]; onToggle?: (day: n
 };
 
 /** ເຄື່ອງແບບປະຈຳວັນ (ໜ້າສະແດງ) — ລຽງ ຈັນ → ອາທິດ ຄື WeekDays; ວັນພັກບໍ່ມີເຄື່ອງແບບ */
-const UniformDays = ({ uniforms, daysOff }: { uniforms: number[]; daysOff: number[] }) => {
+const UniformDays = ({ uniforms, photos, daysOff }: { uniforms: number[]; photos: (string | null)[]; daysOff: number[] }) => {
   const t = useT();
   return (
     <div className="hr-days is-static hr-uniform-days" role="group" aria-label={t('hrUniform')}>
@@ -175,7 +181,7 @@ const UniformDays = ({ uniforms, daysOff }: { uniforms: number[]; daysOff: numbe
         const uniform = off ? undefined : UNIFORMS.find((u) => u.id === uniforms[day]);
         return (
           <span key={day} className={off ? 'is-off' : uniform ? `is-uniform-${uniform.id}` : 'is-unset'}>
-            {uniform ? <UniformIcon id={uniform.id} /> : <i className={`fa-solid ${off ? 'fa-mug-hot' : 'fa-minus'}`} />}
+            {uniform ? <UniformImage id={uniform.id} photos={photos} /> : <i className={`fa-solid ${off ? 'fa-mug-hot' : 'fa-minus'}`} />}
             <span>
               <b>{t(`weekday${day}`)}</b>
               <small>{t(off ? 'hrCompanyDayOff' : uniform?.label ?? 'hrUniformUnset')}</small>
@@ -188,8 +194,9 @@ const UniformDays = ({ uniforms, daysOff }: { uniforms: number[]; daysOff: numbe
 };
 
 /** ຟອມ: ແຕ່ລະມື້ເຮັດວຽກເລືອກເຄື່ອງແບບ 1 ຢ່າງ (ກົດອັນທີ່ເລືອກຢູ່ອີກເທື່ອ = ບໍ່ກຳນົດ); ວັນພັກບໍ່ຕ້ອງເລືອກ */
-const UniformPicker = ({ uniforms, daysOff, onChange }: {
+const UniformPicker = ({ uniforms, photos, daysOff, onChange }: {
   uniforms: number[];
+  photos?: (string | null)[];
   daysOff: number[];
   onChange: (next: number[]) => void;
 }) => {
@@ -212,7 +219,7 @@ const UniformPicker = ({ uniforms, daysOff, onChange }: {
                     <button key={u.id} type="button" role="radio" aria-checked={active}
                       className={`is-uniform-${u.id}${active ? ' is-active' : ''}`} onClick={() => pick(day, u.id)}
                     >
-                      <UniformIcon id={u.id} /> {t(u.label)}
+                      <UniformImage id={u.id} photos={photos} /> {t(u.label)}
                     </button>
                   );
                 })}
@@ -221,6 +228,86 @@ const UniformPicker = ({ uniforms, daysOff, onChange }: {
           </div>
         );
       })}
+    </div>
+  );
+};
+
+/**
+ * ຮູບເສື້ອແທ້ຂອງແຕ່ລະແບບ (ໜ້າສະແດງ) — ຜູ້ມີສິດແກ້ໄຂ ໃສ່ / ປ່ຽນ / ລຶບ ໄດ້ທັນທີ (PUT / DELETE /company/uniform/:type);
+ * ກົດຮູບ = ເປີດຮູບເຕັມ. ບໍ່ມີຮູບ = ໃຊ້ໄອຄອນ
+ */
+const UniformPhotos = ({ photos, onSaved }: { photos: (string | null)[]; onSaved: (company: Company) => void }) => {
+  const t = useT();
+  /** ປະເພດທີ່ກຳລັງອັບໂຫຼດ / ລຶບ */
+  const [busy, setBusy] = useState<number | null>(null);
+
+  const run = async (id: number, request: () => Promise<{ data?: { data?: Company } }>) => {
+    try {
+      setBusy(id);
+      const res = await request();
+      Notific.success('saveSuccessDone');
+      if (res.data?.data) onSaved(res.data.data);
+    } catch (error) {
+      console.error(error);
+      Notific.error(getErrorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const upload = (id: number, e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!IMAGE.test(file.type)) return Notific.warning('hrPhotoType');
+    if (file.size > MAX_FILE) return Notific.warning('incomeFileSize');
+    const body = new FormData();
+    body.append('photo', file);
+    run(id, () => putApi(`/company/uniform/${id}`, body));
+  };
+
+  const remove = (id: number) =>
+    Notific.confirm('hrUniformPhotoRemoveConfirm', () => run(id, () => deleteApi(`/company/uniform/${id}`)));
+
+  return (
+    <div className="hr-uniform-photos">
+      <b className="hr-uniform-photos-title">{t('hrUniformPhotos')}</b>
+      <div className="hr-uniform-photos-grid">
+        {UNIFORMS.map((u) => {
+          const url = photos[u.id - 1];
+          return (
+            <figure key={u.id} className={`hr-uniform-card is-uniform-${u.id}`}>
+              {url ? (
+                <a className="hr-uniform-card-img" href={url} target="_blank" rel="noreferrer" title={t(u.label)}>
+                  <img src={url} alt={t(u.label)} />
+                </a>
+              ) : (
+                <span className="hr-uniform-card-img is-empty"><UniformIcon id={u.id} /></span>
+              )}
+              <figcaption>
+                <b>{t(u.label)}</b>
+                {canEdit && (
+                  <span className="hr-uniform-card-actions">
+                    <label className="acc-rp-btn">
+                      {busy === u.id ? <Loader size="xs" /> : <i className="fa-solid fa-camera" />} {t(url ? 'hrPhotoChange' : 'hrUniformPhotoAdd')}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={busy !== null}
+                        onChange={(e) => upload(u.id, e)}
+                      />
+                    </label>
+                    {url && (
+                      <button type="button" className="acc-rp-btn" disabled={busy !== null} title={t('hrPhotoRemove')}
+                        aria-label={t('hrPhotoRemove')} onClick={() => remove(u.id)}
+                      >
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    )}
+                  </span>
+                )}
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -408,7 +495,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
             {/* ---- 5: ເຄື່ອງແບບປະຈຳວັນ (ສະເພາະມື້ເຮັດວຽກຂອງຂັ້ນທີ 4) ---- */}
             <FormStep no={5} done={uniformsDone} title={t('hrUniform')} hint={t('hrUniformHint')}>
               <div className="is-wide">
-                <UniformPicker uniforms={uniforms} daysOff={daysOff} onChange={setUniforms} />
+                <UniformPicker uniforms={uniforms} photos={data?.uniform_photos} daysOff={daysOff} onChange={setUniforms} />
               </div>
             </FormStep>
           </div>
@@ -525,7 +612,8 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
             <span className="hr-company-card-icon"><UniformIcon id={1} /></span>
             <span className="acc-book-step-title"><b>{t('hrUniform')}</b><small>{t('hrUniformViewHint')}</small></span>
           </header>
-          <UniformDays uniforms={company.uniform_days} daysOff={company.days_off} />
+          <UniformDays uniforms={company.uniform_days} photos={company.uniform_photos} daysOff={company.days_off} />
+          <UniformPhotos photos={company.uniform_photos} onSaved={onSaved} />
         </section>
         </div>
         <div className="hr-company-col">

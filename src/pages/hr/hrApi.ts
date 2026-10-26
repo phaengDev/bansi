@@ -204,6 +204,8 @@ export type Company = {
   days_off: number[];
   /** ເຄື່ອງແບບປະຈຳວັນ 7 ຄ່າ (ດັດຊະນີ = Date.getDay()) — 0 ບໍ່ກຳນົດ, 1 ໂປໂລບໍລິສັດ, 2 ເສື້ອເຊີດ, 3 ເສື້ອທຳມະດາ */
   uniform_days: number[];
+  /** URL ຮູບເສື້ອແທ້ 3 ແບບ — ດັດຊະນີ = ປະເພດ - 1, null = ຍັງບໍ່ມີຮູບ (ໃຊ້ໄອຄອນ) */
+  uniform_photos: (string | null)[];
   district?: DistrictRef | null;
   updatedAt: string;
 };

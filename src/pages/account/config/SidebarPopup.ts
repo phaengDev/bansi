@@ -145,6 +145,7 @@ export const HR_MENU: SidebarPopupGroup[] = [
     group: 'hrGroupSystem',
     items: [
       { key: 'users', icon: 'fa-solid fa-user-shield', label: 'hrUsers' },
+      { key: 'appRelease', icon: 'fa-brands fa-android', label: 'hrAppRelease' },
     ],
   },
   {

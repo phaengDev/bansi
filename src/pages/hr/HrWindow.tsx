@@ -5,16 +5,18 @@ import { HR_MENU, firstRailKey, toRailNav } from '../account/config/SidebarPopup
 import UserPage from './UserPage';
 import CompanyPage from './CompanyPage';
 import DepartmentPage from './DepartmentPage';
+import AppReleasePage from './AppReleasePage';
 
 /** key ຂອງເມນູ (HR_MENU) → ໜ້າ */
 const HR_PAGES: Record<string, ReactNode> = {
   users: <UserPage />,
   company: <CompanyPage />,
   departments: <DepartmentPage />,
+  appRelease: <AppReleasePage />,
 };
 
 /**
- * ໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ແຖບຊ້າຍ: ຜູ້ໃຊ້ລະບົບ, ຂໍ້ມູນບໍລິສັດ, ພະແນກ ແລະ ຕຳແໜ່ງ
+ * ໜ້າຕ່າງ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ (HR) — ແຖບຊ້າຍ: ຜູ້ໃຊ້ລະບົບ, ອັບເດດແອັບພະນັກງານ, ຂໍ້ມູນບໍລິສັດ, ພະແນກ ແລະ ຕຳແໜ່ງ
  * (ພະນັກງານ ແຍກເປັນໄອຄອນຂອງຕົນເອງເທິງ desktop — Shell.tsx).
  * ເປືອກດຽວກັບໜ້າຕັ້ງຄ່າບັນຊີ (ຫົວ = ຊື່ເມນູທີ່ເລືອກ)
  */

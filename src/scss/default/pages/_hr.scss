@@ -841,13 +841,73 @@
 
 // ເຄື່ອງແບບປະຈຳວັນ — ສີຕາມປະເພດ: ໂປໂລບໍລິສັດ = ຂຽວ (ສີຂອງ .hr-days), ເສື້ອເຊີດ = ຟ້າ, ທຳມະດາ = ມ່ວງ; ບໍ່ກຳນົດ = ເທົາ
 .hr-uniform-icon { width: 1.4em; height: 1.4em; flex: none; }
+// ຮູບເສື້ອແທ້ແທນໄອຄອນ — ພື້ນຂາວ ສະແດງທັງໂຕເສື້ອ (contain)
+.hr-uniform-photo { width: 44px; height: 44px; flex: none; object-fit: contain; background: #fff; border-radius: 8px; }
+.hr-uniform-options .hr-uniform-photo { width: 24px; height: 24px; border-radius: 5px; }
 
 .hr-uniform-days > span {
+  justify-content: center;
+
   small { text-align: center; }
 
   &.is-uniform-2 { color: #1f5fa8; background: #eef4fc; border-color: #cfe0f5; }
   &.is-uniform-3 { color: #6b3fa0; background: #f5effc; border-color: #e2d4f5; }
   &.is-unset { color: #7b8a97; background: #f6f8fa; border-style: dashed; border-color: #d5dde4; }
+}
+
+// ຮູບເສື້ອແຕ່ລະແບບ (ໜ້າສະແດງ) — 3 ກາດ: ຮູບ (ກົດເປີດຮູບເຕັມ) ຫຼື ໄອຄອນ, ຊື່, ປຸ່ມໃສ່ / ປ່ຽນ / ລຶບ
+.hr-uniform-photos {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--book-line);
+}
+
+.hr-uniform-photos-title { display: block; margin-bottom: 10px; color: var(--book-ink); font-size: 13px; }
+
+.hr-uniform-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hr-uniform-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--book-line);
+  border-radius: 12px;
+
+  figcaption { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  figcaption > b { color: var(--book-ink); font-size: 13px; }
+}
+
+.hr-uniform-card-img {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  background: #f6f8fa;
+  border-radius: 10px;
+
+  img { width: 100%; height: 100%; object-fit: contain; }
+
+  &.is-empty { font-size: 34px; border: 1px dashed #d5dde4; }
+}
+
+.hr-uniform-card.is-uniform-1 .is-empty { color: #0b6b53; background: #f1faf6; }
+.hr-uniform-card.is-uniform-2 .is-empty { color: #1f5fa8; background: #eef4fc; }
+.hr-uniform-card.is-uniform-3 .is-empty { color: #6b3fa0; background: #f5effc; }
+
+.hr-uniform-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+
+  label { margin: 0; cursor: pointer; }
 }
 
 .hr-uniform-rows { display: flex; flex-direction: column; gap: 6px; }
@@ -1397,4 +1457,112 @@
   small { font-size: 12px; font-weight: 600; }
   small.is-warn { color: #a8620a; }
   small.is-ok { color: #0e7a52; }
+}
+
+// ອັບເດດແອັບພະນັກງານ (AppReleasePage) — ລາຍການ APK ທີ່ອັບໂຫຼດ, ລຸ້ນລ່າສຸດຢູ່ເທິງ (ສີຂຽວ)
+.hr-apps {
+  display: grid;
+  gap: 10px;
+}
+
+.hr-app {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+
+  &.is-latest { border-color: #9fd9c3; box-shadow: 0 0 0 3px #e7f6f0; }
+}
+
+.hr-app-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  place-items: center;
+  color: #5b6f80;
+  background: #eef2f6;
+  border-radius: 12px;
+  font-size: 20px;
+
+  .is-latest & { color: #fff; background: #0b8a6a; }
+}
+
+.hr-app-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+
+  b { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #14314d; }
+  small { color: #7b8a97; font-size: 12px; }
+  p { margin: 4px 0 0; color: #3c5163; font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+
+.hr-app-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  color: #0e7a52;
+  background: #e7f6f0;
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.hr-app-actions { display: flex; flex: none; gap: 2px; }
+
+.rs-modal.acc-book-modal.acs-modal.hr-app-modal {
+  --rs-modal-size: 560px;
+
+  .acc-book-footnote { display: none; }
+  .rs-modal-footer { justify-content: flex-end; }
+}
+
+.hr-app-form {
+  display: grid;
+  gap: 14px;
+}
+
+.hr-app-latest {
+  display: block;
+  margin-top: 8px;
+  color: #7b8a97;
+  font-size: 12px;
+
+  i { color: #1559c9; }
+  b { color: #14314d; }
+}
+
+.hr-app-notes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+
+  > span { color: #3c5163; font-size: 13px; font-weight: 600; }
+}
+
+.hr-app-progress {
+  position: relative;
+  overflow: hidden;
+  height: 30px;
+  background: #eef2f6;
+  border-radius: 8px;
+
+  span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #0b8a6a, #19b48b); transition: width 0.2s; }
+  small {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #14314d;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
 }
