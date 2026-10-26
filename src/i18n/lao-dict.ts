@@ -1379,7 +1379,7 @@ export const laoDict = {
   hrAppUploading: { la: 'ກຳລັງອັບໂຫຼດ', en: 'Uploading', cn: '正在上传' },
   hrAppChecking: { la: 'ກຳລັງກວດໄຟລ໌...', en: 'Checking file...', cn: '正在检查文件...' },
   hrAppNote: { la: 'ອັບໂຫຼດ app-release.apk ບ່ອນນີ້ແທນການສົ່ງໄຟລ໌ໃຫ້ທຸກຄົນ — ພະນັກງານ Android ເປີດແອັບຈະເຫັນແຖບ "ມີເວີຊັນໃໝ່" ແລ້ວກົດອັບເດດເອງ (iPhone ອັບເດດຜ່ານ TestFlight)', en: 'Upload app-release.apk here instead of sending the file to everyone — Android staff see a "new version" bar in the app and update themselves (iPhone updates via TestFlight)', cn: '在此上传 app-release.apk，无需逐个发送 — 安卓员工打开应用会看到“新版本”提示并自行更新（iPhone 通过 TestFlight 更新）' },
-  hrAppKeep: { la: 'ເກັບໄວ້ລຸ້ນລ່າສຸດ', en: 'latest kept:', cn: '保留最新' },
+  hrAppKeepOne: { la: 'ເກັບໄວ້ລຸ້ນດຽວ: ອັບໂຫຼດລຸ້ນໃໝ່ ລຸ້ນເກົ່າຖືກລຶບອອກເອງ', en: 'Only one version is kept: uploading a new one deletes the old one', cn: '只保留一个版本：上传新版本会自动删除旧版本' },
   hrAppDownload: { la: 'ດາວໂຫຼດ APK', en: 'Download APK', cn: '下载 APK' },
   hrAppDeleteConfirm: { la: 'ລຶບເວີຊັນ', en: 'Delete version', cn: '删除版本' },
   hrDepartments: { la: 'ພະແນກ', en: 'Departments', cn: '部门' },

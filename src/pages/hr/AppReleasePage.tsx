@@ -119,12 +119,11 @@ const UploadForm = ({ latest, onClose, onSaved }: { latest: AppRelease | null; o
 /**
  * ອັບເດດແອັບພະນັກງານ (Android) — ອັບໂຫຼດ app-release.apk ບ່ອນດຽວ ແທນການສົ່ງໄຟລ໌ໃຫ້ທຸກຄົນ: ແອັບກວດລຸ້ນລ່າສຸດຕອນເປີດ,
  * ເລກ build ສູງກວ່າຂອງເຄື່ອງ = ຂຶ້ນແຖບ "ມີເວີຊັນໃໝ່" ໃຫ້ກົດອັບເດດເອງ; ອັບເດດແລ້ວແຖບຫາຍເອງ.
- * ລຶບລຸ້ນລ່າສຸດ (ອັບໂຫຼດຜິດ) = ແອັບກັບໄປທຽບກັບລຸ້ນກ່ອນໜ້າ
+ * ເກັບໄວ້ລຸ້ນດຽວ: ອັບໂຫຼດລຸ້ນໃໝ່ = ລຸ້ນເກົ່າຖືກລຶບອອກເອງ (ບໍ່ໃຫ້ເຊີບເວີໜັກ); ລຶບລຸ້ນນີ້ = ແອັບບໍ່ເຫັນແຖບອັບເດດຈົນອັບໂຫຼດໃໝ່
  */
 const AppReleasePage = () => {
   const t = useT();
   const [rows, setRows] = useState<AppRelease[]>([]);
-  const [keep, setKeep] = useState(5);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
@@ -133,7 +132,6 @@ const AppReleasePage = () => {
       setLoading(true);
       const res = await getApi('/app-release/fetch');
       setRows(res.data?.data ?? []);
-      if (res.data?.keep) setKeep(res.data.keep);
     } catch (error) {
       Notific.error(getErrorMessage(error));
     } finally {
@@ -161,7 +159,7 @@ const AppReleasePage = () => {
   return (
     <div className="acs-page">
       <SettingToolbar stats={[{ label: t('hrAppVersions'), value: rows.length }]} addLabel={t('hrAppUpload')} onAdd={() => setAdding(true)} canAdd={canCreate} />
-      <p className="acc-bg-note"><i className="fa-solid fa-circle-info" /> {t('hrAppNote')} ({t('hrAppKeep')} {keep})</p>
+      <p className="acc-bg-note"><i className="fa-solid fa-circle-info" /> {t('hrAppNote')} — {t('hrAppKeepOne')}</p>
 
       <ListState loading={loading} empty={!rows.length} icon="fa-mobile-screen-button">
         <div className="hr-apps">
