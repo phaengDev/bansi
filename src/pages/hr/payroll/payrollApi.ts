@@ -63,6 +63,12 @@ export type PayrollLine = {
   taxable: number;
   tax: number;
   other_deduction: number;
+  /** ງວດເງິນເບີກທີ່ຕ້ອງຫັກເດືອນນີ້, ຍອດຄ້າງກ່ອນຫັກ, ຍອດທີ່ຫັກຈິງ */
+  advance_due: number;
+  advance_balance: number;
+  advance_deduction: number;
+  /** MODE_POLICY = ຕາມງວດ, MODE_MANUAL = ປ້ອນເອງ */
+  advance_mode: number;
   net: number;
   deduction_mode: number;
   sso_mode: number;
@@ -91,6 +97,7 @@ export type Payroll = {
   total_sso_employer: number;
   total_tax: number;
   total_other_deduction: number;
+  total_advance_deduction: number;
   total_net: number;
   number: string | null;
   pay_date: string | null;
@@ -123,13 +130,19 @@ export type PayrollSettings = {
   ot_rate_night: number;
   ot_rate_dayoff: number;
   ot_rate_dayoff_night: number;
+  /** ພະນັກງານຂໍເບີກຜ່ານ app ໄດ້ບໍ່, ເພດານ % ຂອງເງິນເດືອນ (0 = ບໍ່ຈຳກັດ), ຜ່ອນໄດ້ສູງສຸດ (ເດືອນ) */
+  advance_enabled: boolean;
+  advance_max_percent: number;
+  advance_max_installments: number;
+  /** ໝວດລາຍຈ່າຍທີ່ເງິນເດືອນນັບເຂົ້າງົບປະມານ (null = ບໍ່ນັບ) */
+  budget_category_id: number | null;
   updatedAt: string | null;
 };
 
 /** ຜົນຈາກ POST /payroll/line/preview/:id */
 export type LineResult = Pick<PayrollLine,
   'basic_salary' | 'base_pay' | 'absence_deduction' | 'late_deduction' | 'allowance' | 'overtime' | 'bonus' | 'gross'
-  | 'sso_base' | 'sso_employee' | 'sso_employer' | 'taxable' | 'tax' | 'other_deduction' | 'net'>;
+  | 'sso_base' | 'sso_employee' | 'sso_employer' | 'taxable' | 'tax' | 'other_deduction' | 'advance_due' | 'advance_balance' | 'advance_deduction' | 'net'>;
 
 export const kip = (value: number) => formatNumber(Math.round(Number(value) || 0));
 /** formatter ຂອງ NumberInput ເງິນກີບ — ບໍ່ມີທົດສະນິຍົມ (backend ປັດເປັນກີບເຕັມ); ຊ່ອງຫວ່າງຍັງຫວ່າງ */
@@ -138,9 +151,9 @@ export const kipFormatter = (value: unknown) =>
 export const accountText = (a?: PayrollAccount | null) =>
   a ? [a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · ') : '';
 
-/** ຫັກຈາກພະນັກງານທັງໝົດ (ປກສ + ອາກອນ + ຫັກອື່ນ) */
-export const employeeDeductions = (p: Pick<Payroll, 'total_sso_employee' | 'total_tax' | 'total_other_deduction'>) =>
-  p.total_sso_employee + p.total_tax + p.total_other_deduction;
+/** ຫັກຈາກພະນັກງານທັງໝົດ (ປກສ + ອາກອນ + ຫັກອື່ນ + ເງິນເບີກ) */
+export const employeeDeductions = (p: Pick<Payroll, 'total_sso_employee' | 'total_tax' | 'total_other_deduction' | 'total_advance_deduction'>) =>
+  p.total_sso_employee + p.total_tax + p.total_other_deduction + p.total_advance_deduction;
 
 export const usePayrolls = (year: number | null) => {
   const [rows, setRows] = useState<Payroll[]>([]);

@@ -116,6 +116,7 @@ export type ShortcutId =
   | 'financialStatements'
   | 'budget'
   | 'employees'
+  | 'tasks'
   | 'hr'
   | 'attendance'
   | 'payroll'
@@ -134,6 +135,7 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   financialStatements: 'accountAppFinancialStatements',
   budget: 'accountAppBudget',
   employees: 'accountAppEmployees',
+  tasks: 'accountAppTasks',
   hr: 'accountAppHr',
   attendance: 'accountAppAttendance',
   payroll: 'accountAppPayroll',
@@ -153,6 +155,7 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   financialStatements: 'accountAppFinancialStatementsDesc',
   budget: 'accountAppBudgetDesc',
   employees: 'accountAppEmployeesDesc',
+  tasks: 'accountAppTasksDesc',
   hr: 'accountAppHrDesc',
   attendance: 'accountAppAttendanceDesc',
   payroll: 'accountAppPayrollDesc',
@@ -177,6 +180,7 @@ export const shortcuts: ReadonlyArray<{
   { id: 'financialStatements', icon: 'fa-chart-pie', tone: 'emerald', path: '/account/statements', popup: true },
   { id: 'budget', icon: 'fa-bullseye', tone: 'gold', path: '/account/budget', popup: true },
   { id: 'employees', icon: 'fa-id-card', tone: 'cyan', path: '/hr/employees', popup: true },
+  { id: 'tasks', icon: 'fa-list-check', tone: 'sky', path: '/hr/tasks', popup: true },
   { id: 'hr', icon: 'fa-users-gear', tone: 'violet', path: '/hr', popup: true },
   { id: 'attendance', icon: 'fa-user-clock', tone: 'sky', path: '/hr/attendance', popup: true },
   { id: 'payroll', icon: 'fa-money-check-dollar', tone: 'emerald', path: '/hr/payroll', popup: true },

@@ -5,9 +5,10 @@ import { PAYROLL_MENU, firstRailKey, toRailNav } from '../../account/config/Side
 import PayrollList from './PayrollList';
 import PayrollDetail from './PayrollDetail';
 import PayrollSettingPage from './PayrollSettingPage';
+import AdvancePage from './AdvancePage';
 
 /**
- * ໜ້າຕ່າງ ເງິນເດືອນ — ແຖບຊ້າຍ: ໃບເງິນເດືອນປະຈຳເດືອນ (ລາຍການ → ລາຍລະອຽດ) ແລະ ຕັ້ງຄ່າ (ປກສ, ອາກອນ, ການຫັກ)
+ * ໜ້າຕ່າງ ເງິນເດືອນ — ແຖບຊ້າຍ: ໃບເງິນເດືອນປະຈຳເດືອນ (ລາຍການ → ລາຍລະອຽດ), ເງິນເບີກລ່ວງໜ້າ ແລະ ຕັ້ງຄ່າ (ປກສ, ອາກອນ, ການຫັກ)
  */
 const PayrollWindow = () => {
   const t = useT();
@@ -27,6 +28,8 @@ const PayrollWindow = () => {
     <AppPage title={active?.label ?? title} subtitle={title} showHeader={activeKey !== 'runs' || !openId} railNav={railNav} railActiveKey={activeKey} onRailSelect={select}>
       {activeKey === 'settings' ? (
         <PayrollSettingPage />
+      ) : activeKey === 'advances' ? (
+        <AdvancePage />
       ) : openId ? (
         <PayrollDetail id={openId} onBack={() => setOpenId(null)} onChanged={() => setListVersion((v) => v + 1)} />
       ) : (

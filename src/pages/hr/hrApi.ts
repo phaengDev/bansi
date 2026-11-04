@@ -39,6 +39,15 @@ export const GENDERS = [
 // ປະເພດຂອງຊ່ອງເລືອກ (ທະນາຄານ, ແຂວງ, ປະເພດຜູ້ໃຊ້) ຢູ່ utils/selectOption ພ້ອມ hook ດຶງຂໍ້ມູນ
 export type { Bank, Province, UserType };
 
+/** GET /employee/summary/:id — ສະຫຼຸບຂ້າມໂມດູນຂອງພະນັກງານ */
+export type EmployeeSummary = {
+  year: string;
+  advance_balance: number;
+  leave: { _uuid: number; name: string; used: number; pending: number; max_per_year: number | null; remaining: number | null }[];
+  pending: number;
+  last_payroll: { period: string; pay_date: string | null; net: number } | null;
+};
+
 export type EmployeeRef = {
   _uuid: number;
   emp_code: string;

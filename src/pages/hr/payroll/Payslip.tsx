@@ -25,7 +25,7 @@ export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: Payr
         <b>{kip(amount)}</b>
       </div>
     ) : null);
-    const deductions = line.sso_employee + line.tax + line.other_deduction;
+    const deductions = line.sso_employee + line.tax + line.other_deduction + line.advance_deduction;
     return (
       <div ref={ref} className="pay-slip">
         <header className="pay-slip-head">
@@ -67,6 +67,7 @@ export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: Payr
             {item(t('paySsoEmployee'), line.sso_employee)}
             {item(t('payTax'), line.tax)}
             {item(t('payOtherDeduction'), line.other_deduction)}
+            {item(t('payAdvanceDeduction'), line.advance_deduction, line.advance_balance > line.advance_deduction ? `${t('advBalance')} ${kip(line.advance_balance - line.advance_deduction)}` : undefined)}
             {!deductions && <div className="pay-slip-row"><span>—</span><b>0</b></div>}
             <div className="pay-slip-row is-total"><span>{t('payDeductionTotal')}</span><b>{kip(deductions)}</b></div>
           </div>

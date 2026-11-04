@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, Loader, NumberInput, Toggle } from 'rsuite';
+import { Button, Form, Loader, NumberInput, SelectPicker, Toggle } from 'rsuite';
 import moment from 'moment';
 import { getApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
+import { useFinanceCategories } from '../../../utils/selectOption';
 import { FormStep } from '../../account/setting/settingKit';
 import { runSave } from '../../account/setting/settingApi';
 import { kip, kipFormatter, type PayrollSettings, type TaxBracket } from './payrollApi';
@@ -65,6 +66,7 @@ const PayrollSettingPage = () => {
   const [defaults, setDefaults] = useState<PayrollSettings | null>(null);
   const [brackets, setBrackets] = useState<Bracket[]>([]);
   const [saving, setSaving] = useState(false);
+  const expenseCategories = useFinanceCategories(2);
 
   const load = (data: PayrollSettings) => {
     setValues(data);
@@ -194,6 +196,32 @@ const PayrollSettingPage = () => {
                 <button type="button" className="acc-rp-btn" disabled={!canEdit || !values.tax_enabled} onClick={addBracket}><i className="fa-solid fa-plus" /> {t('payBracketAdd')}</button>
               </div>
               <Field label={t('payOtTaxFree')} hint={t('payOtTaxFreeHint')}>{money('ot_tax_free_salary', !values.tax_enabled)}</Field>
+            </FormStep>
+
+            <FormStep no={5} done={values.advance_enabled} title={t('advMenu')} hint={t('advSettingHint')}
+              note={<PolicySwitch on={values.advance_enabled} onChange={(on) => set('advance_enabled', on)} />}
+            >
+              {!values.advance_enabled && offNote(t('advOffNote'))}
+              <Field label={t('advMaxPercent')} hint={t('advMaxPercentHint')}>
+                <NumberInput value={values.advance_max_percent} onChange={(v) => set('advance_max_percent', Math.min(100, Math.max(0, num(v))))}
+                  postfix="%" min={0} max={100} step={5} disabled={!canEdit || !values.advance_enabled}
+                />
+              </Field>
+              <Field label={t('advMaxInstallments')} hint={t('advMaxInstallmentsHint')}>
+                <NumberInput value={values.advance_max_installments} onChange={(v) => set('advance_max_installments', Math.min(36, Math.max(1, Math.round(num(v)))))}
+                  postfix={t('advMonths')} min={1} max={36} disabled={!canEdit || !values.advance_enabled}
+                />
+              </Field>
+            </FormStep>
+
+            <FormStep no={6} done={!!values.budget_category_id} title={t('payBudgetLink')} hint={t('payBudgetLinkHint')}>
+              <div className="is-wide">
+                <Field label={t('payBudgetCategory')} hint={t('payBudgetCategoryHint')}>
+                  <SelectPicker block data={expenseCategories} value={values.budget_category_id} onChange={(v) => set('budget_category_id', v ?? null)}
+                    placeholder={t('payBudgetNone')} disabled={!canEdit} popupClassName="acc-book-menu"
+                  />
+                </Field>
+              </div>
             </FormStep>
           </div>
         </div>

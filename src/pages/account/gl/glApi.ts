@@ -123,6 +123,7 @@ export const ROLES = [
   { key: 'SSO_PAYABLE', label: 'glRoleSsoPayable', hint: 'glRoleSsoPayableHint', groups: [2] },
   { key: 'PIT_PAYABLE', label: 'glRolePitPayable', hint: 'glRolePitPayableHint', groups: [2] },
   { key: 'PAYROLL_DEDUCTION', label: 'glRolePayrollDeduction', hint: 'glRolePayrollDeductionHint', groups: [1, 2] },
+  { key: 'EMPLOYEE_ADVANCE', label: 'glRoleEmployeeAdvance', hint: 'glRoleEmployeeAdvanceHint', groups: [1] },
 ] as const;
 export const roleLabelOf = (key: string) => ROLES.find((r) => r.key === key)?.label ?? key;
 
@@ -139,6 +140,8 @@ export const SOURCES: Record<string, { label: string; icon: string; tone: string
   AP_BILL: { label: 'apBill', icon: 'fa-file-lines', tone: 'is-coral' },
   AP_PAYMENT: { label: 'apPayment', icon: 'fa-money-bill-transfer', tone: 'is-coral' },
   PAYROLL: { label: 'glSourcePayroll', icon: 'fa-money-check-dollar', tone: 'is-violet' },
+  ADVANCE: { label: 'glSourceAdvance', icon: 'fa-hand-holding-dollar', tone: 'is-violet' },
+  ADVANCE_REPAY: { label: 'glSourceAdvanceRepay', icon: 'fa-money-bill-wave', tone: 'is-violet' },
 };
 export const sourceOf = (type: string) => SOURCES[type] ?? { label: type, icon: 'fa-file', tone: 'is-slate' };
 

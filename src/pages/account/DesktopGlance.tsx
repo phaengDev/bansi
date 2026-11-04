@@ -38,7 +38,11 @@ type BudgetSummary = {
   top: BudgetLine[];
 } | null;
 
+/** ຄຳຮ້ອງທີ່ລໍຖ້າ HR (GET /hr/pending) */
+type HrPending = { leave: number; correction: number; advance: number; advance_to_pay: number };
+
 type Glance = {
+  hr?: HrPending | Failed;
   cash?: CashSummary | Failed;
   month?: MonthSummary | Failed;
   ar?: DebtSummary | Failed;
@@ -177,6 +181,8 @@ const loadBudget = async (): Promise<BudgetSummary> => {
       .map((r) => ({ id: r._uuid, name: r.category?.type_name ?? '', amount: r.amount, used: r.actual })),
   };
 };
+
+const loadHrPending = async () => (await getApi('/hr/pending')).data?.data as HrPending;
 
 const settle = <T,>(enabled: boolean, load: () => Promise<T>) =>
   enabled ? load().catch((error): Failed => failOf(error)) : Promise.resolve(undefined);
@@ -330,14 +336,16 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     ap: accessOf('payables'),
     budget: accessOf('budget'),
   };
-  const accessKey = Object.values(access).join('|');
+  // ຄຳຮ້ອງຂອງ HR ຂຶ້ນໃນ "ຕ້ອງຕິດຕາມ" ສະເພາະເມື່ອເປີດໜ້າຕ່າງນັ້ນໄດ້ (ບໍ່ນັບເຂົ້າ anyOpen — ບໍ່ມີບັດຂອງຕົນເອງ)
+  const hrAccess = { attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open' };
+  const accessKey = [...Object.values(access), hrAccess.attendance || hrAccess.payroll ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
   useEffect(() => {
     if (!menusLoaded) return;
     let cancelled = false;
-    const [cash, month, ar, ap, budget] = accessKey.split('|').map((a) => a === 'open');
+    const [cash, month, ar, ap, budget, hr] = accessKey.split('|').map((a) => a === 'open');
     setLoading(true);
     Promise.all([
       settle(cash, loadCash),
@@ -345,9 +353,10 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
       settle(ar, () => loadDebt(1)),
       settle(ap, () => loadDebt(2)),
       settle(budget, loadBudget),
-    ]).then(([c, m, r, p, b]) => {
+      settle(hr, loadHrPending),
+    ]).then(([c, m, r, p, b, h]) => {
       if (cancelled) return;
-      setData({ cash: c, month: m, ar: r, ap: p, budget: b, at: new Date() });
+      setData({ cash: c, month: m, ar: r, ap: p, budget: b, hr: h, at: new Date() });
       setLoading(false);
     });
     return () => {
@@ -520,6 +529,16 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   cash?.negative.forEach((a) => todos.push({
     key: `neg${a.id}`, tone: 'danger', icon: 'fa-wallet', title: a.name, sub: t('glanceNegative'), amount: money(a.symbol, a.balance), target: 'cashBank',
   }));
+  // ຄຳຮ້ອງຈາກພະນັກງານທີ່ລໍຖ້າ HR (ບໍ່ມີສິດ / API ລຸ້ນເກົ່າ = ບໍ່ຂຶ້ນ)
+  const hr = isFailed(data?.hr) ? undefined : data?.hr;
+  const hrTodo = (key: string, count: number | undefined, icon: string, title: string, target: 'attendance' | 'payroll') => {
+    if (!count || !hrAccess[target]) return;
+    todos.push({ key, tone: 'warn', icon, title: t(title), sub: t('glanceHrWaiting'), amount: `${count}`, target });
+  };
+  hrTodo('hr-leave', hr?.leave, 'fa-plane-departure', 'attLeaveRequests', 'attendance');
+  hrTodo('hr-correction', hr?.correction, 'fa-fingerprint', 'attCorrections', 'attendance');
+  hrTodo('hr-advance', hr?.advance, 'fa-hand-holding-dollar', 'advMenu', 'payroll');
+  hrTodo('hr-advance-pay', hr?.advance_to_pay, 'fa-money-bill-transfer', 'advToPay', 'payroll');
   if (ar) debtTodos('ar', ar.overdue, 'danger');
   if (ap) debtTodos('ap', ap.overdue, 'danger');
   if (ap) debtTodos('ap', ap.dueSoon, 'warn');

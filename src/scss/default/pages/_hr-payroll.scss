@@ -1944,3 +1944,74 @@
   .ot-pay-types,
   .ot-amount { grid-template-columns: minmax(0, 1fr); }
 }
+
+// ---- ເງິນເບີກລ່ວງໜ້າ — ກ່ອງລາຍລະອຽດ ----
+.lv-review-facts.is-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.adv-resigned { color: #c4343a; font-weight: 700; }
+
+.adv-sum {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    background: #f6f8fa;
+    border-radius: 10px;
+  }
+
+  small { color: #7b8a97; font-size: 12px; }
+  b { color: #14314d; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .is-due b { color: #c4343a; }
+}
+
+.adv-progress {
+  height: 6px;
+  margin: 10px 0 14px;
+  overflow: hidden;
+  background: #e6ebef;
+  border-radius: 6px;
+
+  i { display: block; height: 100%; background: #16a37f; border-radius: 6px; }
+}
+
+.adv-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 0 0 14px;
+
+  .is-wide { grid-column: 1 / -1; }
+  dt { color: #7b8a97; font-size: 12px; font-weight: 500; }
+  dd { margin: 0; color: #14314d; font-size: 13.5px; }
+}
+
+.adv-heading { margin: 0 0 8px; color: #14314d; font-size: 13.5px; font-weight: 700; }
+.adv-heading i { margin-right: 4px; color: #7b8a97; }
+
+.adv-repayments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #e6ebef;
+    border-radius: 10px;
+  }
+
+  li > i { color: #0f7a5c; }
+  span { display: flex; flex: 1; min-width: 0; flex-direction: column; line-height: 1.35; }
+  b { color: #14314d; font-size: 13px; }
+  small { overflow: hidden; color: #7b8a97; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  em { color: #0f7a5c; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+}
+

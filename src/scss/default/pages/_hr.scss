@@ -307,6 +307,29 @@
 .hr-info .hr-bank-account small { margin: 0; }
 .hr-bank-opt .acc-xfer-opt-text small { color: #7b8a97; }
 
+// ສະຫຼຸບຂ້າມໂມດູນຂອງພະນັກງານ — ເງິນເບີກ, ເງິນເດືອນລ່າສຸດ, ມື້ລາທີ່ເຫຼືອ, ຄຳຮ້ອງທີ່ລໍຖ້າ
+.hr-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 14px 0 4px;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    padding: 9px 12px;
+    line-height: 1.35;
+    background: #f6f8fa;
+    border-radius: 10px;
+  }
+
+  small { color: #7b8a97; font-size: 12px; }
+  small i { width: 14px; }
+  b { color: #14314d; font-size: 15px; font-variant-numeric: tabular-nums; }
+  em { color: #7b8a97; font-size: 11.5px; font-style: normal; }
+  .is-due b { color: #c4343a; }
+}
+
 .hr-docs-head {
   display: flex;
   align-items: center;

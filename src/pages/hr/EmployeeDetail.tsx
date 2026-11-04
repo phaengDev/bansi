@@ -1,14 +1,14 @@
-import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Button, DatePicker, Loader, Modal } from 'rsuite';
 import moment from 'moment';
-import { deleteApi, formatNumber, postApi, putApi } from '../../utils/configApi';
+import { deleteApi, formatNumber, getApi, postApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import {
   DEFAULT_APP_PASSWORD, GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, downloadWithAuth, fileSizeText, fullName,
-  type Employee, type EmployeeDocument,
+  type Employee, type EmployeeDocument, type EmployeeSummary,
 } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
 
@@ -26,8 +26,9 @@ const saveWorkStatus = async (employee: Employee, status: number, endDate: Date 
 };
 
 /** ກ່ອງລາອອກ — ເລືອກວັນລາອອກ (ຕັ້ງແຕ່ວັນເຂົ້າວຽກ) ແລ້ວຢືນຢັນ */
-const ResignModal = ({ employee, onClose, onSaved }: {
+const ResignModal = ({ employee, summary, onClose, onSaved }: {
   employee: Employee;
+  summary: EmployeeSummary | null;
   onClose: () => void;
   onSaved: (saved: Employee) => void;
 }) => {
@@ -67,6 +68,14 @@ const ResignModal = ({ employee, onClose, onSaved }: {
             <div className="hr-note is-warn">
               <i className="fa-solid fa-user-lock" /> {t('hrResignCloseUser')} ({linkedUser.user_name})
             </div>
+          )}
+          {!!summary?.advance_balance && (
+            <div className="hr-note is-warn">
+              <i className="fa-solid fa-hand-holding-dollar" /> {t('hrResignAdvance')} ₭ {formatNumber(summary.advance_balance)}
+            </div>
+          )}
+          {!!summary?.pending && (
+            <div className="hr-note"><i className="fa-solid fa-ban" /> {t('hrResignPending')} ({summary.pending})</div>
           )}
           <div className="acc-lock-actions">
             <Button appearance="default" className="acc-lock-btn is-cancel" onClick={onClose}>{t('cancel')}</Button>
@@ -112,9 +121,21 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
   const [uploading, setUploading] = useState(false);
   const [resigning, setResigning] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [summary, setSummary] = useState<EmployeeSummary | null>(null);
   const resigned = Number(employee.work_status) === RESIGNED;
   const gender = GENDERS.find((g) => g.value === Number(employee.gender));
   const address = [employee.village, employee.district?.district_name, employee.district?.province?.province_name].filter(Boolean).join(', ');
+
+  // ສະຫຼຸບຂ້າມໂມດູນ — ເປັນສ່ວນເສີມ ໂຫຼດບໍ່ໄດ້ກໍ່ບໍ່ສະແດງ
+  useEffect(() => {
+    let alive = true;
+    getApi(`/employee/summary/${btoa(String(employee._uuid))}`)
+      .then((res) => alive && setSummary(res.data?.data ?? null))
+      .catch(() => alive && setSummary(null));
+    return () => {
+      alive = false;
+    };
+  }, [employee._uuid, employee.work_status]);
 
   /** ລະຫັດຜ່ານ app ກັບເປັນຄ່າເລີ່ມຕົ້ນ — ພະນັກງານລືມລະຫັດ (ຍັງບໍ່ມີ OTP) */
   const resetAppPassword = () => Notific.confirm(`${t('hrAppPasswordResetConfirm')} ${DEFAULT_APP_PASSWORD}`, async () => {
@@ -247,6 +268,33 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
         </dl>
         {employee.description && <p className="acc-arap-desc">{employee.description}</p>}
 
+        {summary && (
+          <div className="hr-summary">
+            <span className={summary.advance_balance ? 'is-due' : ''}>
+              <small><i className="fa-solid fa-hand-holding-dollar" /> {t('advBalance')}</small>
+              <b>₭ {formatNumber(summary.advance_balance)}</b>
+            </span>
+            <span>
+              <small><i className="fa-solid fa-money-check-dollar" /> {t('hrLastPayroll')}</small>
+              <b>{summary.last_payroll ? `₭ ${formatNumber(summary.last_payroll.net)}` : '—'}</b>
+              {summary.last_payroll && <em>{moment(`${summary.last_payroll.period}-01`).format('MM/YYYY')}</em>}
+            </span>
+            {summary.leave.filter((l) => l.max_per_year).slice(0, 2).map((l) => (
+              <span key={l._uuid}>
+                <small><i className="fa-solid fa-plane-departure" /> {l.name} {summary.year}</small>
+                <b>{l.remaining} / {l.max_per_year}</b>
+                <em>{t('lvBalanceLeft')}</em>
+              </span>
+            ))}
+            {!!summary.pending && (
+              <span>
+                <small><i className="fa-solid fa-hourglass-half" /> {t('hrPendingRequests')}</small>
+                <b>{summary.pending}</b>
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="hr-docs-head">
           <h6><i className="fa-solid fa-paperclip" /> {t('hrDocuments')} <em>{employee.documents.length}</em></h6>
           <label className={`acc-rp-btn${!canEdit || uploading ? ' is-disabled' : ''}`}>
@@ -298,7 +346,7 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
       </Modal.Footer>
 
       {resigning && (
-        <ResignModal employee={employee} onClose={() => setResigning(false)}
+        <ResignModal employee={employee} summary={summary} onClose={() => setResigning(false)}
           onSaved={(saved) => {
             setEmployee(saved);
             setResigning(false);

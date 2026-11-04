@@ -55,6 +55,10 @@ const SOURCES: Record<string, { icon: string; tone: string }> = {
   AP_PAYMENT_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
   PAYROLL: { icon: 'fa-money-check-dollar', tone: 'is-out' },
   PAYROLL_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
+  ADVANCE: { icon: 'fa-hand-holding-dollar', tone: 'is-out' },
+  ADVANCE_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
+  ADVANCE_REPAY: { icon: 'fa-money-bill-wave', tone: 'is-in' },
+  ADVANCE_REPAY_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
 };
 
 const rangeOf = (period: Period): Range | null => {

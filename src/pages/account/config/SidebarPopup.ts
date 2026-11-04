@@ -184,6 +184,7 @@ export const PAYROLL_MENU: SidebarPopupGroup[] = [
     group: 'accountAppPayroll',
     items: [
       { key: 'runs', icon: 'fa-solid fa-money-check-dollar', label: 'payRuns' },
+      { key: 'advances', icon: 'fa-solid fa-hand-holding-dollar', label: 'advMenu' },
     ],
   },
   {

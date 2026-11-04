@@ -11,8 +11,9 @@ import { HrAvatar } from '../hrKit';
 import { PAID_LEAVE, dayLabel, leaveTone, usePostData, type LeaveBalance, type LeaveType } from './attendanceApi';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 
-/** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ພະນັກງານຍົກເລີກ (ສີຢືມ .att-state) */
+/** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ຍົກເລີກ (ພະນັກງານ / HR ຖອນ) (ສີຢືມ .att-state) */
 const PENDING = 1;
+const APPROVED = 2;
 const LEAVE_STATUSES: Record<number, { label: string; tone: string; icon: string }> = {
   1: { label: 'leaveStatusPending', tone: 'is-late', icon: 'fa-hourglass-half' },
   2: { label: 'leaveStatusApproved', tone: 'is-present', icon: 'fa-circle-check' },
@@ -132,14 +133,24 @@ const PayTiles = ({ value, onChange }: { value: boolean; onChange: (paid: boolea
   );
 };
 
+type ReviewMode = 'approve' | 'reject' | 'revoke';
+
+/** ຂໍ້ຄວາມຂອງແຕ່ລະການກະທຳ: ອະນຸມັດ, ປະຕິເສດ, ຖອນການອະນຸມັດ (ລຶບມື້ລາອອກຈາກການເຂົ້າວຽກ) */
+const REVIEW_COPY: Record<ReviewMode, { label: string; hint: string; icon: string }> = {
+  approve: { label: 'leaveApprove', hint: 'leaveApproveHint', icon: 'fa-check' },
+  reject: { label: 'leaveReject', hint: 'leaveRejectHint', icon: 'fa-xmark' },
+  revoke: { label: 'leaveRevoke', hint: 'leaveRevokeHint', icon: 'fa-rotate-left' },
+};
+
 const ReviewModal = ({ row, mode, onClose, onSaved }: {
   row: LeaveRequest;
-  mode: 'approve' | 'reject';
+  mode: ReviewMode;
   onClose: () => void;
   onSaved: () => void;
 }) => {
   const t = useT();
   const approve = mode === 'approve';
+  const copy = REVIEW_COPY[mode];
   const [leaveTypeId, setLeaveTypeId] = useState<number | null>(row.leave_type_id);
   /** null = ກຳລັງໂຫຼດ */
   const [balances, setBalances] = useState<LeaveBalance[] | null>(approve ? null : []);
@@ -185,7 +196,7 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
       const id = btoa(String(row._uuid));
       const res = approve
         ? await putApi(`/leave/approve/${id}`, { leave_type_id: leaveTypeId, paid: paid ? 1 : 0, note: note.trim() })
-        : await putApi(`/leave/reject/${id}`, { note: note.trim() });
+        : await putApi(`/leave/${mode}/${id}`, { note: note.trim() });
       Notific.success(res.data?.message ?? 'saveSuccessDone');
       onSaved();
       onClose();
@@ -198,14 +209,14 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
 
   return (
     <SettingModal
-      title={t(approve ? 'leaveApprove' : 'leaveReject')}
-      hint={t(approve ? 'leaveApproveHint' : 'leaveRejectHint')}
-      icon={approve ? 'fa-circle-check' : 'fa-circle-xmark'}
+      title={t(copy.label)}
+      hint={t(copy.hint)}
+      icon={approve ? 'fa-circle-check' : copy.icon}
       saving={saving}
       onClose={onClose}
       onSubmit={submit}
       className={`lv-review-modal${approve ? '' : ' is-reject'}`}
-      submit={{ label: t(approve ? 'leaveApprove' : 'leaveReject'), icon: approve ? 'fa-check' : 'fa-xmark', danger: !approve }}
+      submit={{ label: t(copy.label), icon: approve ? 'fa-check' : copy.icon, danger: !approve }}
     >
       <div className="lv-review">
         <div className="lv-review-person">
@@ -288,7 +299,7 @@ const LeavePage = () => {
   /** 0 = ທັງໝົດ */
   const [status, setStatus] = useState(PENDING);
   const [keyword, setKeyword] = useState('');
-  const [reviewing, setReviewing] = useState<{ row: LeaveRequest; mode: 'approve' | 'reject' } | null>(null);
+  const [reviewing, setReviewing] = useState<{ row: LeaveRequest; mode: ReviewMode } | null>(null);
   const { data, loading, reload } = usePostData<LeaveData>('/leave/fetch', { year, status });
 
   const rows = data?.data ?? [];
@@ -391,6 +402,11 @@ const LeavePage = () => {
                                   <i className="fa-solid fa-xmark" />
                                 </button>
                               </>
+                            )}
+                            {r.status === APPROVED && canEdit && (
+                              <button type="button" className="lv-act is-reject" title={t('leaveRevoke')} aria-label={t('leaveRevoke')} onClick={() => setReviewing({ row: r, mode: 'revoke' })}>
+                                <i className="fa-solid fa-rotate-left" />
+                              </button>
                             )}
                           </td>
                         </tr>

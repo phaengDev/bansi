@@ -105,6 +105,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
     [t('payTaxable')]: l.taxable,
     [t('payTax')]: l.tax,
     [t('payOtherDeduction')]: l.other_deduction,
+    [t('payAdvanceDeduction')]: l.advance_deduction,
     [t('payNet')]: l.net,
     [t('attNote')]: l.note ?? '',
   })), `payroll_${data.period}`, title);
@@ -195,7 +196,10 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
           <div className="acc-rp-kpi">
             <small>{t('payDeductionTotal')}</small>
             <b>{kip(employeeDeductions(data))}</b>
-            <em className="is-flat">{t('paySso')} {kip(data.total_sso_employee)} · {t('payTax')} {kip(data.total_tax)}</em>
+            <em className="is-flat">
+              {t('paySso')} {kip(data.total_sso_employee)} · {t('payTax')} {kip(data.total_tax)}
+              {!!data.total_advance_deduction && <> · {t('payAdvanceShort')} {kip(data.total_advance_deduction)}</>}
+            </em>
           </div>
           <div className="acc-rp-kpi">
             <small>{t('payCompanyCost')}</small>
@@ -221,6 +225,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
                     <th className="is-num">{t('paySso')}</th>
                     <th className="is-num">{t('payTax')}</th>
                     <th className="is-num">{t('payOtherShort')}</th>
+                    <th className="is-num">{t('payAdvanceShort')}</th>
                     <th className="is-num">{t('payNet')}</th>
                     <th />
                   </tr>
@@ -255,6 +260,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
                         <td className="is-num">{kip(l.sso_employee)}</td>
                         <td className="is-num">{kip(l.tax)}</td>
                         <td className="is-num">{l.other_deduction ? kip(l.other_deduction) : '—'}</td>
+                        <td className="is-num">{l.advance_deduction ? kip(l.advance_deduction) : '—'}</td>
                         <td className={`is-num pay-net${l.net < 0 ? ' is-bad' : ''}`}><b>{kip(l.net)}</b></td>
                         <td className="acc-gl-tree-actions" onClick={(e) => e.stopPropagation()}>
                           <button type="button" className="acc-gl-act" title={t('paySlip')} onClick={() => setSlip(l)}><i className="fa-solid fa-receipt" /></button>
@@ -278,6 +284,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
                     <td className="is-num">{kip(data.total_sso_employee)}</td>
                     <td className="is-num">{kip(data.total_tax)}</td>
                     <td className="is-num">{kip(sumOf((l) => l.other_deduction))}</td>
+                    <td className="is-num">{kip(data.total_advance_deduction)}</td>
                     <td className="is-num pay-net"><b>{kip(data.total_net)}</b></td>
                     <td />
                   </tr>

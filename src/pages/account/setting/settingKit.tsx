@@ -7,7 +7,7 @@ import { useT } from '../../../context/LanguageContext';
  * ໜ້າຕາຂອງຟອມໃຊ້ style ດຽວກັບຟອມບັນຊີເງິນຄັງ (.acc-book-modal) ໃຫ້ທັງລະບົບບັນຊີເບິ່ງເປັນຊຸດດຽວ.
  */
 
-export type ToolbarStat = { label: string; value: ReactNode; tone?: 'green' | 'violet' | 'gold' };
+export type ToolbarStat = { label: string; value: ReactNode; tone?: 'green' | 'violet' | 'gold' | 'red' };
 
 /**
  * ຊ່ອງຄົ້ນຫາມາດຕະຖານຂອງທຸກໜ້າ — ສູງເທົ່າປຸ່ມ (38px), ໄອຄອນຄົ້ນຫາ, ປຸ່ມ × ລ້າງ (ເມື່ອມີຄຳຄົ້ນ).
@@ -184,7 +184,7 @@ export const MetaChip = ({ icon, children, tone }: { icon?: string; children: Re
  * ກອບຟອມ popup ມາດຕະຖານ — ຫົວ (ໄອຄອນ + ຫົວຂໍ້ + ຄຳແນະນຳ), ເນື້ອໃນ, ທ້າຍ (ຍົກເລີກ / ບັນທຶກ).
  * ເນື້ອໃນແບ່ງກຸ່ມດ້ວຍ <FormSection> ທີ່ເປັນຕາລາງ 2 ຖັນ
  */
-export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, children, wide, compact, className, submit }: {
+export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, children, wide, compact, className, submit, keyboard = true }: {
   title: string;
   hint?: string;
   icon: string;
@@ -199,10 +199,12 @@ export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, chi
   className?: string;
   /** ປຸ່ມຢືນຢັນແທນ "ບັນທຶກ" — ເຊັ່ນ ອະນຸມັດ / ປະຕິເສດ (danger = ສີແດງ) */
   submit?: { label: string; icon?: string; danger?: boolean };
+  /** false = Esc ບໍ່ປິດກ່ອງ — ຟອມຍາວທີ່ມີ dropdown (Esc ປິດ dropdown ແລ້ວປິດກ່ອງນຳ ຂໍ້ມູນທີ່ປ້ອນຫາຍ) */
+  keyboard?: boolean;
 }) => {
   const t = useT();
   return (
-    <Modal open onClose={onClose} size="md" className={`acc-book-modal acs-modal${wide ? ' is-wide' : ''}${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}>
+    <Modal open onClose={onClose} keyboard={keyboard} size="md" className={`acc-book-modal acs-modal${wide ? ' is-wide' : ''}${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}>
       <Modal.Header>
         <div className="acc-book-modal-head">
           <span className="acc-book-modal-icon"><i className={`fa-solid ${icon}`} /></span>

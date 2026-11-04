@@ -158,7 +158,7 @@ const OvertimeForm = ({ data, record, onClose, onSaved }: {
           ) : (
             <CheckPicker
               block data={options} value={employeeIds} onChange={setEmployeeIds} placeholder={t('otPickEmployees')}
-              renderMenuItem={employeeLabel} countable placement="autoVerticalStart"
+              renderOption={employeeLabel} countable placement="autoVerticalStart"
             />
           )}
         </div>

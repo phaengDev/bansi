@@ -13,8 +13,8 @@ import {
 } from './payrollApi';
 
 type Values = Pick<PayrollLine,
-  'allowance' | 'overtime' | 'bonus' | 'other_deduction' | 'absence_deduction' | 'late_deduction' | 'sso_employee'
-  | 'sso_employer' | 'tax' | 'overtime_mode' | ModeKey> & { note: string };
+  'allowance' | 'overtime' | 'bonus' | 'other_deduction' | 'advance_deduction' | 'absence_deduction' | 'late_deduction' | 'sso_employee'
+  | 'sso_employer' | 'tax' | 'overtime_mode' | 'advance_mode' | ModeKey> & { note: string };
 type Amount = keyof LineResult & keyof Values;
 
 const PREVIEW_DELAY = 300;
@@ -42,6 +42,25 @@ const OtSwitch = ({ value, onChange }: { value: number; onChange: (mode: number)
     <span className="pay-mode is-mini" role="radiogroup">
       {[
         { mode: MODE_POLICY, icon: 'fa-business-time', label: t('payOtFromRecords') },
+        { mode: MODE_MANUAL, icon: 'fa-pen', label: t('payManual') },
+      ].map((o) => (
+        <button key={o.mode} type="button" role="radio" aria-checked={value === o.mode}
+          className={`is-mode-${o.mode}${value === o.mode ? ' is-active' : ''}`} onClick={() => onChange(o.mode)}
+        >
+          <i className={`fa-solid ${o.icon}`} /> {o.label}
+        </button>
+      ))}
+    </span>
+  );
+};
+
+/** ຫັກເງິນເບີກ: ຕາມງວດຂອງເດືອນ ຫຼື ປ້ອນເອງ */
+const AdvanceSwitch = ({ value, onChange }: { value: number; onChange: (mode: number) => void }) => {
+  const t = useT();
+  return (
+    <span className="pay-mode is-mini" role="radiogroup">
+      {[
+        { mode: MODE_POLICY, icon: 'fa-calendar-check', label: t('payAdvanceBySchedule') },
         { mode: MODE_MANUAL, icon: 'fa-pen', label: t('payManual') },
       ].map((o) => (
         <button key={o.mode} type="button" role="radio" aria-checked={value === o.mode}
@@ -170,6 +189,8 @@ const PayrollLineForm = ({ line, period, settings, onClose, onSaved }: {
     overtime_mode: line.overtime_mode,
     bonus: line.bonus,
     other_deduction: line.other_deduction,
+    advance_deduction: line.advance_deduction,
+    advance_mode: line.advance_mode,
     absence_deduction: line.absence_deduction,
     late_deduction: line.late_deduction,
     sso_employee: line.sso_employee,
@@ -307,6 +328,20 @@ const PayrollLineForm = ({ line, period, settings, onClose, onSaved }: {
               <Input value={values.note} onChange={(v) => set('note', v)} maxLength={255} placeholder={t('payNotePlaceholder')} />
             </div>
           </FormSection>
+
+          {/* ສະເພາະຄົນທີ່ມີເງິນເບີກຄ້າງ — ຕັ້ງແຜນຢູ່ໜ້າ ເງິນເບີກລ່ວງໜ້າ */}
+          {(result.advance_balance > 0 || values.advance_mode === MODE_MANUAL) && (
+            <FormSection title={t('payAdvanceDeduction')} note={
+              <AdvanceSwitch value={values.advance_mode}
+                onChange={(mode) => setValues((v) => ({ ...v, advance_mode: mode, ...(mode === MODE_MANUAL ? { advance_deduction: result.advance_deduction } : {}) }))}
+              />
+            }>
+              <MoneyInput label={t('payAdvanceDeduction')} value={values.advance_mode === MODE_MANUAL ? values.advance_deduction : result.advance_deduction}
+                disabled={values.advance_mode !== MODE_MANUAL} onChange={(v) => set('advance_deduction', v)}
+                hint={`${t('payAdvanceDue')} ${kip(result.advance_due)} · ${t('advBalance')} ${kip(result.advance_balance)}`}
+              />
+            </FormSection>
+          )}
         </div>
 
         <aside className={`pay-preview${previewing ? ' is-busy' : ''}`}>
@@ -321,6 +356,7 @@ const PayrollLineForm = ({ line, period, settings, onClose, onSaved }: {
           {row(t('paySsoEmployee'), result.sso_employee, 'minus')}
           {row(t('payTax'), result.tax, 'minus')}
           {row(t('payOtherDeduction'), result.other_deduction, 'minus')}
+          {row(t('payAdvanceDeduction'), result.advance_deduction, 'minus')}
           <div className={`pay-preview-net${result.net < 0 ? ' is-bad' : ''}`}>
             <span>{t('payNet')}</span>
             <b>₭ {kip(result.net)}</b>
