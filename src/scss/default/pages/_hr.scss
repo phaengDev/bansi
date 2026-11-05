@@ -365,6 +365,7 @@
   .fa-file-pdf { color: #c4343a; }
   .fa-file-excel { color: #1d7a45; }
   .fa-file-word { color: #1559c9; }
+  .fa-file-powerpoint { color: #c8501e; }
 }
 
 .hr-docs-note { display: block; margin-top: 8px; color: #7b8a97; font-size: 11.5px; }
@@ -685,8 +686,9 @@
 .hr-loc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .hr-loc-actions a.acc-rp-btn { text-decoration: none; }
 
-.acc-rp-btn.is-primary { color: #fff; background: var(--book-accent); border-color: var(--book-accent); }
-.acc-rp-btn.is-primary:hover:not(:disabled) { color: #fff; background: var(--book-accent-dark); border-color: var(--book-accent-dark); }
+// --book-accent ກຳນົດສະເພາະໃນ modal — ນອກ modal ຕ້ອງມີຄ່າສຳຮອງ ບໍ່ດັ່ງນັ້ນພື້ນໂປ່ງໃສ ແລ້ວຕົວໜັງສືຂາວເບິ່ງບໍ່ເຫັນ
+.acc-rp-btn.is-primary { color: #fff; background: var(--book-accent, #0b8a6a); border-color: var(--book-accent, #0b8a6a); }
+.acc-rp-btn.is-primary:hover:not(:disabled) { color: #fff; background: var(--book-accent-dark, #075c47); border-color: var(--book-accent-dark, #075c47); }
 
 // ---- Modal ແຜນທີ່ (LocationModal) ----
 .hr-map-modal {

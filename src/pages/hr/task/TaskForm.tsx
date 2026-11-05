@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { CheckPicker, DatePicker, Form, Input, Loader, SelectPicker } from 'rsuite';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react';
+import { DatePicker, Form, Input, Loader, SelectPicker } from 'rsuite';
 import moment from 'moment';
-import { getApi, postApi, putApi } from '../../../utils/configApi';
+import { deleteApi, getApi, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { useEmployees } from '../../../utils/selectOption';
+import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { FormSection, SettingModal } from '../../account/setting/settingKit';
 import { HrAvatar } from '../hrKit';
+import { MAX_FILE, docIcon, downloadWithAuth, fileSizeText } from '../hrApi';
 import {
-  TASK_PRIORITIES, TASK_STATUSES, assigneeName, idOf, type Task, type TaskAssignee, type TaskItem, type TaskProject,
+  MAX_TASK_FILES, TASK_FILE_ACCEPT, TASK_FILE_TYPES, TASK_PRIORITIES, TASK_STATUSES, assigneeName, idOf, type Task, type TaskFile, type TaskItem, type TaskPerson, type TaskProject,
 } from './taskApi';
+import TaskAssigneePicker from './TaskAssigneePicker';
 
-type Person = Pick<TaskAssignee, 'employee_id' | 'emp_code' | 'first_name' | 'last_name' | 'profile_url'>;
 type Row = TaskItem & { key: number };
 
 let seq = 0;
@@ -33,29 +35,38 @@ const Choice = ({ options, value, onChange }: { options: { value: number; label:
 );
 
 /**
- * ສ້າງ / ແກ້ວຽກ — ຂໍ້ມູນວຽກ, ຜູ້ຮັບຜິດຊອບ (ກົດມົງກຸດ = ຫົວໜ້າວຽກ), ລາຍການຍ່ອຍ. ບັນທຶກແລ້ວ ຄົນທີ່ຫາກໍ່ໄດ້ຮັບມອບໝາຍ
- * ໄດ້ຮັບແຈ້ງເຕືອນເດັ້ງຂຶ້ນຈໍມືຖື (backend ສົ່ງ)
+ * ສ້າງ / ແກ້ວຽກ — ຂໍ້ມູນວຽກ, ຜູ້ຮັບຜິດຊອບ (ກົດມົງກຸດ = ຫົວໜ້າວຽກ), ລາຍການຍ່ອຍ, ເອກະສານຄັດຕິດ. ບັນທຶກແລ້ວ ຄົນທີ່ຫາກໍ່ໄດ້ຮັບມອບໝາຍ
+ * ໄດ້ຮັບແຈ້ງເຕືອນເດັ້ງຂຶ້ນຈໍມືຖື (backend ສົ່ງ). ໄຟລ໌ໃໝ່ອັບໂຫຼດຕອນບັນທຶກ ເທື່ອລະໄຟລ໌ (ບໍ່ໃຫ້ຄຳຂໍໃຫຍ່ເກີນຂີດຈຳກັດຂອງ nginx).
+ * template = ສຳເນົາ: ຕື່ມຂໍ້ມູນຈາກວຽກເດີມໃຫ້ແກ້ກ່ອນ ຍັງບໍ່ສ້າງ / ບໍ່ແຈ້ງເຕືອນຈົນກວ່າຈະກົດມອບໝາຍ (ບໍ່ເອົາເອກະສານ, ຄອມເມັນ ແລະ ຄົນທີ່ລາອອກແລ້ວ)
  */
-const TaskForm = ({ task, projects, onClose, onSaved }: {
+const TaskForm = ({ task, template, projects, onClose, onSaved }: {
   /** null = ສ້າງໃໝ່ */
   task: Task | null;
+  template?: Task | null;
   projects: TaskProject[];
   onClose: () => void;
   onSaved: (task: Task) => void;
 }) => {
   const t = useT();
   const employees = useEmployees();
-  const [loaded, setLoaded] = useState<Task | null>(task ? null : ({} as Task));
-  const [title, setTitle] = useState(task?.title ?? '');
-  const [detail, setDetail] = useState(task?.detail ?? '');
-  const [projectId, setProjectId] = useState<number | null>(task?.project_id ?? null);
-  const [priority, setPriority] = useState(task?.priority ?? 1);
+  const source = task ?? template ?? null;
+  // ສຳເນົາ: ຕັດຄົນທີ່ລາອອກແລ້ວ — backend ບໍ່ຮັບການມອບໝາຍວຽກໃໝ່ໃຫ້ເຂົາເຈົ້າ
+  const sourcePeople = template && !task ? template.assignees.filter((a) => Number(a.work_status) !== 2) : task?.assignees ?? [];
+  const [loaded, setLoaded] = useState<Task | null>(source ? null : ({} as Task));
+  const [title, setTitle] = useState(source ? (task ? source.title : `${source.title} (${t('taskCopy')})`) : '');
+  const [detail, setDetail] = useState(source?.detail ?? '');
+  const [projectId, setProjectId] = useState<number | null>(source?.project_id ?? null);
+  const [priority, setPriority] = useState(source?.priority ?? 1);
   const [status, setStatus] = useState(task?.status ?? 1);
-  const [startDate, setStartDate] = useState<Date | null>(toDate(task?.start_date ?? null));
-  const [dueDate, setDueDate] = useState<Date | null>(toDate(task?.due_date ?? null));
-  const [assigneeIds, setAssigneeIds] = useState<number[]>(task?.assignees.map((a) => a.employee_id) ?? []);
-  const [leadId, setLeadId] = useState<number | null>(task?.assignees.find((a) => a.is_lead)?.employee_id ?? null);
+  const [startDate, setStartDate] = useState<Date | null>(toDate(source?.start_date ?? null));
+  const [dueDate, setDueDate] = useState<Date | null>(toDate(source?.due_date ?? null));
+  const [assigneeIds, setAssigneeIds] = useState<number[]>(sourcePeople.map((a) => a.employee_id));
+  const [leadId, setLeadId] = useState<number | null>(sourcePeople.find((a) => a.is_lead)?.employee_id ?? null);
   const [items, setItems] = useState<Row[]>([]);
+  const [files, setFiles] = useState<TaskFile[]>([]);
+  const [pending, setPending] = useState<File[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
   const lastInput = useRef<HTMLInputElement | null>(null);
   const closeRef = useRef(onClose);
@@ -63,16 +74,19 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
     closeRef.current = onClose;
   });
 
-  // ແກ້ໄຂ: ໂຫຼດລາຍການຍ່ອຍ + ຜູ້ສ້າງ (ໂຫຼດບໍ່ໄດ້ = ປິດຟອມ)
+  // ແກ້ໄຂ / ສຳເນົາ: ໂຫຼດລາຍການຍ່ອຍ + ຜູ້ສ້າງ (ໂຫຼດບໍ່ໄດ້ = ປິດຟອມ); ສຳເນົາ = ລາຍການຍ່ອຍເລີ່ມໃໝ່ທັງໝົດ
+  const sourceId = source ? idOf(source) : null;
+  const isCopy = !task;
   useEffect(() => {
-    if (!task) return;
+    if (!sourceId) return;
     let alive = true;
-    getApi(`/task/${idOf(task)}`)
+    getApi(`/task/${sourceId}`)
       .then((res) => {
         if (!alive) return;
         const full: Task = res.data?.data;
         setLoaded(full);
-        setItems((full.items ?? []).map((i) => ({ ...i, key: ++seq })));
+        setItems((full.items ?? []).map((i) => (isCopy ? { title: i.title, done: false, key: ++seq } : { ...i, key: ++seq })));
+        if (!isCopy) setFiles(full.files ?? []);
       })
       .catch((error) => {
         Notific.error(getErrorMessage(error));
@@ -81,11 +95,11 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
     return () => {
       alive = false;
     };
-  }, [task]);
+  }, [sourceId, isCopy]);
 
   // ພະນັກງານທີ່ເຮັດວຽກຢູ່ + ຜູ້ຮັບຜິດຊອບເດີມທີ່ລາອອກແລ້ວ (ຍັງຢູ່ໃນວຽກເກົ່າໄດ້)
   const people = useMemo(() => {
-    const list: Person[] = employees.map((e) => ({ employee_id: e._uuid, emp_code: e.emp_code, first_name: e.first_name, last_name: e.last_name, profile_url: e.profile_url ?? null }));
+    const list: TaskPerson[] = employees.map((e) => ({ employee_id: e._uuid, emp_code: e.emp_code, first_name: e.first_name, last_name: e.last_name, profile_url: e.profile_url ?? null, department: e.department }));
     for (const a of task?.assignees ?? []) if (!list.some((p) => p.employee_id === a.employee_id)) list.push(a);
     return list;
   }, [employees, task]);
@@ -93,7 +107,7 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
   const lead = leadId && assigneeIds.includes(leadId) ? leadId : assigneeIds[0] ?? null;
 
   const projectOptions = projects
-    .filter((p) => Number(p.status) === 1 || p._uuid === task?.project_id)
+    .filter((p) => Number(p.status) === 1 || p._uuid === source?.project_id)
     .map((p) => ({ value: p._uuid, label: p.name, color: p.color }));
 
   const addItem = () => {
@@ -106,6 +120,60 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
       e.preventDefault();
       addItem();
     }
+  };
+
+  const canAttach = task ? canEdit : canCreate;
+  const addFiles = (picked: File[]) => {
+    if (!canAttach || !picked.length) return;
+    if (picked.some((f) => !TASK_FILE_TYPES.test(f.name))) return Notific.warning('taskFileType');
+    if (picked.some((f) => f.size > MAX_FILE)) return Notific.warning('incomeFileSize');
+    const added = picked.filter((f) => !pending.some((p) => p.name === f.name && p.size === f.size));
+    if (files.length + pending.length + added.length > MAX_TASK_FILES) return Notific.warning('taskFileMax');
+    setPending([...pending, ...added]);
+  };
+  const pickFiles = (e: ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files ?? []));
+    e.target.value = '';
+  };
+  // ວາງໄຟລ໌ບ່ອນໃດກໍ່ໄດ້ໃນຟອມ — ວາງພາດນອກກ່ອງ browser ຈະເປີດໄຟລ໌ນັ້ນແທນໜ້ານີ້ ແລ້ວຂໍ້ມູນທີ່ປ້ອນຫາຍ
+  const hasFiles = (e: DragEvent) => e.dataTransfer.types.includes('Files');
+  const onDragOver = (e: DragEvent) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setDragging(true);
+  };
+  const onDragLeave = (e: DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+  };
+  const onDrop = (e: DragEvent) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setDragging(false);
+    addFiles(Array.from(e.dataTransfer.files));
+  };
+  const removeFile = (file: TaskFile) => Notific.confirm(`${t('hrDocumentDeleteConfirm')} ${file.original_name}`, async () => {
+    try {
+      const res = await deleteApi(`/task/file/${idOf(file)}`);
+      setFiles((list) => list.filter((f) => f._uuid !== file._uuid));
+      Notific.success('acsDeleted');
+      onSaved(res.data.data);
+    } catch (error) {
+      Notific.error(getErrorMessage(error));
+    }
+  });
+  /** ອັບໂຫຼດໄຟລ໌ໃໝ່ຂອງວຽກທີ່ບັນທຶກແລ້ວ — ຄືນຊື່ໄຟລ໌ທີ່ບໍ່ສຳເລັດ */
+  const uploadPending = async (saved: Task) => {
+    const failed: string[] = [];
+    for (const file of pending) {
+      const body = new FormData();
+      body.append('files', file);
+      try {
+        await postApi(`/task/file/${idOf(saved)}`, body);
+      } catch {
+        failed.push(file.name);
+      }
+    }
+    return failed;
   };
 
   const submit = async () => {
@@ -127,7 +195,9 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
     try {
       setSaving(true);
       const res = task ? await putApi(`/task/${idOf(task)}`, body) : await postApi('/task/create', body);
-      Notific.success(res.data?.message ?? 'saveSuccessDone');
+      const failed = await uploadPending(res.data.data);
+      if (failed.length) Notific.error(`${t('taskFilesFailed')} ${failed.join(', ')}`);
+      else Notific.success(res.data?.message ?? 'saveSuccessDone');
       onSaved(res.data.data);
       onClose();
     } catch (error) {
@@ -138,6 +208,7 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
   };
 
   return (
+    <>
     <SettingModal title={t(task ? 'taskEdit' : 'taskNew')} hint={t('taskFormHint')} icon="fa-list-check" saving={saving}
       onClose={onClose} onSubmit={submit} wide className="task-modal" keyboard={false}
       submit={task ? undefined : { label: t('taskAssign'), icon: 'fa-paper-plane' }}
@@ -145,6 +216,7 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
       {!loaded ? (
         <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>
       ) : (
+        <div onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
         <Form fluid>
           <FormSection title={t('taskInfo')}>
             <div className="is-wide rs-form-group">
@@ -189,38 +261,28 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
           </FormSection>
 
           <FormSection title={t('taskAssignees')}>
-            <div className="is-wide rs-form-group">
-              <CheckPicker block data={people.map((p) => ({ ...p, value: p.employee_id, label: `${p.emp_code} ${assigneeName(p)}` }))}
-                value={assigneeIds} onChange={setAssigneeIds} placeholder={t('taskPickAssignees')} countable popupClassName="acc-book-menu"
-                renderOption={(_label, item) => (
-                  <span className="task-person-opt">
-                    <HrAvatar url={item.profile_url as string | null} name={String(item.first_name)} size="sm" />
-                    <b>{assigneeName(item as unknown as Person)}</b> <small>{String(item.emp_code)}</small>
+            <div className="is-wide task-people">
+              {assigneeIds.map((id) => {
+                const p = personOf(id);
+                const isLead = id === lead;
+                return (
+                  <span key={id} className={`task-person${isLead ? ' is-lead' : ''}`}>
+                    <HrAvatar url={p?.profile_url} name={p?.first_name} size="sm" />
+                    <b>{p ? assigneeName(p) : `#${id}`}</b>
+                    <button type="button" className="task-crown" title={t('taskMakeLead')} aria-label={t('taskMakeLead')} aria-pressed={isLead} onClick={() => setLeadId(id)}>
+                      <i className="fa-solid fa-crown" />
+                    </button>
+                    <button type="button" className="task-person-x" aria-label={t('delete')} onClick={() => setAssigneeIds((ids) => ids.filter((x) => x !== id))}>
+                      <i className="fa-solid fa-xmark" />
+                    </button>
                   </span>
-                )}
-              />
-              <small className="pay-field-hint">{t('taskAssigneeHint')}</small>
+                );
+              })}
+              <button type="button" className={`task-people-add${assigneeIds.length ? '' : ' is-empty'}`} title={t('taskPickAssignees')} aria-label={t('taskPickAssignees')} onClick={() => setPicking(true)}>
+                <i className="fa-solid fa-plus" />{!assigneeIds.length && <span>{t('taskPickAssignees')}</span>}
+              </button>
             </div>
-            {!!assigneeIds.length && (
-              <div className="is-wide task-people">
-                {assigneeIds.map((id) => {
-                  const p = personOf(id);
-                  const isLead = id === lead;
-                  return (
-                    <span key={id} className={`task-person${isLead ? ' is-lead' : ''}`}>
-                      <HrAvatar url={p?.profile_url} name={p?.first_name} size="sm" />
-                      <b>{p ? assigneeName(p) : `#${id}`}</b>
-                      <button type="button" className="task-crown" title={t('taskMakeLead')} aria-label={t('taskMakeLead')} aria-pressed={isLead} onClick={() => setLeadId(id)}>
-                        <i className="fa-solid fa-crown" />
-                      </button>
-                      <button type="button" className="task-person-x" aria-label={t('delete')} onClick={() => setAssigneeIds((ids) => ids.filter((x) => x !== id))}>
-                        <i className="fa-solid fa-xmark" />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
+            <small className="is-wide pay-field-hint">{t('taskAssigneeHint')}</small>
           </FormSection>
 
           <FormSection title={`${t('taskChecklist')}${items.length ? ` ${items.filter((i) => i.done).length}/${items.length}` : ''}`}>
@@ -242,6 +304,50 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
             </div>
           </FormSection>
 
+          <FormSection title={`${t('hrDocuments')}${files.length + pending.length ? ` ${files.length + pending.length}` : ''}`}>
+            <div className="is-wide task-files">
+              {!!(files.length || pending.length) && (
+                <ul className="hr-docs">
+                  {files.map((file) => (
+                    <li key={file._uuid}>
+                      <i className={`fa-solid ${docIcon(file)}`} />
+                      <span>
+                        <b>{file.original_name}</b>
+                        <small>{fileSizeText(file.file_size)} · {moment(file.createdAt).format('DD/MM/YYYY')}</small>
+                      </span>
+                      <button type="button" className="acc-gl-act" title={t('hrDownload')} aria-label={t('hrDownload')}
+                        onClick={() => downloadWithAuth(`/task/file/download/${idOf(file)}`, file.original_name)}
+                      >
+                        <i className="fa-solid fa-download" />
+                      </button>
+                      <button type="button" className="acc-gl-act is-danger" title={t('delete')} aria-label={t('delete')} disabled={!canEdit} onClick={() => removeFile(file)}>
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    </li>
+                  ))}
+                  {pending.map((file) => (
+                    <li key={`${file.name}-${file.size}`}>
+                      <i className={`fa-solid ${docIcon({ mime_type: file.type, original_name: file.name })}`} />
+                      <span>
+                        <b>{file.name}</b>
+                        <small>{fileSizeText(file.size)} · <span className="task-file-new">{t('taskFileNew')}</span></small>
+                      </span>
+                      <button type="button" className="acc-gl-act is-danger" title={t('delete')} aria-label={t('delete')} onClick={() => setPending((list) => list.filter((f) => f !== file))}>
+                        <i className="fa-solid fa-xmark" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <label className={`task-drop${dragging ? ' is-over' : ''}${canAttach ? '' : ' is-disabled'}`}>
+                <i className="fa-solid fa-cloud-arrow-up" />
+                <span>{t('taskFileDrop')} <b>{t('taskFilePick')}</b></span>
+                <input type="file" multiple hidden disabled={!canAttach} accept={TASK_FILE_ACCEPT} onChange={pickFiles} />
+              </label>
+              <small className="hr-docs-note">{t('taskFileNote')}</small>
+            </div>
+          </FormSection>
+
           {task && loaded.createdAt && (
             <p className="task-meta">
               <i className="fa-regular fa-clock" /> {t('taskCreated')} {moment(loaded.createdAt).format('DD/MM/YYYY HH:mm')}
@@ -250,8 +356,13 @@ const TaskForm = ({ task, projects, onClose, onSaved }: {
             </p>
           )}
         </Form>
+        </div>
       )}
     </SettingModal>
+    {picking && (
+      <TaskAssigneePicker people={people} value={assigneeIds} lead={lead} onChange={setAssigneeIds} onLead={setLeadId} onClose={() => setPicking(false)} />
+    )}
+    </>
   );
 };
 

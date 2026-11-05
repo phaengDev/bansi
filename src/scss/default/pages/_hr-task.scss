@@ -174,7 +174,28 @@
 .task-project-opt { display: inline-flex; align-items: center; gap: 8px; }
 .task-project-opt i { width: 10px; height: 10px; border-radius: 50%; }
 
-.task-person-cell .task-more { color: #1d7fc4; font-weight: 600; }
+.task-avatars { display: inline-flex; align-items: center; padding: 8px 0 0 8px; }
+
+.task-avatar {
+  position: relative;
+  margin-left: -8px;
+
+  .hr-avatar { width: 34px; height: 34px; border: 2px solid #fff; }
+
+  > i {
+    position: absolute;
+    z-index: 1;
+    top: -9px;
+    left: -3px;
+    color: #f5a300;
+    font-size: 12px;
+    transform: rotate(-20deg);
+  }
+
+  &.is-resigned .hr-avatar { filter: grayscale(1); opacity: 0.6; }
+}
+
+.task-avatar-more { margin-left: 5px; color: #7b8a97; font-size: 12px; font-style: normal; font-weight: 700; }
 
 .task-due {
   display: flex;
@@ -328,9 +349,74 @@
   }
 }
 
-.task-person-opt { display: inline-flex; align-items: center; gap: 8px; small { color: #7b8a97; } }
+.task-people { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
-.task-people { display: flex; flex-wrap: wrap; gap: 8px; }
+.task-people-add {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  background: #1d8fd6;
+  border-radius: 15px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &:hover { background: #1d7fc4; }
+  &.is-empty { height: 38px; padding: 0 16px; border-radius: 10px; }
+}
+
+// ---- ໜ້າຕ່າງເລືອກຜູ້ຮັບຜິດຊອບ ----
+.task-picker-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .app-search { flex: 1; width: auto; min-width: 0; }
+  .task-picker-filter { width: 170px; flex: none; }
+}
+
+.task-picker-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 2px 8px;
+  color: #5b6f80;
+  font-size: 12.5px;
+
+  button { padding: 0; color: #1d7fc4; font-weight: 600; background: none; }
+  button:hover { text-decoration: underline; }
+}
+
+.task-pick-table {
+  min-width: 0;
+
+  tr.is-selected td { background: #f2f9fe; }
+  .task-col-check { width: 44px; }
+  .task-avatar { margin-left: 0; }
+  .task-avatar .hr-avatar { border: 0; }
+  .hr-person { align-items: center; gap: 10px; }
+}
+
+// ມົງກຸດເທິງຮູບ — ຄົນທີ່ເລືອກແລ້ວເປັນສີເທົາ, ຫົວໜ້າວຽກເປັນສີທອງ
+.task-crown-btn {
+  position: absolute;
+  z-index: 1;
+  top: -9px;
+  left: -5px;
+  padding: 1px 3px;
+  color: #c3ccd4;
+  background: none;
+  font-size: 12px;
+  transform: rotate(-20deg);
+
+  &:hover, &.is-on { color: #f5a300; }
+}
+
+.task-picker-picked { margin-right: auto; color: #1d7fc4; font-size: 13px; font-weight: 700; }
+.task-picker .rs-modal-footer { display: flex; align-items: center; }
 
 .task-person {
   display: inline-flex;
@@ -373,9 +459,314 @@
   &.is-done input { color: #7b8a97; text-decoration: line-through; }
 }
 
-.task-check { color: #9aa8b4; background: none; font-size: 19px; &[aria-pressed='true'] { color: #0e9f6e; } }
+.task-files {
+  .hr-docs { margin-bottom: 10px; }
+  .hr-docs li:last-child { border-bottom: 0; }
+  .task-file-new { color: #1d7fc4; font-weight: 700; }
+}
+
+// ກ່ອງລາກໄຟລ໌ມາວາງ / ກົດເລືອກໄຟລ໌
+.task-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 22px 16px;
+  color: #6b7f90;
+  font-size: 13px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1.5px dashed #c9d5df;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  > i { color: #b5c1cc; font-size: 30px; transition: color 0.15s ease; }
+  b { color: #1d7fc4; }
+
+  &:hover, &.is-over { background: #eef6fc; border-color: #1d7fc4; }
+  &:hover > i, &.is-over > i { color: #1d7fc4; }
+  &.is-disabled { cursor: not-allowed; opacity: 0.55; }
+  &.is-disabled:hover { background: #f8fafc; border-color: #c9d5df; }
+}
+
+.task-check {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  color: #9aa8b4;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  font-size: 17px;
+  line-height: 1;
+
+  &[aria-pressed='true'] { color: #0e9f6e; }
+}
 .task-check-add { align-self: flex-start; }
 .task-meta { margin: 12px 0 0; color: #7b8a97; font-size: 12px; }
+
+// ---- ລາຍລະອຽດວຽກ + ຄອມເມັນ ----
+.task-detail-modal { --rs-modal-size: 1040px; }
+
+.task-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  align-items: start;
+  gap: 20px;
+}
+
+.task-detail-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.task-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e9eef3;
+  border-radius: 12px;
+
+  dt { margin-bottom: 2px; color: #7b8a97; font-size: 11.5px; font-weight: 600; }
+  dd { margin: 0; color: #14314d; font-size: 13px; font-weight: 600; }
+  small { display: block; font-weight: 400; }
+}
+
+.task-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 16px 0 8px;
+  color: #3d5266;
+  font-size: 13px;
+  font-weight: 700;
+
+  > i { color: #7b8a97; font-size: 12px; }
+
+  em {
+    padding: 0 7px;
+    color: #5b6f80;
+    background: #eef3f7;
+    border-radius: 10px;
+    font-size: 11px;
+    font-style: normal;
+  }
+}
+
+.task-detail-text { margin: 0; color: #24405a; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.task-person.is-readonly { padding-right: 10px; }
+.task-person-crown { color: #f5a300; font-size: 11px; }
+
+.task-detail-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li { display: flex; align-items: center; gap: 8px; color: #24405a; }
+  li.is-done span { color: #7b8a97; text-decoration: line-through; }
+  .task-check:disabled { cursor: default; opacity: 0.7; }
+}
+
+.task-comments {
+  position: sticky;
+  top: 0;
+  display: flex;
+  max-height: 68vh;
+  flex-direction: column;
+  padding: 2px 14px 14px;
+  background: #f8fafc;
+  border: 1px solid #e9eef3;
+  border-radius: 14px;
+
+  .task-detail-head { margin-top: 10px; }
+}
+
+.task-comment-list {
+  display: flex;
+  min-height: 180px;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 2px 2px 8px;
+}
+
+.task-comment-empty {
+  margin: auto;
+  padding: 24px 0;
+  color: #9aa8b4;
+  text-align: center;
+
+  i { display: block; margin-bottom: 6px; font-size: 24px; }
+}
+
+.task-comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  &.is-mine { flex-direction: row-reverse; }
+  &.is-mine .task-comment-bubble { background: #e6f2fb; border-color: #cfe5f5; }
+}
+
+.task-comment-bubble {
+  min-width: 0;
+  max-width: calc(100% - 32px);
+  padding: 7px 11px;
+  background: #fff;
+  border: 1px solid #e6ecf1;
+  border-radius: 12px;
+
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 2px; }
+  b { color: #14314d; font-size: 12.5px; }
+  small { color: #8a99a6; font-size: 10.5px; }
+  p { margin: 0; color: #24405a; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+
+.task-comment-app { color: #0e7a52; font-size: 10.5px; font-weight: 700; i { font-size: 9px; } }
+
+.task-comment-x {
+  padding: 0 2px;
+  color: #c3ccd4;
+  background: none;
+  font-size: 10px;
+
+  &:hover { color: #e5484d; }
+}
+
+.task-comment-archived {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+
+  .acc-bg-note { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 6px; margin: 0; }
+  .acc-bg-note i { flex: none; margin-top: 3px; }
+}
+
+.task-comment-box {
+  position: relative;
+  margin-top: 8px;
+
+  .rs-input { display: block; padding-right: 46px; resize: none; }
+}
+
+.task-comment-send {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #fff;
+  background: #1d8fd6;
+  border-radius: 9px;
+
+  &:hover:not(:disabled) { background: #1d7fc4; }
+  &:disabled { background: #c3ccd4; cursor: not-allowed; }
+}
+
+.task-detail-modal .rs-modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .hr-status-btn { margin-right: auto; border-color: #f3c4cc; }
+  .hr-status-btn:hover:not(:disabled) { color: #fff; background: #e5484d; border-color: #e5484d; }
+  .acc-book-btn { margin: 0; }
+}
+
+// ໄທມ໌ໄລນ໌ — ເສັ້ນ + ຈຸດດ້ານຊ້າຍ, ລາຍການລ່າສຸດສີຟ້າ
+.task-timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px;
+
+  .task-detail-head { margin: 0; }
+  > button { padding: 0; color: #1d7fc4; font-size: 12.5px; font-weight: 600; background: none; }
+  > button:hover { text-decoration: underline; }
+}
+
+.task-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding: 0 0 8px 24px;
+
+    // ຈຸດ
+    &::before {
+      position: absolute;
+      top: 8px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: #dbe3ea;
+      border-radius: 50%;
+      content: '';
+    }
+
+    // ເສັ້ນຕໍ່ລົງ
+    &::after {
+      position: absolute;
+      top: 26px;
+      bottom: 2px;
+      left: 7px;
+      width: 2px;
+      background: #e6ecf1;
+      content: '';
+    }
+
+    &.is-latest::before { background: #1d8fd6; }
+    &.is-latest::after { background: #1d8fd6; }
+    &.is-latest .task-timeline-card { background: #eef6fc; border-color: #cfe5f5; }
+    &:last-child { padding-bottom: 0; }
+    &:last-child::after { display: none; }
+  }
+}
+
+.task-timeline-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #edf1f5;
+  border-radius: 12px;
+
+  .task-avatar { flex: none; margin-left: 0; }
+  .task-avatar .hr-avatar { border: 0; }
+
+  time { flex: none; align-self: flex-start; color: #8a99a6; font-size: 11.5px; white-space: nowrap; }
+}
+
+.task-timeline-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.35;
+
+  em { color: #1d7fc4; font-size: 12px; font-style: normal; font-weight: 600; }
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7f90; font-size: 12px; overflow-wrap: anywhere; }
+}
 
 // ---- ຕັ້ງຄ່າໂປຣເຈັກ ----
 .task-project-add {
@@ -422,6 +813,11 @@
 }
 
 .task-project-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; }
+
+@media (max-width: 860px) {
+  .task-view { grid-template-columns: minmax(0, 1fr); }
+  .task-comments { position: static; max-height: none; }
+}
 
 @media (max-width: 767.98px) {
   .task-tools { width: 100%; }

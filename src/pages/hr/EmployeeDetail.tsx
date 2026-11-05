@@ -7,12 +7,10 @@ import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import {
-  DEFAULT_APP_PASSWORD, GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, downloadWithAuth, fileSizeText, fullName,
+  DEFAULT_APP_PASSWORD, DOCUMENT_ACCEPT, DOCUMENT_FILE, GENDERS, MAX_DOCUMENTS, MAX_FILE, RESIGNED, WORKING, docIcon, downloadWithAuth, fileSizeText, fullName,
   type Employee, type EmployeeDocument, type EmployeeSummary,
 } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
-
-const DOCUMENT = /\.(jpe?g|png|webp|pdf|docx?|xlsx?)$/i;
 
 const showDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').format('DD/MM/YYYY') : '—');
 
@@ -99,11 +97,6 @@ const spanText = (from: string | null, to: string | null, t: (key: string) => st
   return [years && `${years} ${t('hrYears')}`, months % 12 && `${months % 12} ${t('hrMonths')}`].filter(Boolean).join(' ') || `< 1 ${t('hrMonths')}`;
 };
 
-const docIcon = (doc: EmployeeDocument) =>
-  /pdf/i.test(doc.mime_type ?? doc.original_name) ? 'fa-file-pdf'
-    : /image/i.test(doc.mime_type ?? '') ? 'fa-file-image'
-      : /sheet|excel|xlsx?$/i.test(doc.mime_type ?? doc.original_name) ? 'fa-file-excel' : 'fa-file-word';
-
 /**
  * ລາຍລະອຽດພະນັກງານ — ຂໍ້ມູນທັງໝົດ, ບັນຊີຜູ້ໃຊ້ທີ່ຜູກ ແລະ ເອກະສານຄັດຕິດ (ອັບໂຫຼດ ≤ 5 ໄຟລ໌ × 5MB, ດາວໂຫຼດຜ່ານ API ທີ່ login ແລ້ວ, ລຶບ).
  * ປ່ຽນສະຖານະຢູ່ນີ້: ລາອອກ (ເລືອກວັນລາອອກ) / ກັບເຂົ້າວຽກ (ລ້າງວັນລາອອກ)
@@ -157,7 +150,7 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
     e.target.value = '';
     if (!files.length) return;
     if (files.length > MAX_DOCUMENTS) return Notific.warning('hrDocumentMax');
-    if (files.some((f) => !DOCUMENT.test(f.name))) return Notific.warning('hrDocumentType');
+    if (files.some((f) => !DOCUMENT_FILE.test(f.name))) return Notific.warning('hrDocumentType');
     if (files.some((f) => f.size > MAX_FILE)) return Notific.warning('incomeFileSize');
     const body = new FormData();
     files.forEach((f) => body.append('files', f));
@@ -300,7 +293,7 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged }: {
           <label className={`acc-rp-btn${!canEdit || uploading ? ' is-disabled' : ''}`}>
             {uploading ? <Loader size="xs" /> : <i className="fa-solid fa-upload" />} {t('hrDocumentUpload')}
             <input type="file" multiple hidden disabled={!canEdit || uploading} onChange={upload}
-              accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx"
+              accept={DOCUMENT_ACCEPT}
             />
           </label>
         </div>

@@ -6,7 +6,8 @@ import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { SettingToolbar } from '../../account/setting/settingKit';
-import { AssigneeCell, DueCell, PriorityChip, TaskStatusSelect } from './TaskBits';
+import { AssigneeStack, DueCell, PAGE_SIZES, PriorityChip, TaskPager, TaskStatusSelect, slicePage } from './TaskBits';
+import TaskDetail from './TaskDetail';
 import TaskForm from './TaskForm';
 import TaskProjects from './TaskProjects';
 import { TASK_DOING, TASK_DONE, TASK_PENDING, TASK_STATUSES, assigneeName, idOf, useTaskProjects, useTasks, type Task } from './taskApi';
@@ -20,7 +21,6 @@ const COLUMNS: Column[] = ['detail', 'project', 'assignees', 'due'];
 const COLUMN_LABELS: Record<Column, string> = { detail: 'taskDetail', project: 'taskProject', assignees: 'taskAssignees', due: 'taskDue' };
 const COLUMN_ICONS: Record<Column, string> = { detail: 'fa-solid fa-align-left', project: 'fa-regular fa-folder', assignees: 'fa-solid fa-user-group', due: 'fa-regular fa-calendar' };
 const COLUMNS_KEY = 'taskColumns';
-const PAGE_SIZES = [10, 20, 50, 100];
 
 const readColumns = (): Column[] => {
   try {
@@ -47,7 +47,7 @@ const sortValue = (task: Task, key: SortKey): string | number => {
 
 /**
  * ມອບໝາຍວຽກ — ແຖບສະຖານະ, ກັ່ນຕາມໂປຣເຈັກ / ຕິດດາວ, ຄົ້ນຫາ, ຕາຕະລາງ (ເລືອກຫຼາຍ, ປ່ຽນສະຖານະໃນແຖວ, ຈັດລຽງ, ແບ່ງໜ້າ),
- * ຄັງເກັບ, ຕັ້ງຄ່າໂປຣເຈັກ ແລະ ເລືອກຖັນທີ່ສະແດງ. ກົດແຖວ = ແກ້ໄຂ
+ * ຄັງເກັບ, ຕັ້ງຄ່າໂປຣເຈັກ ແລະ ເລືອກຖັນທີ່ສະແດງ. ກົດແຖວ = ລາຍລະອຽດ + ຄອມເມັນ, ປຸ່ມດິນສໍ = ແກ້ໄຂ
  */
 const TaskPage = () => {
   const t = useT();
@@ -64,6 +64,8 @@ const TaskPage = () => {
   const [pageSize, setPageSize] = useState(50);
   const [columns, setColumns] = useState<Column[]>(readColumns);
   const [editing, setEditing] = useState<Task | null | 'new'>(null);
+  const [viewing, setViewing] = useState<Task | null>(null);
+  const [copying, setCopying] = useState<Task | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -108,10 +110,7 @@ const TaskPage = () => {
     { key: 'overdue', label: 'taskOverdue', count: base.filter((r) => r.overdue).length },
   ];
 
-  const pages = Math.max(1, Math.ceil(shown.length / pageSize));
-  const current = Math.min(page, pages);
-  const from = (current - 1) * pageSize;
-  const pageRows = shown.slice(from, from + pageSize);
+  const { rows: pageRows, current } = slicePage(shown, page, pageSize);
   const allOnPage = pageRows.length > 0 && pageRows.every((r) => selected.has(r._uuid));
 
   const filterBy = (apply: () => void) => {
@@ -162,8 +161,10 @@ const TaskPage = () => {
       Notific.success('saveSuccessDone');
       setSelected((s) => new Set([...s].filter((id) => !ids.includes(id))));
       reload();
+      return true;
     } catch (error) {
       Notific.error(getErrorMessage(error));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -171,8 +172,8 @@ const TaskPage = () => {
   const bulkDelete = () => Notific.confirm(`${t('taskDeleteConfirm')} ${selected.size} ${t('taskItems')}`, () => {
     bulk('delete');
   });
-  const removeOne = (task: Task) => Notific.confirm(`${t('taskDeleteOne')} ${task.title}`, () => {
-    bulk('delete', undefined, [task._uuid]);
+  const removeOne = (task: Task) => Notific.confirm(`${t('taskDeleteOne')} ${task.title}`, async () => {
+    if (await bulk('delete', undefined, [task._uuid])) setViewing(null);
   });
 
   const sortHead = (key: SortKey, label: string, className = '') => (
@@ -225,7 +226,6 @@ const TaskPage = () => {
   const projectOptions = projects
     .filter((p) => Number(p.status) === 1 || p._uuid === projectId)
     .map((p) => ({ value: p._uuid, label: p.name, color: p.color }));
-  const span = 4 + columns.length;
 
   return (
     <div className="acs-page task-page">
@@ -329,7 +329,7 @@ const TaskPage = () => {
               </thead>
               <tbody>
                 {pageRows.map((task) => (
-                  <tr key={task._uuid} className={`is-click${selected.has(task._uuid) ? ' is-selected' : ''}${task.status === TASK_DONE ? ' is-done' : ''}`} onClick={() => setEditing(task)}>
+                  <tr key={task._uuid} className={`is-click${selected.has(task._uuid) ? ' is-selected' : ''}${task.status === TASK_DONE ? ' is-done' : ''}`} onClick={() => setViewing(task)}>
                     <td className="task-col-check" onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={selected.has(task._uuid)} onChange={() => toggleSelect(task._uuid)} />
                     </td>
@@ -342,7 +342,7 @@ const TaskPage = () => {
                         </button>
                         <span>
                           <b>{task.title}</b>
-                          {(task.priority > 1 || !!task.items_total) && (
+                          {(task.priority > 1 || !!task.items_total || !!task.files_total || !!task.comments_total) && (
                             <span className="task-meta-row">
                               <PriorityChip priority={task.priority} />
                               {!!task.items_total && (
@@ -350,6 +350,8 @@ const TaskPage = () => {
                                   <i className="fa-solid fa-list-check" /> {task.items_done}/{task.items_total}
                                 </span>
                               )}
+                              {!!task.files_total && <span className="acs-chip" title={t('hrDocuments')}><i className="fa-solid fa-paperclip" /> {task.files_total}</span>}
+                              {!!task.comments_total && <span className="acs-chip" title={t('taskComments')}><i className="fa-regular fa-comment" /> {task.comments_total}</span>}
                             </span>
                           )}
                         </span>
@@ -359,13 +361,13 @@ const TaskPage = () => {
                     {has('project') && (
                       <td>{task.project ? <span className="task-project"><i style={{ background: task.project.color }} />{task.project.name}</span> : <span className="acc-gl-ref">—</span>}</td>
                     )}
-                    {has('assignees') && <td><AssigneeCell assignees={task.assignees} /></td>}
+                    {has('assignees') && <td><AssigneeStack assignees={task.assignees} /></td>}
                     {has('due') && <td><DueCell task={task} /></td>}
                     <td onClick={(e) => e.stopPropagation()}>
                       <TaskStatusSelect status={task.status} onChange={(s) => changeStatus(task, s)} disabled={!canEdit || archived} />
                     </td>
                     <td className="acc-gl-tree-actions" onClick={(e) => e.stopPropagation()}>
-                      <button type="button" className="acc-gl-act" title={t('edit')} aria-label={t('edit')} onClick={() => setEditing(task)}>
+                      <button type="button" className="acc-gl-act" disabled={!canEdit} title={t('edit')} aria-label={t('edit')} onClick={() => setEditing(task)}>
                         <i className="fa-solid fa-pen" />
                       </button>
                       <button type="button" className="acc-gl-act is-danger" disabled={!canDelete || busy} title={t('delete')} aria-label={t('delete')} onClick={() => removeOne(task)}>
@@ -375,38 +377,25 @@ const TaskPage = () => {
                   </tr>
                 ))}
               </tbody>
-              {shown.length > PAGE_SIZES[0] && (
-                <tfoot>
-                  <tr>
-                    <td colSpan={span}>
-                      <div className="task-foot">
-                        <span className="acc-gl-ref">{t('taskShowing')} {from + 1}–{from + pageRows.length} {t('taskOf')} {shown.length}</span>
-                        <SelectPicker data={PAGE_SIZES.map((n) => ({ value: n, label: `${n} ${t('taskPerPage')}` }))} value={pageSize}
-                          onChange={(v) => { if (v) filterBy(() => setPageSize(v)); }}
-                          cleanable={false} searchable={false} size="sm" placement="topEnd" className="task-page-size" popupClassName="acc-book-menu"
-                        />
-                        <span className="task-pages">
-                          <button type="button" className="acc-gl-act" disabled={current <= 1} onClick={() => setPage(current - 1)} aria-label={t('previous')}><i className="fa-solid fa-chevron-left" /></button>
-                          {Array.from({ length: pages }, (_, i) => i + 1)
-                            .filter((n) => n === 1 || n === pages || Math.abs(n - current) <= 2)
-                            .map((n, i, list) => (
-                              <span key={n}>
-                                {i > 0 && n - list[i - 1] > 1 && <em>…</em>}
-                                <button type="button" className={`acc-gl-act${n === current ? ' is-active' : ''}`} onClick={() => setPage(n)}>{n}</button>
-                              </span>
-                            ))}
-                          <button type="button" className="acc-gl-act" disabled={current >= pages} onClick={() => setPage(current + 1)} aria-label={t('next')}><i className="fa-solid fa-chevron-right" /></button>
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
             </table>
           </div>
+          {shown.length > PAGE_SIZES[0] && <TaskPager total={shown.length} page={current} pageSize={pageSize} onPage={setPage} onPageSize={(n) => filterBy(() => setPageSize(n))} />}
         </div>
       )}
 
+      {viewing && (
+        <TaskDetail task={viewing} onClose={() => setViewing(null)} onChanged={reload} onDelete={removeOne}
+          onEdit={(task) => {
+            setEditing(task);
+            setViewing(null);
+          }}
+          onCopy={(task) => {
+            setCopying(task);
+            setViewing(null);
+          }}
+        />
+      )}
+      {copying && <TaskForm task={null} template={copying} projects={projects} onClose={() => setCopying(null)} onSaved={() => reload()} />}
       {editing && (
         <TaskForm task={editing === 'new' ? null : editing} projects={projects} onClose={() => setEditing(null)}
           onSaved={() => reload()}

@@ -277,5 +277,18 @@ export const downloadWithAuth = async (url: string, fileName: string) => {
 export const fileSizeText = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
+/** ຊະນິດເອກະສານທີ່ອັບໂຫຼດໄດ້ — ກົງກັບ DOCUMENT_TYPES ຂອງ api-bansi */
+export const DOCUMENT_FILE = /\.(jpe?g|png|webp|pdf|docx?|xlsx?)$/i;
+export const DOCUMENT_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx';
+
+/** ໄອຄອນຂອງເອກະສານ */
+export const docIcon = (doc: { mime_type?: string | null; original_name: string }) => {
+  const kind = doc.mime_type || doc.original_name;
+  if (/pdf/i.test(kind)) return 'fa-file-pdf';
+  if (/image/i.test(kind)) return 'fa-file-image';
+  if (/presentation|powerpoint|\.pptx?$/i.test(kind)) return 'fa-file-powerpoint';
+  return /sheet|excel|xlsx?$/i.test(kind) ? 'fa-file-excel' : 'fa-file-word';
+};
+
 export const MAX_FILE = 5 * 1024 * 1024;
 export const MAX_DOCUMENTS = 5;

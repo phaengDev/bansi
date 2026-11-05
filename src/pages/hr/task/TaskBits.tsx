@@ -39,21 +39,19 @@ export const PriorityChip = ({ priority }: { priority: number }) => {
   return <span className={`acs-chip task-prio ${meta.tone}`}><i className={meta.icon} /> {t(meta.label)}</span>;
 };
 
-/** ຜູ້ຮັບຜິດຊອບ — ຫົວໜ້າວຽກ (ຄົນທຳອິດ) + ຈຳນວນຄົນອື່ນ; ຊີ້ເບິ່ງ = ລາຍຊື່ທັງໝົດ */
-export const AssigneeCell = ({ assignees }: { assignees: TaskAssignee[] }) => {
+/** ຮູບຜູ້ຮັບຜິດຊອບຊ້ອນກັນ — ຫົວໜ້າວຽກຢູ່ໜ້າສຸດ ມີມົງກຸດ; ເກີນ max = +n; ຊີ້ເບິ່ງ = ລາຍຊື່ທັງໝົດ */
+export const AssigneeStack = ({ assignees, max = 5 }: { assignees: TaskAssignee[]; max?: number }) => {
   const t = useT();
   if (!assignees.length) return <span className="acc-gl-ref">—</span>;
-  const [first, ...rest] = assignees;
   return (
-    <span className="hr-person task-person-cell" title={assignees.map((a) => `${assigneeName(a)}${a.is_lead ? ` (${t('taskLead')})` : ''}`).join('\n')}>
-      <HrAvatar url={first.profile_url} name={first.first_name} />
-      <span>
-        <b>{assigneeName(first)}</b>
-        <small className="acc-gl-ref">
-          {first.is_lead ? t('taskLead') : first.emp_code}
-          {!!rest.length && <> · <span className="task-more">+{rest.length} {t('taskPeople')}</span></>}
-        </small>
-      </span>
+    <span className="task-avatars" title={assignees.map((a) => `${assigneeName(a)}${a.is_lead ? ` (${t('taskLead')})` : ''}`).join('\n')}>
+      {assignees.slice(0, max).map((a) => (
+        <span key={a.employee_id} className={`task-avatar${a.is_lead ? ' is-lead' : ''}${Number(a.work_status) === 2 ? ' is-resigned' : ''}`}>
+          {a.is_lead && <i className="fa-solid fa-crown" />}
+          <HrAvatar url={a.profile_url} name={a.first_name} size="sm" />
+        </span>
+      ))}
+      {assignees.length > max && <em className="task-avatar-more">+{assignees.length - max}</em>}
     </span>
   );
 };
@@ -74,5 +72,48 @@ export const DueCell = ({ task }: { task: Task }) => {
       {due.format('DD/MM/YYYY')}
       {hint && <small className="acc-gl-ref">{hint}</small>}
     </span>
+  );
+};
+
+export const PAGE_SIZES = [10, 20, 50, 100];
+
+/** ແຖວຂອງໜ້າປັດຈຸບັນ (ໜ້າເກີນ = ໜ້າສຸດທ້າຍ) */
+export const slicePage = <T,>(list: T[], page: number, pageSize: number) => {
+  const current = Math.min(page, Math.max(1, Math.ceil(list.length / pageSize)));
+  const from = (current - 1) * pageSize;
+  return { current, from, rows: list.slice(from, from + pageSize) };
+};
+
+/** ແບ່ງໜ້າທ້າຍຕາຕະລາງ — ສະແດງ x–y ຈາກ n, ແຖວຕໍ່ໜ້າ, ເລກໜ້າ */
+export const TaskPager = ({ total, page, pageSize, onPage, onPageSize }: {
+  total: number;
+  page: number;
+  pageSize: number;
+  onPage: (page: number) => void;
+  onPageSize: (size: number) => void;
+}) => {
+  const t = useT();
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const from = (page - 1) * pageSize;
+  return (
+    <div className="task-foot">
+      <span className="acc-gl-ref">{t('taskShowing')} {from + 1}–{Math.min(from + pageSize, total)} {t('taskOf')} {total}</span>
+      <SelectPicker data={PAGE_SIZES.map((n) => ({ value: n, label: `${n} ${t('taskPerPage')}` }))} value={pageSize}
+        onChange={(v) => { if (v) onPageSize(v); }}
+        cleanable={false} searchable={false} size="sm" placement="topEnd" className="task-page-size" popupClassName="acc-book-menu"
+      />
+      <span className="task-pages">
+        <button type="button" className="acc-gl-act" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label={t('previous')}><i className="fa-solid fa-chevron-left" /></button>
+        {Array.from({ length: pages }, (_, i) => i + 1)
+          .filter((n) => n === 1 || n === pages || Math.abs(n - page) <= 2)
+          .map((n, i, list) => (
+            <span key={n}>
+              {i > 0 && n - list[i - 1] > 1 && <em>…</em>}
+              <button type="button" className={`acc-gl-act${n === page ? ' is-active' : ''}`} onClick={() => onPage(n)}>{n}</button>
+            </span>
+          ))}
+        <button type="button" className="acc-gl-act" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label={t('next')}><i className="fa-solid fa-chevron-right" /></button>
+      </span>
+    </div>
   );
 };

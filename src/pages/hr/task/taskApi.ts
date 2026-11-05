@@ -36,7 +36,42 @@ export type TaskAssignee = {
   profile_url: string | null;
 };
 
+export type TaskComment = { _uuid: number; body: string; createdAt: string; author_name: string; author_photo: string | null; from_app: boolean; mine: boolean };
+
+/** ລາຍການໄທມ໌ໄລນ໌ — action: create | update | item_done | item_undone | file_add | file_del | archive | unarchive */
+export type TaskLog = {
+  _uuid: number;
+  action: string;
+  /** ຊ່ອງທີ່ແກ້ຂອງ action update */
+  fields: string[];
+  /** ສະຖານະໃໝ່ ຖ້າປ່ຽນ */
+  status: number | null;
+  /** ຊື່ລາຍການຍ່ອຍ / ໄຟລ໌ */
+  note: string | null;
+  createdAt: string;
+  author_name: string;
+  author_photo: string | null;
+  author_employee_id: number | null;
+  from_app: boolean;
+};
+
+/** ຄົນໃນຕົວເລືອກຜູ້ຮັບຜິດຊອບ */
+export type TaskPerson = Pick<TaskAssignee, 'employee_id' | 'emp_code' | 'first_name' | 'last_name' | 'profile_url'> & {
+  work_status?: number | null;
+  department?: { _uuid: number; depart_name: string } | null;
+};
+
+/** ກົງກັບ MAX_ASSIGNEES ຂອງ api-bansi */
+export const MAX_TASK_ASSIGNEES = 50;
+
 export type TaskItem = { _uuid?: number; title: string; done: boolean };
+
+export type TaskFile = { _uuid: number; original_name: string; mime_type: string | null; file_size: number; createdAt: string };
+
+/** ເອກະສານຕໍ່ວຽກ — ກົງກັບ MAX_FILES ແລະ taskFileUpload ຂອງ api-bansi */
+export const MAX_TASK_FILES = 20;
+export const TASK_FILE_TYPES = /\.(jpe?g|png|webp|pdf|docx?|xlsx?|pptx?)$/i;
+export const TASK_FILE_ACCEPT = '.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
 
 export type Task = {
   _uuid: number;
@@ -56,6 +91,11 @@ export type Task = {
   items_total: number;
   items_done: number;
   items?: TaskItem[];
+  files_total: number;
+  files?: TaskFile[];
+  comments_total: number;
+  comments?: TaskComment[];
+  timeline?: TaskLog[];
   starred: boolean;
   overdue: boolean;
   createdby_name?: string | null;
