@@ -34,6 +34,7 @@ export const fromPartnerPayment = (p: PartnerPayment, categoryName: string): Ent
     dateKey: date.format('YYYY-MM-DD'),
     title: p.description || p.partner?.name || p.pay_number,
     category: { id: Number(p.pay_kind) === 1 ? -1 : -2, code: '', name: categoryName },
+    sub: null,
     account: p.account
       ? { id: p.account._uuid, name: p.account.acountName, bank: p.account.banks?.abbr ?? null, url: p.account.banks?.url ?? null }
       : null,

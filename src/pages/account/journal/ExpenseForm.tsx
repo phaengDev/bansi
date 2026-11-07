@@ -15,14 +15,15 @@ import { currencySymbol } from '../ledger/currency';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
 import {
   CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, defaultClassId, formatQty, isAllowedFile, isFutureDay,
-  type TaxMode,
+  subOptionsOf, withCategory, type SubRef, type TaxMode,
 } from './journalKit';
-import { useAccountClasses, useFinanceCategories, useTaxes } from '../../../utils/selectOption';
+import { useAccountClasses, useFinanceCategories, useTaxes, type FinanceSubCategory } from '../../../utils/selectOption';
+import SubCategoryField from './SubCategoryField';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
 import { kip, type BudgetCheck } from '../budget/budgetApi';
 import { BudgetHint } from '../budget/BudgetKit';
 
-const { StringType, NumberType, DateType } = Schema.Types;
+const { NumberType, DateType } = Schema.Types;
 
 /** ລາຍການຍ່ອຍທີ່ບັນທຶກແລ້ວ (tbl_expense_items) */
 export type ExpenseItem = {
@@ -36,14 +37,19 @@ export type ExpenseItem = {
   amount: number;
 };
 
-/** ແຖວຈາກ POST /expense/fetch — ຫົວ + ປະເພດ (typeout), ບັນຊີ (acount + banks.url + treasury.currency), ລາຍການຍ່ອຍ */
+/** ແຖວຈາກ POST /expense/fetch — ຫົວ + ລາຍການຍ່ອຍ ແລະ ປະເພດ (sub.category), ບັນຊີ (acount + banks.url + treasury.currency), ລາຍການຍ່ອຍ */
 export type Expense = {
   _uuid: number;
   number: string;
   /** ວັນທີຈ່າຍເງິນ YYYY-MM-DD */
   expense_date: string;
+  /** ຊື່ລາຍການຍ່ອຍຕອນບັນທຶກ (backend ຕັ້ງໃຫ້) */
   expense_title: string;
-  type_expense_fk: number;
+  /** ລາຍການຍ່ອຍ — ປະເພດອ່ານຜ່ານ sub.category */
+  sub_category_id: number;
+  sub?: SubRef | null;
+  /** ລາຍຈ່າຍທີ່ບັນທຶກຄູ່ຕອນຈ່າຍເງິນເດືອນ — ວັນທີ / ຍົກເລີກ ຈັດການຢູ່ໜ້າເງິນເດືອນ */
+  payroll_id?: number | null;
   payee_name?: string | null;
   bill_no?: string | null;
   type_acountid: number;
@@ -66,7 +72,6 @@ export type Expense = {
   status: number;
   createdAt: string;
   updatedAt?: string;
-  typeout?: { _uuid: number; type_code: string; type_name: string } | null;
   acount?: (TreasuryAccount & { treasury?: AccountType }) | null;
   user?: { user_uuid: number; user_name: string } | null;
   items: ExpenseItem[];
@@ -150,8 +155,9 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const [focusKey, setFocusKey] = useState<number | null>(null);
   const [inputs, setInputs] = useState<any>({
     expense_date: data ? expenseDateOf(data).toDate() : new Date(),
-    expense_title: data?.expense_title ?? '',
-    type_expense_fk: data?.type_expense_fk ?? null,
+    /** ໃຊ້ກັ່ນລາຍການຍ່ອຍໃນຟອມເທົ່ານັ້ນ (ບໍ່ສົ່ງ) */
+    category_id: data?.sub?.category_id ?? null,
+    sub_category_id: data?.sub_category_id ?? null,
     bill_no: data?.bill_no ?? '',
     acount_id_fk: data?.acount_id_fk ?? null,
     tax_id: null,
@@ -207,15 +213,15 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
 
   // ---- ງົບປະມານຂອງປະເພດທີ່ເລືອກ (ເຕືອນເທົ່ານັ້ນ ບໍ່ກັ້ນການບັນທຶກ) ----
   const [budgetCheck, setBudgetCheck] = useState<BudgetCheck | null>(null);
-  const budget = inputs.type_expense_fk ? budgetCheck : null;
+  const budget = inputs.category_id ? budgetCheck : null;
   const budgetDate = inputs.expense_date ? moment(inputs.expense_date).format('YYYY-MM-DD') : '';
   useEffect(() => {
-    if (!inputs.type_expense_fk) return;
+    if (!inputs.category_id) return;
     let cancelled = false;
     // ລໍຖ້າພິມຈຳນວນແລ້ວຄ່ອຍຖາມ (ບໍ່ຖາມທຸກຕົວອັກສອນ)
     const timer = setTimeout(() => {
       postApi('/budget/check', {
-        category_id: inputs.type_expense_fk,
+        category_id: inputs.category_id,
         expense_date: budgetDate,
         acount_id_fk: inputs.acount_id_fk ?? undefined,
         amount: calc.total,
@@ -228,7 +234,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [inputs.type_expense_fk, budgetDate, inputs.acount_id_fk, calc.total, data?._uuid]);
+  }, [inputs.category_id, budgetDate, inputs.acount_id_fk, calc.total, data?._uuid]);
   /** ຍອດທີ່ຈະເກີນງົບ (ປີ ຫຼື ເດືອນ ອັນໃດຫຼາຍກວ່າ) — 0 = ບໍ່ເກີນ */
   const budgetOver = budget?.has_budget
     ? Math.max(0, -budget.after, budget.month ? -budget.month.after : 0)
@@ -257,10 +263,15 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     tone: 'is-gold',
   }));
 
+  // ລາຍການຍ່ອຍ — ປະເພດທີ່ມີລາຍການຍ່ອຍ ຕ້ອງເລືອກ; ແຖວເກົ່າທີ່ບໍ່ມີ ແລະ ບໍ່ໄດ້ປ່ຽນປະເພດ ບໍ່ບັງຄັບ (backend ກົດດຽວກັນ)
+  /** ລາຍການຍ່ອຍທີ່ຫາກໍ່ເພີ່ມຈາກຊ່ອງເລືອກ (ຕົວເລືອກຂອງປະເພດໂຫຼດໄວ້ກ່ອນແລ້ວ ຈຶ່ງເກັບໄວ້ນີ້) */
+  const [addedSubs, setAddedSubs] = useState<FinanceSubCategory[]>([]);
+  const subOptions = subOptionsOf(categories, inputs.category_id, data?.sub ?? null, t('inactive'), addedSubs);
+
   const model = Schema.Model<any>({
     expense_date: DateType().isRequired(t('selectRequired')),
-    expense_title: StringType().isRequired(t('inputRequired')),
-    type_expense_fk: NumberType().isRequired(t('selectRequired')),
+    category_id: NumberType().isRequired(t('selectRequired')),
+    sub_category_id: NumberType().isRequired(t('selectRequired')),
     ...(isEdit
       ? {}
       : {
@@ -300,8 +311,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     const text = (value: unknown) => String(value ?? '').trim();
     // ສົ່ງເປັນ "YYYY-MM-DD" (FormData ບໍ່ຜ່ານ interceptor ທີ່ແປງ Date)
     body.append('expense_date', moment(inputs.expense_date).format('YYYY-MM-DD'));
-    body.append('expense_title', text(inputs.expense_title));
-    body.append('type_expense_fk', String(inputs.type_expense_fk));
+    body.append('sub_category_id', String(inputs.sub_category_id));
     body.append('payee_name', customer.name.trim());
     body.append('bill_no', text(inputs.bill_no));
     body.append('description', text(inputs.description));
@@ -358,34 +368,40 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
 
   const existingFile = data?.file_url && !removeFile && !file;
   const renderAccount = renderAccountOption(t('treasuryNoBank'), false);
-  const infoDone = !!inputs.expense_date && !!String(inputs.expense_title).trim() && !!inputs.type_expense_fk;
+  const infoDone = !!inputs.expense_date && !!inputs.sub_category_id;
 
+  // keyboard={false}: Esc ຕອນຊ່ອງເລືອກເປີດຢູ່ ຈະປິດທັງຟອມ ແລ້ວຂໍ້ມູນທີ່ປ້ອນຫາຍ
   return (
-    <Modal open onClose={onClose} size="lg" className="acc-book-modal is-steps is-xfer is-expense">
+    <Modal open onClose={onClose} size="lg" keyboard={false} className="acc-book-modal is-steps is-xfer is-expense">
       <Modal.Header>
         <div className="acc-book-modal-head">
           <span className="acc-book-modal-icon"><i className={`fa-solid ${isEdit ? 'fa-pen-to-square' : 'fa-arrow-trend-down'}`} /></span>
           <span>
             <Modal.Title>{t(isEdit ? 'expenseEdit' : 'expenseAdd')}</Modal.Title>
-            <small>{isEdit ? `${data.number} · ${t('expenseLockedNote')}` : t('expenseHint')}</small>
+            <small>{isEdit ? `${data.number} · ${t(data.payroll_id ? 'expenseFromPayrollNote' : 'expenseLockedNote')}` : t('expenseHint')}</small>
           </span>
         </div>
       </Modal.Header>
 
       <Modal.Body>
-        <Form fluid ref={formRef} model={model} formValue={inputs} onChange={setInputs} className="acc-book-main">
-          {/* ---- ຂັ້ນ 1: ຫົວ ---- */}
+        <Form fluid ref={formRef} model={model} formValue={inputs} className="acc-book-main"
+          onChange={(next) => setInputs(withCategory(next, inputs.category_id, categories))}
+        >
+          {/* ---- ຂັ້ນ 1: ຫົວ — ວັນທີຈ່າຍ (ເຕັມແຖວ) → ປະເພດ | ລາຍການຍ່ອຍ ---- */}
           <FormStep no={1} done={infoDone} title={t('expenseStepInfo')} hint={t('expenseStepInfoHint')}>
             <div className="is-wide">
-              <InputField name="expense_title" label={t('expenseTitle')} placeholder={t('expenseTitlePlaceholder')}
-                icon={<i className="fa-solid fa-pen" />}
+              <InputField name="expense_date" label={t('expenseDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy"
+                block cleanable={false} shouldDisableDate={isFutureDay} placeholder="dd/mm/yyyy" disabled={!!data?.payroll_id}
               />
             </div>
-            <PickerField name="type_expense_fk" label={t('expenseCategory')} data={categoryOptions} placeholder={t('select')}
+            <PickerField name="category_id" label={t('expenseCategory')} data={categoryOptions} placeholder={t('select')}
               cleanable={false} renderOption={codeLabel} renderValue={codeLabel}
             />
-            <InputField name="expense_date" label={t('expenseDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy"
-              block cleanable={false} shouldDisableDate={isFutureDay} placeholder="dd/mm/yyyy"
+            <SubCategoryField categoryId={inputs.category_id} categoryLabel={categoryOptions.find((c) => c.value === inputs.category_id)?.label ?? ''} options={subOptions} expense
+              onCreated={(created) => {
+                setAddedSubs((list) => [...list.filter((x) => x._uuid !== created._uuid), created]);
+                setInputs((prev: typeof inputs) => ({ ...prev, sub_category_id: created._uuid }));
+              }}
             />
           </FormStep>
 

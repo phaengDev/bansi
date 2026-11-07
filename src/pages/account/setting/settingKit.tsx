@@ -264,22 +264,31 @@ export const FormStep = ({ no, done, title, hint, note, children }: {
   </section>
 );
 
+/** Form.Control ກິນ prop `locale` ໄວ້ (rsuite useCustom) ຈຶ່ງຕ້ອງສົ່ງຜ່ານຊື່ອື່ນ ບໍ່ດັ່ງນັ້ນຄຳໃນ picker ຈະເປັນພາສາອັງກິດ */
+const LocalizedPicker = ({ pickerLocale, ...rest }: Record<string, any>) => (
+  <SelectPicker data={[]} {...rest} locale={pickerLocale} />
+);
+
 /** SelectPicker ໃນຟອມ — ຂຽນ Form.Group ເອງ ເພາະ InputField ບໍ່ສົ່ງ renderOption/renderValue ຕໍ່ */
-export const PickerField = ({ name, label, data, required = true, className, ...rest }: {
+export const PickerField = ({ name, label, data, required = true, className, locale, ...rest }: {
   name: string;
   label: string;
   data: Record<string, any>[];
   required?: boolean;
   className?: string;
-} & Record<string, any>) => (
-  <Form.Group controlId={`${name}-1`} className={className}>
-    <Form.Label className="form-label">
-      {label}
-      {required && <span className="text-danger">*</span>}
-    </Form.Label>
-    <Form.Control name={name} accepter={SelectPicker} data={data as any[]} block popupClassName="acc-book-menu" {...rest} />
-  </Form.Group>
-);
+} & Record<string, any>) => {
+  const t = useT();
+  return (
+    <Form.Group controlId={`${name}-1`} className={className}>
+      <Form.Label className="form-label">
+        {label}
+        {required && <span className="text-danger">*</span>}
+      </Form.Label>
+      <Form.Control name={name} accepter={LocalizedPicker} data={data as any[]} block popupClassName="acc-book-menu"
+        pickerLocale={{ searchPlaceholder: t('search'), ...locale }} {...rest} />
+    </Form.Group>
+  );
+};
 
 /** ໝວດ / ປະເພດບັນຊີ ໃນ PickerField — ກ່ອງລະຫັດ (ສີຕາມໝວດ) + ຊື່ + ປ້າຍທ້າຍ; item ຕ້ອງມີ code, name, tone, cur? */
 export const codeLabel = (_: unknown, item: any) => item && (

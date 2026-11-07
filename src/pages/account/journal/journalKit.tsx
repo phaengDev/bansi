@@ -1,7 +1,7 @@
 import moment from 'moment';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
-import type { AccountClass, FinanceCategory, Tax } from '../../../utils/selectOption';
+import type { AccountClass, FinanceCategory, FinanceSubCategory, Tax } from '../../../utils/selectOption';
 
 /** ສ່ວນທີ່ຟອມລາຍຮັບ (IncomeForm) ແລະ ລາຍຈ່າຍ (ExpenseForm) ໃຊ້ຮ່ວມກັນ */
 
@@ -25,6 +25,41 @@ export type { FinanceCategory as Category, AccountClass, Tax };
 export const defaultClassId = (classes: AccountClass[]) =>
   (classes.find((c) => c.type_code === CASH_CLASS_CODE) ?? classes[0])?._uuid ?? null;
 export type TaxMode = 'none' | 'select' | 'manual';
+
+/** ລາຍການຍ່ອຍທີ່ແຖວບັນທຶກໄວ້ (ຈາກ backend: sub) */
+/**
+ * ລາຍການຍ່ອຍຂອງລາຍຮັບ / ລາຍຈ່າຍ (ຈາກ backend: sub) — ລາຍຮັບ / ລາຍຈ່າຍເກັບແຕ່ sub_category_id,
+ * ປະເພດມາກັບລາຍການຍ່ອຍ (category)
+ */
+export type SubRef = {
+  _uuid: number;
+  name: string;
+  status: number;
+  category_id: number;
+  category?: { _uuid: number; type_code: string; type_name: string; status?: number } | null;
+};
+
+/**
+ * ຕົວເລືອກລາຍການຍ່ອຍຂອງປະເພດທີ່ເລືອກ — ລາຍການທີ່ໃຊ້ງານ + ອັນທີ່ຫາກໍ່ເພີ່ມໃນຟອມນີ້ (added) + ລາຍການເດີມຂອງແຖວທີ່ແກ້
+ * (ປິດໃຊ້ແລ້ວກໍ່ສະແດງໄວ້ ບໍ່ໃຫ້ຫາຍ)
+ */
+export const subOptionsOf = (categories: FinanceCategory[], categoryId: number | null, current?: SubRef | null, offLabel = '', added: FinanceSubCategory[] = []) => {
+  const subs = categories.find((c) => c._uuid === categoryId)?.subs ?? [];
+  const fresh = added.filter((a) => a.category_id === categoryId && !subs.some((s) => s._uuid === a._uuid));
+  const list = [...subs, ...fresh].map((s) => ({ label: s.name, value: s._uuid }));
+  if (current && !list.some((o) => o.value === current._uuid)) list.push({ label: `${current.name}${offLabel ? ` (${offLabel})` : ''}`, value: current._uuid });
+  return list;
+};
+
+/**
+ * ປ່ຽນປະເພດໃນຟອມ (category_id ໃຊ້ກັ່ນລາຍການຍ່ອຍເທົ່ານັ້ນ ບໍ່ສົ່ງໄປ backend) — ລ້າງລາຍການຍ່ອຍຂອງປະເພດເກົ່າ;
+ * ປະເພດໃໝ່ມີລາຍການຍ່ອຍດຽວ = ເລືອກໃຫ້ເລີຍ
+ */
+export const withCategory = <T extends { category_id?: number | null; sub_category_id?: number | null }>(next: T, prevCategory: unknown, categories: FinanceCategory[]): T => {
+  if (next.category_id === prevCategory) return next;
+  const subs = categories.find((c) => c._uuid === next.category_id)?.subs ?? [];
+  return { ...next, sub_category_id: subs.length === 1 ? subs[0]._uuid : null };
+};
 
 /** ລົງຍ້ອນຫຼັງໄດ້ ແຕ່ບໍ່ໃຫ້ເລືອກວັນໃນອະນາຄົດ (backend ກວດຊ້ຳ) */
 export const isFutureDay = (date: Date) => moment(date).isAfter(moment(), 'day');

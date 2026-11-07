@@ -116,7 +116,7 @@ const IncomePage = () => {
   const shown = rows.filter((r) =>
     (status === 'all' || (status === 'active') === isActive(r))
     && (!day || dayKeyOf(r) === day)
-    && (!q || [r.number, r.incom_title, r.typein?.type_name, r.typein?.type_code, r.acount?.acountName, r.description, r.payer_account_name,
+    && (!q || [r.number, r.incom_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.description, r.payer_account_name,
       r.payer_name, r.partner?.name, r.partner?.partner_code, r.partner?.phone]
       .join(' ').toLowerCase().includes(q)));
 
@@ -243,7 +243,7 @@ const IncomePage = () => {
                           <b className="acc-jr-title" title={r.incom_title}>{r.incom_title}</b>
                           <div className="acc-jr-meta">
                             <span className="acc-jr-no">{r.number}</span>
-                            {r.typein && <span className="acc-jr-cat">{r.typein.type_code} · {r.typein.type_name}</span>}
+                            {r.sub?.category && <span className="acc-jr-cat">{r.sub.category.type_code} · {r.sub.category.type_name}</span>}
                             {(r.partner || r.payer_name) && (
                               <span className={`acc-jr-cust${r.partner ? '' : ' is-manual'}`} title={t('incomeCustomer')}>
                                 <i className={`fa-solid ${r.partner ? 'fa-user' : 'fa-pen'}`} /> {r.partner?.name ?? r.payer_name}

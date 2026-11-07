@@ -174,6 +174,12 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
           <i className="fa-solid fa-circle-check" /> {t('payPaidOn')} {data.pay_date && moment(data.pay_date).format('DD/MM/YYYY')}
           {data.account && <> · {accountText(data.account)}</>}
           {data.description && <> · {data.description}</>}
+          {data.expense && (
+            <span className="pay-paid-expense">
+              <i className="fa-solid fa-receipt" /> {t('payRecordedAs')} {data.expense.number}
+              {data.expense.sub && <> · {data.expense.sub.category?.type_name} → {data.expense.sub.name}</>}
+            </span>
+          )}
         </p>
       )}
       {!!noBank && <p className="acc-bg-note"><i className="fa-solid fa-circle-info" /> {noBank} {t('payNoBankAccount')}</p>}

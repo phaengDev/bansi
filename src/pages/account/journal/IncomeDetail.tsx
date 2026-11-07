@@ -126,8 +126,8 @@ const IncomeDetail = ({ income, onClose, onEdit, onCancel }: {
             <div>
               <dt>{t('incomeCategory')}</dt>
               <dd>
-                {income.typein
-                  ? <span className="acc-jr-cat">{income.typein.type_code} · {income.typein.type_name}</span>
+                {income.sub?.category
+                  ? <span className="acc-jr-cat">{income.sub.category.type_code} · {income.sub.category.type_name}</span>
                   : '—'}
               </dd>
             </div>

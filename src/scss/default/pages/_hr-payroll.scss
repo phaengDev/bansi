@@ -1057,6 +1057,50 @@
 .pay-page .acc-rp-btn.is-primary { color: #fff; background: var(--rp-accent); border-color: var(--rp-accent); }
 .pay-page .acc-rp-btn.is-primary:hover:not(:disabled) { color: #fff; background: var(--rp-ink); border-color: var(--rp-ink); }
 
+// ຟອມຈ່າຍເງິນເດືອນ — ຕິກບັນທຶກເປັນລາຍຈ່າຍ
+.pay-record-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e3eaf0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  .rs-toggle { flex: none; }
+  &:hover { border-color: #c9d5df; }
+  &.is-on { background: #fff6f6; border-color: #f3c4cc; }
+  &.is-on .pay-record-icon { color: #fff; background: #c9424a; }
+}
+
+.pay-record-icon {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  color: #7b8a97;
+  background: #eef2f6;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pay-record-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.45;
+
+  b { color: #14314d; font-size: 13.5px; }
+  small { color: #6b7f90; font-size: 12px; }
+}
+
+.pay-paid-expense { margin-left: 6px; padding-left: 8px; border-left: 1px solid #b7e6cf; }
+
 .acc-bg-note.pay-paid-note {
   margin: 0;
   padding: 9px 12px;
@@ -1253,16 +1297,6 @@
   small { color: rgba(255, 255, 255, 0.75); font-size: 12px; font-weight: 700; }
   b { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
   em { padding: 3px 10px; background: rgba(255, 255, 255, 0.16); border-radius: 10px; font-size: 12px; font-style: normal; font-weight: 700; }
-}
-
-.pay-acc-opt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-
-  em { color: #0e7a52; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
-  em.is-bad { color: #c4343a; }
 }
 
 .pay-posting {

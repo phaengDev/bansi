@@ -12,7 +12,10 @@ import { getErrorMessage } from './useCRUD';
 // ===================== ປະເພດຂໍ້ມູນຂອງແຕ່ລະລາຍການ =====================
 
 /** ປະເພດລາຍຮັບ (kind 1) / ລາຍຈ່າຍ (kind 2) — tbl_finance_categories */
-export type FinanceCategory = { _uuid: number; type_code: string; type_name: string };
+/** ລາຍການຍ່ອຍຂອງປະເພດລາຍຮັບ / ລາຍຈ່າຍ (tbl_finance_subcategory) — status 0 = ປິດໃຊ້ງານ */
+export type FinanceSubCategory = { _uuid: number; category_id: number; name: string; sort?: number; status: number };
+/** ປະເພດລາຍຮັບ / ລາຍຈ່າຍ — subs ຂອງຕົວເລືອກ (/finance-category/option) ມີສະເພາະທີ່ໃຊ້ງານ */
+export type FinanceCategory = { _uuid: number; type_code: string; type_name: string; subs?: FinanceSubCategory[] };
 /** ໝວດບັນຊີ (tbl_type_account) — 101 = ເງິນສົດ */
 export type AccountClass = { _uuid: number; type_code: string; type_name: string; status: number };
 export type Tax = { _uuid: number; tax_code: string; name: string; rate: string | number; calc_method: number; is_default: number };
@@ -122,8 +125,15 @@ const byCode = (a: { type_code?: string }, b: { type_code?: string }) =>
 
 // ===================== ແປງແຖວເປັນ option (ຢູ່ນອກ hook ໃຫ້ useMemo ບໍ່ຄິດໃໝ່ທຸກ render) =====================
 
-const toCurrencyOption = (i: any) => ({ label: i.name, value: i._id, icon: i.icon, genus: i.genus, rate: Number(i.reate ?? 0) });
-const toCodeName = <T extends { _uuid: number; type_code: string; type_name: string }>(i: T) =>
+const toCurrencyOption = (i: any) => ({ 
+  label: i.name, 
+  value: i._id, 
+  icon: i.icon, 
+  genus: i.genus, 
+  rate: Number(i.reate ?? 0) });
+const toCodeName = <T extends { _uuid: number; 
+  type_code: string; 
+  type_name: string }>(i: T) =>
   ({ ...i, label: `${i.type_code} ${i.type_name}`, value: i._uuid });
 const toTax = (i: Tax) => ({ ...i, label: `${i.name} (${Number(i.rate)}%)`, value: i._uuid });
 const toFiscalYear = (i: FiscalYear) => ({ ...i, label: i.fiscal_name || i.fiscal_code, value: i._uuid });
@@ -140,7 +150,6 @@ const toEmployee = (i: EmployeeOption) =>
 const toUserType = (i: UserType) => ({ ...i, label: i.names, value: i._uuid });
 
 // ===================== ບັນຊີ / ການເງິນ =====================
-
 /** ສະກຸນເງິນ (GET /currency) — icon = ທຸງ, genus = ສັນຍາລັກ (₭, $, ฿), rate = ອັດຕາແລກປ່ຽນປັດຈຸບັນ */
 export function useCurrency() {
   return useApiOptions<any>('/currency', toCurrencyOption);

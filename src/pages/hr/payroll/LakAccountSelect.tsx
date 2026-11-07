@@ -1,10 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { SelectPicker } from 'rsuite';
 import { getApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { useT } from '../../../context/LanguageContext';
-import { kip } from './payrollApi';
 
 export type CashAccount = {
   _uuid: number;
@@ -31,8 +30,8 @@ export const useLakAccounts = () => {
 };
 
 /**
- * ເລືອກບັນຊີສະກຸນກີບ ພ້ອມຍອດໃຊ້ໄດ້ຂອງແຕ່ລະບັນຊີ ແລະ ຍອດຫຼັງລາຍການ.
- * direction out = ເງິນອອກ (ຍອດບໍ່ພໍເປັນສີແດງ), in = ເງິນເຂົ້າ
+ * ເລືອກບັນຊີສະກຸນກີບ — ບໍ່ສະແດງຍອດເງິນຂອງບັນຊີ (ຄືກັບຟອມລາຍຈ່າຍ); direction out = ເງິນອອກ: ເຕືອນເມື່ອຍອດບໍ່ພໍ
+ * (backend ກວດຊ້ຳ), in = ເງິນເຂົ້າ
  */
 export const LakAccountSelect = ({ accounts, value, onChange, amount, direction = 'out' }: {
   accounts: CashAccount[];
@@ -45,26 +44,15 @@ export const LakAccountSelect = ({ accounts, value, onChange, amount, direction 
   const options = accounts.map((a) => ({
     value: a._uuid,
     label: [a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · '),
-    balance: a.balance_treasury,
   }));
   const account = accounts.find((a) => a._uuid === value);
-  const after = account ? account.balance_treasury + (direction === 'in' ? amount : -amount) : null;
+  const short = direction === 'out' && !!account && account.balance_treasury < amount;
   return (
     <>
       <SelectPicker block data={options} value={value} onChange={onChange} searchable={options.length > 6} cleanable={false}
         placeholder={accounts.length ? t('select') : t('payNoLakAccount')} popupClassName="acc-book-menu"
-        renderOption={(label: ReactNode, item: Record<string, unknown>) => (
-          <span className="pay-acc-opt">
-            <span>{label}</span>
-            <em className={direction === 'out' && Number(item.balance) < amount ? 'is-bad' : ''}>₭ {kip(Number(item.balance))}</em>
-          </span>
-        )}
       />
-      {account && (
-        <small className={`pay-field-hint${after! < 0 ? ' is-bad' : ''}`}>
-          {t('payBalance')} {kip(account.balance_treasury)} → {t('payAfter')} {kip(after!)}
-        </small>
-      )}
+      {short && <small className="pay-field-hint is-bad"><i className="fa-solid fa-triangle-exclamation" /> {t('payNotEnough')}</small>}
     </>
   );
 };

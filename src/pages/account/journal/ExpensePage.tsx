@@ -113,7 +113,7 @@ const ExpensePage = () => {
   const shown = rows.filter((r) =>
     (status === 'all' || (status === 'active') === isActive(r))
     && (!day || dayKeyOf(r) === day)
-    && (!q || [r.number, r.expense_title, r.typeout?.type_name, r.typeout?.type_code, r.acount?.acountName, r.payee_name,
+    && (!q || [r.number, r.expense_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.payee_name,
       r.partner?.name, r.partner?.partner_code, r.partner?.phone, r.bill_no, r.description, ...(r.items ?? []).map((i) => i.item_name)]
       .join(' ').toLowerCase().includes(q)));
 
@@ -248,7 +248,7 @@ const ExpensePage = () => {
                           <b className="acc-jr-title" title={r.expense_title}>{r.expense_title}</b>
                           <div className="acc-jr-meta">
                             <span className="acc-jr-no">{r.number}</span>
-                            {r.typeout && <span className="acc-jr-cat">{r.typeout.type_code} · {r.typeout.type_name}</span>}
+                            {r.sub?.category && <span className="acc-jr-cat">{r.sub.category.type_code} · {r.sub.category.type_name}</span>}
                             {(r.partner || r.payee_name) && (
                               <span className={`acc-jr-cust${r.partner ? '' : ' is-manual'}`} title={t('expenseParty')}>
                                 <i className={`fa-solid ${!r.partner ? 'fa-pen' : [2, 3].includes(Number(r.partner.partner_type)) ? 'fa-truck-field' : 'fa-user'}`} />
@@ -256,6 +256,7 @@ const ExpensePage = () => {
                               </span>
                             )}
                             {!active && <span className="acc-jr-pill">{t('incomeCancelled')}</span>}
+                            {!!r.payroll_id && <span className="acc-jr-payroll" title={t('expenseFromPayrollNote')}><i className="fa-solid fa-money-check-dollar" /> {t('expenseFromPayroll')}</span>}
                             {backdated && (
                               <span className="acc-jr-backdated" title={recorded.format('DD/MM/YYYY HH:mm')}>
                                 <i className="fa-solid fa-clock-rotate-left" /> {t('incomeBackdated')}
@@ -304,8 +305,8 @@ const ExpensePage = () => {
                               >
                                 <i className="fa-solid fa-pen" />
                               </button>
-                              <button type="button" className="acc-jr-act is-danger" disabled={!canDelete}
-                                title={t('expenseCancel')} aria-label={t('expenseCancel')} onClick={() => cancelExpense(r)}
+                              <button type="button" className="acc-jr-act is-danger" disabled={!canDelete || !!r.payroll_id}
+                                title={t(r.payroll_id ? 'expenseFromPayrollNote' : 'expenseCancel')} aria-label={t('expenseCancel')} onClick={() => cancelExpense(r)}
                               >
                                 <i className="fa-solid fa-ban" />
                               </button>
@@ -341,7 +342,7 @@ const ExpensePage = () => {
             setEditing(viewing);
             setViewing(null);
           }}
-          onCancel={() => cancelExpense(viewing)}
+          onCancel={viewing.payroll_id ? undefined : () => cancelExpense(viewing)}
         />
       )}
 

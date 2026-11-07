@@ -613,6 +613,277 @@
 
 .acc-fc-card-top { display: flex; align-items: center; gap: 8px; }
 
+// ທ້າຍລາຍການຂອງຊ່ອງເລືອກລາຍການຍ່ອຍ — "+ ເພີ່ມໃໝ່" ເປີດປັອບອັບ (ສີຂຽວ = ຟອມລາຍຮັບ, ແດງ = ຟອມລາຍຈ່າຍ)
+.acc-book-menu {
+  --sub-create: #0b8a6a;
+
+  &.is-expense { --sub-create: #c9424a; }
+}
+
+// ລາຍການຍ່ອຍໃນລາຍການເລືອກ — ລູກສອນທາງໜ້າ ສີຕາມຟອມ
+.acc-sub-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  > i { color: var(--sub-create); font-size: 11px; opacity: 0.75; }
+}
+
+.acc-sub-create {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 12px;
+  color: var(--sub-create);
+  background: #f8fafc;
+  border-top: 1px solid #e6ecf1;
+  font-size: 13px;
+  font-weight: 700;
+
+  i { font-size: 12px; }
+  &:hover { background: #f1f5f8; }
+}
+
+// ລາຍການຍ່ອຍໃນບັດ
+.acc-fc-sub-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 0 12px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    max-width: 100%;
+    padding: 2px 9px;
+    overflow: hidden;
+    color: var(--tone-deep);
+    background: var(--tone-soft);
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  li.is-more { color: #6b7f90; background: #eef2f6; }
+}
+
+// ລາຍການຍ່ອຍໃນຟອມປະເພດ — ລາຍການໃນກ່ອງດຽວ, ແກ້ຊື່ໄດ້ໃນແຖວ, ຊ່ອງເພີ່ມຢູ່ທ້າຍ
+.acc-fc-subs {
+  --sub-accent: var(--book-accent, #0b8a6a);
+  --sub-soft: #e5f5ef;
+  --sub-line: #e6ecf1;
+}
+
+.acc-fc-subs-count {
+  padding: 2px 10px;
+  color: var(--book-muted, #6b7f90);
+  background: #f1f5f8;
+  border-radius: 999px;
+
+  b { color: var(--book-accent, #0b8a6a); }
+}
+
+.acc-fc-subs-hint {
+  display: flex;
+  gap: 6px;
+  margin: -4px 0 10px;
+  color: #7b8a97;
+  font-size: 12px;
+  line-height: 1.5;
+
+  i { flex: none; margin-top: 3px; font-size: 11px; }
+}
+
+.acc-fc-sub-list {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--sub-line);
+  border-radius: 12px;
+}
+
+.acc-fc-sub-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  color: #9aa8b4;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--sub-line);
+
+  i { font-size: 13px; }
+}
+
+.acc-fc-sub {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 12px;
+  border-bottom: 1px solid var(--sub-line);
+  transition: background 0.15s ease;
+
+  &:hover,
+  &:focus-within { background: #f8fbfa; }
+  &:hover .acc-fc-sub-remove,
+  &:focus-within .acc-fc-sub-remove { opacity: 1; }
+
+  &.is-off .acc-fc-sub-name { color: #9aa8b4; }
+  &.is-off .acc-fc-sub-no { color: #9aa8b4; background: #eef2f6; }
+  &.has-error { background: #fff5f5; }
+  &.has-error .acc-fc-sub-name { color: #c4343a; }
+}
+
+.acc-fc-sub-no {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  color: var(--sub-accent);
+  background: var(--sub-soft);
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+// ຊ່ອງຊື່ແບບແກ້ໃນແຖວ — ບໍ່ມີຂອບຈົນກວ່າຈະຊີ້ / ໂຟກັສ
+.acc-fc-sub-name,
+.acc-fc-sub-quick input {
+  min-width: 0;
+  height: 34px;
+  flex: 1;
+  padding: 0 10px;
+  color: #14314d;
+  font: inherit;
+  font-size: 13.5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder { color: #a9b6c1; }
+}
+
+.acc-fc-sub-name {
+  &:hover { border-color: var(--sub-line); }
+  &:focus { background: #fff; border-color: var(--sub-accent); box-shadow: 0 0 0 3px rgba(11, 138, 106, 0.12); }
+}
+
+.acc-fc-sub-state {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-width: 112px;
+  margin: 0;
+  padding: 3px 10px 3px 6px;
+  color: #7b8a97;
+  background: #f1f5f8;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-on { color: var(--sub-accent); background: var(--sub-soft); }
+}
+
+.acc-fc-sub-new {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 112px;
+  padding: 5px 10px;
+  color: #1d7fc4;
+  background: #e6f2fb;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+
+  i { font-size: 10px; }
+}
+
+.acc-fc-sub-remove {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  color: #9aa8b4;
+  background: none;
+  border-radius: 8px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover,
+  &:focus-visible { color: #fff; background: #e5484d; opacity: 1; }
+}
+
+// ຊ່ອງເພີ່ມທ້າຍລາຍການ
+.acc-fc-sub-quick {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 12px;
+  background: #f8fafc;
+
+  input:focus { background: #fff; border-color: var(--sub-accent); box-shadow: 0 0 0 3px rgba(11, 138, 106, 0.12); }
+  &.has-error input { border-color: #e5484d; box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.12); }
+}
+
+.acc-fc-sub-plus {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  color: #fff;
+  background: var(--sub-accent);
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+.acc-fc-sub-add {
+  display: inline-flex;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 12px;
+  color: #fff;
+  background: var(--sub-accent);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  kbd {
+    padding: 1px 6px;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 10.5px;
+    box-shadow: none;
+  }
+
+  &:hover:not(:disabled) { filter: brightness(1.08); }
+  &:disabled { background: #b5c1cc; cursor: not-allowed; }
+}
+
+@media (max-width: 575.98px) {
+  .acc-fc-sub-state,
+  .acc-fc-sub-new { min-width: 0; }
+  .acc-fc-sub-state span { display: none; }
+}
+
 .acc-fc-code {
   padding: 3px 10px;
   color: var(--tone-deep);
@@ -4423,6 +4694,18 @@
   &.is-transfer { color: #0a5f86; background: #e2f3fb; }
 }
 
+// ລາຍຈ່າຍທີ່ບັນທຶກຄູ່ຕອນຈ່າຍເງິນເດືອນ
+.acc-jr-payroll {
+  padding: 1px 8px;
+  color: #0e7a52;
+  background: #e3f7ee;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+
+  i { margin-right: 2px; font-size: 10px; }
+}
+
 .acc-jr-pill {
   padding: 1px 8px;
   color: #8e2440;
@@ -6244,6 +6527,30 @@
 
     tbody tr { cursor: default; }
   }
+}
+
+// ລາຍການຍ່ອຍ ລາຍເດືອນ — ທຸກຖັນເງິນຊິດຂວາ, ແຖວປະເພດ = ລວມ (ຕົວໜາ), ລາຍການຍ່ອຍຫຍໍ້ໜ້າ
+.acc-rp-table.acc-rp-matrix {
+  th:not(:first-child),
+  td:not(:first-child) { text-align: right; white-space: nowrap; }
+
+  th:first-child,
+  td:first-child { position: sticky; left: 0; z-index: 1; min-width: 180px; background: #fff; }
+  th:first-child { background: #f6f8fa; }
+
+  tr.is-group td { color: var(--rp-text); font-weight: 800; background: #f8fbfd; }
+  td.is-sub { padding-left: 26px; color: var(--rp-muted); }
+  tbody td:last-child { color: var(--rp-ink); font-weight: 800; }
+  tfoot td:first-child { background: #f6f8fa; }
+}
+
+.acc-rp-card-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  small { color: var(--rp-muted); font-size: 11.5px; }
+  .acc-rp-btn { height: 30px; padding: 0 10px; }
 }
 
 @container (max-width: 860px) {

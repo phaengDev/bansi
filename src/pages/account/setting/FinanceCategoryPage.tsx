@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { Form, Loader, Textarea, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { InputField } from '../../../utils/inputFields';
 import { createModel, requiredField } from '../../../utils/validate';
+import { Notific } from '../../../utils/Notification';
+import type { FinanceSubCategory } from '../../../utils/selectOption';
 import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { FormSection, SearchBox, SettingModal } from './settingKit';
@@ -18,7 +20,13 @@ type FinanceCategory = {
   typestatus: Kind;
   description?: string;
   status: number;
+  /** ທຸກລາຍການຍ່ອຍ (ລວມທີ່ປິດ) ຕາມລຳດັບ */
+  subs?: FinanceSubCategory[];
 };
+
+/** ແຖວລາຍການຍ່ອຍໃນຟອມ — key ໃຊ້ພາຍໃນຟອມເທົ່ານັ້ນ */
+type SubRow = { key: number; _uuid?: number; name: string; status: number };
+let subSeq = 0;
 
 /**
  * ລະຫັດຕໍ່ໄປຕາມຮູບແບບທີ່ໃຊ້ຢູ່ — ເອົາສ່ວນໜ້າຂອງລະຫັດທີ່ໃຫຍ່ສຸດ (1001-003 → "1001-") ແລ້ວ +1 → 1001-004.
@@ -44,6 +52,10 @@ const FinanceCategoryForm = ({ kind, data, codes, onClose, onSaved }: {
   const isIncome = kind === 1;
   const formRef = useRef<FormInstance>(null);
   const [saving, setSaving] = useState(false);
+  const [subs, setSubs] = useState<SubRow[]>(() => (data?.subs ?? []).map((s) => ({ key: ++subSeq, _uuid: s._uuid, name: s.name, status: Number(s.status) })));
+  /** ຊ່ອງພິມເພີ່ມລາຍການຍ່ອຍທ້າຍລາຍການ — Enter = ເພີ່ມ ແລ້ວພິມອັນຕໍ່ໄປໄດ້ເລີຍ */
+  const [draft, setDraft] = useState('');
+  const draftRef = useRef<HTMLInputElement>(null);
   const [inputs, setInputs] = useState<any>({
     type_code: data?.type_code ?? suggestCode(codes, isIncome ? 'IN-' : 'EX-'),
     type_name: data?.type_name ?? '',
@@ -55,10 +67,41 @@ const FinanceCategoryForm = ({ kind, data, codes, onClose, onSaved }: {
     type_name: requiredField(t('inputRequired'), 'string'),
   });
 
+  const keyOf = (name: string) => name.trim().toLowerCase();
+  const named = subs.filter((r) => r.name.trim());
+  const dupes = new Set(named.map((r) => keyOf(r.name)).filter((n, i, all) => all.indexOf(n) !== i));
+  const activeCount = named.filter((r) => r.status).length;
+  const draftDupe = !!draft.trim() && named.some((r) => keyOf(r.name) === keyOf(draft));
+
+  const addDraft = () => {
+    const name = draft.trim();
+    if (!name) return;
+    if (draftDupe) return Notific.warning('fcSubDuplicate');
+    setSubs((list) => [...list, { key: ++subSeq, name, status: 1 }]);
+    setDraft('');
+    draftRef.current?.focus();
+  };
+  const updateSub = (key: number, patch: Partial<SubRow>) => setSubs((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  /** Enter ໃນແຖວທີ່ແກ້ຢູ່ = ໄປຊ່ອງເພີ່ມລາຍການຍ່ອຍ */
+  const onSubKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    draftRef.current?.focus();
+  };
+  const onDraftKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    addDraft();
+  };
+
   const submit = async () => {
     if (!formRef.current?.check()) return;
+    if (dupes.size || draftDupe) return Notific.warning('fcSubDuplicate');
+    // ພິມໃນຊ່ອງເພີ່ມແລ້ວ ແຕ່ຍັງບໍ່ກົດ Enter — ບັນທຶກນຳ ບໍ່ໃຫ້ຫາຍ
+    const rows = draft.trim() ? [...named, { key: 0, name: draft, status: 1 }] : named;
+    const payload = rows.map((r) => ({ _uuid: r._uuid, name: r.name.trim(), status: r.status }));
     const ok = await runSave(
-      () => saveSetting('/finance-category', data?._uuid, { ...inputs, typestatus: kind, ...(data ? {} : { status: 1 }) }),
+      () => saveSetting('/finance-category', data?._uuid, { ...inputs, typestatus: kind, subs: payload, ...(data ? {} : { status: 1 }) }),
       setSaving,
     );
     if (ok) {
@@ -84,6 +127,57 @@ const FinanceCategoryForm = ({ kind, data, codes, onClose, onSaved }: {
           </div>
           <div className="is-wide">
             <InputField name="description" label={t('detail')} accepter={Textarea} rows={2} required={false} />
+          </div>
+        </FormSection>
+        <FormSection title={t('fcSubs')}
+          note={named.length > 0 && <span className="acc-fc-subs-count"><b>{activeCount}</b> {t('active')}{named.length > activeCount && <> · {named.length - activeCount} {t('inactive')}</>}</span>}
+        >
+          <div className="is-wide acc-fc-subs">
+            <p className="acc-fc-subs-hint"><i className="fa-solid fa-circle-info" /> {t('fcSubsNote')}</p>
+            <div className="acc-fc-sub-list">
+              {subs.length === 0 && (
+                <div className="acc-fc-sub-empty">
+                  <i className="fa-solid fa-list-ul" />
+                  <span>{t('fcSubEmpty')}</span>
+                </div>
+              )}
+              {subs.map((row, index) => {
+                const on = !!row.status;
+                const dupe = !!row.name.trim() && dupes.has(keyOf(row.name));
+                return (
+                  <div key={row.key} className={`acc-fc-sub${on ? '' : ' is-off'}${dupe ? ' has-error' : ''}`}>
+                    <span className="acc-fc-sub-no">{index + 1}</span>
+                    <input className="acc-fc-sub-name" value={row.name} maxLength={150} placeholder={t('fcSubPlaceholder')}
+                      aria-label={`${t('fcSubs')} ${index + 1}`} onChange={(e) => updateSub(row.key, { name: e.target.value })} onKeyDown={onSubKey}
+                    />
+                    {row._uuid ? (
+                      <label className={`acc-fc-sub-state${on ? ' is-on' : ''}`} title={t(on ? 'active' : 'inactive')}>
+                        <Toggle size="sm" checked={on} onChange={(value) => updateSub(row.key, { status: value ? 1 : 0 })} />
+                        <span>{t(on ? 'active' : 'inactive')}</span>
+                      </label>
+                    ) : (
+                      <span className="acc-fc-sub-new"><i className="fa-solid fa-circle-plus" /> {t('fcSubNew')}</span>
+                    )}
+                    <button type="button" className="acc-fc-sub-remove" aria-label={`${t('delete')} ${row.name}`} title={t('delete')}
+                      onClick={() => setSubs((list) => list.filter((r) => r.key !== row.key))}
+                    >
+                      <i className="fa-regular fa-trash-can" />
+                    </button>
+                  </div>
+                );
+              })}
+              <div className={`acc-fc-sub-quick${draftDupe ? ' has-error' : ''}`}>
+                <span className="acc-fc-sub-plus"><i className="fa-solid fa-plus" /></span>
+                <input ref={draftRef} value={draft} maxLength={150} placeholder={t('fcSubQuick')} aria-label={t('fcSubAdd')}
+                  autoFocus={!!data && !subs.length} onChange={(e) => setDraft(e.target.value)} onKeyDown={onDraftKey}
+                />
+                {draft.trim() ? (
+                  <button type="button" className="acc-fc-sub-add" disabled={draftDupe} onClick={addDraft}>
+                    {t('fcSubAddShort')} <kbd>Enter</kbd>
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </FormSection>
       </Form>
@@ -115,7 +209,7 @@ const FinanceCategoryPage = ({ kind }: { kind: Kind }) => {
   const shown = rows
     .filter((r) =>
       (status === 'all' || (status === 'active') === isActive(r))
-      && (!q || `${r.type_code} ${r.type_name} ${r.description ?? ''}`.toLowerCase().includes(q)))
+      && (!q || `${r.type_code} ${r.type_name} ${r.description ?? ''} ${(r.subs ?? []).map((x) => x.name).join(' ')}`.toLowerCase().includes(q)))
     .sort((a, b) => String(a.type_code).localeCompare(String(b.type_code), undefined, { numeric: true }));
   const hasFilter = !!q || status !== 'all';
   const clearFilters = () => {
@@ -206,6 +300,15 @@ const FinanceCategoryPage = ({ kind }: { kind: Kind }) => {
                 <p className={r.description ? '' : 'is-empty'} title={r.description}>
                   {r.description || t('fcNoDescription')}
                 </p>
+                {(() => {
+                  const on = (r.subs ?? []).filter((x) => Number(x.status) === 1);
+                  return on.length ? (
+                    <ul className="acc-fc-sub-chips" aria-label={t('fcSubs')}>
+                      {on.slice(0, 5).map((x) => <li key={x._uuid}>{x.name}</li>)}
+                      {on.length > 5 && <li className="is-more">+{on.length - 5}</li>}
+                    </ul>
+                  ) : null;
+                })()}
                 <footer>
                   <span className="acc-fc-kind">
                     <i className={`fa-solid ${icon}`} /> {t(isIncome ? 'fcKindIncome' : 'fcKindExpense')}

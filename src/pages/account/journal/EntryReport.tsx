@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { DateRangePicker, Loader, SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { formatNumber, postApi } from '../../../utils/configApi';
@@ -12,7 +12,7 @@ import type { Income } from './IncomeForm';
 import type { Expense } from './ExpenseForm';
 import { formatQty } from './journalKit';
 import {
-  changeOf, fromExpense, fromIncome, groupSum, previousRange, rangeOf, topItems, trendOf,
+  changeOf, fromExpense, fromIncome, groupSum, monthlyBySub, previousRange, rangeOf, topItems, trendOf,
   type Bucket, type Entry, type Period, type Range, type ReportKind,
 } from './reportData';
 
@@ -157,6 +157,12 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
     key: String(e.category?.id ?? 0),
     label: e.category ? `${e.category.code} · ${e.category.name}` : t('notSpecified'),
   }));
+  const bySub = groupSum(shown, (e) => ({
+    key: String(e.sub?.id ?? 0),
+    label: e.sub?.name ?? t('notSpecified'),
+    sub: e.category?.name,
+  }));
+  const matrix = monthlyBySub(shown, range, t('notSpecified'));
   const byAccount = groupSum(shown, (e) => ({
     key: String(e.account?.id ?? 0),
     label: e.account?.name ?? '—',
@@ -207,6 +213,7 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
       number: t('rpNumber'),
       title: t(isIncome ? 'incomeTitle' : 'expenseTitle'),
       category: t(isIncome ? 'incomeCategory' : 'expenseCategory'),
+      sub: t('fcSubs'),
       account: t(isIncome ? 'incomeAccount' : 'expenseAccount'),
       method: t(isIncome ? 'incomeReceiveMethod' : 'expensePayMethod'),
       party: t(isIncome ? 'incomeStepPayer' : 'expensePayee'),
@@ -221,6 +228,7 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
       [col.number]: e.number,
       [col.title]: e.title,
       [col.category]: e.category ? `${e.category.code} ${e.category.name}` : '',
+      [col.sub]: e.sub?.name ?? '',
       [col.account]: e.account?.name ?? '',
       [col.method]: t(e.transfer ? 'incomeReceiveTransfer' : 'incomeReceiveCash'),
       [col.party]: e.party ?? '',
@@ -239,6 +247,24 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
       [col.total]: total,
     });
     exportExcel(rows, `${kind}-report_${startKey}_${endKey}`, `${title} ${rangeText}${symbol ? ` (${curKey})` : ''}`);
+  };
+
+  /** ຕາຕະລາງລາຍການຍ່ອຍ ລາຍເດືອນ → Excel (ແຖວປະເພດ = ລວມ, ແຖວລາຍການຍ່ອຍ ຫຍໍ້ໜ້າ) */
+  const exportMatrix = () => {
+    const nameCol = t('fcSubs');
+    const totalCol = t('total');
+    const line = (label: string, cells: number[], total: number) => ({
+      [nameCol]: label,
+      ...Object.fromEntries(matrix.months.map((m, i) => [m.label, cells[i]])),
+      [totalCol]: total,
+    });
+    const rows: Record<string, string | number>[] = [];
+    matrix.groups.forEach((g) => {
+      rows.push(line(g.label, g.cells, g.total));
+      g.rows.forEach((r) => rows.push(line(`    ${r.label}`, r.cells, r.total)));
+    });
+    rows.push(line(totalCol, matrix.totals, matrix.grand));
+    exportExcel(rows, `${kind}-monthly_${startKey}_${endKey}`, `${t('rpMonthlyBySub')} ${rangeText}${symbol ? ` (${curKey})` : ''}`);
   };
 
   const print = () => {
@@ -430,6 +456,10 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
                   </div>
                   <ShareList buckets={byAccount} total={total} logo />
                 </section>
+                <section className="acc-rp-card">
+                  <header><h4><i className="fa-solid fa-list-ul" /> {t('rpBySub')}</h4><small>{bySub.length}</small></header>
+                  <ShareList buckets={bySub} total={total} />
+                </section>
                 {byParty.length > 0 && (
                   <section className="acc-rp-card">
                     <header><h4><i className="fa-solid fa-user-tag" /> {t(isIncome ? 'rpByPayer' : 'rpByPayee')}</h4><small>{byParty.length}</small></header>
@@ -461,6 +491,53 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
                 )}
               </div>
 
+              {/* ---- ລາຍການຍ່ອຍ ລາຍເດືອນ — ຖັນ = ເດືອນໃນຊ່ວງທີ່ເລືອກ ---- */}
+              <section className="acc-rp-card">
+                <header>
+                  <h4><i className="fa-solid fa-table-cells" /> {t('rpMonthlyBySub')}</h4>
+                  <span className="acc-rp-card-tools">
+                    {matrix.months.length < 2 && <small className="no-print">{t('rpMonthlyHint')}</small>}
+                    <button type="button" className="acc-rp-btn no-print" onClick={exportMatrix}><i className="fa-solid fa-file-excel" /> Excel</button>
+                  </span>
+                </header>
+                <div className="acc-rp-scroll">
+                  <table className="acc-rp-table is-compact acc-rp-matrix">
+                    <thead>
+                      <tr>
+                        <th>{t('fcSubs')}</th>
+                        {matrix.months.map((m) => <th key={m.key}>{m.label}</th>)}
+                        <th>{t('total')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {matrix.groups.map((g) => (
+                        <Fragment key={g.key}>
+                          <tr className="is-group">
+                            <td>{g.label}</td>
+                            {g.cells.map((v, i) => <td key={matrix.months[i].key}>{v ? formatNumber(v) : '—'}</td>)}
+                            <td>{formatNumber(g.total)}</td>
+                          </tr>
+                          {g.rows.map((r) => (
+                            <tr key={r.key}>
+                              <td className="is-sub">{r.label}</td>
+                              {r.cells.map((v, i) => <td key={matrix.months[i].key}>{v ? formatNumber(v) : '—'}</td>)}
+                              <td>{formatNumber(r.total)}</td>
+                            </tr>
+                          ))}
+                        </Fragment>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td>{t('total')}</td>
+                        {matrix.totals.map((v, i) => <td key={matrix.months[i].key}>{formatNumber(v)}</td>)}
+                        <td>{money(matrix.grand)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </section>
+
               {/* ---- ທຸກລາຍການ — ກົດແຖວ = ເປີດໃບ (ເບິ່ງຢ່າງດຽວ) ---- */}
               <section className="acc-rp-card">
                 <header><h4><i className="fa-solid fa-list" /> {t('rpEntries')}</h4><small>{shown.length}</small></header>
@@ -490,7 +567,10 @@ const EntryReport = ({ kind }: { kind: ReportKind }) => {
                             {e.title}
                             {e.party && <small>{e.party}</small>}
                           </td>
-                          <td>{e.category ? `${e.category.code} · ${e.category.name}` : '—'}</td>
+                          <td>
+                            {e.category ? `${e.category.code} · ${e.category.name}` : '—'}
+                            {e.sub && <small>{e.sub.name}</small>}
+                          </td>
                           <td>
                             {e.account?.name ?? '—'}
                             <small>{t(e.transfer ? 'incomeReceiveTransfer' : 'incomeReceiveCash')}</small>

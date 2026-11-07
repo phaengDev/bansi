@@ -15,27 +15,31 @@ import { currencySymbol } from '../ledger/currency';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
 import {
   CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, defaultClassId, isAllowedFile, isFutureDay,
-  type TaxMode,
+  subOptionsOf, withCategory, type SubRef, type TaxMode,
 } from './journalKit';
-import { useAccountClasses, useFinanceCategories, useTaxes } from '../../../utils/selectOption';
+import { useAccountClasses, useFinanceCategories, useTaxes, type FinanceSubCategory } from '../../../utils/selectOption';
+import SubCategoryField from './SubCategoryField';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
 
 export { CASH, TRANSFER };
 
-const { StringType, NumberType, DateType } = Schema.Types;
+const { NumberType, DateType } = Schema.Types;
 
 /** ວັນທີຮັບເງິນຂອງລາຍຮັບ — ແຖວເກົ່າທີ່ບໍ່ມີ income_date ໃຊ້ວັນທີຂອງ createdAt ແທນ (ຄື backend) */
 export const incomeDateOf = (row: { income_date?: string | null; createdAt: string }) =>
   row.income_date ? moment(row.income_date, 'YYYY-MM-DD') : moment(row.createdAt);
 
-/** ແຖວຈາກ POST /income/fetch — ມີປະເພດ (typein), ບັນຊີ (acount + banks.url + treasury.currency), ຜູ້ບັນທຶກ */
+/** ແຖວຈາກ POST /income/fetch — ມີລາຍການຍ່ອຍ ແລະ ປະເພດ (sub.category), ບັນຊີ (acount + banks.url + treasury.currency), ຜູ້ບັນທຶກ */
 export type Income = {
   _uuid: number;
   number: string;
   /** ວັນທີຮັບເງິນ YYYY-MM-DD — ແຖວເກົ່າເປັນ null */
   income_date?: string | null;
+  /** ຊື່ລາຍການຍ່ອຍຕອນບັນທຶກ (backend ຕັ້ງໃຫ້) */
   incom_title: string;
-  type_incom_fk: number;
+  /** ລາຍການຍ່ອຍ — ປະເພດອ່ານຜ່ານ sub.category */
+  sub_category_id: number;
+  sub?: SubRef | null;
   type_acountid: number;
   acount_id_fk: number;
   /** 1 = ເງິນສົດ, 2 = ເງິນໂອນ */
@@ -61,7 +65,6 @@ export type Income = {
   status: number;
   createdAt: string;
   updatedAt?: string;
-  typein?: { _uuid: number; type_code: string; type_name: string } | null;
   acount?: (TreasuryAccount & { treasury?: AccountType }) | null;
   user?: { user_uuid: number; user_name: string } | null;
 };
@@ -103,8 +106,9 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const receiveClass = receiveClassPicked ?? defaultClassId(classes);
   const [inputs, setInputs] = useState<any>({
     income_date: data ? incomeDateOf(data).toDate() : new Date(),
-    incom_title: data?.incom_title ?? '',
-    type_incom_fk: data?.type_incom_fk ?? null,
+    /** ໃຊ້ກັ່ນລາຍການຍ່ອຍໃນຟອມເທົ່ານັ້ນ (ບໍ່ສົ່ງ) */
+    category_id: data?.sub?.category_id ?? null,
+    sub_category_id: data?.sub_category_id ?? null,
     description: data?.description ?? '',
     acount_id_fk: data?.acount_id_fk ?? null,
     balances: data ? Number(data.balances) : null,
@@ -161,10 +165,15 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
     tone: 'is-gold',
   }));
 
+  // ລາຍການຍ່ອຍ — ປະເພດທີ່ມີລາຍການຍ່ອຍ ຕ້ອງເລືອກ; ແຖວເກົ່າທີ່ບໍ່ມີ ແລະ ບໍ່ໄດ້ປ່ຽນປະເພດ ບໍ່ບັງຄັບ (backend ກົດດຽວກັນ)
+  /** ລາຍການຍ່ອຍທີ່ຫາກໍ່ເພີ່ມຈາກຊ່ອງເລືອກ (ຕົວເລືອກຂອງປະເພດໂຫຼດໄວ້ກ່ອນແລ້ວ ຈຶ່ງເກັບໄວ້ນີ້) */
+  const [addedSubs, setAddedSubs] = useState<FinanceSubCategory[]>([]);
+  const subOptions = subOptionsOf(categories, inputs.category_id, data?.sub ?? null, t('inactive'), addedSubs);
+
   const model = Schema.Model<any>({
     income_date: DateType().isRequired(t('selectRequired')),
-    incom_title: StringType().isRequired(t('inputRequired')),
-    type_incom_fk: NumberType().isRequired(t('selectRequired')),
+    category_id: NumberType().isRequired(t('selectRequired')),
+    sub_category_id: NumberType().isRequired(t('selectRequired')),
     ...(isEdit
       ? {}
       : {
@@ -205,8 +214,7 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
     const body = new FormData();
     // ສົ່ງເປັນ "YYYY-MM-DD" (FormData ບໍ່ຜ່ານ interceptor ທີ່ແປງ Date)
     body.append('income_date', moment(inputs.income_date).format('YYYY-MM-DD'));
-    body.append('incom_title', String(inputs.incom_title).trim());
-    body.append('type_incom_fk', String(inputs.type_incom_fk));
+    body.append('sub_category_id', String(inputs.sub_category_id));
     body.append('description', String(inputs.description ?? '').trim());
     body.append('receive_type', String(receiveType));
     body.append('partner_id', customer.partner ? String(customer.partner._uuid) : '');
@@ -254,8 +262,9 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
   // ບໍ່ສະແດງຍອດເງິນຂອງບັນຊີໃນຟອມລາຍຮັບ
   const renderAccount = renderAccountOption(t('treasuryNoBank'), false);
 
+  // keyboard={false}: Esc ຕອນຊ່ອງເລືອກເປີດຢູ່ ຈະປິດທັງຟອມ ແລ້ວຂໍ້ມູນທີ່ປ້ອນຫາຍ
   return (
-    <Modal open onClose={onClose} size="lg" className="acc-book-modal is-steps is-xfer">
+    <Modal open onClose={onClose} size="lg" keyboard={false} className="acc-book-modal is-steps is-xfer">
       <Modal.Header>
         <div className="acc-book-modal-head">
           <span className="acc-book-modal-icon"><i className={`fa-solid ${isEdit ? 'fa-pen-to-square' : 'fa-arrow-trend-up'}`} /></span>
@@ -267,22 +276,26 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
       </Modal.Header>
 
       <Modal.Body>
-        <Form fluid ref={formRef} model={model} formValue={inputs} onChange={setInputs} className="acc-book-main">
-          <FormStep no={1} done={!!inputs.income_date && !!String(inputs.incom_title).trim() && !!inputs.type_incom_fk}
+        <Form fluid ref={formRef} model={model} formValue={inputs} className="acc-book-main"
+          onChange={(next) => setInputs(withCategory(next, inputs.category_id, categories))}
+        >
+          <FormStep no={1} done={!!inputs.income_date && !!inputs.sub_category_id}
             title={t('incomeStepInfo')} hint={t('incomeStepInfoHint')}
           >
-            {/* ລາຍການ (ເຕັມແຖວ) → ປະເພດ | ວັນທີຮັບເງິນ → ລາຍລະອຽດ — ຮູບແບບດຽວກັບຟອມລາຍຈ່າຍ */}
+            {/* ວັນທີຮັບເງິນ (ເຕັມແຖວ, ຄ່າຕັ້ງຕົ້ນມື້ນີ້ ລົງຍ້ອນຫຼັງໄດ້) → ປະເພດ | ລາຍການຍ່ອຍ → ລາຍລະອຽດ — ຮູບແບບດຽວກັບຟອມລາຍຈ່າຍ */}
             <div className="is-wide">
-              <InputField name="incom_title" label={t('incomeTitle')} placeholder={t('incomeTitlePlaceholder')}
-                icon={<i className="fa-solid fa-pen" />}
+              <InputField name="income_date" label={t('incomeDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy"
+                block cleanable={false} shouldDisableDate={isFutureDay} placeholder="dd/mm/yyyy"
               />
             </div>
-            <PickerField name="type_incom_fk" label={t('incomeCategory')} data={categoryOptions} placeholder={t('select')}
+            <PickerField name="category_id" label={t('incomeCategory')} data={categoryOptions} placeholder={t('select')}
               cleanable={false} renderOption={codeLabel} renderValue={codeLabel}
             />
-            {/* ຄ່າຕັ້ງຕົ້ນມື້ນີ້, ລົງຍ້ອນຫຼັງໄດ້ */}
-            <InputField name="income_date" label={t('incomeDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy"
-              block cleanable={false} shouldDisableDate={isFutureDay} placeholder="dd/mm/yyyy"
+            <SubCategoryField categoryId={inputs.category_id} categoryLabel={categoryOptions.find((c) => c.value === inputs.category_id)?.label ?? ''} options={subOptions}
+              onCreated={(created) => {
+                setAddedSubs((list) => [...list.filter((x) => x._uuid !== created._uuid), created]);
+                setInputs((prev: typeof inputs) => ({ ...prev, sub_category_id: created._uuid }));
+              }}
             />
             <div className="is-wide">
               <InputField name="description" label={t('detail')} accepter={Textarea} rows={2} required={false} />

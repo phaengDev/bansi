@@ -124,8 +124,8 @@ const ExpenseDetail = ({ expense, onClose, onEdit, onCancel }: {
             <div>
               <dt>{t('expenseCategory')}</dt>
               <dd>
-                {expense.typeout
-                  ? <span className="acc-jr-cat">{expense.typeout.type_code} · {expense.typeout.type_name}</span>
+                {expense.sub?.category
+                  ? <span className="acc-jr-cat">{expense.sub.category.type_code} · {expense.sub.category.type_name}</span>
                   : '—'}
               </dd>
             </div>

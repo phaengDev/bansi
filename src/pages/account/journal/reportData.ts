@@ -18,6 +18,8 @@ export type Entry = {
   dateKey: string;
   title: string;
   category: { id: number; code: string; name: string } | null;
+  /** ລາຍການຍ່ອຍ (null = ບໍ່ແມ່ນລາຍຮັບ-ລາຍຈ່າຍ ເຊັ່ນ ຮັບ/ຈ່າຍຊຳລະໜີ້ໃນໃບກະແສເງິນສົດ) */
+  sub: { id: number; name: string } | null;
   account: { id: number; name: string; bank: string | null; url: string | null } | null;
   currency: { key: string; symbol: string };
   /** true = ເງິນໂອນ, false = ເງິນສົດ */
@@ -47,6 +49,12 @@ const accountOf = (acc: Income['acount'] | Expense['acount']) =>
     ? { id: acc._uuid, name: acc.acountName, bank: acc.banks?.abbr ?? null, url: acc.banks?.url ?? null }
     : null;
 
+/** ປະເພດ + ລາຍການຍ່ອຍ — ລາຍຮັບ / ລາຍຈ່າຍເກັບແຕ່ລາຍການຍ່ອຍ, ປະເພດມາກັບມັນ */
+const subOf = (sub: Income['sub']) => ({
+  category: sub?.category ? { id: sub.category._uuid, code: sub.category.type_code, name: sub.category.type_name } : null,
+  sub: sub ? { id: sub._uuid, name: sub.name } : null,
+});
+
 export const fromIncome = (r: Income): Entry => {
   const date = incomeDateOf(r);
   return {
@@ -55,7 +63,7 @@ export const fromIncome = (r: Income): Entry => {
     date,
     dateKey: date.format('YYYY-MM-DD'),
     title: r.incom_title,
-    category: r.typein ? { id: r.typein._uuid, code: r.typein.type_code, name: r.typein.type_name } : null,
+    ...subOf(r.sub),
     account: accountOf(r.acount),
     currency: currencyOf(r.acount?.treasury?.currency),
     transfer: Number(r.receive_type) === TRANSFER,
@@ -79,7 +87,7 @@ export const fromExpense = (r: Expense): Entry => {
     date,
     dateKey: date.format('YYYY-MM-DD'),
     title: r.expense_title,
-    category: r.typeout ? { id: r.typeout._uuid, code: r.typeout.type_code, name: r.typeout.type_name } : null,
+    ...subOf(r.sub),
     account: accountOf(r.acount),
     currency: currencyOf(r.acount?.treasury?.currency),
     transfer: Number(r.pay_type) === TRANSFER,
@@ -182,6 +190,49 @@ export const topItems = (entries: Entry[], limit = 10) => {
     })
   );
   return [...map.values()].sort((a, b) => b.total - a.total).slice(0, limit);
+};
+
+export type MatrixRow = { key: string; label: string; cells: number[]; total: number };
+export type MatrixGroup = MatrixRow & { rows: MatrixRow[] };
+
+/**
+ * ຍອດແຕ່ລະລາຍການຍ່ອຍ ຕໍ່ເດືອນ — ຖັນ = ທຸກເດືອນໃນຊ່ວງ, ແຖວ = ປະເພດ (ລວມ) ແລະ ລາຍການຍ່ອຍຂອງມັນ. ລຽງຍອດຫຼາຍສຸດກ່ອນ
+ */
+export const monthlyBySub = (entries: Entry[], range: Range, notSpecified: string) => {
+  const months: { key: string; label: string }[] = [];
+  for (let d = range.start.clone().startOf('month'); d.isSameOrBefore(range.end, 'month'); d.add(1, 'month')) {
+    months.push({ key: d.format('YYYY-MM'), label: d.format('MM/YYYY') });
+  }
+  const index = new Map(months.map((m, i) => [m.key, i]));
+  const empty = () => months.map(() => 0);
+  const groups = new Map<string, MatrixGroup & { rowMap: Map<string, MatrixRow> }>();
+  const totals = empty();
+  entries.forEach((e) => {
+    const i = index.get(e.date.format('YYYY-MM'));
+    if (i === undefined) return;
+    const gKey = String(e.category?.id ?? 0);
+    const group = groups.get(gKey) ?? {
+      key: gKey,
+      label: e.category ? `${e.category.code} · ${e.category.name}` : notSpecified,
+      cells: empty(),
+      total: 0,
+      rows: [],
+      rowMap: new Map<string, MatrixRow>(),
+    };
+    const rKey = e.sub ? String(e.sub.id) : 'none';
+    const row = group.rowMap.get(rKey) ?? { key: `${gKey}-${rKey}`, label: e.sub?.name ?? notSpecified, cells: empty(), total: 0 };
+    row.cells[i] += e.amount;
+    row.total += e.amount;
+    group.rowMap.set(rKey, row);
+    group.cells[i] += e.amount;
+    group.total += e.amount;
+    groups.set(gKey, group);
+    totals[i] += e.amount;
+  });
+  const list = [...groups.values()]
+    .map(({ rowMap, ...g }) => ({ ...g, rows: [...rowMap.values()].sort((a, b) => b.total - a.total) }))
+    .sort((a, b) => b.total - a.total);
+  return { months, groups: list, totals, grand: totals.reduce((n, v) => n + v, 0) };
 };
 
 /** % ປ່ຽນແປງທຽບຊ່ວງກ່ອນ — ຊ່ວງກ່ອນເປັນ 0 = ບໍ່ມີຕົວທຽບ (null) */

@@ -3,6 +3,7 @@ import { formatNumber, getApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import type { Company } from '../hrApi';
+import type { SubRef } from '../../account/journal/journalKit';
 
 /**
  * ເງິນເດືອນ — api-bansi: /payroll/*. ໃບເງິນເດືອນ 1 ໃບ ຕໍ່ ເດືອນ: ຮ່າງ (ແກ້ / ຄິດໄລ່ໃໝ່ໄດ້) → ຈ່າຍແລ້ວ
@@ -104,6 +105,8 @@ export type Payroll = {
   account_id: number | null;
   description: string | null;
   account?: PayrollAccount | null;
+  /** ລາຍຈ່າຍທີ່ບັນທຶກຄູ່ຕອນຈ່າຍ (ຕິກ "ບັນທຶກເປັນລາຍຈ່າຍ") */
+  expense?: { _uuid: number; number: string; sub?: SubRef | null } | null;
   /** ເດືອນສິ້ນສຸດແລ້ວ — ຍັງບໍ່ສິ້ນສຸດ ມື້ທີ່ຍັງບໍ່ຮອດບໍ່ນັບເປັນຂາດວຽກ */
   complete: boolean;
   lines?: PayrollLine[];
