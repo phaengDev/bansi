@@ -73,7 +73,19 @@ export type User = {
   employee?: EmployeeRef | null;
 };
 
-export type Position = { _uuid: number; department_id: number; position_name: string; sort: number; status: number; employees?: number };
+/** ຕຳແໜ່ງ = ລາຍຊື່ກາງ (ບໍ່ຂຶ້ນກັບພະແນກ) — level = Level 1, 2, 3… (1 = ສູງສຸດ, ບໍ່ຈຳກັດຂັ້ນ; null = ຍັງບໍ່ກຳນົດ) */
+export type Position = {
+  _uuid: number;
+  position_name: string;
+  level: number | null;
+  sort: number;
+  status: number;
+  /** ພະນັກງານທີ່ເຮັດວຽກຢູ່ */
+  employees?: number;
+};
+
+/** "Level 3" — ບໍ່ມີ = null (ໃຫ້ຜູ້ເອີ້ນສະແດງ "ຍັງບໍ່ກຳນົດ") */
+export const levelText = (level: number | null | undefined) => (level ? `Level ${level}` : null);
 
 export type Department = {
   _uuid: number;
@@ -82,9 +94,10 @@ export type Department = {
   description: string | null;
   sort: number;
   status: number;
+  /** 1 = ຂັ້ນບໍລິຫານ (ຄະນະບໍລິຫານ) — ຄຸມທຸກພະແນກ, ຢູ່ເທິງສຸດຂອງໂຄງຮ່າງ, ບໍ່ນັບເປັນພະແນກ */
+  executive?: number;
   /** ພະນັກງານທີ່ເຮັດວຽກຢູ່ */
   employees?: number;
-  positions: Position[];
 };
 
 /** ເມືອງ + ແຂວງຂອງເມືອງ — ບໍລິສັດ ແລະ ພະນັກງານເກັບແຕ່ district_id (ແຂວງມາກັບເມືອງ) */
@@ -95,7 +108,80 @@ export type DistrictRef = {
   province?: { _uuid: number; province_name: string } | null;
 };
 
-export type EmployeeDocument = { _uuid: number; original_name: string; mime_type: string | null; file_size: number; createdAt: string };
+export type EmployeeDocument = {
+  _uuid: number;
+  original_name: string;
+  mime_type: string | null;
+  file_size: number;
+  createdAt: string;
+  /** id_card · driving_license · cv · contract · certificate · other */
+  doc_type: string;
+};
+
+/** ປະເພດເອກະສານ (key ຂອງ lao-dict) — ລຽງຕາມລຳດັບທີ່ສະແດງ */
+export const DOC_TYPES = [
+  { key: 'id_card', label: 'hrDocIdCard', icon: 'fa-id-card' },
+  { key: 'driving_license', label: 'hrDocDriving', icon: 'fa-car' },
+  { key: 'cv', label: 'hrDocCv', icon: 'fa-file-lines' },
+  { key: 'contract', label: 'hrDocContract', icon: 'fa-file-signature' },
+  { key: 'certificate', label: 'hrDocCertificate', icon: 'fa-award' },
+  { key: 'other', label: 'hrDocOther', icon: 'fa-folder' },
+] as const;
+
+/** ປະຫວັດຫຍໍ້ — kind 1 ປະສົບການເຮັດວຽກ · 2 ການສຶກສາ · 3 ການຝຶກອົບຮົມ; end_date null = ຍັງເຮັດຢູ່ */
+export type ResumeLine = {
+  _uuid: number;
+  kind: number;
+  title: string;
+  subtitle: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  description: string | null;
+  original_name: string | null;
+  mime_type: string | null;
+  file_size: number | null;
+};
+export const RESUME_KINDS = [
+  { value: 1, label: 'hrResumeWork', icon: 'fa-briefcase' },
+  { value: 2, label: 'hrResumeEducation', icon: 'fa-graduation-cap' },
+  { value: 3, label: 'hrResumeTraining', icon: 'fa-chalkboard-user' },
+] as const;
+
+/** ທັກສະຂອງພະນັກງານ (ພ້ອມໝວດ ແລະ ລະດັບທັງໝົດຂອງໝວດ) */
+export type EmployeeSkill = { _uuid: number; skill_id: number; level: string | null; name: string; type_id: number; type_name: string; type_sort: number; levels: string[] };
+export type SkillType = { _uuid: number; name: string; levels: string[]; sort: number; status: number; skills: { _uuid: number; name: string; status: number; sort: number; employees?: number }[] };
+
+/** ສະຖານະຄອບຄົວ */
+export const MARITAL_STATUSES = [
+  { value: 1, label: 'hrMaritalSingle' },
+  { value: 2, label: 'hrMaritalMarried' },
+  { value: 3, label: 'hrMaritalDivorced' },
+  { value: 4, label: 'hrMaritalWidowed' },
+] as const;
+export const WAGE_TYPES = [
+  { value: 1, label: 'hrWageMonthly' },
+  { value: 2, label: 'hrWageHourly' },
+] as const;
+export const BLOOD_TYPES = ['A', 'B', 'AB', 'O'];
+
+/** ລາຍການຕັ້ງຄ່າ (tbl_hr_option) */
+export type HrOption = { _uuid: number; kind: string; name: string; sort: number; status: number; employees?: number };
+export type HrOptionKind = 'employee_type' | 'education_level';
+
+/** ຕົວເລືອກທີ່ເປີດໃຊ້ ແຍກຕາມ kind (ຟອມພະນັກງານ) */
+export const useHrOptions = () => {
+  const [data, setData] = useState<Record<HrOptionKind, { _uuid: number; name: string }[]>>({ employee_type: [], education_level: [] });
+  useEffect(() => {
+    let alive = true;
+    getApi('/hr-option/option')
+      .then((res) => alive && setData({ employee_type: [], education_level: [], ...(res.data?.data ?? {}) }))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return data;
+};
 
 export type Employee = EmployeeRef & {
   gender: number;
@@ -117,6 +203,43 @@ export type Employee = EmployeeRef & {
   profile: string | null;
   description: string | null;
   position?: { _uuid: number; position_name: string } | null;
+  // ---- ຂໍ້ມູນເພີ່ມເຕີມ (ບໍ່ບັງຄັບ) ----
+  nationality: string | null;
+  ethnicity: string | null;
+  religion: string | null;
+  birth_place: string | null;
+  blood_type: string | null;
+  id_card_no: string | null;
+  id_card_expiry: string | null;
+  passport_no: string | null;
+  passport_expiry: string | null;
+  sso_no: string | null;
+  marital_status: number | null;
+  spouse_name: string | null;
+  spouse_birthday: string | null;
+  spouse_phone: string | null;
+  children: number | null;
+  education_level_id: number | null;
+  educationLevel?: { _uuid: number; name: string } | null;
+  education_field: string | null;
+  education_school: string | null;
+  graduation_year: number | null;
+  emergency_name: string | null;
+  emergency_relation: string | null;
+  emergency_phone: string | null;
+  home_distance_km: number | null;
+  employee_type_id: number | null;
+  employeeType?: { _uuid: number; name: string } | null;
+  contract_no: string | null;
+  contract_fixed_term: number;
+  contract_end: string | null;
+  probation_end: string | null;
+  wage_type: number;
+  skills: EmployeeSkill[];
+  resumes: ResumeLine[];
+  /** ຫົວໜ້າ (ລາຍງານຕໍ່) — ໂຄງຮ່າງການຈັດຕັ້ງ */
+  reports_to_id: number | null;
+  reportsTo?: (EmployeeRef & { position?: { _uuid: number; position_name: string } | null }) | null;
   district?: DistrictRef | null;
   documents: EmployeeDocument[];
   /** 1 = ຍັງໃຊ້ລະຫັດ app ເລີ່ມຕົ້ນ (123) — ພະນັກງານຍັງບໍ່ໄດ້ປ່ຽນ */

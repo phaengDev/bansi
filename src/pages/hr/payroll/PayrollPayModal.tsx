@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { DatePicker, Form, Input, Toggle } from 'rsuite';
+import { DatePicker, Form, Input } from 'rsuite';
 import moment from 'moment';
 import { getApi, putApi } from '../../../utils/configApi';
 import { Notific } from '../../../utils/Notification';
 import { useT } from '../../../context/LanguageContext';
-import { FormSection, PickerField, SettingModal, codeLabel } from '../../account/setting/settingKit';
+import { FormSection, PickerField, SettingModal, SwitchRow, codeLabel } from '../../account/setting/settingKit';
 import { useFinanceCategories, type FinanceSubCategory } from '../../../utils/selectOption';
 import SubCategoryField from '../../account/journal/SubCategoryField';
 import { subOptionsOf, withCategory, type SubRef } from '../../account/journal/journalKit';
@@ -105,14 +105,13 @@ const PayrollPayModal = ({ payroll, onClose, onPaid }: { payroll: Payroll; onClo
         </FormSection>
         <FormSection title={t('payRecordExpense')}>
           <div className="is-wide">
-            <label className={`pay-record-toggle${record ? ' is-on' : ''}`}>
+            <SwitchRow checked={record} onChange={setRecord} className={`pay-record-toggle${record ? ' is-on' : ''}`} label={t('payRecordExpenseLabel')} end>
               <span className="pay-record-icon"><i className="fa-solid fa-receipt" /></span>
               <span className="pay-record-text">
                 <b>{t('payRecordExpenseLabel')}</b>
                 <small>{t('payRecordExpenseHint')} ₭ {kip(payroll.total_net)}</small>
               </span>
-              <Toggle checked={record} onChange={setRecord} aria-label={t('payRecordExpenseLabel')} />
-            </label>
+            </SwitchRow>
           </div>
           {record && (
             <>

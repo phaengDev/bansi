@@ -5,6 +5,10 @@ import { HR_MENU, firstRailKey, toRailNav } from '../account/config/SidebarPopup
 import UserPage from './UserPage';
 import CompanyPage from './CompanyPage';
 import DepartmentPage from './DepartmentPage';
+import PositionPage from './PositionPage';
+import HrOptionPage from './HrOptionPage';
+import SkillPage from './SkillPage';
+import OrgChartPage from './org/OrgChartPage';
 import AppReleasePage from './AppReleasePage';
 
 /** key ຂອງເມນູ (HR_MENU) → ໜ້າ */
@@ -12,6 +16,10 @@ const HR_PAGES: Record<string, ReactNode> = {
   users: <UserPage />,
   company: <CompanyPage />,
   departments: <DepartmentPage />,
+  positions: <PositionPage />,
+  empOptions: <HrOptionPage />,
+  skills: <SkillPage />,
+  orgChart: <OrgChartPage />,
   appRelease: <AppReleasePage />,
 };
 

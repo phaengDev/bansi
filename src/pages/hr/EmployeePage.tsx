@@ -180,7 +180,11 @@ const EmployeePage = () => {
         />
       )}
       {viewing && (
-        <EmployeeDetail employee={viewing} onClose={() => setViewing(null)} onChanged={reload}
+        <EmployeeDetail key={viewing._uuid} employee={viewing} onClose={() => setViewing(null)} onChanged={reload}
+          onOpenEmployee={(id) => {
+            const next = rows.find((r) => r._uuid === id);
+            if (next) setViewing(next);
+          }}
           onEdit={(current) => {
             setEditing(current);
             setViewing(null);

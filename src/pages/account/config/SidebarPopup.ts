@@ -152,7 +152,11 @@ export const HR_MENU: SidebarPopupGroup[] = [
     group: 'hrGroupOrg',
     items: [
       { key: 'company', icon: 'fa-solid fa-building', label: 'hrCompany' },
-      { key: 'departments', icon: 'fa-solid fa-sitemap', label: 'hrDepartmentsPositions' },
+      { key: 'departments', icon: 'fa-solid fa-building-user', label: 'hrDepartments' },
+      { key: 'positions', icon: 'fa-solid fa-id-badge', label: 'hrPositions' },
+      { key: 'empOptions', icon: 'fa-solid fa-list-check', label: 'hrEmpOptions' },
+      { key: 'skills', icon: 'fa-solid fa-star', label: 'hrSkills' },
+      { key: 'orgChart', icon: 'fa-solid fa-diagram-project', label: 'hrOrgChart' },
     ],
   },
 ];

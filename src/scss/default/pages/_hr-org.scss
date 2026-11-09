@@ -1,0 +1,755 @@
+// ================= ໂຄງຮ່າງການຈັດຕັ້ງ (HR → ໂຄງຮ່າງການຈັດຕັ້ງ) + ສາຍບັງຄັບບັນຊາໃນຟອມ =================
+// class ທັງໝົດຂຶ້ນຕົ້ນດ້ວຍ .org- (ບໍ່ຂຶ້ນກັບ class ຂອງໜ້າ) — ການພິມ (printElementByFrame) ສຳເນົາແຕ່ກ້ອນຮູບ
+
+// ສີຂອງພະແນກ — ວົນ 8 ສີ (toneClass ໃນ OrgBits.tsx)
+$org-tones: (#604bd8, #0b8a6a, #1d7fc4, #d9822b, #c9424a, #0f9fb5, #b7791f, #3f51b5);
+@for $i from 0 through 7 {
+  .org-tone-#{$i} {
+    --tone: #{nth($org-tones, $i + 1)};
+    --tone-soft: #{rgba(nth($org-tones, $i + 1), 0.1)};
+  }
+}
+
+.hr-org-opt {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  > span:last-child { display: flex; min-width: 0; flex-direction: column; line-height: 1.35; }
+  b { color: #14314d; font-weight: 600; }
+  small { overflow: hidden; color: #8a9aa8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.hr-org-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hr-org-menu .rs-picker-menu-group-title { color: #604bd8; font-size: 11.5px; font-weight: 700; }
+
+// ສະວິດ "ຂັ້ນບໍລິຫານ" ໃນຟອມພະແນກ
+.hr-exec-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e3eaf0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  .rs-toggle { flex: none; }
+  &.is-on { background: #fffaeb; border-color: #f2d48a; }
+  &.is-on .hr-exec-icon { color: #fff; background: #d29a1e; }
+}
+
+.hr-exec-icon {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  color: #b7791f;
+  background: #fff1d1;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hr-exec-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.45;
+
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7f90; font-size: 12px; }
+}
+
+// ---- ສາຍບັງຄັບບັນຊາ (ຟອມພະນັກງານ, ລາຍລະອຽດ) ----
+.org-line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background: #f7f5ff;
+  border: 1px solid #e4ddff;
+  border-radius: 12px;
+}
+
+.org-line-row {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 12px;
+
+  & + & { border-top: 1px dashed #e0d9fb; }
+}
+
+.org-line-label {
+  width: 96px;
+  flex: none;
+  color: #604bd8;
+  font-size: 12px;
+  font-weight: 700;
+
+  i { margin-right: 4px; font-size: 11px; }
+}
+
+.org-line-empty {
+  color: #8a9aa8;
+  font-size: 12.5px;
+
+  &.is-top { color: #b7791f; font-weight: 600; }
+  i { margin-right: 4px; }
+}
+
+.org-line-section {
+  margin-top: 14px;
+
+  h6 {
+    margin: 0 0 8px;
+    color: #14314d;
+    font-size: 13px;
+    font-weight: 700;
+
+    i { margin-right: 6px; color: #604bd8; }
+  }
+}
+
+// ຄົນ 1 ຄົນ (ຫົວໜ້າ / ລູກທີມ) — ກົດໄດ້ເມື່ອເປັນປຸ່ມ
+.org-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e4ddff;
+  border-radius: 999px;
+
+  .hr-avatar.is-sm { width: 30px; height: 30px; }
+  &.is-link { cursor: pointer; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  &.is-link:hover { border-color: #b9a8f5; box-shadow: 0 2px 8px rgba(96, 75, 216, 0.15); }
+}
+
+.org-chip-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.3;
+
+  b { overflow: hidden; color: #14314d; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+  small { overflow: hidden; color: #6b7f90; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.org-line-team {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.org-line-row.is-team { align-items: flex-start; padding: 6px 0; }
+.org-line-row.is-team .org-line-label { padding-top: 7px; }
+
+.org-line-label em {
+  margin-left: 2px;
+  padding: 0 6px;
+  background: #efeaff;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-style: normal;
+}
+
+// ຫົວໜ້າສາຍງານໃນຟອມພະນັກງານ
+.hr-boss-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hr-boss-hint {
+  color: #6b7f90;
+  font-size: 12px;
+
+  i { color: #604bd8; margin-right: 3px; }
+}
+
+.org-suggest {
+  margin-left: auto;
+  padding: 1px 8px;
+  color: #604bd8;
+  background: #efeaff;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.hr-org-menu .hr-org-opt { width: 100%; }
+
+// popup ປ່ຽນຫົວໜ້າສາຍງານ
+.org-boss-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.org-boss-label { color: #3d5266; font-size: 13px; font-weight: 600; }
+.org-boss-note { color: #6b7f90; font-size: 12px; }
+
+.org-boss-suggest {
+  align-self: flex-start;
+  padding: 4px 10px;
+  color: #604bd8;
+  background: #f4f1ff;
+  border: 1px dashed #c9bdf7;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &:hover { background: #ebe5ff; }
+}
+
+// ໜ້າຕຳແໜ່ງ: ກຸ່ມຕາມ Level
+.org-level {
+  display: inline-block;
+  padding: 2px 10px;
+  color: #fff;
+  background: linear-gradient(145deg, #8f7bff, #604bd8);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.is-unset { color: #8a4b04; background: #fff1d1; }
+}
+
+.hr-level-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  & + & { margin-top: 18px; }
+
+  > header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    em { color: #6b7f90; font-size: 12px; font-style: normal; font-weight: 700; }
+    small { color: #8a4b04; font-size: 12px; }
+  }
+}
+
+.hr-level-quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  button {
+    padding: 4px 12px;
+    color: #5b6f80;
+    background: #f1f5f9;
+    border: 1px solid #e3eaf0;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &:hover { color: #604bd8; border-color: #c9bdf7; }
+    &.is-active { color: #fff; background: #604bd8; border-color: #604bd8; }
+  }
+
+  small { flex-basis: 100%; color: #6b7f90; font-size: 12px; }
+}
+
+// ---- ໜ້າໂຄງຮ່າງ ----
+.org-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: #eef3f7;
+  border-radius: 10px;
+}
+
+.org-zoom-value {
+  min-width: 52px;
+  padding: 4px 6px;
+  color: #3d5266;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:hover { background: #fff; }
+}
+
+.org-hint { align-self: flex-start; }
+
+.org-scroll {
+  position: relative;
+  height: clamp(420px, calc(100vh - 250px), 2400px);
+  overflow: auto;
+  padding: 24px 16px;
+  background-color: #fbfcfe;
+  background-image: radial-gradient(#dfe6ee 1px, transparent 1px);
+  background-size: 18px 18px;
+  border: 1px solid #e3eaf0;
+  border-radius: 16px;
+  cursor: grab;
+
+  &.is-panning { cursor: grabbing; user-select: none; }
+}
+
+.org-sizer {
+  position: relative;
+  margin: 0 auto;
+}
+
+.org-canvas {
+  --org-line: #c7d2dc;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: max-content;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  transform-origin: 0 0;
+}
+
+// ---- ຕົ້ນໄມ້ (ເສັ້ນເຊື່ອມດ້ວຍ ::before/::after) ----
+.org-tree,
+.org-tree ul {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.org-tree ul {
+  position: relative;
+  padding-top: 22px;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 22px;
+    border-left: 2px solid var(--org-line);
+    content: '';
+  }
+}
+
+.org-tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 8px 0;
+
+  &::before,
+  &::after {
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 22px;
+    border-top: 2px solid var(--org-line);
+    content: '';
+  }
+
+  &::after { right: auto; left: 50%; border-left: 2px solid var(--org-line); }
+  &:first-child::before,
+  &:last-child::after { border: 0; }
+  &:last-child::before { border-right: 2px solid var(--org-line); border-radius: 0 10px 0 0; }
+  &:first-child::after { border-radius: 10px 0 0 0; }
+  &:only-child { padding-top: 0; }
+  &:only-child::before,
+  &:only-child::after { display: none; }
+}
+
+// ລາກ (root) ຂອງແຕ່ລະຕົ້ນ — ບໍ່ມີເສັ້ນຂຶ້ນເທິງ
+.org-tree > li {
+  padding-top: 0;
+
+  &::before,
+  &::after { display: none; }
+}
+
+// ລູກທີ່ບໍ່ມີລູກຕໍ່ ລຽງລົງເປັນຖັນ — ເສັ້ນທາງຊ້າຍ
+.org-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 0 0 26px;
+
+  &::after {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 12px;
+    border-left: 2px solid var(--org-line);
+    content: '';
+  }
+
+  &::before {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: calc(50% - 12px);
+    border-top: 2px solid var(--org-line);
+    content: '';
+  }
+}
+
+.org-stack-item {
+  position: relative;
+
+  &::before {
+    position: absolute;
+    top: -12px;
+    left: -14px;
+    width: 14px;
+    height: calc(50% + 12px);
+    border-bottom: 2px solid var(--org-line);
+    border-left: 2px solid var(--org-line);
+    border-bottom-left-radius: 8px;
+    content: '';
+  }
+
+  &:not(:last-child)::after {
+    position: absolute;
+    top: 50%;
+    bottom: -12px;
+    left: -14px;
+    border-left: 2px solid var(--org-line);
+    content: '';
+  }
+}
+
+// ---- ບັດຕຳແໜ່ງ ----
+.org-card {
+  position: relative;
+  display: flex;
+  width: 176px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 12px 12px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-top: 3px solid var(--tone);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(20, 49, 77, 0.06);
+  cursor: default;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+
+  &:hover { box-shadow: 0 8px 22px rgba(20, 49, 77, 0.1); }
+  &:hover .org-edit { opacity: 1; }
+
+  &.is-vacant {
+    background: #fffaf0;
+    border: 1.5px dashed #e6b54a;
+    border-top: 3px solid #e6b54a;
+  }
+
+  &.is-group {
+    width: 212px;
+    align-items: stretch;
+    padding: 10px 10px 8px;
+    text-align: left;
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      padding-right: 18px;
+
+      em {
+        flex: none;
+        padding: 0 7px;
+        color: var(--tone);
+        background: var(--tone-soft);
+        border-radius: 10px;
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 700;
+      }
+    }
+
+    .org-card-title { color: #14314d; font-size: 12.5px; font-weight: 700; }
+    .org-card-dept { align-self: flex-start; margin: 4px 0 6px; }
+  }
+}
+
+.org-card-face {
+  position: relative;
+  margin-bottom: 6px;
+
+  .hr-avatar.is-lg { width: 60px; height: 60px; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--tone); }
+  }
+
+.org-card-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.org-card-name { color: #14314d; font-size: 13.5px; line-height: 1.35; }
+.org-card-title { color: #5b6f80; font-size: 11.5px; line-height: 1.4; }
+
+.org-card-dept {
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 1px 8px;
+  overflow: hidden;
+  color: var(--tone);
+  background: var(--tone-soft);
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-edit {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #8a9aa8;
+  background: #f1f5f9;
+  border: 0;
+  border-radius: 6px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+
+  &:hover { color: #604bd8; background: #efeaff; }
+  &:focus-visible { opacity: 1; }
+}
+
+// ບັດລູກທີມໃນຖັນ (compact) — ຮູບຊ້າຍ ຊື່ຂວາ, ແຖບສີທາງຊ້າຍ
+.org-card.is-single.is-compact {
+  width: 222px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 30px 9px 12px;
+  text-align: left;
+  border-top-width: 1px;
+  border-left: 3px solid var(--tone);
+
+  &.is-vacant { border: 1.5px dashed #e6b54a; border-left: 3px solid #e6b54a; }
+  .org-card-face { margin: 0; }
+  .org-card-face .hr-avatar.is-lg { width: 40px; height: 40px; border-width: 2px; box-shadow: 0 0 0 1.5px var(--tone); b { font-size: 16px; } }
+  .org-card-info { align-items: flex-start; }
+  .org-card-name { font-size: 12.5px; }
+  .org-card-title { font-size: 11px; }
+  .org-card-dept { margin-top: 3px; }
+}
+
+// ແຖວຄົນ (ບັດກຸ່ມ, ຖັນພະແນກ)
+.org-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  background: #f8fafc;
+  border-radius: 9px;
+
+  .hr-avatar.is-sm { width: 28px; height: 28px; }
+
+  &.is-vacant { background: #fffaf0; border: 1px dashed #e6b54a; }
+  &.is-vacant b { color: #b26b00; }
+}
+
+.org-row .org-edit { position: static; margin-left: auto; flex: none; }
+.org-row:hover .org-edit { opacity: 1; }
+
+.org-row-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.3;
+
+  b { overflow: hidden; color: #14314d; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+  small { overflow: hidden; color: #6b7f90; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+// ---- ກຸ່ມທີ່ຍັງບໍ່ຕໍ່ເຂົ້າຕົ້ນຫຼັກ ----
+.org-loose {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px 18px;
+  background: rgba(255, 244, 220, 0.5);
+  border: 1.5px dashed #f0c96b;
+  border-radius: 16px;
+
+  > header {
+    color: #8a4b04;
+    font-size: 12.5px;
+    font-weight: 700;
+
+    em { margin-left: 4px; padding: 0 7px; background: #fff; border-radius: 10px; font-style: normal; }
+  }
+}
+
+.org-loose-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+// ---- ມຸມມອງຕາມຝ່າຍ ----
+.org-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 16px;
+  background: rgba(96, 75, 216, 0.05);
+  border: 1px dashed #d9d1fb;
+  border-radius: 18px;
+}
+
+.org-col {
+  position: relative;
+  width: 236px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(20, 49, 77, 0.06);
+
+  > header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 34px 10px 14px;
+    background: var(--tone-soft);
+    border-top: 4px solid var(--tone);
+
+    b { color: #14314d; font-size: 13px; line-height: 1.35; }
+    small { color: #6b7f90; font-size: 11px; }
+  }
+
+  &:hover .org-edit { opacity: 1; }
+}
+
+.org-col-boss {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 1px 8px;
+  color: var(--tone);
+  background: #fff;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+
+  &.is-warn { color: #8a4b04; background: #fff4dc; }
+}
+
+.org-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.org-col-node { position: relative; }
+
+.org-col-kids {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 0 12px;
+  padding-left: 14px;
+
+  > .org-col-node::before {
+    position: absolute;
+    top: -8px;
+    left: -14px;
+    width: 12px;
+    height: 26px;
+    border-bottom: 2px solid var(--org-line);
+    border-left: 2px solid var(--org-line);
+    border-bottom-left-radius: 7px;
+    content: '';
+  }
+
+  > .org-col-node:not(:last-child)::after {
+    position: absolute;
+    top: 18px;
+    bottom: -8px;
+    left: -14px;
+    border-left: 2px solid var(--org-line);
+    content: '';
+  }
+}
+
+.org-top-title {
+  padding: 2px 12px;
+  color: #8a5a00;
+  background: #fff1d1;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+
+  i { margin-right: 4px; }
+}
+
+// ---- ຄົ້ນຫາ: ໄຮໄລ້ອັນທີ່ກົງ, ຈາງອັນອື່ນ ----
+.org-canvas.has-query {
+  .org-card:not(.is-hit),
+  .org-col-node > .org-row:not(.is-hit) { opacity: 0.32; }
+  .org-row.is-hit { background: #fff4dc; box-shadow: inset 0 0 0 1.5px #e6b54a; }
+}
+
+.org-card.is-hit { box-shadow: 0 0 0 3px #f2c14e, 0 8px 22px rgba(20, 49, 77, 0.12); }
+
+// ---- ພິມ ----
+.org-print {
+  font-family: inherit;
+
+  .org-canvas { position: static; transform-origin: 0 0; }
+  .org-card,
+  .org-col { box-shadow: none; }
+}
+
+.org-print-title {
+  margin: 0 0 12px;
+  color: #14314d;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .org-line-row { flex-wrap: wrap; gap: 4px 12px; padding: 6px 0; }
+  .org-scroll { height: 70vh; }
+}

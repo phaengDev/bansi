@@ -1,0 +1,482 @@
+// ================= ຂໍ້ມູນພະນັກງານເພີ່ມເຕີມ: ຟອມພັບໄດ້, ແຖບລາຍລະອຽດ, ປະຫວັດຫຍໍ້, ທັກສະ, ເອກະສານຕາມປະເພດ, ໜ້າຕັ້ງຄ່າ =================
+
+// ---- ຂັ້ນຂອງຟອມທີ່ພັບໄດ້ (ຂໍ້ມູນບໍ່ບັງຄັບ) ----
+.acc-book-step.is-collapsible > header {
+  cursor: pointer;
+  user-select: none;
+
+  &:hover .acc-book-step-title b { color: #0b8a6a; }
+  &:focus-visible { outline: 2px solid rgba(11, 138, 106, 0.35); outline-offset: 4px; border-radius: 8px; }
+}
+
+.acc-book-step.is-collapsed {
+  padding-bottom: 14px;
+  background: #fbfcfd;
+
+  > header { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+  .acc-book-step-no { color: #8a9aa8; background: #eef2f6; }
+}
+
+.acc-book-step-chevron {
+  margin-left: auto;
+  color: #8a9aa8;
+  font-size: 12px;
+}
+
+.acc-book-step-summary { color: #0b8a6a !important; }
+
+.hr-inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
+
+  > span { display: flex; flex-direction: column; line-height: 1.4; }
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7f90; font-size: 12px; }
+}
+
+.hr-segment-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+
+  .acc-type-segment { flex-wrap: wrap; }
+}
+
+.hr-field-note {
+  color: #8a5a00;
+  font-size: 12px;
+
+  i { margin-right: 4px; }
+}
+
+.hr-unit { color: #6b7f90; font-size: 12px; font-weight: 600; }
+
+// ---- ແຖບໃນລາຍລະອຽດພະນັກງານ ----
+.hr-detail-tabs {
+  display: flex;
+  width: 100%;
+  margin-bottom: 14px;
+
+  button { flex: 1; justify-content: center; }
+}
+
+.hr-extra {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+
+  section {
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e8eef3;
+    border-radius: 12px;
+  }
+
+  h6 {
+    margin: 0 0 6px;
+    color: #14314d;
+    font-size: 12.5px;
+    font-weight: 800;
+
+    i { margin-right: 6px; color: #604bd8; }
+  }
+
+  dl { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+  dl > div { display: flex; gap: 8px; font-size: 12.5px; }
+  dt { width: 42%; flex: none; color: #6b7f90; font-weight: 500; }
+  dd { min-width: 0; margin: 0; color: #14314d; font-weight: 600; overflow-wrap: anywhere; }
+  dd small { color: #6b7f90; font-weight: 500; }
+}
+
+.hr-extra-empty {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  color: #6b7f90;
+  background: #f8fafc;
+  border: 1px dashed #dbe3ea;
+  border-radius: 10px;
+  font-size: 12.5px;
+
+  i { margin-right: 6px; color: #8a9aa8; }
+}
+
+.hr-expiry {
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+
+  &.is-bad { color: #c4343a; background: #fdecec; }
+  &.is-warn { color: #8a4b04; background: #fff4dc; }
+}
+
+// ---- ບລັອກໃນແຖບ ປະຫວັດ/ທັກສະ/ເອກະສານ ----
+.hr-profile-block {
+  & + & { margin-top: 18px; }
+
+  > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    h6 { display: flex; align-items: center; gap: 8px; margin: 0; color: #14314d; font-size: 13.5px; font-weight: 800; }
+    h6 em { padding: 0 7px; color: #604bd8; background: #efeaff; border-radius: 10px; font-size: 11px; font-style: normal; }
+    h6 i { color: #604bd8; }
+  }
+}
+
+.hr-resume-group + .hr-resume-group { margin-top: 10px; }
+
+.hr-resume-group-head,
+.hr-doc-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f4f6f9;
+  border-radius: 10px;
+
+  > span { display: flex; align-items: center; gap: 6px; color: #3d5266; font-size: 12.5px; font-weight: 700; }
+  > span i { width: 16px; color: #604bd8; text-align: center; }
+  em { padding: 0 6px; color: #604bd8; background: #fff; border-radius: 10px; font-size: 10.5px; font-style: normal; }
+  label { margin: 0; cursor: pointer; }
+  .acc-rp-btn { height: 28px; padding: 0 10px; font-size: 12px; }
+}
+
+.hr-resume-line {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding: 10px 6px 10px 14px;
+  border-left: 2px solid #e4ddff;
+  margin-left: 14px;
+
+  &:hover .hr-resume-actions { opacity: 1; }
+}
+
+.hr-resume-dot {
+  position: absolute;
+  top: 15px;
+  left: -6px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2px solid #604bd8;
+  border-radius: 50%;
+}
+
+.hr-resume-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7f90; font-size: 12px; }
+  p { margin: 2px 0 0; color: #3d5266; font-size: 12.5px; white-space: pre-line; }
+}
+
+.hr-resume-actions { display: flex; align-self: flex-start; gap: 2px; opacity: 0.4; transition: opacity 0.15s ease; }
+
+.hr-resume-file {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  color: #3d5266;
+  background: #f4f6f9;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+
+  &.is-link { cursor: pointer; }
+  &.is-link:hover { color: #1559c9; background: #e8f1ff; }
+  b { overflow: hidden; max-width: 260px; text-overflow: ellipsis; white-space: nowrap; }
+  small { color: #8a9aa8; }
+}
+
+// ຟອມປະຫວັດ / ໝວດທັກສະ (ຊ່ອງທຳມະດາ ບໍ່ຜ່ານ Form)
+.hr-resume-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  > .acc-type-segment { align-self: flex-start; flex-wrap: wrap; }
+}
+
+.hr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+
+  > span { color: #3d5266; font-size: 13px; font-weight: 600; }
+  > span em { color: #c4343a; font-style: normal; }
+}
+
+.hr-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hr-resume-pick { align-self: flex-start; cursor: pointer; }
+
+// ---- ທັກສະ ----
+.hr-skill-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+
+  & + & { border-top: 1px dashed #e8eef3; }
+}
+
+.hr-skill-type {
+  width: 110px;
+  flex: none;
+  padding-top: 4px;
+  color: #6b7f90;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hr-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.hr-skill-chip {
+  --rank: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 10px;
+  color: #14314d;
+  background: #f4f1ff;
+  border: 1px solid #e4ddff;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+
+  em {
+    padding: 0 8px;
+    color: #fff;
+    // ລະດັບສູງ = ສີເຂັ້ມ
+    background: color-mix(in srgb, #604bd8 calc(45% + var(--rank) * 55%), #c9bdf7);
+    border-radius: 999px;
+    font-size: 11px;
+    font-style: normal;
+  }
+}
+
+.hr-skill-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  h6 { margin: 0 0 6px; color: #604bd8; font-size: 13px; font-weight: 800; }
+}
+
+.hr-skill-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 10px;
+
+  &:hover { background: #f8fafc; }
+  &.is-on { background: #f4f1ff; }
+}
+
+.hr-skill-name {
+  display: inline-flex;
+  min-width: 170px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: #14314d;
+  background: transparent;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+
+  i { color: #b0bcc7; font-size: 15px; }
+}
+
+.hr-skill-row.is-on .hr-skill-name i { color: #604bd8; }
+
+.hr-skill-levels {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  button {
+    min-width: 34px;
+    padding: 2px 8px;
+    color: #5b6f80;
+    background: #fff;
+    border: 1px solid #e3eaf0;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+
+    &:hover { border-color: #c9bdf7; color: #604bd8; }
+    &.is-active { color: #fff; background: #604bd8; border-color: #604bd8; }
+  }
+
+  &.is-static em {
+    padding: 0 7px;
+    color: #604bd8;
+    background: #f4f1ff;
+    border-radius: 8px;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 600;
+  }
+}
+
+.hr-skill-none { color: #8a9aa8; font-size: 12px; }
+
+// ---- ເອກະສານຕາມປະເພດ ----
+.hr-doc-group {
+  & + & { margin-top: 8px; }
+  .hr-docs { padding: 0 4px; }
+}
+
+.hr-doc-type { width: 150px; flex: none; }
+
+// ---- ໜ້າຕັ້ງຄ່າ: ຕົວເລືອກຂໍ້ມູນພະນັກງານ / ທັກສະ ----
+.hr-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 14px;
+}
+
+.hr-option-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(20, 49, 77, 0.04);
+
+  &.is-off { opacity: 0.6; }
+
+  > header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
+    b { color: #14314d; font-size: 14px; }
+    small { color: #6b7f90; font-size: 12px; }
+  }
+
+  ul { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+}
+
+.hr-option-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  color: #604bd8;
+  background: #efeaff;
+  border-radius: 10px;
+}
+
+.hr-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 8px;
+
+  &:hover { background: #f8fafc; }
+  &.is-off .hr-option-name { color: #8a9aa8; text-decoration: line-through; }
+  .rs-input { flex: 1; }
+}
+
+.hr-option-name {
+  flex: 1;
+  padding: 3px 0;
+  color: #14314d;
+  background: transparent;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+
+  &:not(:disabled):hover { color: #604bd8; }
+}
+
+.hr-option-add {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e3eaf0;
+
+  .rs-input { flex: 1; }
+  .acc-rp-btn { height: 30px; }
+}
+
+.hr-skill-card-actions { display: flex; align-items: center; gap: 2px; }
+
+.hr-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .hr-skill-rename { width: 160px; }
+}
+
+.hr-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 10px;
+  background: #f4f6f9;
+  border-radius: 999px;
+
+  &.is-off { opacity: 0.55; }
+
+  > button:first-child { padding: 0; color: #14314d; background: transparent; border: 0; font-size: 12.5px; font-weight: 600; }
+  > button:first-child:not(:disabled):hover { color: #604bd8; }
+  em { padding: 0 6px; color: #0b8a6a; background: #e3f7ee; border-radius: 10px; font-size: 10.5px; font-style: normal; }
+}
+
+.hr-skill-x {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: #8a9aa8;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  font-size: 10px;
+
+  &:hover { color: #c4343a; background: #fdecec; }
+}
+
+@media (max-width: 760px) {
+  .hr-field-row { grid-template-columns: 1fr; }
+  .hr-skill-group { flex-direction: column; gap: 4px; }
+  .hr-doc-type { width: 120px; }
+}

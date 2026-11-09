@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { Button, Form, Loader, Modal, SelectPicker, Toggle } from 'rsuite';
 import { useT } from '../../../context/LanguageContext';
 
@@ -228,6 +228,29 @@ export const SettingModal = ({ title, hint, icon, saving, onClose, onSubmit, chi
   );
 };
 
+/**
+ * ແຖວທີ່ມີສະວິດ ເປີດ/ປິດ — ກົດບ່ອນໃດໃນແຖວກໍ່ສະຫຼັບ. ບໍ່ໃຊ້ <label> ຫໍ່ ເພາະ Toggle ຂອງ rsuite ເອງເປັນ label:
+ * label ຊ້ອນກັນ = ກົດທີ່ສະວິດແລ້ວສະຫຼັບ 2 ເທື່ອ (ຄືບໍ່ໄດ້ກົດ). end = ສະວິດຢູ່ທ້າຍແຖວ
+ */
+export const SwitchRow = ({ checked, onChange, className, children, label, end, size }: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  className?: string;
+  children: ReactNode;
+  label?: string;
+  end?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}) => {
+  const toggle = <Toggle size={size} checked={checked} onChange={onChange} aria-label={label} />;
+  return (
+    <div role="group" className={className} onClick={(e) => !(e.target as HTMLElement).closest('.rs-toggle') && onChange(!checked)}>
+      {!end && toggle}
+      {children}
+      {end && toggle}
+    </div>
+  );
+};
+
 /** ກຸ່ມຊ່ອງໃນຟອມ — ຫົວຂໍ້ນ້ອຍ + ຕາລາງ 2 ຖັນ (ລູກທີ່ມີ class "is-wide" ກວ້າງເຕັມແຖວ) */
 export const FormSection = ({ title, note, children }: { title: string; note?: ReactNode; children: ReactNode }) => (
   <section className="acc-book-group">
@@ -241,26 +264,33 @@ export const FormSection = ({ title, note, children }: { title: string; note?: R
 
 /**
  * ຂັ້ນຕອນຂອງຟອມແບບບັດ (ໃຊ້ໃນ modal ".acc-book-modal.is-steps") — ເລກຂັ້ນ (ກາຍເປັນ ✓ ເມື່ອປ້ອນຄົບ)
- * + ຫົວຂໍ້ + ຄຳແນະນຳ, ແລ້ວຕາລາງ 2 ຖັນ ທີ່ທຸກຊ່ອງກວ້າງ ແລະ ສູງເທົ່າກັນ
+ * + ຫົວຂໍ້ + ຄຳແນະນຳ, ແລ້ວຕາລາງ 2 ຖັນ ທີ່ທຸກຊ່ອງກວ້າງ ແລະ ສູງເທົ່າກັນ.
+ * onToggle = ພັບໄດ້ (ຂໍ້ມູນບໍ່ບັງຄັບ): ກົດຫົວຂໍ້ເພື່ອເປີດ/ປິດ, ຕອນພັບສະແດງ summary ແທນຄຳແນະນຳ
  */
-export const FormStep = ({ no, done, title, hint, note, children }: {
+export const FormStep = ({ no, done, title, hint, note, children, collapsed, onToggle, summary }: {
   no: number;
   done?: boolean;
   title: string;
   hint?: string;
   note?: ReactNode;
   children: ReactNode;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  summary?: ReactNode;
 }) => (
-  <section className={`acc-book-step${done ? ' is-done' : ''}`}>
-    <header>
+  <section className={`acc-book-step${done ? ' is-done' : ''}${onToggle ? ' is-collapsible' : ''}${collapsed ? ' is-collapsed' : ''}`}>
+    <header
+      {...(onToggle ? { role: 'button', tabIndex: 0, 'aria-expanded': !collapsed, onClick: onToggle, onKeyDown: (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onToggle()) } : {})}
+    >
       <span className="acc-book-step-no">{done ? <i className="fa-solid fa-check" /> : no}</span>
       <span className="acc-book-step-title">
         <b>{title}</b>
-        {hint && <small>{hint}</small>}
+        {collapsed && summary ? <small className="acc-book-step-summary">{summary}</small> : hint && <small>{hint}</small>}
       </span>
       {note && <em>{note}</em>}
+      {onToggle && <i className={`fa-solid fa-chevron-${collapsed ? 'down' : 'up'} acc-book-step-chevron`} />}
     </header>
-    <div className="acc-book-grid">{children}</div>
+    {!collapsed && <div className="acc-book-grid">{children}</div>}
   </section>
 );
 

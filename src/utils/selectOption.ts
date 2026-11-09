@@ -41,9 +41,10 @@ export type TreasuryAccountOption = {
 export type Bank = { _uuid: number; abbr: string; name_la: string; name_en?: string; url?: string | null };
 export type District = { _uuid: number; district_name: string };
 export type Province = { _uuid: number; province_name: string; districts: District[] };
-export type PositionOption = { _uuid: number; position_name: string };
-/** ພະແນກທີ່ໃຊ້ງານ + ຕຳແໜ່ງທີ່ໃຊ້ງານ */
-export type DepartmentOption = { _uuid: number; depart_code: string; depart_name: string; positions: PositionOption[] };
+/** ຕຳແໜ່ງ = ລາຍຊື່ກາງ — level 1 ຜູ້ບໍລິຫານສູງສຸດ · 2 ຮອງ · 3 ຫົວໜ້າພະແນກ/ທີມ · 4 ພະນັກງານ */
+export type PositionOption = { _uuid: number; position_name: string; level: number | null };
+/** ພະແນກທີ່ໃຊ້ງານ — executive = 1: ຂັ້ນບໍລິຫານ */
+export type DepartmentOption = { _uuid: number; depart_code: string; depart_name: string; executive?: number };
 /** ພະນັກງານທີ່ເຮັດວຽກຢູ່ — user_id = ບັນຊີຜູ້ໃຊ້ທີ່ຜູກແລ້ວ (null = ຍັງບໍ່ມີ) */
 export type EmployeeOption = {
   _uuid: number;
@@ -143,7 +144,7 @@ const toTreasuryAccount = (i: TreasuryAccountOption) =>
 const toBank = (i: Bank) => ({ ...i, label: `${i.abbr} ${i.name_la}`, value: i._uuid });
 const toProvince = (i: Province) => ({ ...i, label: i.province_name, value: i._uuid });
 const toDistrict = (i: District) => ({ ...i, label: i.district_name, value: i._uuid });
-const toDepartment = (i: DepartmentOption) => ({ ...i, positions: i.positions ?? [], label: i.depart_name, value: i._uuid });
+const toDepartment = (i: DepartmentOption) => ({ ...i, label: i.depart_name, value: i._uuid });
 const toPosition = (i: PositionOption) => ({ ...i, label: i.position_name, value: i._uuid });
 const toEmployee = (i: EmployeeOption) =>
   ({ ...i, label: `${i.emp_code} ${[i.first_name, i.last_name].filter(Boolean).join(' ')}`, value: i._uuid });
@@ -193,14 +194,11 @@ export const useDistricts = (provinceId: number | string | null | undefined) => 
 
 // ===================== ອົງກອນ / HR =====================
 
-/** ພະແນກທີ່ໃຊ້ງານ ພ້ອມຕຳແໜ່ງທີ່ໃຊ້ງານ */
+/** ພະແນກທີ່ໃຊ້ງານ */
 export const useDepartments = () => useApiOptions<DepartmentOption>('/department/option', toDepartment);
 
-/** ຕຳແໜ່ງຂອງພະແນກທີ່ເລືອກ — ບໍ່ມີພະແນກ = ລາຍການຫວ່າງ */
-export const usePositions = (departmentId: number | string | null | undefined) => {
-  const departments = useDepartments();
-  return useMemo(() => childOptions(departments, departmentId, (d) => d.positions, toPosition), [departments, departmentId]);
-};
+/** ຕຳແໜ່ງທີ່ໃຊ້ງານ (ລາຍຊື່ກາງ ບໍ່ຂຶ້ນກັບພະແນກ) — ລຽງຕາມລະດັບ */
+export const usePositions = () => useApiOptions<PositionOption>('/position/option', toPosition);
 
 /** ພະນັກງານທີ່ເຮັດວຽກຢູ່ — label "EMP-0001 ຊື່ ນາມສະກຸນ" */
 export const useEmployees = () => useApiOptions<EmployeeOption>('/employee/option', toEmployee);
