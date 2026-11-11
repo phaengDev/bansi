@@ -4,6 +4,7 @@ import { useT } from '../../context/LanguageContext';
 import { isFolderId, type DesktopFolder, type LifeOutletContext, type ShortcutId } from './DesktopShared';
 import type { AccountMenu } from './accountMenus';
 import DesktopGlance, { useGlanceHidden } from './DesktopGlance';
+import { useHrPending } from '../hr/hrPending';
 
 type DragState = {
   id: string;
@@ -51,6 +52,7 @@ const AccountDesktopMenu: React.FC = () => {
   const folderPanelRef = useRef<HTMLElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const wasDraggingRef = useRef(false);
+  const pending = useHrPending();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   /** ໄອຄອນທີ່ກຳລັງຖືກທັບ — ປ່ອຍຕອນນີ້ = ລວມເປັນກຸ່ມ (ຫຼື ສະລັບລຳດັບ ຖ້າລາກຢູ່ໃນກຸ່ມ) */
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -228,9 +230,19 @@ const AccountDesktopMenu: React.FC = () => {
     return true;
   };
 
+  /** ຕົວເລກສີແດງຂອງໄອຄອນ = ຄຳຮ້ອງທີ່ລໍຖ້າ HR (ການເຂົ້າ-ອອກວຽກ: ລາພັກ + ລືມສະແກນ; ເງິນເດືອນ: ເບີກເງິນລໍຖ້າອະນຸມັດ / ຈ່າຍ) */
+  const badgeOf = (id: string) => {
+    if (!pending) return 0;
+    if (id === 'attendance') return pending.leave + pending.correction;
+    if (id === 'payroll') return pending.advance + pending.advance_to_pay;
+    return 0;
+  };
+  const badge = (count: number) => !!count && <em className="life-desktop-shortcut-badge">{count > 99 ? '99+' : count}</em>;
+
   const renderIcon = (menu: AccountMenu, dropId?: string) => (
     <span className={`life-desktop-shortcut-icon is-${menu.tone}`} data-drop-id={dropId}>
       <i className={menu.iconClass} aria-hidden="true" />
+      {badge(badgeOf(menu.id))}
       {menu.locked && (
         <em className="life-desktop-shortcut-lock" title={t('menuLockLocked')}>
           <i className="fa-solid fa-lock" aria-hidden="true" />
@@ -293,6 +305,8 @@ const AccountDesktopMenu: React.FC = () => {
                       <i className={member.iconClass} />
                     </span>
                   ))}
+                  {/* ກຸ່ມ = ລວມຕົວເລກຂອງສະມາຊິກ */}
+                  {badge(membersOf(item.folder).reduce((sum, member) => sum + badgeOf(member.id), 0))}
                 </span>
               ) : (
                 renderIcon(menu!, item.id)

@@ -630,6 +630,30 @@ $account-themes: (
 }
 
 // ກະແຈນ້ອຍມຸມລຸ່ມຂວາ — ເມນູນີ້ຕັ້ງລະຫັດຜ່ານໄວ້ (account/menuLock.ts)
+// ຕົວເລກສີແດງ (ຄຳຮ້ອງທີ່ລໍຖ້າ) ມຸມຂວາເທິງ — ຄືແອັບໃນໂທລະສັບ
+.life-desktop-shortcut-badge {
+  position: absolute;
+  z-index: 2;
+  top: -7px;
+  right: -7px;
+  display: inline-flex;
+  min-width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  color: #fff;
+  background: #ef4444;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .life-desktop-shortcut-lock {
   position: absolute;
   right: -7px;

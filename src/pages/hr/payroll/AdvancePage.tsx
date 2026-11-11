@@ -6,6 +6,7 @@ import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useEmployees } from '../../../utils/selectOption';
+import { refreshHrPending } from '../hrPending';
 import { useT } from '../../../context/LanguageContext';
 import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
@@ -408,7 +409,12 @@ const AdvancePage = () => {
   const [status, setStatus] = useState(ADV_PENDING);
   const [keyword, setKeyword] = useState('');
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const { data, loading, reload } = usePostData<AdvanceData>('/advance/fetch', { year, status });
+  const { data, loading, reload: reloadList } = usePostData<AdvanceData>('/advance/fetch', { year, status });
+  // ລາຍການປ່ຽນ (ອະນຸມັດ / ປະຕິເສດ / ຈ່າຍ) = ຕົວເລກລໍຖ້າຢູ່ເມນູຊ້າຍ ແລະ ໄອຄອນ desktop ອັບເດດນຳ
+  const reload = () => {
+    reloadList();
+    refreshHrPending();
+  };
 
   const rows = data?.data ?? [];
   const summary = data?.summary;

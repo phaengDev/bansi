@@ -47,12 +47,14 @@ const EditButton = ({ node, ctx }: { node: OrgNode; ctx: Ctx }) => {
  * ບັດຂອງຄົນ — ຮູບ, ຊື່, ຕຳແໜ່ງ; ປ້າຍພະແນກສະເພາະບ່ອນທີ່ພະແນກປ່ຽນຈາກຫົວໜ້າ (ຂັ້ນບໍລິຫານບໍ່ມີປ້າຍ).
  * compact = ຮູບຊ້າຍ ຊື່ຂວາ (ຖັນລູກທີມ)
  */
-const NodeCard = ({ node, ctx, compact }: { node: OrgNode; ctx: Ctx; compact?: boolean }) => {
+const NodeCard = ({ node, ctx, compact, loose }: { node: OrgNode; ctx: Ctx; compact?: boolean; loose?: boolean }) => {
+  const t = useT();
   const newDept = !node.parent || node.parent.person.department_id !== node.person.department_id;
   const dept = newDept && !isExecutive(node.department) ? node.department?.depart_name : undefined;
   return (
-    <div className={`org-card is-single${compact ? ' is-compact' : ''} ${toneClass(node.tone)}${hit(node, ctx.query) ? ' is-hit' : ''}`}>
+    <div className={`org-card is-single${compact ? ' is-compact' : ''}${loose ? ' is-loose' : ''} ${toneClass(node.tone)}${hit(node, ctx.query) ? ' is-hit' : ''}`}>
       <EditButton node={node} ctx={ctx} />
+      {loose && <span className="org-card-loose"><i className="fa-solid fa-triangle-exclamation" /> {t('hrNoBoss')}</span>}
       <span className="org-card-face"><HrAvatar url={node.person.profile_url} name={node.person.first_name} size="lg" /></span>
       <span className="org-card-info">
         <b className="org-card-name">{personName(node.person)}</b>
@@ -81,28 +83,205 @@ const Branch = ({ node, ctx, keep }: { node: OrgNode; ctx: Ctx; keep?: (n: OrgNo
   );
 };
 
-/** ຄົນທີ່ຍັງບໍ່ມີຫົວໜ້າສາຍງານ (ນອກຈາກຜູ້ສູງສຸດ) — ພ້ອມລູກທີມຂອງເຂົາ */
-const LooseSection = ({ tree, ctx }: { tree: OrgTree; ctx: Ctx }) => {
-  const t = useT();
-  const loose = tree.roots.filter((r) => r !== tree.main);
-  if (!loose.length) return null;
-  return (
-    <section className="org-loose">
-      <header><i className="fa-solid fa-triangle-exclamation" /> {t('hrNoBoss')} <em>{loose.length}</em></header>
-      <div className="org-loose-list">
-        {loose.map((r) => <ul key={r.person._uuid} className="org-tree"><Branch node={r} ctx={ctx} /></ul>)}
-      </div>
-    </section>
-  );
+// ---- ມຸມມອງສາຍບັງຄັບບັນຊາ: ວາງບັດເປັນແຖວຕາມ Level ----
+const CARD_W = 176;
+const CARD_H = 190;
+const GAP_X = 18;
+const GAP_Y = 64;
+const ROOT_GAP = 56;
+/** ບ່ອນປ້າຍ Level ທາງຊ້າຍ */
+const GUTTER = 92;
+const PITCH = CARD_H + GAP_Y;
+
+type Box = { node: OrgNode; x: number; y: number; row: number; loose: boolean };
+
+/**
+ * ວາງບັດ: ແຖວຕາມ Level ຂອງຕຳແໜ່ງ — ຄົນ Level ດຽວກັນຢູ່ແຖວດຽວກັນ ບໍ່ວ່າຈະລາຍງານຕໍ່ໃຜ ຫຼື ຍັງບໍ່ມີຫົວໜ້າສາຍງານ.
+ * ພາຍໃນ Level ດຽວກັນ ຖ້າຕຳແໜ່ງໜຶ່ງລາຍງານຕໍ່ອີກຕຳແໜ່ງ (ເຊັ່ນ ຫົວໜ້າໜ່ວຍງານ → ຜູ້ຈັດການ ທັງສອງເປັນ Level 2)
+ * ແຍກເປັນແຖວຍ່ອຍ Level 2.1, 2.2… ແລະ ຄົນຕຳແໜ່ງດຽວກັນຢູ່ແຖວຍ່ອຍດຽວກັນ. Level ຕ່ຳຢູ່ລຸ່ມທຸກແຖວຍ່ອຍຂອງ Level ສູງ.
+ * ຕຳແໜ່ງທີ່ຍັງບໍ່ມີ Level: ຄົນຕຳແໜ່ງດຽວກັນແຖວດຽວກັນ. ລູກທີມຢູ່ຕ່ຳກວ່າຫົວໜ້າສະເໝີ (ຂໍ້ມູນບໍ່ສອດຄ່ອງ = ລົງແຖວຖັດໄປ).
+ * ແນວນອນ: ແຕ່ລະກິ່ງມີແຖບຂອງຕົນ (ບໍ່ທັບກັນ), ຫົວໜ້າຢູ່ກາງລູກທີມ; ຕົ້ນຫຼັກກ່ອນ ແລ້ວຄົນທີ່ຍັງບໍ່ມີຫົວໜ້າສາຍງານ
+ */
+const layoutByLevel = (tree: OrgTree) => {
+  const nodes = [...tree.byPerson.values()];
+  const levelOf = (n: OrgNode) => n.position?.level ?? null;
+  const posKey = (n: OrgNode) => (n.person.position_id ? `P${n.person.position_id}` : `N${n.person._uuid}`);
+  const levels = [...new Set(nodes.map(levelOf).filter((l): l is number => !!l))].sort((a, b) => a - b);
+  const passes = nodes.length * 2 + 2;
+
+  // ແຖວຍ່ອຍພາຍໃນ Level: ຕຳແໜ່ງທີ່ລາຍງານຕໍ່ຕຳແໜ່ງອື່ນໃນ Level ດຽວກັນ ຢູ່ລຸ່ມມັນ 1 ແຖວຍ່ອຍ
+  const sub = new Map<string, number>();
+  const maxSub = new Set(nodes.map(posKey)).size - 1;
+  for (let pass = 0; pass <= nodes.length; pass++) {
+    let changed = false;
+    for (const n of nodes) {
+      const p = n.parent;
+      if (!p || !levelOf(n) || levelOf(n) !== levelOf(p) || posKey(n) === posKey(p)) continue;
+      // ຂໍ້ມູນວົນກັນ (ກ → ຂ → ກ) ບໍ່ໃຫ້ລົງເລິກເກີນຈຳນວນຕຳແໜ່ງ
+      const need = Math.min(maxSub, (sub.get(posKey(p)) ?? 0) + 1);
+      if ((sub.get(posKey(n)) ?? 0) < need) {
+        sub.set(posKey(n), need);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  const subOf = (n: OrgNode) => sub.get(posKey(n)) ?? 0;
+  const height = new Map(levels.map((l) => [l, 1 + Math.max(0, ...nodes.filter((n) => levelOf(n) === l).map(subOf))]));
+  const base = new Map<number, number>();
+  levels.reduce((row, l) => (base.set(l, row), row + height.get(l)!), 0);
+  const lowest = levels.length ? base.get(levels[levels.length - 1])! : 0;
+  const unsetRow = new Map<string, number>();
+  const rowOf = new Map<OrgNode, number>();
+  const groupRow = (n: OrgNode) => {
+    const level = levelOf(n);
+    return level ? base.get(level)! + subOf(n) : unsetRow.get(posKey(n));
+  };
+
+  // ວົນຄິດຄືນຈົນບໍ່ປ່ຽນ: ແຖວຂອງ Level / ຕຳແໜ່ງໜຶ່ງ ດັນແຖວຂອງລູກທີມລົງນຳ
+  for (let pass = 0; pass <= passes; pass++) {
+    rowOf.clear();
+    const assign = (n: OrgNode, parentRow: number | null) => {
+      const want = groupRow(n);
+      const row = parentRow === null ? want ?? lowest
+        : n.parent && posKey(n.parent) === posKey(n) ? parentRow + 1
+        : Math.max(want ?? parentRow + 1, parentRow + 1);
+      rowOf.set(n, row);
+      n.children.forEach((c) => assign(c, row));
+    };
+    tree.roots.forEach((r) => assign(r, null));
+    let changed = false;
+    for (const n of nodes) {
+      const p = n.parent;
+      if (p && posKey(p) === posKey(n)) continue;
+      const level = levelOf(n);
+      if (level) {
+        // ຕ່ຳກວ່າຫົວໜ້າທີ່ຢູ່ Level ສູງກວ່າ / ບໍ່ມີ Level (ຫົວໜ້າ Level ຕ່ຳກວ່າຕົນ = ຂໍ້ມູນກັບກັນ ຂ້າມໄປ)
+        const bossLevel = p ? levelOf(p) : null;
+        if (p && (bossLevel === null || bossLevel < level)) {
+          const need = rowOf.get(p)! + 1 - subOf(n);
+          if (base.get(level)! < need) {
+            base.set(level, need);
+            changed = true;
+          }
+        }
+      } else if ((unsetRow.get(posKey(n)) ?? -1) < rowOf.get(n)!) {
+        unsetRow.set(posKey(n), rowOf.get(n)!);
+        changed = true;
+      }
+    }
+    for (let i = 1; i < levels.length; i++) {
+      const need = base.get(levels[i - 1])! + height.get(levels[i - 1])!;
+      if (base.get(levels[i])! < need) {
+        base.set(levels[i], need);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+
+  // ຕັດແຖວທີ່ບໍ່ມີໃຜອອກ (ເຊັ່ນ ແຖວທີ່ຖືກດັນລົງ ຫຼື ຂໍ້ມູນວົນກັນ) — ລຳດັບແຖວເກົ່າຍັງຄືເກົ່າ
+  const used = [...new Set(rowOf.values())].sort((a, b) => a - b);
+  const compact = new Map(used.map((r, i) => [r, i]));
+  rowOf.forEach((r, n) => rowOf.set(n, compact.get(r)!));
+  const levelAt = (row: number) => levels.find((l) => used[row] >= base.get(l)! && used[row] < base.get(l)! + height.get(l)!);
+
+  // ລູກທີມແຖວໃກ້ກ່ອນ ແລ້ວແຖວລຸ່ມ — ລູກທີມທີ່ຢູ່ຫ່າງລົງໄປຈະຢູ່ຕິດກັນ ໃຊ້ເສັ້ນລຳດຽວລົງໄປຫາ
+  const kidsOf = new Map(nodes.map((n) => [n, [...n.children].sort((a, b) => rowOf.get(a)! - rowOf.get(b)!)]));
+
+  const widthOf = new Map<OrgNode, number>();
+  const measure = (n: OrgNode): number => {
+    const kids = n.children.reduce((sum, c) => sum + measure(c), 0) + GAP_X * Math.max(0, n.children.length - 1);
+    const w = Math.max(CARD_W, kids);
+    widthOf.set(n, w);
+    return w;
+  };
+  const boxes: Box[] = [];
+  const place = (n: OrgNode, left: number, loose: boolean): Box => {
+    const w = widthOf.get(n)!;
+    let x = left + (w - CARD_W) / 2;
+    if (n.children.length) {
+      const total = n.children.reduce((sum, c) => sum + widthOf.get(c)!, 0) + GAP_X * (n.children.length - 1);
+      let cursor = left + (w - total) / 2;
+      const kids = kidsOf.get(n)!.map((c) => {
+        const box = place(c, cursor, false);
+        cursor += widthOf.get(c)! + GAP_X;
+        return box;
+      });
+      x = (kids[0].x + kids[kids.length - 1].x) / 2;
+    }
+    const box = { node: n, x, y: rowOf.get(n)! * PITCH, row: rowOf.get(n)!, loose };
+    boxes.push(box);
+    return box;
+  };
+  let cursor = GUTTER;
+  for (const root of tree.roots) {
+    measure(root);
+    // ຜູ້ສູງສຸດ (Level 1) ບໍ່ຕ້ອງມີຫົວໜ້າ — ປ້າຍເຕືອນສະເພາະຄົນອື່ນທີ່ຍັງບໍ່ມີ
+    place(root, cursor, root !== tree.main && (root.position?.level ?? 99) > 1);
+    cursor += widthOf.get(root)! + ROOT_GAP;
+  }
+  const rows = boxes.length ? Math.max(...boxes.map((b) => b.row)) + 1 : 0;
+  /** ປ້າຍແຖວ: "2" ຫຼື ແຖວຍ່ອຍ "2.1", "2.2"; null = ມີແຕ່ຕຳແໜ່ງທີ່ຍັງບໍ່ກຳນົດ Level; '' = ບໍ່ມີປ້າຍ */
+  const rowLabels: (string | null)[] = Array.from({ length: rows }, (_, row) => {
+    const level = levelAt(row);
+    if (level) {
+      const same = used.map((_r, i) => i).filter((i) => levelAt(i) === level);
+      return same.length > 1 ? `${level}.${same.indexOf(row) + 1}` : String(level);
+    }
+    return boxes.some((b) => b.row === row && !levelOf(b.node)) ? null : '';
+  });
+  const byNode = new Map(boxes.map((b) => [b.node, b]));
+  // ເສັ້ນ: ລົງຈາກຫົວໜ້າ → ເສັ້ນນອນ → ລົງຫາລູກທີມແຖວຖັດໄປ.
+  // ລູກທີມທີ່ຢູ່ຫ່າງລົງໄປຫຼາຍແຖວ: ເສັ້ນລຳດຽວລົງໄປ → ເສັ້ນນອນເໜືອແຖວຂອງເຂົາ → ລົງຫາແຕ່ລະຄົນ (ບໍ່ແມ່ນເສັ້ນຍາວຂະໜານກັນຫຼາຍເສັ້ນ)
+  const midX = (n: OrgNode) => byNode.get(n)!.x + CARD_W / 2;
+  const lines = boxes.filter((b) => b.node.children.length).map((b) => {
+    const px = b.x + CARD_W / 2;
+    const bus = b.y + CARD_H + GAP_Y / 2;
+    const kids = kidsOf.get(b.node)!;
+    const near = kids.filter((c) => byNode.get(c)!.row === b.row + 1);
+    const far = kids.filter((c) => byNode.get(c)!.row > b.row + 1);
+    const farXs = far.map(midX);
+    const trunk = far.length ? (Math.min(...farXs) + Math.max(...farXs)) / 2 : px;
+    const xs = [px, trunk, ...near.map(midX)];
+    let d = `M${px},${b.y + CARD_H}V${bus}M${Math.min(...xs)},${bus}H${Math.max(...xs)}`;
+    for (const c of near) d += `M${midX(c)},${bus}V${byNode.get(c)!.y}`;
+    if (far.length) {
+      const farBus = Math.min(...far.map((c) => byNode.get(c)!.y)) - GAP_Y / 2;
+      d += `M${trunk},${bus}V${farBus}M${Math.min(...farXs)},${farBus}H${Math.max(...farXs)}`;
+      for (const c of far) d += `M${midX(c)},${farBus}V${byNode.get(c)!.y}`;
+    }
+    return d;
+  });
+  return { boxes, lines, rows, rowLabels, width: Math.max(cursor - ROOT_GAP, GUTTER + CARD_W) + 16, height: Math.max(0, rows * PITCH - GAP_Y) };
 };
 
-/** ມຸມມອງສາຍບັງຄັບບັນຊາ (ຕົ້ນໄມ້ຂອງຄົນ) */
-const TreeView = ({ tree, ctx }: { tree: OrgTree; ctx: Ctx }) => (
-  <>
-    {tree.main && <ul className="org-tree"><Branch node={tree.main} ctx={ctx} /></ul>}
-    <LooseSection tree={tree} ctx={ctx} />
-  </>
-);
+/** ມຸມມອງສາຍບັງຄັບບັນຊາ — ແຖວຕາມ Level (ປ້າຍ Level ທາງຊ້າຍ), ເສັ້ນເຊື່ອມແຕ້ມດ້ວຍ SVG */
+const TreeView = ({ tree, ctx }: { tree: OrgTree; ctx: Ctx }) => {
+  const t = useT();
+  const layout = useMemo(() => layoutByLevel(tree), [tree]);
+  return (
+    <div className="org-level-tree" style={{ width: layout.width, height: layout.height }}>
+      {Array.from({ length: layout.rows }, (_, row) => (
+        <div key={row} className="org-level-band" style={{ top: row * PITCH - GAP_Y / 4, height: CARD_H + GAP_Y / 2 }}>
+          {layout.rowLabels[row] !== '' && (
+            <span className={`org-level-tag${layout.rowLabels[row] ? '' : ' is-unset'}`} title={layout.rowLabels[row] ? undefined : t('hrLevelUnsetHint')}>
+              {layout.rowLabels[row] ? `Level ${layout.rowLabels[row]}` : t('hrLevelUnset')}
+            </span>
+          )}
+        </div>
+      ))}
+      <svg className="org-level-lines" width={layout.width} height={layout.height} aria-hidden="true">
+        {layout.lines.map((d, i) => <path key={i} d={d} />)}
+      </svg>
+      {layout.boxes.map((b) => (
+        <div key={b.node.person._uuid} className="org-level-slot" style={{ left: b.x, top: b.y, width: CARD_W, height: CARD_H }}>
+          <NodeCard node={b.node} ctx={ctx} loose={b.loose} />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /** ຄົນໃນຖັນພະແນກ — ແລ້ວລູກທີມໃນພະແນກດຽວກັນ ລຽງລົງແບບມີເສັ້ນທາງຊ້າຍ */
 const ColumnNode = ({ node, ctx }: { node: OrgNode; ctx: Ctx }) => {
@@ -272,8 +451,11 @@ const OrgChartPage = () => {
   const fit = () => {
     const box = scrollRef.current;
     const width = canvasRef.current?.offsetWidth ?? 0;
+    const height = canvasRef.current?.offsetHeight ?? 0;
     if (!box || !width) return;
-    setZoom(Math.max(ZOOM_MIN, Math.min(1, (box.clientWidth - 32) / width)));
+    // ເຫັນທັງໝົດ (ກວ້າງ ແລະ ສູງ) ແຕ່ບໍ່ນ້ອຍກວ່າ 50% ໃຫ້ຍັງອ່ານຊື່ໄດ້
+    const byHeight = height ? (box.clientHeight - 48) / height : 1;
+    setZoom(Math.max(Math.max(ZOOM_MIN, 0.5), Math.min(1, (box.clientWidth - 32) / width, byHeight)));
   };
   // ຄັ້ງທຳອິດ / ປ່ຽນມຸມມອງ: ຫຍໍ້ໃຫ້ພໍດີຄວາມກວ້າງ (ບໍ່ຂະຫຍາຍເກີນ 100%)
   useEffect(() => {

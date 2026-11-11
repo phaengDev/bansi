@@ -5,9 +5,7 @@ import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
-import type { TaskProject } from './taskApi';
-
-const PALETTE = ['#1580be', '#8b5cf6', '#0e9f6e', '#f08a12', '#e5484d', '#0ea5e9', '#d946ef', '#64748b'];
+import { PROJECT_COLORS as PALETTE, type TaskProject } from './taskApi';
 
 /**
  * ຕັ້ງຄ່າໂປຣເຈັກ / ໝວດວຽກ — ເພີ່ມ, ແກ້ຊື່ / ສີ, ເປີດ-ປິດ, ລຶບ (ມີວຽກໃຊ້ຢູ່ = backend ປິດແທນການລຶບ)

@@ -8,10 +8,29 @@ import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { HrAvatar } from '../hrKit';
 import { docIcon, downloadWithAuth, fileSizeText } from '../hrApi';
-import { DueCell, PriorityChip, TaskStatusPill, TaskStatusSelect } from './TaskBits';
-import { TASK_STATUSES, assigneeName, idOf, type Task, type TaskComment, type TaskLog } from './taskApi';
+import { ActiveTime, DueCell, PersonStatusPill, ProgressBar, QuadrantChip, TaskStatusPill, TaskStatusSelect } from './TaskBits';
+import { PERSON_DONE, PERSON_STATUSES, TASK_STATUSES, assigneeName, idOf, partOf, teamOf, type Task, type TaskComment, type TaskLog } from './taskApi';
 
 const stamp = (value: string) => moment(value).format('DD/MM/YYYY HH:mm');
+
+const sameDay = (a: string, b: string) => moment(a).isSame(b, 'day');
+/** ທຸກລາຍການໃນກຸ່ມຢູ່ມື້ດຽວກັນບໍ */
+const oneDay = (group: TaskLog[]) => group.every((log) => sameDay(log.createdAt, group[0].createdAt));
+const logAuthor = (log: TaskLog) => `${log.author_employee_id ?? ''}|${log.author_name}`;
+
+/**
+ * ໄທມ໌ໄລນ໌ຂອງແຕ່ລະຄົນ ຮວມເປັນກຸ່ມດຽວ (ທຸກມື້, ເຖິງມີຄົນອື່ນຄັ່ນກາງ) — ເບິ່ງງ່າຍວ່າໃຜອັບເດດຫຍັງແດ່.
+ * ຄົນທີ່ເຄື່ອນໄຫວລ່າສຸດຢູ່ເທິງ; ໃນກຸ່ມ ໃໝ່ → ເກົ່າ
+ */
+const groupLogs = (logs: TaskLog[]) => {
+  const groups = new Map<string, TaskLog[]>();
+  for (const log of logs) {
+    const list = groups.get(logAuthor(log));
+    if (list) list.push(log);
+    else groups.set(logAuthor(log), [log]);
+  }
+  return [...groups.values()];
+};
 
 /** ຫົວຂໍ້ຂອງແຕ່ລະ action ໃນໄທມ໌ໄລນ໌ */
 const LOG_LABELS: Record<string, string> = {
@@ -23,6 +42,7 @@ const LOG_LABELS: Record<string, string> = {
   file_del: 'taskLogFileDel',
   archive: 'taskArchive',
   unarchive: 'taskUnarchive',
+  progress: 'taskLogProgress',
 };
 
 /** ຊື່ຊ່ອງທີ່ແກ້ (action update) */
@@ -43,6 +63,8 @@ const TaskTimeline = ({ logs, leadId }: { logs: TaskLog[]; leadId?: number }) =>
   const t = useT();
   const [open, setOpen] = useState(true);
   const detailOf = (log: TaskLog) => {
+    // ອັບເດດຄວາມຄືບໜ້າ (app): status = ສະຖານະສ່ວນຂອງຕົນ, note = %
+    if (log.action === 'progress') return `${t(PERSON_STATUSES[log.status ?? 1]?.label ?? 'taskPersonTodo')} · ${log.note ?? 0}%`;
     if (log.action !== 'update') return log.note;
     const fields = log.fields.map((field) => (field === 'status' && log.status && TASK_STATUSES[log.status]
       ? `${t('status')} (${t(TASK_STATUSES[log.status].label)})`
@@ -57,22 +79,54 @@ const TaskTimeline = ({ logs, leadId }: { logs: TaskLog[]; leadId?: number }) =>
       </div>
       {open && (
         <ol className="task-timeline">
-          {logs.map((log, index) => {
-            const detail = detailOf(log);
+          {groupLogs(logs).map((group, index) => {
+            const [log] = group;
+            const avatar = (
+              <span className="task-avatar">
+                {log.author_employee_id !== null && log.author_employee_id === leadId && <i className="fa-solid fa-crown" />}
+                <HrAvatar url={log.author_photo} name={log.author_name} />
+              </span>
+            );
             return (
               <li key={`${log._uuid}-${log.createdAt}`} className={index === 0 ? 'is-latest' : ''}>
-                <div className="task-timeline-card">
-                  <span className="task-avatar">
-                    {log.author_employee_id !== null && log.author_employee_id === leadId && <i className="fa-solid fa-crown" />}
-                    <HrAvatar url={log.author_photo} name={log.author_name} />
-                  </span>
-                  <span className="task-timeline-body">
-                    <em>{t(LOG_LABELS[log.action] ?? log.action)}</em>
-                    <b>{log.author_name}</b>
-                    {detail && <small>{detail}</small>}
-                  </span>
-                  <time>{stamp(log.createdAt)}</time>
-                </div>
+                {group.length === 1 ? (
+                  <div className="task-timeline-card">
+                    {avatar}
+                    <span className="task-timeline-body">
+                      <em>{t(LOG_LABELS[log.action] ?? log.action)}</em>
+                      <b>{log.author_name}</b>
+                      {detailOf(log) && <small>{detailOf(log)}</small>}
+                    </span>
+                    <time>{stamp(log.createdAt)}</time>
+                  </div>
+                ) : (
+                  // ຄົນດຽວກັນເຮັດຫຼາຍຢ່າງ — ຊື່ເທື່ອດຽວ ແລ້ວລາຍການສິ່ງທີ່ເຮັດ. ທຸກອັນມື້ດຽວກັນ = ວັນທີຢູ່ຫົວບັດ, ແຕ່ລະແຖວມີແຕ່ເວລາ;
+                  // ຫຼາຍມື້ = ຫົວບັດເປັນຊ່ວງວັນທີ, ທຸກແຖວມີວັນທີ + ເວລາ
+                  <div className="task-timeline-card is-group">
+                    {avatar}
+                    <span className="task-timeline-body">
+                      <span className="task-timeline-who">
+                        <b>{log.author_name}</b>
+                        <span className="task-timeline-count">{group.length} {t('taskLogTimes')}</span>
+                        <time>{oneDay(group) ? moment(log.createdAt).format('DD/MM/YYYY') : `${moment(group[group.length - 1].createdAt).format('DD/MM/YYYY')} – ${moment(log.createdAt).format('DD/MM/YYYY')}`}</time>
+                      </span>
+                      <ul className="task-timeline-steps">
+                        {group.map((step) => {
+                          const detail = detailOf(step);
+                          return (
+                            <li key={`${step._uuid}-${step.createdAt}`}>
+                              <span>
+                                <em>{t(LOG_LABELS[step.action] ?? step.action)}</em>
+                                {detail && <small>{detail}</small>}
+                              </span>
+                              <time>{moment(step.createdAt).format(oneDay(group) ? 'HH:mm' : 'DD/MM/YYYY HH:mm')}</time>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </span>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -99,6 +153,8 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
   const [task, setTask] = useState(initial);
   const [comments, setComments] = useState<TaskComment[] | null>(null);
   const [draft, setDraft] = useState('');
+  /** ຄົນທີ່ເລືອກແຈ້ງເຖິງ (ເຊັ່ນ ເລັ່ງວຽກບາງຄົນ) — ຫວ່າງ = ແຈ້ງທຸກຄົນ */
+  const [to, setTo] = useState<Set<number>>(new Set());
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState(false);
   const threadRef = useRef<HTMLDivElement | null>(null);
@@ -108,6 +164,9 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
   });
   const archived = Number(task.archived) === 1;
   const editable = canEdit && !archived;
+  const team = teamOf(task);
+  /** ຄົນທີ່ສ່ວນຂອງຕົນຍັງບໍ່ສຳເລັດ — ທາງລັດເລືອກແຈ້ງເຖິງ (ເລັ່ງວຽກ) */
+  const behind = task.assignees.filter((a) => partOf(task, a).status !== PERSON_DONE).map((a) => a.employee_id);
 
   useEffect(() => {
     let alive = true;
@@ -167,9 +226,10 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
     if (!body || sending) return;
     try {
       setSending(true);
-      const res = await postApi(`/task/comment/${idOf(task)}`, { body });
+      const res = await postApi(`/task/comment/${idOf(task)}`, { body, to: [...to] });
       setComments(res.data.data);
       setDraft('');
+      setTo(new Set());
       onChanged();
     } catch (error) {
       Notific.error(getErrorMessage(error));
@@ -219,7 +279,7 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
               {editable
                 ? <TaskStatusSelect status={task.status} disabled={busy} onChange={(status) => update(`/task/status/${idOf(task)}`, { status })} />
                 : <TaskStatusPill status={task.status} />}
-              <PriorityChip priority={task.priority} />
+              <QuadrantChip task={task} />
               {task.overdue && <span className="acs-chip task-prio is-urgent"><i className="fa-solid fa-circle-exclamation" /> {t('taskOverdue')}</span>}
             </div>
 
@@ -230,16 +290,34 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
             <h6 className="task-detail-head"><i className="fa-solid fa-align-left" /> {t('taskDetail')}</h6>
             {task.detail ? <p className="task-detail-text">{task.detail}</p> : <p className="acc-arap-empty">{t('taskNoDetail')}</p>}
 
-            <h6 className="task-detail-head"><i className="fa-solid fa-user-group" /> {t('taskAssignees')} <em>{task.assignees.length}</em></h6>
-            <div className="task-people">
-              {task.assignees.map((a) => (
-                <span key={a.employee_id} className={`task-person is-readonly${a.is_lead ? ' is-lead' : ''}`} title={a.is_lead ? t('taskLead') : undefined}>
-                  <HrAvatar url={a.profile_url} name={a.first_name} size="sm" />
-                  <b>{assigneeName(a)}</b>
-                  {a.is_lead && <i className="fa-solid fa-crown task-person-crown" />}
-                </span>
-              ))}
-            </div>
+            <h6 className="task-detail-head">
+              <i className="fa-solid fa-user-group" /> {t('taskAssignees')} <em>{task.assignees.length}</em>
+              <span className="task-team-sum">
+                <i className="fa-solid fa-user-check" /> {t('taskPersonDone')} {team.done}/{team.total}
+                <ProgressBar value={team.progress} compact />
+              </span>
+            </h6>
+            {/* ຄວາມຄືບໜ້າສ່ວນຂອງແຕ່ລະຄົນ — ພະນັກງານອັບເດດເອງໃນ app */}
+            <ul className="task-progress-list">
+              {task.assignees.map((a) => {
+                const part = partOf(task, a);
+                return (
+                  <li key={a.employee_id} className={Number(a.work_status) === 2 ? 'is-resigned' : ''}>
+                    <span className="task-avatar" title={a.is_lead ? t('taskLead') : undefined}>
+                      {a.is_lead && <i className="fa-solid fa-crown" />}
+                      <HrAvatar url={a.profile_url} name={a.first_name} size="sm" />
+                    </span>
+                    <span className="task-progress-who">
+                      <b>{assigneeName(a)}</b>
+                      <small>{t('taskLastUpdate')} <ActiveTime value={a.active_at} /></small>
+                    </span>
+                    <PersonStatusPill status={part.status} reported={part.reported} />
+                    <ProgressBar value={part.progress} />
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="task-progress-hint"><i className="fa-solid fa-mobile-screen-button" /> {t('taskProgressHint')}</p>
 
             {!!task.items?.length && (
               <>
@@ -293,24 +371,32 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
                 <div className="text-center py-4"><Loader size="sm" /></div>
               ) : !comments.length ? (
                 <p className="task-comment-empty"><i className="fa-regular fa-comment-dots" /> {t('taskCommentEmpty')}</p>
-              ) : comments.map((c) => (
-                <div key={c._uuid} className={`task-comment${c.mine ? ' is-mine' : ''}`}>
-                  <HrAvatar url={c.author_photo} name={c.author_name} size="sm" />
-                  <div className="task-comment-bubble">
-                    <header>
-                      <b>{c.author_name}</b>
-                      {c.from_app && <span className="task-comment-app"><i className="fa-solid fa-mobile-screen" /> {t('taskCommentFromApp')}</span>}
-                      <small>{stamp(c.createdAt)}</small>
-                      {(c.mine || canDelete) && (
-                        <button type="button" className="task-comment-x" title={t('delete')} aria-label={t('delete')} onClick={() => removeComment(c)}>
-                          <i className="fa-solid fa-trash" />
-                        </button>
-                      )}
-                    </header>
-                    <p>{c.body}</p>
+              ) : comments.map((c, index) => {
+                // ຄອມເມັນຕິດກັນຂອງຄົນດຽວກັນ (ເຖິງຕ່າງມື້) — ຮູບ ແລະ ຊື່ເທື່ອດຽວ; ຄອມເມັນຍັງລຽງຕາມເວລາ ໃຫ້ອ່ານເປັນການສົນທະນາ
+                const prev = comments[index - 1];
+                const cont = !!prev && prev.author_name === c.author_name && prev.from_app === c.from_app && prev.mine === c.mine;
+                return (
+                  <div key={c._uuid} className={`task-comment${c.mine ? ' is-mine' : ''}${cont ? ' is-cont' : ''}`}>
+                    {cont ? <span className="task-comment-gap" /> : <HrAvatar url={c.author_photo} name={c.author_name} size="sm" />}
+                    <div className="task-comment-bubble">
+                      <header>
+                        {!cont && <b>{c.author_name}</b>}
+                        {!cont && c.from_app && <span className="task-comment-app"><i className="fa-solid fa-mobile-screen" /> {t('taskCommentFromApp')}</span>}
+                        <small>{cont && sameDay(prev.createdAt, c.createdAt) ? moment(c.createdAt).format('HH:mm') : stamp(c.createdAt)}</small>
+                        {!!c.to?.length && (
+                          <span className="task-comment-to-tag" title={t('taskCommentTo')}><i className="fa-solid fa-at" /> {c.to.map((p) => p.name).join(', ')}</span>
+                        )}
+                        {(c.mine || canDelete) && (
+                          <button type="button" className="task-comment-x" title={t('delete')} aria-label={t('delete')} onClick={() => removeComment(c)}>
+                            <i className="fa-solid fa-trash" />
+                          </button>
+                        )}
+                      </header>
+                      <p>{c.body}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {archived ? (
               <div className="task-comment-archived">
@@ -322,12 +408,38 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
                 )}
               </div>
             ) : (
-              <div className="task-comment-box">
-                <Input as="textarea" rows={2} value={draft} onChange={setDraft} onKeyDown={onDraftKey} maxLength={2000} placeholder={t('taskCommentPlaceholder')} aria-label={t('taskComments')} />
-                <button type="button" className="task-comment-send" disabled={!draft.trim() || sending} title={t('taskCommentSend')} aria-label={t('taskCommentSend')} onClick={send}>
-                  {sending ? <Loader size="xs" /> : <i className="fa-solid fa-paper-plane" />}
-                </button>
-              </div>
+              <>
+                {task.assignees.length > 1 && (
+                  // ແຈ້ງເຖິງ: ທຸກຄົນ (ຄ່າເລີ່ມຕົ້ນ) ຫຼື ເລືອກບາງຄົນ — ທາງລັດ "ຄົນທີ່ຍັງບໍ່ສຳເລັດ" ໄວ້ເລັ່ງວຽກ
+                  <div className="task-comment-to" role="group" aria-label={t('taskCommentTo')}>
+                    <span className="task-comment-to-label" title={t('taskCommentToHint')}><i className="fa-solid fa-bell" /> {t('taskCommentTo')}</span>
+                    <button type="button" className={to.size ? '' : 'is-on'} aria-pressed={!to.size} onClick={() => setTo(new Set())}>{t('taskCommentToAll')}</button>
+                    {task.assignees.map((a) => (
+                      <button key={a.employee_id} type="button" className={`has-avatar${to.has(a.employee_id) ? ' is-on' : ''}`} aria-pressed={to.has(a.employee_id)}
+                        onClick={() => setTo((s) => {
+                          const next = new Set(s);
+                          if (next.has(a.employee_id)) next.delete(a.employee_id);
+                          else next.add(a.employee_id);
+                          return next;
+                        })}
+                      >
+                        <HrAvatar url={a.profile_url} name={a.first_name} size="sm" /> {a.first_name}
+                      </button>
+                    ))}
+                    {behind.length > 0 && behind.length < task.assignees.length && (
+                      <button type="button" className="task-comment-to-quick" onClick={() => setTo(new Set(behind))}>
+                        <i className="fa-solid fa-bolt" /> {t('taskCommentToBehind')} ({behind.length})
+                      </button>
+                    )}
+                  </div>
+                )}
+                <div className="task-comment-box">
+                  <Input as="textarea" rows={2} value={draft} onChange={setDraft} onKeyDown={onDraftKey} maxLength={2000} placeholder={t('taskCommentPlaceholder')} aria-label={t('taskComments')} />
+                  <button type="button" className="task-comment-send" disabled={!draft.trim() || sending} title={t('taskCommentSend')} aria-label={t('taskCommentSend')} onClick={send}>
+                    {sending ? <Loader size="xs" /> : <i className="fa-solid fa-paper-plane" />}
+                  </button>
+                </div>
+              </>
             )}
           </aside>
         </div>

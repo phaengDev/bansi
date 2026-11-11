@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
 import { PAYROLL_MENU, firstRailKey, toRailNav } from '../../account/config/SidebarPopup';
+import { useHrPending } from '../hrPending';
 import PayrollList from './PayrollList';
 import PayrollDetail from './PayrollDetail';
 import PayrollSettingPage from './PayrollSettingPage';
@@ -15,7 +16,12 @@ const PayrollWindow = () => {
   const [activeKey, setActiveKey] = useState(firstRailKey(PAYROLL_MENU));
   const [openId, setOpenId] = useState<number | null>(null);
   const [listVersion, setListVersion] = useState(0);
-  const railNav = useMemo(() => toRailNav(PAYROLL_MENU, t), [t]);
+  const pending = useHrPending();
+  // ຕົວເລກສີແດງ = ເບີກເງິນທີ່ລໍຖ້າອະນຸມັດ + ອະນຸມັດແລ້ວລໍຖ້າຈ່າຍ
+  const railNav = useMemo(() => toRailNav(PAYROLL_MENU, t).map((item) => ({
+    ...item,
+    badge: item.key === 'advances' && pending ? pending.advance + pending.advance_to_pay : undefined,
+  })), [t, pending]);
   const active = railNav.find((item) => item.key === activeKey);
   const title = t('accountAppPayroll');
 

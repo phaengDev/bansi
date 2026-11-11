@@ -11,8 +11,8 @@ import { useEmployees, useUserTypes, type EmployeeOption } from '../../utils/sel
 import { ChoiceTiles, FormSection, ListState, PickerField, SettingModal, SettingToolbar } from '../account/setting/settingKit';
 import { runSave, saveSetting, useStatusToggle } from '../account/setting/settingApi';
 import {
-  ALLOW, DEFAULT_USER_LEVEL, DENY, PERMISSIONS, fullName, selfId, useHrList, userLevelIcon,
-  type PermissionKey, type User, type UserType,
+  ALLOW, APP_APPROVALS, DEFAULT_USER_LEVEL, DENY, PERMISSIONS, fullName, selfId, useHrList, userLevelIcon,
+  type ApprovalKey, type PermissionKey, type User, type UserType,
 } from './hrApi';
 import { HrAvatar } from './hrKit';
 
@@ -52,6 +52,10 @@ const UserForm = ({ data, types, onClose, onSaved }: {
     updates: data ? Number(data.updates) === ALLOW : true,
     deletes: data ? Number(data.deletes) === ALLOW : false,
   });
+  /** ສິດອະນຸມັດຜ່ານ app — ຕິກໄດ້ເມື່ອຜູກພະນັກງານແລ້ວ */
+  const [approvals, setApprovals] = useState<Record<ApprovalKey, boolean>>(
+    Object.fromEntries(APP_APPROVALS.map((a) => [a.key, Number(data?.[a.key]) === 1])) as Record<ApprovalKey, boolean>,
+  );
   const [inputs, setInputs] = useState<any>({
     user_name: data?.user_name ?? '',
     phones: data?.phones ?? '',
@@ -108,6 +112,8 @@ const UserForm = ({ data, types, onClose, onSaved }: {
       employee_id: inputs.employee_id || null,
       type_user: type,
       ...Object.fromEntries(PERMISSIONS.map((p) => [p.key, perms[p.key] ? ALLOW : DENY])),
+      // ບໍ່ຜູກພະນັກງານ = ອະນຸມັດໃນ app ບໍ່ໄດ້ (backend ລ້າງໃຫ້ຄືກັນ)
+      ...Object.fromEntries(APP_APPROVALS.map((a) => [a.key, inputs.employee_id && approvals[a.key] ? 1 : 0])),
       ...(data ? {} : { password: inputs.password, status: 1 }),
     };
     if (await runSave(() => saveSetting('/user', data?.user_uuid, payload), setSaving)) {
@@ -163,6 +169,26 @@ const UserForm = ({ data, types, onClose, onSaved }: {
               );
             })}
           </div>
+        </FormSection>
+        {/* ຈັດການຜ່ານແອັບ: ຜູ້ໄດ້ສິດຮັບແຈ້ງເຕືອນຄຳຂໍໃໝ່ ແລະ ອະນຸມັດໃນແອັບ (ເມນູເຫັນສະເພາະຄົນທີ່ໄດ້ສິດ) */}
+        <FormSection title={t('hrAppApprovals')}>
+          <div className={`is-wide hr-perms hr-app-perms${inputs.employee_id ? '' : ' is-locked'}`} role="group" aria-label={t('hrAppApprovals')}>
+            {APP_APPROVALS.map((a) => {
+              const on = !!inputs.employee_id && approvals[a.key];
+              return (
+                <Checkbox key={a.key} checked={on} disabled={!inputs.employee_id}
+                  className={`hr-perm${on ? ' is-on' : ''}`}
+                  onChange={(_, checked) => setApprovals({ ...approvals, [a.key]: checked })}
+                >
+                  <i className={`fa-solid ${a.icon}`} /> {t(a.label)}
+                </Checkbox>
+              );
+            })}
+          </div>
+          <p className={`is-wide hr-app-hint${inputs.employee_id ? '' : ' is-warn'}`}>
+            <i className={`fa-solid ${inputs.employee_id ? 'fa-mobile-screen-button' : 'fa-link-slash'}`} />
+            {t(inputs.employee_id ? 'hrAppApprovalsHint' : 'hrAppApprovalsNeedEmployee')}
+          </p>
         </FormSection>
       </Form>
     </SettingModal>
@@ -282,6 +308,15 @@ const UserCard = ({ user, isSelf, toggling, onToggle, onEdit, onPassword, onDele
           );
         })}
       </div>
+
+      {/* ສິດອະນຸມັດຜ່ານແອັບ (ສະເພາະທີ່ໄດ້) */}
+      {!!employee && APP_APPROVALS.some((a) => Number(user[a.key]) === 1) && (
+        <p className="hr-user-app" title={t('hrAppApprovalsHint')}>
+          <i className="fa-solid fa-mobile-screen-button" />
+          <span>{t('hrAppApprovals')}:</span>
+          <b>{APP_APPROVALS.filter((a) => Number(user[a.key]) === 1).map((a) => t(a.label)).join(' · ')}</b>
+        </p>
+      )}
 
       <div className="hr-user-actions">
         <button type="button" disabled={!canEdit} onClick={onEdit}><i className="fa-solid fa-pen" /> {t('edit')}</button>

@@ -7,6 +7,7 @@
 
   &.is-doing { --task-ink: #a8620a; --task-soft: #fff1d6; }
   &.is-done { --task-ink: #0e7a52; --task-soft: #e3f7ee; }
+  &.is-silent { --task-ink: #7a8b99; --task-soft: #f1f5f8; }
 }
 
 .task-tone { color: var(--task-ink); }
@@ -130,9 +131,19 @@
   &.is-on, &:hover { color: #f5b301; }
 }
 
-// ປ້າຍຄວາມສຳຄັນ (acs-chip)
+// ສີ 4 ຊ່ອງຂອງຕາຕະລາງບໍລິຫານເວລາ — ຄືກັບ app
+.task-prio, .task-quadrant {
+  &.is-q1 { --q-ink: #dc2626; --q-soft: #fee2e2; }
+  &.is-q2 { --q-ink: #0e7a52; --q-soft: #e3f7ee; }
+  &.is-q3 { --q-ink: #b67503; --q-soft: #fdf3d4; }
+  &.is-q4 { --q-ink: #64748b; --q-soft: #f1f5f9; }
+}
+
+// ປ້າຍຄວາມສຳຄັນ / ເກີນກຳນົດ (acs-chip)
 .task-prio {
-  &.is-high { color: #9a5b00; background: #fff4dc; }
+  color: var(--q-ink, #64748b);
+  background: var(--q-soft, #f1f5f9);
+
   &.is-urgent { color: #c4343a; background: #ffeceb; }
 }
 
@@ -173,6 +184,28 @@
 
 .task-project-opt { display: inline-flex; align-items: center; gap: 8px; }
 .task-project-opt i { width: 10px; height: 10px; border-radius: 50%; }
+
+// ສີຂອງໂປຣເຈັກ (ປັອບອັບເພີ່ມໂປຣເຈັກຈາກຟອມວຽກ)
+.task-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    transition: transform 0.12s;
+
+    &:hover { transform: scale(1.08); }
+    &.is-active { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #1d2b36; }
+  }
+}
 
 .task-avatars { display: inline-flex; align-items: center; padding: 8px 0 0 8px; }
 
@@ -326,7 +359,10 @@
   flex-wrap: wrap;
   gap: 6px;
 
+  // --c = ສີຂອງປຸ່ມ; ປຸ່ມທີ່ເລືອກ = ພື້ນສີເຕັມ ໂຕໜັງສືຂາວ ມີເງົາ (ເຫັນຊັດວ່າເລືອກອັນໃດ)
   button {
+    --c: #0b8fd6;
+
     display: inline-flex;
     height: 36px;
     align-items: center;
@@ -338,15 +374,77 @@
     border-radius: 10px;
     font-size: 13px;
     font-weight: 700;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 
-    &.is-active { color: #0b8fd6; background: #eaf5fc; border-color: #0b8fd6; }
-    &.is-active.is-high { color: #c26a04; background: #fff3e2; border-color: #f08a12; }
-    &.is-active.is-urgent { color: #c4343a; background: #fde8e9; border-color: #e5484d; }
-    &.is-active.is-doing { color: #b67503; background: #fdf3d4; border-color: #d98a04; }
-    &.is-active.is-done { color: #0b7f58; background: #dcf7e9; border-color: #0e9f6e; }
-    &.is-high i { color: #f08a12; }
-    &.is-urgent i { color: #e5484d; }
+    &.is-imp { --c: #7c3aed; }
+    &.is-urg { --c: #e5484d; }
+    &.is-off { --c: #64748b; }
+    &.is-doing { --c: #d98a04; }
+    &.is-done { --c: #0e9f6e; }
+    &.is-imp i, &.is-urg i { color: var(--c); }
+
+    &:hover:not(.is-active) { color: var(--c); border-color: var(--c); }
+    &:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+
+    &.is-active {
+      color: #fff;
+      background: var(--c);
+      border-color: var(--c);
+      box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--c) 60%, transparent);
+
+      i { color: #fff; }
+    }
   }
+}
+
+// ຄວາມສຳຄັນ: 2 ກຸ່ມປຸ່ມ + ແຖບບອກຊ່ອງ ແລະ ສິ່ງທີ່ຄວນເຮັດ
+.task-quadrant-pick { display: flex; flex-direction: column; gap: 8px; }
+.task-quadrant-rows { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+
+.task-quadrant {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px 5px 10px;
+  color: var(--q-ink, #7a8b99);
+  background: var(--q-soft, #f4f7fa);
+  border-radius: 10px;
+
+  button {
+    margin-left: auto;
+    padding: 4px 10px;
+    color: #64748b;
+    background: none;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    &:hover { background: rgb(255 255 255 / 70%); }
+  }
+}
+
+.task-quadrant-mark {
+  display: inline-flex;
+  min-width: 26px;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  color: #fff;
+  background: var(--q-ink);
+  border-radius: 8px;
+  font-size: 11.5px;
+}
+
+.task-quadrant-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+
+  strong { font-size: 13px; }
+  small { color: #64748b; font-size: 12px; }
 }
 
 .task-people { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -614,6 +712,10 @@
   align-items: flex-start;
   gap: 8px;
 
+  // ຄອມເມັນຕໍ່ເນື່ອງຂອງຄົນເກົ່າ — ຕິດກັບອັນກ່ອນ, ບ່ອນຮູບວ່າງໄວ້ (ກວ້າງເທົ່າຮູບ)
+  &.is-cont { margin-top: -6px; }
+  .task-comment-gap { width: 24px; flex: none; }
+
   &.is-mine { flex-direction: row-reverse; }
   &.is-mine .task-comment-bubble { background: #e6f2fb; border-color: #cfe5f5; }
 }
@@ -652,6 +754,54 @@
 
   .acc-bg-note { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 6px; margin: 0; }
   .acc-bg-note i { flex: none; margin-top: 3px; }
+}
+
+// ແຈ້ງເຖິງ: ທຸກຄົນ / ເລືອກບາງຄົນ (ເໜືອກ່ອງພິມຄອມເມັນ)
+.task-comment-to {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+
+  button {
+    display: inline-flex;
+    height: 28px;
+    align-items: center;
+    gap: 5px;
+    padding: 0 11px;
+    color: #4a5f71;
+    background: #fff;
+    border: 1px solid #d5dee6;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.has-avatar { padding-left: 3px; }
+    .hr-avatar { width: 20px; height: 20px; }
+    &:hover:not(.is-on) { color: #1d7fc4; border-color: #1d8fd6; }
+    &.is-on { color: #fff; background: #1d8fd6; border-color: #1d8fd6; }
+  }
+
+  .task-comment-to-quick { color: #a8620a; border-style: dashed; border-color: #e3b25c; }
+  .task-comment-to-quick:hover:not(.is-on) { color: #a8620a; background: #fff8ea; border-color: #d98a04; }
+}
+
+.task-comment-to-label {
+  color: #6b7f90;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+
+  i { margin-right: 3px; color: #f08a12; font-size: 11px; }
+}
+
+.task-comment-to-tag {
+  color: #1d7fc4;
+  font-size: 11px;
+  font-weight: 700;
+
+  i { font-size: 9.5px; }
 }
 
 .task-comment-box {
@@ -768,6 +918,52 @@
   small { color: #6b7f90; font-size: 12px; overflow-wrap: anywhere; }
 }
 
+// ຄົນດຽວກັນເຮັດຫຼາຍຢ່າງຕິດກັນ: ຊື່ເທື່ອດຽວ + ລາຍການສິ່ງທີ່ເຮັດ
+.task-timeline-card.is-group { align-items: flex-start; }
+
+.task-timeline-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+
+  // ວັນທີ / ຊ່ວງວັນທີຢູ່ແຖວຊື່ — ໃຫ້ເວລາຂອງແຕ່ລະແຖວລຽງຊື່ກັນທາງຂວາ
+  time { margin-left: auto; }
+}
+
+.task-timeline-count {
+  padding: 0 8px;
+  color: #1d7fc4;
+  background: #e6f2fb;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.task-timeline .task-timeline-steps {
+  display: flex;
+  flex-direction: column;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 0 5px 12px;
+    border-left: 2px solid #dbe6ef;
+
+    &::before, &::after { display: none; }
+
+    > span { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+  }
+
+  li + li { border-top: 1px dashed #e6ecf1; }
+}
+
+.task-timeline li.is-latest .task-timeline-steps li { border-left-color: #b6d8f0; }
+
 // ---- ຕັ້ງຄ່າໂປຣເຈັກ ----
 .task-project-add {
   display: flex;
@@ -822,4 +1018,190 @@
 @media (max-width: 767.98px) {
   .task-tools { width: 100%; }
   .task-foot { flex-wrap: wrap; }
+}
+
+// ---- ຄວາມຄືບໜ້າຂອງແຕ່ລະຄົນ (ພະນັກງານອັບເດດສ່ວນຂອງຕົນໃນ app) ----
+.task-bar {
+  display: inline-flex;
+  min-width: 130px;
+  align-items: center;
+  gap: 8px;
+
+  .task-bar-track {
+    position: relative;
+    height: 8px;
+    min-width: 70px;
+    flex: 1;
+    overflow: hidden;
+    background: #e8eef3;
+    border-radius: 4px;
+
+    i { position: absolute; inset: 0 auto 0 0; background: #1d8fd6; border-radius: 4px; transition: width 0.3s; }
+  }
+
+  b { min-width: 36px; color: #3d5266; font-size: 12px; text-align: right; }
+
+  &.is-full {
+    .task-bar-track i { background: #0e9f6e; }
+    b { color: #0e7a52; }
+  }
+
+  &.is-compact {
+    min-width: 0;
+    gap: 6px;
+
+    .task-bar-track { width: 56px; min-width: 56px; height: 6px; flex: none; }
+    b { min-width: 0; font-size: 11px; }
+  }
+}
+
+.task-active { color: #3d5266; white-space: nowrap; }
+
+// ຕາຕະລາງ: ຮູບຜູ້ຮັບຜິດຊອບ + ແຖບ % ຂອງທີມ
+.task-who { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+
+.task-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  em { color: #5b6f80; font-size: 11px; font-style: normal; white-space: nowrap; }
+  em i { font-size: 10px; }
+}
+
+// ລາຍລະອຽດວຽກ: ແຖວຂອງແຕ່ລະຄົນ
+.task-detail-head .task-team-sum {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: #5b6f80;
+  font-size: 12px;
+  font-weight: 600;
+
+  > i { color: #0e9f6e; font-size: 11px; }
+}
+
+.task-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto 170px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 8px 14px;
+    background: #f8fafc;
+    border: 1px solid #e8eef3;
+    border-radius: 12px;
+
+    &.is-resigned { opacity: 0.6; }
+  }
+
+  .task-avatar { margin-left: 0; }
+}
+
+.task-progress-who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+
+  b { overflow: hidden; color: #1d2b36; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  small { display: flex; gap: 4px; color: #7a8b99; font-size: 11.5px; }
+  small .task-active { color: inherit; }
+}
+
+.task-progress-hint {
+  margin: 6px 0 0;
+  color: #7a8b99;
+  font-size: 11.5px;
+
+  i { margin-right: 4px; }
+}
+
+// ---- ມຸມມອງ "ຕາມຄົນ" ----
+// ປຸ່ມມີຂໍ້ຄວາມ — ກວ້າງຕາມຂໍ້ຄວາມ (ປຸ່ມອື່ນໃນ .task-tools ເປັນໄອຄອນສີ່ຫຼ່ຽມ)
+.task-tools .acc-rp-btn.task-view-btn {
+  width: auto;
+  gap: 7px;
+  padding: 0 13px;
+  white-space: nowrap;
+
+  span { font-size: 13px; font-weight: 700; }
+}
+
+.task-people-table {
+  .task-num { text-align: center; white-space: nowrap; }
+  .task-tone-doing { color: #a8620a; }
+  .task-tone-done { color: #0e7a52; }
+
+  .task-late-count {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    color: #fff;
+    background: #e5484d;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .task-people-caret { width: 36px; color: #7a8b99; text-align: center; }
+
+  .task-people-sub > td { padding: 4px 14px 14px 58px; background: #f8fafc; }
+}
+
+.task-person-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  .task-avatar { margin-left: 0; }
+
+  > span { display: flex; flex-direction: column; }
+  b { color: #1d2b36; }
+  small { color: #7a8b99; font-size: 11.5px; }
+}
+
+.task-people-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px 170px 130px 110px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #e6ecf1;
+    border-radius: 10px;
+    cursor: pointer;
+
+    &:hover { background: #f5faff; border-color: #b9d4ea; }
+    &:focus-visible { outline: 2px solid #1d8fd6; outline-offset: 1px; }
+    &.is-closed { opacity: 0.75; }
+  }
+}
+
+.task-people-title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+
+  b { overflow: hidden; color: #1d2b36; text-overflow: ellipsis; white-space: nowrap; }
+  .task-project { font-size: 11.5px; }
 }

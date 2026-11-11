@@ -598,30 +598,73 @@ $org-tones: (#604bd8, #0b8a6a, #1d7fc4, #d9822b, #c9424a, #0f9fb5, #b7791f, #3f5
   small { overflow: hidden; color: #6b7f90; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 }
 
-// ---- ກຸ່ມທີ່ຍັງບໍ່ຕໍ່ເຂົ້າຕົ້ນຫຼັກ ----
-.org-loose {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px 18px;
-  background: rgba(255, 244, 220, 0.5);
-  border: 1.5px dashed #f0c96b;
-  border-radius: 16px;
+// ---- ມຸມມອງສາຍບັງຄັບບັນຊາ: ແຖວຕາມ Level (ຕຳແໜ່ງ absolute ຈາກ layoutByLevel) ----
+.org-level-tree { position: relative; }
 
-  > header {
-    color: #8a4b04;
-    font-size: 12.5px;
-    font-weight: 700;
+.org-level-band {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-radius: 14px;
 
-    em { margin-left: 4px; padding: 0 7px; background: #fff; border-radius: 10px; font-style: normal; }
+  &:nth-child(odd) { background: rgba(96, 75, 216, 0.035); }
+}
+
+.org-level-tag {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  padding: 3px 10px;
+  color: #604bd8;
+  background: #fff;
+  border: 1px solid #e4ddff;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  transform: translateY(-50%);
+
+  &.is-unset { max-width: 80px; color: #8a4b04; background: #fff4dc; border-color: #f5d79b; font-size: 10px; line-height: 1.3; white-space: normal; }
+}
+
+.org-level-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+
+  path { fill: none; stroke: var(--org-line); stroke-width: 2; stroke-linejoin: round; }
+}
+
+.org-level-slot {
+  position: absolute;
+
+  > .org-card { width: 100%; height: 100%; justify-content: center; }
+  .org-card-name,
+  .org-card-title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 }
 
-.org-loose-list {
-  display: flex;
-  align-items: flex-start;
-  gap: 28px;
+// ຍັງບໍ່ມີຫົວໜ້າສາຍງານ — ຢູ່ແຖວ Level ຂອງຕົນ ແຕ່ຂອບປະສີເຫຼືອງ
+.org-card.is-loose { border: 1.5px dashed #e6b54a; border-top: 3px solid #e6b54a; }
+
+.org-card-loose {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  padding: 1px 8px;
+  color: #8a4b04;
+  background: #fff4dc;
+  border: 1px solid #f5d79b;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 // ---- ມຸມມອງຕາມຝ່າຍ ----

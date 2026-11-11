@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
+import { useT } from '../../../context/LanguageContext';
 
 /**
  * ມອບໝາຍວຽກ — api-bansi: /task/*. ມອບໝາຍ = ຜູ້ຮັບຜິດຊອບໄດ້ຮັບແຈ້ງເຕືອນເດັ້ງຂຶ້ນຈໍມືຖື, ອັບເດດສະຖານະ / ລາຍການຍ່ອຍໃນ app
@@ -17,12 +18,63 @@ export const TASK_STATUSES: Record<number, { label: string; tone: string; icon: 
   [TASK_DONE]: { label: 'taskDone', tone: 'is-done', icon: 'fa-solid fa-circle-check' },
 };
 
-/** ຄວາມສຳຄັນ — 1 ປົກກະຕິ (ບໍ່ສະແດງປ້າຍໃນຕາຕະລາງ), 2 ສຳຄັນ (ສີສົ້ມ), 3 ດ່ວນ (ສີແດງ) */
-export const TASK_PRIORITIES: Record<number, { label: string; tone: string; icon: string }> = {
-  1: { label: 'taskPriorityNormal', tone: 'is-normal', icon: 'fa-regular fa-flag' },
-  2: { label: 'taskPriorityHigh', tone: 'is-high', icon: 'fa-solid fa-flag' },
-  3: { label: 'taskPriorityUrgent', tone: 'is-urgent', icon: 'fa-solid fa-bolt' },
+/** ຄວາມຄືບໜ້າສ່ວນຂອງແຕ່ລະຄົນ — ພະນັກງານອັບເດດເອງໃນ app (ບໍ່ປ່ຽນສະຖານະຂອງວຽກ) */
+export const PERSON_TODO = 1;
+export const PERSON_DONE = 3;
+export const PERSON_STATUSES: Record<number, { label: string; tone: string; icon: string }> = {
+  1: { label: 'taskPersonTodo', tone: 'is-pending', icon: 'fa-regular fa-circle' },
+  2: { label: 'taskPersonDoing', tone: 'is-doing', icon: 'fa-solid fa-circle-half-stroke' },
+  3: { label: 'taskPersonDone', tone: 'is-done', icon: 'fa-solid fa-circle-check' },
 };
+
+/**
+ * ສ່ວນຂອງຄົນໜຶ່ງໃນວຽກໜຶ່ງ ທີ່ໃຊ້ສະແດງ / ນັບ: ວຽກປິດແລ້ວ (ສຳເລັດ) = ສຳເລັດ 100 %; ນອກນັ້ນ = ຕາມທີ່ຄົນນັ້ນອັບເດດ.
+ * reported = ເຄີຍອັບເດດ ຫຼື ເຮັດຫຍັງໃນວຽກແລ້ວ
+ */
+export const partOf = (task: Pick<Task, 'status'>, a: TaskAssignee) => {
+  const closed = task.status === TASK_DONE;
+  return {
+    status: closed ? PERSON_DONE : a.status,
+    progress: closed ? 100 : a.progress,
+    reported: closed || a.status !== PERSON_TODO || !!a.active_at,
+  };
+};
+
+/** ຄວາມຄືບໜ້າຂອງທີມໃນວຽກໜຶ່ງ: ຈຳນວນຄົນທີ່ສຳເລັດສ່ວນຂອງຕົນ + ສະເລ່ຍ % */
+export const teamOf = (task: Pick<Task, 'status' | 'assignees'>) => {
+  const parts = task.assignees.map((a) => partOf(task, a));
+  return {
+    done: parts.filter((p) => p.status === PERSON_DONE).length,
+    total: parts.length,
+    progress: parts.length ? Math.round(parts.reduce((sum, p) => sum + p.progress, 0) / parts.length) : 0,
+  };
+};
+
+/**
+ * ຄວາມສຳຄັນ = ຕາຕະລາງບໍລິຫານເວລາ (ຄືກັບ app): ສຳຄັນ / ບໍ່ສຳຄັນ × ເລັ່ງດ່ວນ / ບໍ່ເລັ່ງດ່ວນ → 4 ຊ່ອງ ແລະ ສິ່ງທີ່ຄວນເຮັດ.
+ * important / urgent ທັງສອງ null = ຍັງບໍ່ໄດ້ຈັດ
+ */
+export type Quadrant = 'doNow' | 'schedule' | 'delegate' | 'drop';
+export const QUADRANTS: Record<Quadrant, { roman: string; action: string; tone: string; icon: string }> = {
+  doNow: { roman: 'I', action: 'taskQDoNow', tone: 'is-q1', icon: 'fa-solid fa-fire' },
+  schedule: { roman: 'II', action: 'taskQSchedule', tone: 'is-q2', icon: 'fa-solid fa-calendar-check' },
+  delegate: { roman: 'III', action: 'taskQDelegate', tone: 'is-q3', icon: 'fa-solid fa-bolt' },
+  drop: { roman: 'IV', action: 'taskQDrop', tone: 'is-q4', icon: 'fa-solid fa-circle-minus' },
+};
+export const quadrantOf = (important: boolean | null | undefined, urgent: boolean | null | undefined): Quadrant | null => {
+  if (important == null && urgent == null) return null;
+  if (important) return urgent ? 'doNow' : 'schedule';
+  return urgent ? 'delegate' : 'drop';
+};
+/** "ສຳຄັນ · ເລັ່ງດ່ວນ" ຂອງວຽກ */
+export const useQuadrantLabel = () => {
+  const t = useT();
+  return (important: boolean | null, urgent: boolean | null) =>
+    `${t(important ? 'taskImportant' : 'taskNotImportant')} · ${t(urgent ? 'taskUrgent' : 'taskNotUrgent')}`;
+};
+
+/** ສີໃຫ້ເລືອກຂອງໂປຣເຈັກ */
+export const PROJECT_COLORS = ['#1580be', '#8b5cf6', '#0e9f6e', '#f08a12', '#e5484d', '#0ea5e9', '#d946ef', '#64748b'];
 
 export type TaskProject = { _uuid: number; name: string; color: string; status: number; sort?: number; tasks?: number };
 
@@ -34,9 +86,24 @@ export type TaskAssignee = {
   last_name: string | null;
   work_status: number | null;
   profile_url: string | null;
+  /** ຄວາມຄືບໜ້າສ່ວນຂອງຕົນ (ພະນັກງານອັບເດດໃນ app) — ເບິ່ງ PERSON_STATUSES */
+  status: number;
+  progress: number;
+  /** ຄັ້ງລ່າສຸດທີ່ຄົນນີ້ເຮັດຫຍັງໃນວຽກ (ອັບເດດ, ໝາຍລາຍການຍ່ອຍ, ຄອມເມັນ); null = ຍັງບໍ່ເຄີຍ */
+  active_at: string | null;
 };
 
-export type TaskComment = { _uuid: number; body: string; createdAt: string; author_name: string; author_photo: string | null; from_app: boolean; mine: boolean };
+export type TaskComment = {
+  _uuid: number;
+  body: string;
+  createdAt: string;
+  author_name: string;
+  author_photo: string | null;
+  from_app: boolean;
+  mine: boolean;
+  /** ຄົນທີ່ຖືກແຈ້ງເຖິງ — ຫວ່າງ / ບໍ່ມີ = ແຈ້ງທຸກຄົນ */
+  to?: { employee_id: number; name: string }[];
+};
 
 /** ລາຍການໄທມ໌ໄລນ໌ — action: create | update | item_done | item_undone | file_add | file_del | archive | unarchive */
 export type TaskLog = {
@@ -81,6 +148,8 @@ export type Task = {
   project: TaskProject | null;
   status: number;
   priority: number;
+  important: boolean | null;
+  urgent: boolean | null;
   start_date: string | null;
   due_date: string | null;
   archived: number;

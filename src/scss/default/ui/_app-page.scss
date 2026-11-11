@@ -189,6 +189,34 @@
 .app-page-rail.is-open .app-page-rail-toggle,
 .app-page-rail.is-open .app-page-rail-item { width: 100%; }
 
+// ຕົວເລກສີແດງ (ຄຳຮ້ອງທີ່ລໍຖ້າ) — ມຸມຂວາເທິງຂອງໄອຄອນ; ແຖບຂະຫຍາຍ = ທ້າຍແຖວ
+.app-page-rail-badge {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  display: inline-flex;
+  min-width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  color: #fff;
+  background: #ef4444;
+  border: 2px solid #0e5a45;
+  border-radius: 9px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.app-page-rail.is-open .app-page-rail-badge {
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
 .app-page-rail.is-open .app-page-rail-toggle > span,
 .app-page-rail.is-open .app-page-rail-item > span { display: block; }
 

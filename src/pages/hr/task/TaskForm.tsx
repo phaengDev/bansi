@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react';
-import { DatePicker, Form, Input, Loader, SelectPicker } from 'rsuite';
+import { DatePicker, Form, Input, Loader } from 'rsuite';
 import moment from 'moment';
 import { deleteApi, getApi, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -11,9 +11,10 @@ import { FormSection, SettingModal } from '../../account/setting/settingKit';
 import { HrAvatar } from '../hrKit';
 import { MAX_FILE, docIcon, downloadWithAuth, fileSizeText } from '../hrApi';
 import {
-  MAX_TASK_FILES, TASK_FILE_ACCEPT, TASK_FILE_TYPES, TASK_PRIORITIES, TASK_STATUSES, assigneeName, idOf, type Task, type TaskFile, type TaskItem, type TaskPerson, type TaskProject,
+  MAX_TASK_FILES, QUADRANTS, TASK_FILE_ACCEPT, TASK_FILE_TYPES, TASK_STATUSES, assigneeName, idOf, quadrantOf, useQuadrantLabel, type Task, type TaskFile, type TaskItem, type TaskPerson, type TaskProject,
 } from './taskApi';
 import TaskAssigneePicker from './TaskAssigneePicker';
+import TaskProjectField from './TaskProjectField';
 
 type Row = TaskItem & { key: number };
 
@@ -21,7 +22,7 @@ let seq = 0;
 const toDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').toDate() : null);
 const toDay = (value: Date | null) => (value ? moment(value).format('YYYY-MM-DD') : null);
 
-/** ປຸ່ມເລືອກ 1 ຢ່າງ (ຄວາມສຳຄັນ, ສະຖານະ) */
+/** ປຸ່ມເລືອກ 1 ຢ່າງ (ສຳຄັນ / ເລັ່ງດ່ວນ, ສະຖານະ) */
 const Choice = ({ options, value, onChange }: { options: { value: number; label: string; tone: string; icon?: string }[]; value: number; onChange: (v: number) => void }) => (
   <span className="task-choice" role="radiogroup">
     {options.map((o) => (
@@ -35,15 +36,58 @@ const Choice = ({ options, value, onChange }: { options: { value: number; label:
 );
 
 /**
+ * ຄວາມສຳຄັນ (ຄືກັບ app): ສຳຄັນ / ບໍ່ສຳຄັນ ແລະ ເລັ່ງດ່ວນ / ບໍ່ເລັ່ງດ່ວນ + ບອກວ່າຢູ່ຊ່ອງໃດ ແລະ ຄວນເຮັດແນວໃດ.
+ * ເລືອກຂັ້ນໃດຂັ້ນໜຶ່ງ ອີກຂັ້ນເປັນ "ບໍ່…" ໄວ້ກ່ອນ; ລ້າງ = ຍັງບໍ່ໄດ້ຈັດ (ທັງສອງ null)
+ */
+const QuadrantPicker = ({ important, urgent, onChange }: {
+  important: boolean | null;
+  urgent: boolean | null;
+  onChange: (important: boolean | null, urgent: boolean | null) => void;
+}) => {
+  const t = useT();
+  const label = useQuadrantLabel();
+  const q = quadrantOf(important, urgent);
+  const flagValue = (v: boolean | null) => (v === null ? -1 : Number(v));
+  return (
+    <div className="task-quadrant-pick">
+      <div className="task-quadrant-rows">
+        <Choice value={flagValue(important)} onChange={(v) => onChange(v === 1, urgent ?? false)} options={[
+          { value: 1, label: t('taskImportant'), tone: 'is-imp', icon: 'fa-solid fa-star' },
+          { value: 0, label: t('taskNotImportant'), tone: 'is-off', icon: 'fa-regular fa-star' },
+        ]} />
+        <Choice value={flagValue(urgent)} onChange={(v) => onChange(important ?? false, v === 1)} options={[
+          { value: 1, label: t('taskUrgent'), tone: 'is-urg', icon: 'fa-solid fa-bolt' },
+          { value: 0, label: t('taskNotUrgent'), tone: 'is-off', icon: 'fa-regular fa-hourglass' },
+        ]} />
+      </div>
+      <div className={`task-quadrant${q ? ` ${QUADRANTS[q].tone}` : ''}`} aria-live="polite">
+        {q ? (
+          <>
+            <b className="task-quadrant-mark">{QUADRANTS[q].roman}</b>
+            <span className="task-quadrant-text">
+              <strong>{t(QUADRANTS[q].action)}</strong>
+              <small>{label(important, urgent)}</small>
+            </span>
+            <button type="button" onClick={() => onChange(null, null)}>{t('taskQClear')}</button>
+          </>
+        ) : <span className="task-quadrant-text"><small>{t('taskQNone')}</small></span>}
+      </div>
+    </div>
+  );
+};
+
+/**
  * ສ້າງ / ແກ້ວຽກ — ຂໍ້ມູນວຽກ, ຜູ້ຮັບຜິດຊອບ (ກົດມົງກຸດ = ຫົວໜ້າວຽກ), ລາຍການຍ່ອຍ, ເອກະສານຄັດຕິດ. ບັນທຶກແລ້ວ ຄົນທີ່ຫາກໍ່ໄດ້ຮັບມອບໝາຍ
  * ໄດ້ຮັບແຈ້ງເຕືອນເດັ້ງຂຶ້ນຈໍມືຖື (backend ສົ່ງ). ໄຟລ໌ໃໝ່ອັບໂຫຼດຕອນບັນທຶກ ເທື່ອລະໄຟລ໌ (ບໍ່ໃຫ້ຄຳຂໍໃຫຍ່ເກີນຂີດຈຳກັດຂອງ nginx).
  * template = ສຳເນົາ: ຕື່ມຂໍ້ມູນຈາກວຽກເດີມໃຫ້ແກ້ກ່ອນ ຍັງບໍ່ສ້າງ / ບໍ່ແຈ້ງເຕືອນຈົນກວ່າຈະກົດມອບໝາຍ (ບໍ່ເອົາເອກະສານ, ຄອມເມັນ ແລະ ຄົນທີ່ລາອອກແລ້ວ)
  */
-const TaskForm = ({ task, template, projects, onClose, onSaved }: {
+const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSaved }: {
   /** null = ສ້າງໃໝ່ */
   task: Task | null;
   template?: Task | null;
   projects: TaskProject[];
+  /** ເພີ່ມໂປຣເຈັກໃໝ່ຈາກຊ່ອງເລືອກໂປຣເຈັກ → ໃຫ້ໜ້າຫຼັກໂຫຼດລາຍຊື່ຄືນ */
+  onProjectsChanged?: () => void;
   onClose: () => void;
   onSaved: (task: Task) => void;
 }) => {
@@ -56,7 +100,9 @@ const TaskForm = ({ task, template, projects, onClose, onSaved }: {
   const [title, setTitle] = useState(source ? (task ? source.title : `${source.title} (${t('taskCopy')})`) : '');
   const [detail, setDetail] = useState(source?.detail ?? '');
   const [projectId, setProjectId] = useState<number | null>(source?.project_id ?? null);
-  const [priority, setPriority] = useState(source?.priority ?? 1);
+  // ວຽກໃໝ່ເລີ່ມ "ສຳຄັນ · ບໍ່ເລັ່ງດ່ວນ" ຄືກັບ app (ວຽກທີ່ມອບໝາຍສ່ວນຫຼາຍ)
+  const [important, setImportant] = useState<boolean | null>(source ? source.important ?? null : true);
+  const [urgent, setUrgent] = useState<boolean | null>(source ? source.urgent ?? null : false);
   const [status, setStatus] = useState(task?.status ?? 1);
   const [startDate, setStartDate] = useState<Date | null>(toDate(source?.start_date ?? null));
   const [dueDate, setDueDate] = useState<Date | null>(toDate(source?.due_date ?? null));
@@ -105,10 +151,6 @@ const TaskForm = ({ task, template, projects, onClose, onSaved }: {
   }, [employees, task]);
   const personOf = (id: number) => people.find((p) => p.employee_id === id);
   const lead = leadId && assigneeIds.includes(leadId) ? leadId : assigneeIds[0] ?? null;
-
-  const projectOptions = projects
-    .filter((p) => Number(p.status) === 1 || p._uuid === source?.project_id)
-    .map((p) => ({ value: p._uuid, label: p.name, color: p.color }));
 
   const addItem = () => {
     setItems((list) => [...list, { key: ++seq, title: '', done: false }]);
@@ -184,7 +226,8 @@ const TaskForm = ({ task, template, projects, onClose, onSaved }: {
       title: title.trim(),
       detail: detail.trim(),
       project_id: projectId,
-      priority,
+      important,
+      urgent,
       start_date: toDay(startDate),
       due_date: toDay(dueDate),
       assignee_ids: assigneeIds,
@@ -227,18 +270,16 @@ const TaskForm = ({ task, template, projects, onClose, onSaved }: {
               <label className="form-label">{t('taskDetail')}</label>
               <Input as="textarea" rows={3} value={detail} onChange={setDetail} maxLength={5000} />
             </div>
-            <div className="rs-form-group">
+            <div className="is-wide rs-form-group">
               <label className="form-label">{t('taskProject')}</label>
-              <SelectPicker block data={projectOptions} value={projectId} onChange={setProjectId} placeholder={t('taskNoProject')}
-                popupClassName="acc-book-menu" searchable={projectOptions.length > 8}
-                renderOption={(label, item) => <span className="task-project-opt"><i style={{ background: String(item.color) }} />{label}</span>}
-              />
+              <TaskProjectField value={projectId} onChange={setProjectId} projects={projects} keepId={source?.project_id} onCreated={onProjectsChanged} />
             </div>
-            <div className="rs-form-group">
+            <div className="is-wide rs-form-group">
               <label className="form-label">{t('taskPriority')}</label>
-              <Choice value={priority} onChange={setPriority} options={[1, 2, 3].map((p) => ({
-                value: p, label: t(TASK_PRIORITIES[p].label), tone: TASK_PRIORITIES[p].tone, icon: p > 1 ? 'fa-solid fa-fire' : undefined,
-              }))} />
+              <QuadrantPicker important={important} urgent={urgent} onChange={(i, u) => {
+                setImportant(i);
+                setUrgent(u);
+              }} />
             </div>
             <div className="rs-form-group">
               <label className="form-label">{t('taskStart')}</label>

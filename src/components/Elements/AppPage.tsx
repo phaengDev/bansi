@@ -14,6 +14,8 @@ export type AppPageRailItem = {
    * by listing the entries of a group next to each other. A collapsed rail shows it as a divider line.
    */
   group?: ReactNode;
+  /** ຕົວເລກສີແດງຢູ່ມຸມໄອຄອນ (ເຊັ່ນ ຄຳຮ້ອງທີ່ລໍຖ້າ) — 0 / ບໍ່ໃສ່ = ບໍ່ສະແດງ */
+  badge?: number;
 };
 
 export type AppPageProps = {
@@ -258,6 +260,7 @@ const AppPage = ({
                         <span><i className={item.icon} aria-hidden="true" /></span>
                         <span className={`ms-2 ${railOpen ? '' : 'd-none'}`}>{item.label}</span>
                       </span>
+                      {!!item.badge && <em className="app-page-rail-badge">{item.badge > 99 ? '99+' : item.badge}</em>}
                     </button>
                   </RailPopover>
                 </Fragment>

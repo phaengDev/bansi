@@ -6,11 +6,12 @@ import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { SettingToolbar } from '../../account/setting/settingKit';
-import { AssigneeStack, DueCell, PAGE_SIZES, PriorityChip, TaskPager, TaskStatusSelect, slicePage } from './TaskBits';
+import { AssigneeStack, DueCell, PAGE_SIZES, QuadrantChip, TaskPager, TaskStatusSelect, TeamProgress, slicePage } from './TaskBits';
 import TaskDetail from './TaskDetail';
 import TaskForm from './TaskForm';
 import TaskProjects from './TaskProjects';
-import { TASK_DOING, TASK_DONE, TASK_PENDING, TASK_STATUSES, assigneeName, idOf, useTaskProjects, useTasks, type Task } from './taskApi';
+import TaskPeople from './TaskPeople';
+import { TASK_DOING, TASK_DONE, TASK_PENDING, TASK_STATUSES, assigneeName, idOf, quadrantOf, useTaskProjects, useTasks, type Task } from './taskApi';
 
 type SortKey = 'title' | 'detail' | 'project' | 'assignee' | 'due' | 'status';
 type Column = 'detail' | 'project' | 'assignees' | 'due';
@@ -21,6 +22,7 @@ const COLUMNS: Column[] = ['detail', 'project', 'assignees', 'due'];
 const COLUMN_LABELS: Record<Column, string> = { detail: 'taskDetail', project: 'taskProject', assignees: 'taskAssignees', due: 'taskDue' };
 const COLUMN_ICONS: Record<Column, string> = { detail: 'fa-solid fa-align-left', project: 'fa-regular fa-folder', assignees: 'fa-solid fa-user-group', due: 'fa-regular fa-calendar' };
 const COLUMNS_KEY = 'taskColumns';
+const VIEW_KEY = 'taskByPerson';
 
 const readColumns = (): Column[] => {
   try {
@@ -47,7 +49,8 @@ const sortValue = (task: Task, key: SortKey): string | number => {
 
 /**
  * ມອບໝາຍວຽກ — ແຖບສະຖານະ, ກັ່ນຕາມໂປຣເຈັກ / ຕິດດາວ, ຄົ້ນຫາ, ຕາຕະລາງ (ເລືອກຫຼາຍ, ປ່ຽນສະຖານະໃນແຖວ, ຈັດລຽງ, ແບ່ງໜ້າ),
- * ຄັງເກັບ, ຕັ້ງຄ່າໂປຣເຈັກ ແລະ ເລືອກຖັນທີ່ສະແດງ. ກົດແຖວ = ລາຍລະອຽດ + ຄອມເມັນ, ປຸ່ມດິນສໍ = ແກ້ໄຂ
+ * ຄັງເກັບ, ຕັ້ງຄ່າໂປຣເຈັກ ແລະ ເລືອກຖັນທີ່ສະແດງ. ກົດແຖວ = ລາຍລະອຽດ + ຄອມເມັນ, ປຸ່ມດິນສໍ = ແກ້ໄຂ.
+ * ປຸ່ມ "ຕາມຄົນ" = ຕິດຕາມແຕ່ລະຜູ້ຮັບຜິດຊອບວ່າເຮັດຮອດໃສ (TaskPeople) ຈາກວຽກທີ່ກັ່ນແລ້ວຊຸດດຽວກັນ
  */
 const TaskPage = () => {
   const t = useT();
@@ -63,6 +66,13 @@ const TaskPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [columns, setColumns] = useState<Column[]>(readColumns);
+  const [byPerson, setByPerson] = useState(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
   const [editing, setEditing] = useState<Task | null | 'new'>(null);
   const [viewing, setViewing] = useState<Task | null>(null);
   const [copying, setCopying] = useState<Task | null>(null);
@@ -76,6 +86,17 @@ const TaskPage = () => {
       // storage ປິດ — ຈື່ສະເພາະໜ້ານີ້
     }
   }, [columns]);
+
+  const switchView = () => {
+    const next = !byPerson;
+    setByPerson(next);
+    setSelected(new Set());
+    try {
+      localStorage.setItem(VIEW_KEY, next ? '1' : '0');
+    } catch {
+      // storage ປິດ — ຈື່ສະເພາະໜ້ານີ້
+    }
+  };
 
   const switchArchive = () => {
     setArchived((v) => !v);
@@ -257,6 +278,11 @@ const TaskPage = () => {
           renderOption={(label, item) => <span className="task-project-opt"><i style={{ background: String(item.color) }} />{label}</span>}
         />
         <span className="task-tools">
+          <button type="button" className={`acc-rp-btn task-view-btn${byPerson ? ' is-on' : ''}`} onClick={switchView} aria-pressed={byPerson}
+            title={t('taskByPersonHint')}
+          >
+            <i className="fa-solid fa-users-viewfinder" /> <span>{t('taskByPerson')}</span>
+          </button>
           <button type="button" className={`acc-rp-btn${starredOnly ? ' is-on' : ''}`} onClick={() => filterBy(() => setStarredOnly((v) => !v))}
             title={t('taskStarredOnly')} aria-label={t('taskStarredOnly')} aria-pressed={starredOnly}
           >
@@ -271,9 +297,11 @@ const TaskPage = () => {
           <button type="button" className="acc-rp-btn" onClick={() => setSettingsOpen(true)} title={t('taskProjects')} aria-label={t('taskProjects')}>
             <i className="fa-regular fa-folder-open" />
           </button>
-          <Whisper trigger="click" placement="bottomEnd" speaker={columnPicker}>
-            <button type="button" className="acc-rp-btn" title={t('taskColumns')} aria-label={t('taskColumns')}><i className="fa-solid fa-table-columns" /></button>
-          </Whisper>
+          {!byPerson && (
+            <Whisper trigger="click" placement="bottomEnd" speaker={columnPicker}>
+              <button type="button" className="acc-rp-btn" title={t('taskColumns')} aria-label={t('taskColumns')}><i className="fa-solid fa-table-columns" /></button>
+            </Whisper>
+          )}
         </span>
       </SettingToolbar>
 
@@ -284,7 +312,7 @@ const TaskPage = () => {
         </p>
       )}
 
-      {!!selected.size && (
+      {!!selected.size && !byPerson && (
         <div className="task-bulk">
           <b><i className="fa-solid fa-square-check" /> {t('taskSelected')} {selected.size} {t('taskItems')}</b>
           {canEdit && !archived && (
@@ -311,6 +339,8 @@ const TaskPage = () => {
           <i className={`fa-solid ${archived ? 'fa-box-archive' : 'fa-list-check'}`} />
           <p>{t(rows.length ? 'taskNoMatch' : archived ? 'noData' : 'taskEmpty')}</p>
         </div>
+      ) : byPerson ? (
+        <TaskPeople tasks={shown} onOpen={setViewing} />
       ) : (
         <div className={`acc-gl-group${loading ? ' is-refreshing' : ''}`}>
           <div className="acc-rp-scroll">
@@ -342,9 +372,9 @@ const TaskPage = () => {
                         </button>
                         <span>
                           <b>{task.title}</b>
-                          {(task.priority > 1 || !!task.items_total || !!task.files_total || !!task.comments_total) && (
+                          {(['doNow', 'schedule', 'delegate'].includes(quadrantOf(task.important, task.urgent) ?? '') || !!task.items_total || !!task.files_total || !!task.comments_total) && (
                             <span className="task-meta-row">
-                              <PriorityChip priority={task.priority} />
+                              <QuadrantChip task={task} hideDrop />
                               {!!task.items_total && (
                                 <span className={`acs-chip${task.items_done === task.items_total ? ' is-green' : ''}`}>
                                   <i className="fa-solid fa-list-check" /> {task.items_done}/{task.items_total}
@@ -361,7 +391,14 @@ const TaskPage = () => {
                     {has('project') && (
                       <td>{task.project ? <span className="task-project"><i style={{ background: task.project.color }} />{task.project.name}</span> : <span className="acc-gl-ref">—</span>}</td>
                     )}
-                    {has('assignees') && <td><AssigneeStack assignees={task.assignees} /></td>}
+                    {has('assignees') && (
+                      <td>
+                        <span className="task-who">
+                          <AssigneeStack assignees={task.assignees} task={task} />
+                          <TeamProgress task={task} />
+                        </span>
+                      </td>
+                    )}
                     {has('due') && <td><DueCell task={task} /></td>}
                     <td onClick={(e) => e.stopPropagation()}>
                       <TaskStatusSelect status={task.status} onChange={(s) => changeStatus(task, s)} disabled={!canEdit || archived} />
@@ -395,9 +432,9 @@ const TaskPage = () => {
           }}
         />
       )}
-      {copying && <TaskForm task={null} template={copying} projects={projects} onClose={() => setCopying(null)} onSaved={() => reload()} />}
+      {copying && <TaskForm task={null} template={copying} projects={projects} onProjectsChanged={reloadProjects} onClose={() => setCopying(null)} onSaved={() => reload()} />}
       {editing && (
-        <TaskForm task={editing === 'new' ? null : editing} projects={projects} onClose={() => setEditing(null)}
+        <TaskForm task={editing === 'new' ? null : editing} projects={projects} onProjectsChanged={reloadProjects} onClose={() => setEditing(null)}
           onSaved={() => reload()}
         />
       )}

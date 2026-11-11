@@ -480,3 +480,55 @@
   .hr-skill-group { flex-direction: column; gap: 4px; }
   .hr-doc-type { width: 120px; }
 }
+
+// ---- ສິດວັນລາພັກ (LeaveQuotaSection) ----
+.hr-leave-quota { margin: 16px 0; }
+
+.hr-lq-list { display: grid; gap: 6px; }
+
+.hr-lq-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f7f9fc;
+  border-radius: 10px;
+}
+
+.hr-lq-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7d90; font-size: 11.5px; }
+}
+
+.hr-lq-used { color: #6b7d90; font-size: 12px; white-space: nowrap; }
+
+.hr-lq-left {
+  color: #6b7d90;
+  font-size: 12px;
+  white-space: nowrap;
+
+  b { color: #0e7a52; font-size: 16px; }
+  small { margin-left: 2px; }
+  &.is-out b { color: #c4343a; }
+  &.is-free { color: #604bd8; font-weight: 700; }
+}
+
+.hr-lq-editor { display: grid; gap: 10px; }
+
+.hr-lq-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+
+  > span { display: flex; flex-direction: column; }
+  b { color: #14314d; font-size: 13px; }
+  small { color: #6b7d90; font-size: 11.5px; }
+}
+

@@ -1237,6 +1237,39 @@
 }
 
 // ສິດ — 3 ຊ່ອງເທົ່າກັນ: ອະນຸຍາດ = ຂຽວ ✓, ບໍ່ອະນຸຍາດ = ເທົາ ✕
+// ສິດອະນຸມັດຜ່ານແອັບ — ຍັງບໍ່ຜູກພະນັກງານ = ຈາງ (ຕິກບໍ່ໄດ້)
+.hr-app-perms.is-locked { opacity: 0.55; }
+
+.hr-app-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #5b6f80;
+  font-size: 12.5px;
+  line-height: 1.5;
+
+  i { margin-top: 3px; color: #0b8a6a; }
+  &.is-warn i { color: #c26a04; }
+}
+
+.hr-user-app {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 10px 18px 0;
+  padding: 7px 10px;
+  color: #0b7f58;
+  background: #ebf8f2;
+  border-radius: 10px;
+  font-size: 12px;
+
+  i { font-size: 12px; }
+  span { color: #4a7a68; }
+  b { font-weight: 700; }
+}
+
 .hr-user-perms {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

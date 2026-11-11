@@ -27,6 +27,13 @@ export const PERMISSIONS = [
   { key: 'deletes', label: 'hrPermDelete', icon: 'fa-trash' },
 ] as const;
 export type PermissionKey = (typeof PERMISSIONS)[number]['key'];
+/** ສິດອະນຸມັດຜ່ານ app (1 = ໄດ້) — ສະເພາະບັນຊີທີ່ຜູກພະນັກງານ; ໄດ້ຮັບແຈ້ງເຕືອນຄຳຂໍໃໝ່ ແລະ ອະນຸມັດໃນ app */
+export const APP_APPROVALS = [
+  { key: 'approve_leave', label: 'hrApproveLeave', icon: 'fa-umbrella-beach' },
+  { key: 'approve_correction', label: 'hrApproveCorrection', icon: 'fa-fingerprint' },
+  { key: 'approve_advance', label: 'hrApproveAdvance', icon: 'fa-hand-holding-dollar' },
+] as const;
+export type ApprovalKey = (typeof APP_APPROVALS)[number]['key'];
 
 export const WORKING = 1;
 export const RESIGNED = 2;
@@ -69,6 +76,9 @@ export type User = {
   creates: number;
   updates: number;
   deletes: number;
+  approve_leave?: number;
+  approve_correction?: number;
+  approve_advance?: number;
   typeuser?: UserType | null;
   employee?: EmployeeRef | null;
 };

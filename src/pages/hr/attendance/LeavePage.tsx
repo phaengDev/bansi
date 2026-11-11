@@ -5,6 +5,7 @@ import { postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
+import { refreshHrPending } from '../hrPending';
 import { useT } from '../../../context/LanguageContext';
 import { fullName, type EmployeeRef } from '../hrApi';
 import { HrAvatar } from '../hrKit';
@@ -300,7 +301,12 @@ const LeavePage = () => {
   const [status, setStatus] = useState(PENDING);
   const [keyword, setKeyword] = useState('');
   const [reviewing, setReviewing] = useState<{ row: LeaveRequest; mode: ReviewMode } | null>(null);
-  const { data, loading, reload } = usePostData<LeaveData>('/leave/fetch', { year, status });
+  const { data, loading, reload: reloadList } = usePostData<LeaveData>('/leave/fetch', { year, status });
+  // ລາຍການປ່ຽນ (ອະນຸມັດ / ປະຕິເສດ / ຈ່າຍ) = ຕົວເລກລໍຖ້າຢູ່ເມນູຊ້າຍ ແລະ ໄອຄອນ desktop ອັບເດດນຳ
+  const reload = () => {
+    reloadList();
+    refreshHrPending();
+  };
 
   const rows = data?.data ?? [];
   const summary = data?.summary ?? { pending: 0, approved: 0, rejected: 0, cancelled: 0 };

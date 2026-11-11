@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
 import { ATTENDANCE_MENU, firstRailKey, toRailNav } from '../../account/config/SidebarPopup';
+import { useHrPending } from '../hrPending';
 import AttendanceDaily from './AttendanceDaily';
 import AttendanceMonthly from './AttendanceMonthly';
 import CorrectionPage from './CorrectionPage';
@@ -27,7 +28,12 @@ const PAGES: Record<string, ReactNode> = {
 const AttendanceWindow = () => {
   const t = useT();
   const [activeKey, setActiveKey] = useState(firstRailKey(ATTENDANCE_MENU));
-  const railNav = useMemo(() => toRailNav(ATTENDANCE_MENU, t), [t]);
+  const pending = useHrPending();
+  // ຕົວເລກສີແດງ = ຄຳຂໍລາພັກ / ແຈ້ງລືມສະແກນ ທີ່ລໍຖ້າອະນຸມັດ
+  const railNav = useMemo(() => toRailNav(ATTENDANCE_MENU, t).map((item) => ({
+    ...item,
+    badge: item.key === 'leaves' ? pending?.leave : item.key === 'corrections' ? pending?.correction : undefined,
+  })), [t, pending]);
   const active = railNav.find((item) => item.key === activeKey);
   const title = t('accountAppAttendance');
 

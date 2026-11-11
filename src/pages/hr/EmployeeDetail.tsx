@@ -11,6 +11,7 @@ import {
 } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
 import { DocumentSection, ExtraInfo, ResumeSection, SkillSection } from './EmployeeProfile';
+import { LeaveQuotaSection } from './LeaveQuotaSection';
 import { ReportLineBox } from './org/OrgBits';
 import { buildOrgTree, useOrgData } from './org/orgModel';
 
@@ -283,6 +284,9 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged, onOpenE
             )}
           </div>
         )}
+
+        {/* ສິດວັນລາພັກ (HR ຕັ້ງສະເພາະຄົນໄດ້) */}
+        {!resigned && <LeaveQuotaSection employee={employee} />}
 
         <ExtraInfo employee={employee} />
         </>}
