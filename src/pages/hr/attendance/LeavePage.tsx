@@ -10,6 +10,7 @@ import { useT } from '../../../context/LanguageContext';
 import { fullName, type EmployeeRef } from '../hrApi';
 import { HrAvatar } from '../hrKit';
 import { PAID_LEAVE, dayLabel, leaveTone, usePostData, type LeaveBalance, type LeaveType } from './attendanceApi';
+import { LeaveFileChips, LeaveFileGallery, type LeaveFile } from './LeaveFiles';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 
 /** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ຍົກເລີກ (ພະນັກງານ / HR ຖອນ) (ສີຢືມ .att-state) */
@@ -40,6 +41,8 @@ type LeaveRequest = {
   reviewedAt: string | null;
   createdAt: string;
   employee: (EmployeeRef & { position?: { _uuid: number; position_name: string } | null }) | null;
+  /** ໃບລາທີ່ພະນັກງານແນບ (api ລຸ້ນເກົ່າ = ບໍ່ມີ) */
+  files?: LeaveFile[];
 };
 
 type LeaveData = {
@@ -254,6 +257,8 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
           <p>{row.reason || '—'}</p>
         </div>
 
+        <LeaveFileGallery files={row.files} />
+
         {approve && (
           <div className="lv-review-field">
             <label>{t('leaveType')}</label>
@@ -393,7 +398,10 @@ const LeavePage = () => {
                             <b>{rangeLabel(r)}</b>
                             <small className="acc-gl-ref d-block">{r.days} {t('attWorkdays')} · {t('leaveRequestedAt')} {moment(r.createdAt).format('DD/MM/YYYY HH:mm')}</small>
                           </td>
-                          <td className="att-note">{r.reason}</td>
+                          <td className="att-note">
+                            {r.reason}
+                            <LeaveFileChips files={r.files} />
+                          </td>
                           <td>
                             <span className={`att-state ${state.tone}`}><i className={`fa-solid ${state.icon}`} /> {t(state.label)}</span>
                             {r.review_note && <small className="acc-gl-ref d-block">{r.review_note}</small>}

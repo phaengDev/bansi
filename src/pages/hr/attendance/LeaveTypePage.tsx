@@ -12,7 +12,7 @@ import {
   CardAction, ChoiceTiles, FormSection, ListState, MetaChip, SettingCard, SettingModal, SettingToolbar,
 } from '../../account/setting/settingKit';
 import { postfixProp, runSave, saveSetting, useSettingList, useStatusToggle } from '../../account/setting/settingApi';
-import { leaveTone, type LeaveType } from './attendanceApi';
+import { LEAVE_GENDERS, leaveTone, type LeaveType } from './attendanceApi';
 
 /** ລາໄດ້ສູງສຸດທີ່ຕັ້ງໄດ້ (ມື້) — ກົງກັບ leaveTypeController ຂອງ api-bansi */
 const MAX_LIMIT = 366;
@@ -42,6 +42,7 @@ const LeaveTypeForm = ({ data, existing, onClose, onSaved }: {
   const formRef = useRef<FormInstance>(null);
   const [saving, setSaving] = useState(false);
   const [paid, setPaid] = useState(data ? Number(data.paid) : 1);
+  const [gender, setGender] = useState(Number(data?.gender ?? 0));
   const [inputs, setInputs] = useState<Inputs>({
     name: data?.name ?? '',
     max_per_year: data?.max_per_year ?? null,
@@ -71,6 +72,7 @@ const LeaveTypeForm = ({ data, existing, onClose, onSaved }: {
     const payload = {
       name: inputs.name.trim(),
       paid,
+      gender,
       max_per_year: perYear,
       max_per_request: perRequest,
       description: inputs.description.trim(),
@@ -108,6 +110,16 @@ const LeaveTypeForm = ({ data, existing, onClose, onSaved }: {
               const meta = leaveTone(value);
               return { value, label: t(meta.label), icon: meta.icon, hint: t(meta.hint) };
             })}
+          />
+          {/* ໃຜລາໄດ້ — ເຊັ່ນ ລາເກີດລູກ = ສະເພາະຍິງ; ພະນັກງານເພດອື່ນບໍ່ເຫັນປະເພດນີ້ໃນ app */}
+          <ChoiceTiles
+            className="is-wide"
+            label={t('lvTypeWho')}
+            value={gender}
+            onChange={setGender}
+            options={[0, 2, 1].map((value) => ({
+              value, label: t(LEAVE_GENDERS[value].label), icon: LEAVE_GENDERS[value].icon, hint: t(LEAVE_GENDERS[value].hint),
+            }))}
           />
         </FormSection>
         <FormSection title={t('lvTypeLimits')} note={t('lvTypeLimitsNote')}>
@@ -190,6 +202,9 @@ const LeaveTypePage = () => {
                 meta={
                   <>
                     <MetaChip icon="fa-sack-dollar" tone={Number(r.paid) === 1 ? undefined : 'gold'}>{t(meta.label)}</MetaChip>
+                    {!!Number(r.gender) && (
+                      <MetaChip icon={LEAVE_GENDERS[Number(r.gender)]?.icon} tone={Number(r.gender) === 2 ? 'female' : 'male'}>{t(LEAVE_GENDERS[Number(r.gender)]?.label ?? '')}</MetaChip>
+                    )}
                     <MetaChip icon="fa-calendar-days">
                       {r.max_per_year ? `${t('lvTypeSummaryYear')} ${r.max_per_year} ${t('leaveDayUnit')}` : t('lvTypeUnlimitedYear')}
                     </MetaChip>

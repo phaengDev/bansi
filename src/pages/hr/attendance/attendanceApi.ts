@@ -127,6 +127,8 @@ export type LeaveType = {
   _uuid: number;
   name: string;
   paid: number;
+  /** ໃຜລາໄດ້ — LEAVE_GENDERS: 0 ທຸກຄົນ, 1 ສະເພາະຊາຍ, 2 ສະເພາະຍິງ */
+  gender: number;
   max_per_year: number | null;
   max_per_request: number | null;
   description: string | null;
@@ -134,6 +136,13 @@ export type LeaveType = {
   status: number;
   /** ຈຳນວນຄຳຂໍທີ່ອ້າງອີງ — ມີ = ລຶບບໍ່ໄດ້ (ປິດໃຊ້ງານແທນ) */
   request_count?: number;
+};
+
+/** ໃຜລາໄດ້ (ລະຫັດດຽວກັບເພດຂອງພະນັກງານ: 1 ຊາຍ, 2 ຍິງ) — ພະນັກງານເຫັນ / ຂໍໄດ້ສະເພາະປະເພດທີ່ກົງກັບເພດຂອງຕົນ */
+export const LEAVE_GENDERS: Record<number, { label: string; hint: string; icon: string }> = {
+  0: { label: 'lvGenderAll', hint: 'lvGenderAllHint', icon: 'fa-venus-mars' },
+  2: { label: 'lvGenderFemale', hint: 'lvGenderFemaleHint', icon: 'fa-venus' },
+  1: { label: 'lvGenderMale', hint: 'lvGenderMaleHint', icon: 'fa-mars' },
 };
 
 /** ມື້ຂອງປະເພດໃນປີ: used ອະນຸມັດແລ້ວ, pending ລໍຖ້າ, remaining null = ບໍ່ຈຳກັດ */
