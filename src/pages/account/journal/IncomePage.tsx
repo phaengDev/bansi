@@ -23,7 +23,8 @@ const ACTIVE = 1;
  * ຫົວໜ້າ: ຍອດລວມເດືອນ (ແຍກສະກຸນ — ບວກຂ້າມສະກຸນບໍ່ໄດ້) + ກຣາຟລາຍວັນ (ກົດແທ່ງ = ກັ່ນມື້ນັ້ນ).
  * ບັນທຶກ/ແກ້ໄຂ ຜ່ານ IncomeForm; ຍົກເລີກ = ຫັກເງິນອອກຈາກບັນຊີຄືນ
  */
-const IncomePage = () => {
+/** startNew = ເປີດມາພ້ອມຟອມບັນທຶກໃໝ່ (ປຸ່ມ + ຂອງໜ້າພາບລວມ) */
+const IncomePage = ({ startNew = false }: { startNew?: boolean }) => {
   const t = useT();
   const [month, setMonth] = useState(() => moment().startOf('month'));
   const [rows, setRows] = useState<Income[]>([]);
@@ -35,7 +36,7 @@ const IncomePage = () => {
   /** ມື້ທີ່ກັ່ນຈາກກຣາຟ (YYYY-MM-DD) — null = ທັງເດືອນ */
   const [day, setDay] = useState<string | null>(null);
   /** undefined = ປິດຟອມ, null = ບັນທຶກໃໝ່, ມີແຖວ = ແກ້ໄຂ */
-  const [editing, setEditing] = useState<Income | null | undefined>(undefined);
+  const [editing, setEditing] = useState<Income | null | undefined>(startNew && canCreate ? null : undefined);
   /** ລາຍຮັບທີ່ກຳລັງເບິ່ງລາຍລະອຽດ */
   const [viewing, setViewing] = useState<Income | null>(null);
 

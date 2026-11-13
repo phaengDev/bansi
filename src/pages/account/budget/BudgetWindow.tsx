@@ -8,7 +8,7 @@ import { Notific } from '../../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useT } from '../../../context/LanguageContext';
-import { BUDGET_MENU, firstRailKey, toRailNav } from '../config/SidebarPopup';
+import { BUDGET_MENU, toRailNav } from '../config/SidebarPopup';
 import {
   BUDGET_STATUS, monthLabel, percentText, statusOf, useBudgets,
   type BudgetRow, type Unbudgeted,
@@ -18,6 +18,7 @@ import BudgetOverview from './BudgetOverview';
 import BudgetMonthly from './BudgetMonthly';
 import BudgetForm from './BudgetForm';
 import BudgetDetail from './BudgetDetail';
+import { useRailKey } from '../windowMemory';
 
 const showDate = (value: string) => moment(value, 'YYYY-MM-DD').format('DD/MM/YYYY');
 
@@ -28,7 +29,7 @@ const showDate = (value: string) => moment(value, 'YYYY-MM-DD').format('DD/MM/YY
 const BudgetWindow = () => {
   const t = useT();
   const railNav = useMemo(() => toRailNav(BUDGET_MENU, t), [t]);
-  const [activeKey, setActiveKey] = useState(firstRailKey(BUDGET_MENU));
+  const [activeKey, setActiveKey] = useRailKey('budget', BUDGET_MENU);
   const active = railNav.find((item) => item.key === activeKey);
   const title = t('accountAppBudget');
   const years = useFiscalYears();

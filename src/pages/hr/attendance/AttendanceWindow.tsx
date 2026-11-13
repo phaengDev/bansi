@@ -1,7 +1,7 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
-import { ATTENDANCE_MENU, firstRailKey, toRailNav } from '../../account/config/SidebarPopup';
+import { ATTENDANCE_MENU, toRailNav } from '../../account/config/SidebarPopup';
 import { useHrPending } from '../hrPending';
 import AttendanceDaily from './AttendanceDaily';
 import AttendanceMonthly from './AttendanceMonthly';
@@ -10,6 +10,7 @@ import HolidayPage from './HolidayPage';
 import LeavePage from './LeavePage';
 import LeaveTypePage from './LeaveTypePage';
 import OvertimePage from './OvertimePage';
+import { useRailKey } from '../../account/windowMemory';
 
 const PAGES: Record<string, ReactNode> = {
   daily: <AttendanceDaily />,
@@ -27,7 +28,7 @@ const PAGES: Record<string, ReactNode> = {
  */
 const AttendanceWindow = () => {
   const t = useT();
-  const [activeKey, setActiveKey] = useState(firstRailKey(ATTENDANCE_MENU));
+  const [activeKey, setActiveKey] = useRailKey('attendance', ATTENDANCE_MENU);
   const pending = useHrPending();
   // ຕົວເລກສີແດງ = ຄຳຂໍລາພັກ / ແຈ້ງລືມສະແກນ ທີ່ລໍຖ້າອະນຸມັດ
   const railNav = useMemo(() => toRailNav(ATTENDANCE_MENU, t).map((item) => ({

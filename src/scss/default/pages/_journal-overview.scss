@@ -1,0 +1,1140 @@
+// ---- ພາບລວມ ລາຍຮັບ-ລາຍຈ່າຍ (journal/JournalOverview) — ໃຊ້ .acc-rp ເປັນພື້ນ (ຕົວກັ່ນ, ບັດ, ກອບກຣາບ ຂອງ statements) ----
+// ຮັບ = ຂຽວ #0e9f86, ຈ່າຍ = ແດງ #e5484d ທຸກບ່ອນ; animation ປິດເມື່ອຜູ້ໃຊ້ຂໍ prefers-reduced-motion
+
+@keyframes jo-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes jo-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes jo-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes jo-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes jo-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes jo-float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-14px, 10px); }
+}
+
+@keyframes jo-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+.acc-jo {
+  .acc-jo-body > * { animation: jo-rise 0.45s ease both; }
+
+  .acc-jo-card,
+  .acc-jo-tile { animation: jo-rise 0.5s ease both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+  .acc-jo-grow > * > i { transform-origin: bottom; animation: jo-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 14ms); }
+  .acc-jo-net > * > i { transform-origin: center; }
+  .acc-jo-reveal { animation: jo-reveal 1s ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after { animation: none !important; transition: none !important; }
+  }
+}
+
+.acc-jo-refresh { width: 36px; justify-content: center; padding: 0; }
+
+// ---- ບັດຫຼັກ: ເງິນເຫຼືອ + ອາລົມ ----
+.acc-jo-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 18px;
+  padding: 22px 24px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, #053d33 0%, #08735f 55%, #0e9f86 100%);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(6, 78, 59, 0.22);
+
+  // ວົງມົນເບົາໆ ລອຍຢູ່ພື້ນຫຼັງ
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: jo-float 9s ease-in-out infinite;
+  }
+
+  &::before { top: -90px; right: 22%; width: 240px; height: 240px; background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 70%); }
+  &::after { bottom: -110px; right: -40px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(63, 208, 164, 0.35) 0%, transparent 70%); animation-delay: -4s; }
+
+  &.is-loss { background: linear-gradient(135deg, #5c1620 0%, #8e2430 55%, #c4343a 100%); box-shadow: 0 10px 30px rgba(142, 36, 48, 0.22); }
+  &.is-empty { background: linear-gradient(135deg, #1d3a55 0%, #2a5878 60%, #3c7aa0 100%); box-shadow: 0 10px 30px rgba(29, 58, 85, 0.2); }
+
+  > * { position: relative; z-index: 1; }
+}
+
+.acc-jo-hero-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+
+  > small { color: rgba(255, 255, 255, 0.78); font-size: 13px; font-weight: 700; }
+}
+
+.acc-jo-hero-kicker {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.acc-jo-hero-value {
+  font-family: 'Open Sans', 'NotoSerifLao', sans-serif;
+  font-size: clamp(30px, 4.2vw, 46px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.acc-jo-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    background: rgba(0, 0, 0, 0.16);
+    border-radius: 10px;
+    font-family: 'Open Sans', 'NotoSerifLao', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  i { font-size: 11px; opacity: 0.85; }
+}
+
+.acc-jo-mood {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.acc-jo-mood-emoji {
+  display: inline-block;
+  flex: none;
+  font-size: 22px;
+  animation: jo-wiggle 1.2s ease 0.6s 2;
+}
+
+.acc-jo-hero-side {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.acc-jo-meter {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+
+  em { display: block; margin-top: 6px; color: rgba(255, 255, 255, 0.82); font-size: 11.5px; font-style: normal; font-weight: 600; }
+}
+
+.acc-jo-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  small { color: rgba(255, 255, 255, 0.8); font-size: 12px; font-weight: 700; }
+  b { font-family: 'Open Sans', 'NotoSerifLao', sans-serif; font-size: 18px; font-weight: 800; }
+}
+
+.acc-jo-meter-track {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+
+  i { display: block; height: 100%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
+
+.acc-jo-meter.is-good .acc-jo-meter-track i { background: linear-gradient(90deg, #a7f3d0, #6ee7b7); }
+.acc-jo-meter.is-warn .acc-jo-meter-track i { background: linear-gradient(90deg, #fde68a, #fbbf24); }
+.acc-jo-meter.is-bad .acc-jo-meter-track i { background: linear-gradient(90deg, #fecaca, #f87171); }
+
+.acc-jo-forecast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+
+  > i { flex: none; color: #fde68a; font-size: 18px; }
+
+  span { display: flex; min-width: 0; flex-direction: column; }
+  small { color: rgba(255, 255, 255, 0.8); font-size: 11.5px; font-weight: 700; }
+  b { font-family: 'Open Sans', 'NotoSerifLao', sans-serif; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  em { color: rgba(255, 255, 255, 0.7); font-size: 11px; font-style: normal; }
+}
+
+.acc-jo-quick {
+  display: flex;
+  gap: 8px;
+
+  button {
+    display: inline-flex;
+    flex: 1;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #0b3b31;
+    background: #fff;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    font-size: 12.5px;
+    font-weight: 800;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &.is-in i { color: #0e9f86; }
+    &.is-out i { color: #e5484d; }
+
+    &:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18); }
+    &:active { transform: none; }
+  }
+}
+
+// ---- ບັດສະຫຼຸບ (ມີເສັ້ນນ້ອຍຢູ່ລຸ່ມ) ----
+.acc-jo-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.acc-jo-tile {
+  --jo-tone: #2a78d6;
+  --jo-soft: #e8f1fc;
+
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px 54px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--rp-line);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(27, 62, 94, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(27, 62, 94, 0.1); }
+
+  &.is-in { --jo-tone: #0e9f86; --jo-soft: #e3f5f1; }
+  &.is-out { --jo-tone: #e5484d; --jo-soft: #fdecec; }
+  &.is-net { --jo-tone: #7c5cd6; --jo-soft: #f1ecfd; }
+  &.is-count { --jo-tone: #eb6834; --jo-soft: #fdeee6; }
+
+  small { color: #5b6f80; font-size: 12px; font-weight: 700; }
+
+  b {
+    color: var(--rp-text);
+    font-family: var(--rp-font);
+    font-size: 21px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  em {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    color: var(--rp-muted);
+    font-family: var(--rp-font);
+    font-size: 11.5px;
+    font-style: normal;
+    font-weight: 600;
+  }
+}
+
+.acc-jo-tile-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--jo-tone);
+  background: var(--jo-soft);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: transform 0.25s ease;
+
+  .acc-jo-tile:hover & { transform: rotate(-8deg) scale(1.08); }
+}
+
+.acc-jo-tile-pair {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+
+  .is-in { color: #08735f; }
+  .is-out { color: #c4343a; }
+}
+
+.acc-jo-spark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  animation: jo-reveal 1.1s ease-out 0.2s both;
+
+  polyline { fill: none; stroke: var(--jo-tone); stroke-width: 2; stroke-linejoin: round; }
+  .is-area { fill: var(--jo-soft); opacity: 0.9; }
+}
+
+.acc-jo-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  background: #f1f4f7;
+  border-radius: 999px;
+  font-family: var(--rp-font, 'Open Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+
+  &.is-good { color: #08735f; background: #e3f5f1; }
+  &.is-bad { color: #c4343a; background: #fdecec; }
+  &.is-flat { color: var(--rp-muted, #7b8a97); }
+}
+
+// ---- ບັດ + ຫົວບັດທີ່ມີປຸ່ມສະຫຼັບ ----
+.acc-jo-card { transition: box-shadow 0.2s ease; }
+.acc-jo-card:hover { box-shadow: 0 10px 26px rgba(27, 62, 94, 0.08); }
+
+.acc-jo-card-head {
+  flex-wrap: wrap;
+
+  .acc-fs-legend { margin-left: auto; }
+  .acc-fs-legend + .acc-jo-mini-switch { margin-left: 4px; }
+  h4 + .acc-jo-mini-switch { margin-left: auto; }
+}
+
+.acc-jo-mini-switch {
+  button { padding: 4px 10px !important; font-size: 12px !important; }
+  i { margin-right: 3px; font-size: 11px; }
+}
+
+.acc-fs-legend .is-line.is-out-line { background: #e5484d; }
+
+.acc-jo-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 0 0;
+  color: var(--rp-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+
+  i { color: #9fb0bf; }
+
+  &.is-hint {
+    padding: 8px 12px;
+    color: #8a4b12;
+    background: #fff6ea;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+}
+
+.acc-jo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+
+  // ປະຕິທິນສູງກວ່າກຣາບມື້ໃນອາທິດ — ບໍ່ຢືດບັດຂວາໃຫ້ມີບ່ອນຫວ່າງ
+  &.is-wide-left { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+}
+
+.acc-fs-pairs.is-wide .acc-fs-pair i { max-width: 22px; }
+
+// ສຸດທິ: ແທ່ງຂຶ້ນ-ລົງຈາກເສັ້ນ 0
+.acc-jo-zero {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  border-top: 1px solid #8fa1b1;
+  pointer-events: none;
+}
+
+.acc-jo-net {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.acc-jo-net-col,
+.acc-jo-hit {
+  position: relative;
+  outline: none;
+
+  &:hover,
+  &:focus-visible { background: rgba(20, 49, 77, 0.04); border-radius: 4px; }
+
+  &:hover::before,
+  &:focus-visible::before {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 6px);
+    left: 0;
+    padding: 4px 8px;
+    color: #fff;
+    background: #14314d;
+    border-radius: 6px;
+    font-family: var(--rp-font);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &.is-late:hover::before,
+  &.is-late:focus-visible::before { right: 0; left: auto; }
+}
+
+.acc-jo-net-col i {
+  position: absolute;
+  right: 0;
+  left: 0;
+  width: 60%;
+  max-width: 18px;
+  margin: 0 auto;
+  border-radius: 4px;
+
+  &.is-in { background: linear-gradient(180deg, #3fd0a4 0%, #0e9f86 100%); }
+  &.is-out { background: linear-gradient(180deg, #e5484d 0%, #f07a7f 100%); }
+}
+
+.acc-jo .acc-jo-net-col i { animation: jo-pop 0.5s ease both; animation-delay: calc(var(--i, 0) * 14ms); }
+
+.acc-jo-hit i {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: #fff;
+  border: 2px solid #0e9f86;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  &.is-out { border-color: #e5484d; }
+}
+
+.acc-jo-hit:hover i,
+.acc-jo-hit:focus-visible i { opacity: 1; }
+
+// ---- ມາຈາກໃສ / ໄປໃສ ----
+.acc-jo-seg {
+  display: flex;
+  height: 28px;
+  gap: 2px;
+  margin-bottom: 12px;
+
+  > i {
+    position: relative;
+    display: flex;
+    min-width: 3px;
+    align-items: center;
+    padding: 0 8px;
+    color: #fff;
+    border-radius: 4px;
+    font-family: var(--rp-font);
+    font-size: 11.5px;
+    font-style: normal;
+    font-weight: 800;
+    outline: none;
+    transform-origin: left;
+    animation: jo-grow-x 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    transition: filter 0.15s ease;
+
+    span { overflow: hidden; white-space: nowrap; }
+
+    &:hover,
+    &:focus-visible { filter: brightness(1.08); box-shadow: 0 0 0 2px #fff, 0 0 0 3px #14314d; }
+
+    &:hover::before,
+    &:focus-visible::before {
+      content: attr(data-tip);
+      position: absolute;
+      z-index: 3;
+      bottom: calc(100% + 6px);
+      left: 0;
+      padding: 4px 8px;
+      color: #fff;
+      background: #14314d;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  }
+}
+
+.acc-jo-cat-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 8px 4px;
+    border-bottom: 1px dashed #e8edf1;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+
+    &:last-child { border-bottom: 0; }
+    &:hover { background: #f8fbfd; }
+  }
+}
+
+.acc-jo-cat-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+.acc-jo-cat-name {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+
+  b { overflow: hidden; color: var(--rp-text); font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  small { color: var(--rp-muted); font-family: var(--rp-font); font-size: 11px; font-weight: 600; }
+}
+
+.acc-jo-cat-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+
+  b { color: var(--rp-text); font-family: var(--rp-font); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+}
+
+.acc-jo-cat-bar {
+  grid-column: 2 / -1;
+  height: 5px;
+  overflow: hidden;
+  background: #eef2f5;
+  border-radius: 3px;
+
+  i { display: block; height: 100%; border-radius: 3px; transform-origin: left; animation: jo-reveal 0.9s ease-out both; }
+}
+
+.acc-jo-cats.is-in .acc-jo-cat-bar i { background: #3fd0a4; }
+.acc-jo-cats.is-out .acc-jo-cat-bar i { background: #f07a7f; }
+
+.acc-jo-more {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px;
+  color: #3d5266;
+  background: #f6f8fa;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:hover { color: var(--rp-ink); background: var(--rp-soft); }
+}
+
+.acc-jo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 10px;
+  color: var(--rp-muted);
+  text-align: center;
+
+  i { display: grid; width: 52px; height: 52px; place-items: center; color: var(--rp-accent); background: var(--rp-soft); border-radius: 50%; font-size: 20px; animation: jo-pop 0.5s ease both; }
+  p { margin: 0; font-size: 12.5px; font-weight: 600; }
+}
+
+// ---- ປະຕິທິນເງິນ ----
+// ສະຫຼຸບຈຳນວນມື້ (ເທິງປະຕິທິນ)
+.acc-jo-cal-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    color: #3d5266;
+    background: #f6f8fa;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  i { width: 8px; height: 8px; border-radius: 50%; }
+  .is-in i { background: #0e9f86; }
+  .is-out i { background: #e5484d; }
+  .is-quiet i { background: #c9d4dd; }
+}
+
+// ສີລະດັບ — ຕາຕະລາງລາຍອາທິດ (ຊ່ອງນ້ອຍ ຕ້ອງເຂັ້ມ)
+.acc-jo-heat-cell,
+.acc-jo-cal-legend:not(.is-soft) i {
+  &.is-l0 { background: #eef2f5; }
+  &.is-future { background: #f7f9fa; }
+  &.is-in.is-l1 { background: #d5f3ea; }
+  &.is-in.is-l2 { background: #9fe3cd; }
+  &.is-in.is-l3 { background: #4cc6a2; }
+  &.is-in.is-l4 { background: #0e9f86; }
+  &.is-out.is-l1 { background: #fde0e0; }
+  &.is-out.is-l2 { background: #f7b0b2; }
+  &.is-out.is-l3 { background: #ee7479; }
+  &.is-out.is-l4 { background: #e5484d; }
+}
+
+// ສີລະດັບ — ປະຕິທິນເດືອນ (ບັດໃຫຍ່ ໃຊ້ສີອ່ອນ ໃຫ້ຕົວໜັງສືເຂັ້ມອ່ານງ່າຍ, ແຖບນ້ອຍໃນບັດບອກຮັບ/ຈ່າຍ)
+.acc-jo-cal-day,
+.acc-jo-cal-legend.is-soft i {
+  &.is-in.is-l1 { background: #f1fbf7; border-color: #d3f1e5; }
+  &.is-in.is-l2 { background: #ddf5ec; border-color: #b9e9d6; }
+  &.is-in.is-l3 { background: #c2eedd; border-color: #93ddc2; }
+  &.is-in.is-l4 { background: #a3e4cb; border-color: #6fcfac; }
+  &.is-out.is-l1 { background: #fff5f5; border-color: #fbe0e1; }
+  &.is-out.is-l2 { background: #fee8e8; border-color: #f9cdcf; }
+  &.is-out.is-l3 { background: #fdd6d7; border-color: #f5b0b3; }
+  &.is-out.is-l4 { background: #fbc2c4; border-color: #ee9296; }
+}
+
+.acc-jo-cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.acc-jo-cal-head {
+  padding: 2px 0 4px;
+  color: #5b6f80;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+
+  &.is-weekend { color: #c2410c; }
+}
+
+.acc-jo-cal-day {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 78px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 8px 8px;
+  color: #3d5266;
+  background: #fff;
+  border: 1px solid #e9eef2;
+  border-radius: 12px;
+  outline: none;
+  animation: jo-pop 0.35s ease both;
+  animation-delay: calc(var(--i, 0) * 12ms);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &.is-weekend.is-l0 { background: #fcfaf8; }
+
+  // ມື້ທີ່ຍັງບໍ່ຮອດ — ຈາງ, ຂອບປະ
+  &.is-future {
+    color: #c3ced8;
+    background: transparent;
+    border-style: dashed;
+    border-color: #e3e9ee;
+  }
+
+  &:not(.is-future):hover,
+  &:not(.is-future):focus-visible {
+    z-index: 2;
+    border-color: #9fb0bf;
+    box-shadow: 0 8px 18px rgba(20, 49, 77, 0.12);
+    transform: translateY(-2px);
+  }
+
+  // ມື້ນີ້ — ເລກວັນໃນວົງສີ + ປ້າຍ (ຊະນະສີຂອບຂອງລະດັບ)
+  .acc-jo-cal &.is-today {
+    border-color: #0e9f86;
+    box-shadow: 0 0 0 3px rgba(14, 159, 134, 0.14);
+
+    .acc-jo-cal-top b { color: #fff; background: #0e9f86; }
+  }
+
+  &:not(.is-future):hover::before,
+  &:not(.is-future):focus-visible::before {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 6px);
+    left: 0;
+    padding: 4px 8px;
+    color: #fff;
+    background: #14314d;
+    border-radius: 6px;
+    font-family: var(--rp-font);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &.is-late:hover::before,
+  &.is-late:focus-visible::before { right: 0; left: auto; }
+}
+
+.acc-jo-cal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+
+  b {
+    display: grid;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 4px;
+    place-items: center;
+    border-radius: 999px;
+    font-family: var(--rp-font);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  em {
+    overflow: hidden;
+    padding: 1px 7px;
+    color: #08735f;
+    background: #e3f5f1;
+    border-radius: 999px;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+}
+
+.acc-jo-cal-amount {
+  margin-top: auto;
+  overflow: hidden;
+  color: #14314d;
+  font-family: var(--rp-font);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// ແຖບນ້ອຍ ຮັບ (ຂຽວ) / ຈ່າຍ (ແດງ) ຂອງມື້ນັ້ນ
+.acc-jo-cal-bars {
+  display: grid;
+  gap: 3px;
+
+  i {
+    display: block;
+    height: 4px;
+    margin-left: auto;
+    border-radius: 2px;
+    transform-origin: right;
+    animation: jo-grow-x 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+
+    &.is-in { background: #0e9f86; }
+    &.is-out { background: #e5484d; }
+  }
+}
+
+.acc-jo-cal-day:not(.has-data) .acc-jo-cal-top { flex: 1; align-items: flex-start; }
+
+.acc-jo-cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--rp-muted);
+  font-size: 11px;
+  font-weight: 600;
+
+  span { margin: 0 4px; }
+  i { width: 16px; height: 12px; border: 1px solid transparent; border-radius: 4px; }
+  &.is-soft i.is-l0 { background: #fff; border-color: #e3e9ee; }
+}
+
+.acc-jo-cal-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  color: #3d5266;
+  background: linear-gradient(90deg, #f1fbf7 0%, #f6f8fa 100%);
+  border: 1px dashed #c9e9dd;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+
+  i { color: #0e9f86; }
+}
+
+// ຊ່ວງຍາວ: ຕາຕະລາງລາຍອາທິດ
+.acc-jo-heat { overflow-x: auto; }
+
+.acc-jo-heat-months {
+  display: grid;
+  margin-left: 30px;
+  color: var(--rp-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+
+  span { white-space: nowrap; }
+}
+
+.acc-jo-heat-body { display: flex; gap: 6px; }
+
+.acc-jo-heat-days {
+  display: grid;
+  width: 24px;
+  flex: none;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  color: var(--rp-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.acc-jo-heat-grid {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 14px);
+  gap: 3px;
+}
+
+.acc-jo-heat-cell {
+  position: relative;
+  border-radius: 3px;
+  outline: none;
+
+  &:not(.is-future):hover,
+  &:not(.is-future):focus-visible { z-index: 2; box-shadow: 0 0 0 2px #14314d; }
+
+  &:not(.is-future):hover::before,
+  &:not(.is-future):focus-visible::before {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 6px);
+    left: 0;
+    padding: 4px 8px;
+    color: #fff;
+    background: #14314d;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &.is-late:hover::before,
+  &.is-late:focus-visible::before { right: 0; left: auto; }
+
+  &.is-today { box-shadow: 0 0 0 2px #14314d; }
+}
+
+// ---- ຈຸດເດັ່ນ ----
+.acc-jo-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.acc-jo-fact {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  background: #fbfcfd;
+  border: 1px solid #edf1f4;
+  border-radius: 12px;
+  animation: jo-rise 0.45s ease both;
+  animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover { transform: translateY(-2px); border-color: #dbe4eb; box-shadow: 0 8px 18px rgba(27, 62, 94, 0.08); }
+  &.is-link { cursor: pointer; }
+  &.is-link:hover .acc-jo-fact-go { transform: translateX(3px); color: var(--rp-ink); }
+}
+
+.acc-jo-fact-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 17px;
+  transition: transform 0.25s ease;
+
+  .acc-jo-fact:hover & { transform: rotate(-10deg) scale(1.1); }
+
+  &.is-gold { color: #b07800; background: #fff4d6; }
+  &.is-teal { color: #08735f; background: #e3f5f1; }
+  &.is-red { color: #c4343a; background: #fdecec; }
+  &.is-orange { color: #c2410c; background: #fdeee6; }
+  &.is-purple { color: #5b3fb0; background: #f1ecfd; }
+  &.is-blue { color: #1e5fae; background: #e8f1fc; }
+}
+
+.acc-jo-fact-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+
+  small { color: #5b6f80; font-size: 11.5px; font-weight: 700; }
+  b { overflow: hidden; color: var(--rp-text); font-family: var(--rp-font); font-size: 16px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+  em { overflow: hidden; color: var(--rp-muted); font-size: 11.5px; font-style: normal; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.acc-jo-fact-go { color: #b3c0cb; font-size: 12px; transition: transform 0.15s ease; }
+
+// ---- ອັນດັບ ----
+.acc-jo-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 28px 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    border-radius: 10px;
+    animation: jo-rise 0.4s ease both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+    transition: background 0.15s ease;
+
+    &:hover { background: #f8fbfd; }
+  }
+}
+
+.acc-jo-rank-no {
+  display: grid;
+  place-items: center;
+  color: var(--rp-muted);
+  font-family: var(--rp-font);
+  font-size: 13px;
+  font-weight: 800;
+
+  i { font-size: 18px; }
+  &.is-1 i { color: #e6a700; filter: drop-shadow(0 2px 3px rgba(230, 167, 0, 0.35)); }
+  &.is-2 i { color: #94a3b8; }
+  &.is-3 i { color: #c27c3e; }
+}
+
+.acc-jo-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: hsl(var(--hue) 55% 32%);
+  background: hsl(var(--hue) 70% 92%);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.acc-jo-rank-name {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+
+  b { overflow: hidden; color: var(--rp-text); font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.acc-jo-rank-bar {
+  height: 5px;
+  overflow: hidden;
+  background: #eef2f5;
+  border-radius: 3px;
+
+  i { display: block; height: 100%; border-radius: 3px; animation: jo-reveal 0.9s ease-out both; }
+  &.is-in i { background: #3fd0a4; }
+  &.is-out i { background: #f07a7f; }
+}
+
+.acc-jo-rank-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  b { color: var(--rp-text); font-family: var(--rp-font); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  small { color: var(--rp-muted); font-size: 11px; font-weight: 600; }
+}
+
+// ---- ລາຍການລ່າສຸດ ----
+.acc-jo-feed ul {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.acc-jo-feed li {
+  animation: jo-rise 0.4s ease both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+
+  button {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    transition: background 0.15s ease;
+
+    &:hover { background: #f8fbfd; }
+  }
+}
+
+.acc-jo-feed-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  font-size: 13px;
+
+  &.is-in { color: #08735f; background: #e3f5f1; }
+  &.is-out { color: #c4343a; background: #fdecec; }
+
+  img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+}
+
+.acc-jo-feed-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+
+  b { overflow: hidden; color: var(--rp-text); font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  small { overflow: hidden; color: var(--rp-muted); font-size: 11.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.acc-jo-feed-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  b { font-family: var(--rp-font); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  small { color: var(--rp-muted); font-size: 11px; font-weight: 600; }
+
+  &.is-in b { color: #08735f; }
+  &.is-out b { color: #c4343a; }
+}
+
+// ---- ໜ້າຕ່າງແຄບ ----
+@container (max-width: 980px) {
+  .acc-jo-hero { grid-template-columns: minmax(0, 1fr); }
+  .acc-jo-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acc-jo-grid,
+  .acc-jo-grid.is-wide-left { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container (max-width: 520px) {
+  .acc-jo-tiles { grid-template-columns: minmax(0, 1fr); }
+  .acc-jo-cal-day small { display: none; }
+}

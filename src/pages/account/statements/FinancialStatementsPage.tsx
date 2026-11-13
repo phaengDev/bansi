@@ -5,7 +5,7 @@ import AppPage from '../../../components/Elements/AppPage';
 import { postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { useT } from '../../../context/LanguageContext';
-import { STATEMENTS_MENU, firstRailKey, toRailNav } from '../config/SidebarPopup';
+import { STATEMENTS_MENU, toRailNav } from '../config/SidebarPopup';
 import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import type { Income } from '../journal/IncomeForm';
 import type { Expense } from '../journal/ExpenseForm';
@@ -15,6 +15,9 @@ import type { PartnerPayment } from '../arap/arapApi';
 import ProfitLoss from './ProfitLoss';
 import CashFlow from './CashFlow';
 import BalanceSheet from './BalanceSheet';
+import { useGlPnl } from '../gl/useGlPnl';
+import { isKip } from '../ledger/currency';
+import { useRailKey } from '../windowMemory';
 
 /** ຂໍ້ມູນທີ່ທຸກໃບໃຊ້ຮ່ວມກັນ */
 export type StatementData = {
@@ -29,6 +32,8 @@ export type StatementData = {
   payments: Entry[];
   currency: string | null;
   symbol: string;
+  /** ລາຍຮັບ-ລາຍຈ່າຍ ຕາມຜັງບັນຊີ ຈາກສະໝຸດບັນຊີ (LAK) — null = ລະບົບບັນຊີຄູ່ຍັງບໍ່ມີລາຍການ */
+  gl: ReturnType<typeof useGlPnl>;
 };
 
 /**
@@ -39,7 +44,7 @@ export type StatementData = {
 const FinancialStatementsPage = () => {
   const t = useT();
   const railNav = useMemo(() => toRailNav(STATEMENTS_MENU, t), [t]);
-  const [activeKey, setActiveKey] = useState(firstRailKey(STATEMENTS_MENU));
+  const [activeKey, setActiveKey] = useRailKey('statements', STATEMENTS_MENU);
   const [period, setPeriod] = useState<Period>('month');
   const [range, setRange] = useState<Range>(() => rangeOf('month'));
   const [currency, setCurrency] = useState<string | null>(null);
@@ -66,7 +71,8 @@ const FinancialStatementsPage = () => {
       postApi('/income/fetch', span),
       postApi('/expense/fetch', span),
       postApi('/treasury-account/fetch', {}),
-      postApi('/transfer-money/fetch', { start_date: startKey, end_date: to }, { params: { limit: 100000 } }),
+      // ຕັ້ງແຕ່ຕົ້ນງວດກ່ອນ — ໃບກະແສເງິນສົດທຽບງວດກ່ອນ
+      postApi('/transfer-money/fetch', span, { params: { limit: 100000 } }),
       // ລູກໜີ້-ເຈົ້າໜີ້ ຍັງບໍ່ເປີດໃຊ້ (503) = ບໍ່ມີລາຍການ
       postApi('/partner-payment/fetch', span).catch(() => ({ data: { data: [] } })),
     ])
@@ -94,13 +100,17 @@ const FinancialStatementsPage = () => {
     setRange(rangeOf(value));
   };
 
+  const gl = useGlPnl(range, prev);
+  // ໃບທີ່ມາຈາກສະໝຸດບັນຊີ (ຊັບສົມບັດ, ຜົນດຳເນີນງານເມື່ອມີລາຍການບັນຊີຄູ່) ເປັນ LAK ສະເໝີ — ບໍ່ມີປຸ່ມເລືອກສະກຸນ
+  const ledgerOnly = activeKey === 'balanceSheet' || (activeKey === 'profitLoss' && !!gl);
   const currencies = currenciesOf([...incomes, ...expenses], accounts);
-  const curKey = currency && currencies.some((c) => c.key === currency) ? currency : currencies[0]?.key ?? null;
-  const symbol = currencies.find((c) => c.key === curKey)?.symbol ?? '';
+  const kip = currencies.find((c) => isKip({ name: c.key, genus: c.symbol }))?.key ?? 'LAK';
+  const curKey = ledgerOnly ? kip : currency && currencies.some((c) => c.key === currency) ? currency : currencies[0]?.key ?? null;
+  const symbol = currencies.find((c) => c.key === curKey)?.symbol ?? (ledgerOnly ? '₭' : '');
 
   const receipts = settlements.filter((p) => Number(p.pay_kind) === 1).map((p) => fromPartnerPayment(p, t('fsArCollections')));
   const payments = settlements.filter((p) => Number(p.pay_kind) === 2).map((p) => fromPartnerPayment(p, t('fsApSettlements')));
-  const data: StatementData = { range, prev, incomes, expenses, accounts, transfers, receipts, payments, currency: curKey, symbol };
+  const data: StatementData = { range, prev, incomes, expenses, accounts, transfers, receipts, payments, currency: curKey, symbol, gl };
   const pages: Record<string, ReactNode> = {
     profitLoss: <ProfitLoss data={data} />,
     cashFlow: <CashFlow data={data} />,
@@ -136,7 +146,11 @@ const FinancialStatementsPage = () => {
                 </button>
               ))}
             </div>
-            {currencies.length > 1 && (
+            {ledgerOnly ? (
+              <span className="acc-fs-ledger-chip" title={t('glBsNote')}>
+                <i className="fa-solid fa-book" /> {t('fsLedgerUnit')}
+              </span>
+            ) : currencies.length > 1 && (
               <div className="acc-type-segment" role="tablist" aria-label={t('accountTypeCurrency')}>
                 {currencies.map((c) => (
                   <button key={c.key} type="button" role="tab" aria-selected={curKey === c.key}

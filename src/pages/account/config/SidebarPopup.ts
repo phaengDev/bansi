@@ -66,6 +66,12 @@ export const ACCOUNT_SETTING_MENU: SidebarPopupGroup[] = [
 /** ເມນູຂອງໜ້າຕ່າງ ບັນທຶກບັນຊີປະຈຳວັນ — ລາຍຮັບ ແລະ ລາຍຈ່າຍ ຢູ່ໜ້າຕ່າງດຽວກັນ */
 export const JOURNAL_MENU: SidebarPopupGroup[] = [
   {
+    group: 'journalGroupOverview',
+    items: [
+      { key: 'overview', icon: 'fa-solid fa-gauge-high', label: 'journalOverview' },
+    ],
+  },
+  {
     group: 'journalGroupEntries',
     items: [
       { key: 'income', icon: 'fa-solid fa-arrow-trend-up', label: 'journalIncome' },

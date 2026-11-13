@@ -26,7 +26,8 @@ import PayrollWindow from '../hr/payroll/PayrollWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import MenuContextMenu from './MenuContextMenu';
 import { MenuLockForm, type MenuLockMode } from './setting/MenuLockPage';
-import { refreshAccountMenus, useAccountMenus } from './accountMenus';
+import { refreshAccountMenus, useAccountMenus, useAccountMenusLoaded } from './accountMenus';
+import { keepWindowsOn, readOpenWindows, saveKeepWindows, saveOpenWindows } from './windowMemory';
 import {
   langLabels,
   localeByLanguage,
@@ -89,11 +90,18 @@ const AccountShell: React.FC = () => {
     () => (localStorage.getItem('accountTaskbarPinned') ?? localStorage.getItem('lifeTaskbarPinned')) !== 'false',
   );
   const [taskbarRevealed, setTaskbarRevealed] = useState(false);
+  /** ຈື່ໜ້າຕ່າງທີ່ເປີດໄວ້ — ໂຫຼດໜ້າເວັບໃໝ່ແລ້ວເປີດຄືນ (windowMemory) */
+  const [keepWindows, setKeepWindows] = useState(keepWindowsOn);
+  /** ລຳດັບທີ່ເປີດ/ກົດເປີດຄືນ — ອັນສຸດທ້າຍ = ຢູ່ໜ້າສຸດ, ເປີດຄືນຕາມລຳດັບນີ້ */
+  const focusOrderRef = useRef<ShortcutId[]>([]);
+  /** ເປີດຄືນແລ້ວ (ຫຼື ບໍ່ຕ້ອງເປີດ) — ກ່ອນນັ້ນບໍ່ບັນທຶກ ບໍ່ໃຫ້ລາຍການວ່າງທັບຂອງເກົ່າ */
+  const restoredRef = useRef(false);
   const taskbarVisible = taskbarPinned || taskbarRevealed;
   const userName = localStorage.getItem('user_name');
   const { wallpaper, setWallpaper } = useWallpaper();
   /** ເມນູບັນຊີຈາກ GET /menu/main (ລຳດັບ, ຊື່, ໄອຄອນ, ລັອກ) — ຍັງບໍ່ມີກໍ່ໃຊ້ shortcuts ຂອງໜ້າເວັບ */
   const menus = useAccountMenus();
+  const menusLoaded = useAccountMenusLoaded();
   /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop */
   const desktopLayout = useDesktopLayout(menus.map((menu) => menu.id));
   const menuOf = (id: ShortcutId) => menus.find((menu) => menu.id === id);
@@ -166,6 +174,7 @@ const AccountShell: React.FC = () => {
     const popup = popupWindows[id];
     if (popup) {
       popup.show();
+      focusOrderRef.current = [...focusOrderRef.current.filter((item) => item !== id), id];
       return;
     }
     const shortcut = shortcuts.find((item) => item.id === id);
@@ -186,6 +195,46 @@ const AccountShell: React.FC = () => {
   useEffect(() => {
     refreshAccountMenus();
   }, []);
+
+  // ---- ຈື່ໜ້າຕ່າງທີ່ເປີດໄວ້ (ຕັ້ງຄ່າ Desktop) ----
+  const openSignature = shortcuts
+    .filter((shortcut) => popupWindows[shortcut.id]?.open)
+    .map((shortcut) => `${shortcut.id}${popupWindows[shortcut.id]?.minimized ? '-' : ''}`)
+    .join(',');
+
+  // ລໍຮູ້ສະຖານະລັອກຂອງເມນູກ່ອນ: ເມນູທີ່ຕັ້ງລະຫັດໄວ້ ຫຼື ບໍ່ມີສິດແລ້ວ ບໍ່ເປີດຄືນເອງ (ຕ້ອງໃສ່ລະຫັດທຸກເທື່ອ)
+  useEffect(() => {
+    if (restoredRef.current || !menusLoaded) return;
+    restoredRef.current = true;
+    if (!keepWindowsOn()) return;
+    const saved = readOpenWindows().filter((w) => {
+      const menu = menus.find((item) => item.id === w.id);
+      return menu && !menu.locked && popupWindows[menu.id];
+    });
+    if (!saved.length) return;
+    saved.forEach((w) => showShortcut(w.id as ShortcutId));
+    // ຫຼັງໜ້າຕ່າງຂຶ້ນແລ້ວ: ອັນທີ່ຫຍໍ້ໄວ້ ຫຍໍ້ຄືນ, ອັນທີ່ໃຊ້ຫຼ້າສຸດ (ບໍ່ໄດ້ຫຍໍ້) ຂຶ້ນມາຢູ່ໜ້າສຸດ
+    window.setTimeout(() => {
+      saved.forEach((w) => {
+        if (w.minimized) popupWindows[w.id as ShortcutId]?.windowRef.current?.minimize();
+      });
+      const top = [...saved].reverse().find((w) => !w.minimized);
+      if (top) popupWindows[top.id as ShortcutId]?.windowRef.current?.restore();
+    }, 80);
+  }, [menusLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!keepWindows || !restoredRef.current) return;
+    const open = openSignature ? openSignature.split(',') : [];
+    const ids = open.map((item) => item.replace(/-$/, ''));
+    const order = [...ids.filter((id) => !focusOrderRef.current.includes(id as ShortcutId)), ...focusOrderRef.current.filter((id) => ids.includes(id))];
+    saveOpenWindows(order.map((id) => ({ id, minimized: open.includes(`${id}-`) })));
+  }, [keepWindows, openSignature]);
+
+  const toggleKeepWindows = (on: boolean) => {
+    setKeepWindows(on);
+    saveKeepWindows(on);
+  };
 
   useEffect(() => {
     localStorage.setItem('accountTaskbarPinned', String(taskbarPinned));
@@ -543,6 +592,8 @@ const AccountShell: React.FC = () => {
               <DesktopSettings
                 taskbarPinned={taskbarPinned}
                 onToggleTaskbarPinned={setTaskbarPinned}
+                keepWindows={keepWindows}
+                onToggleKeepWindows={toggleKeepWindows}
                 onArrangeIcons={desktopLayout.resetPositions}
                 wallpaper={wallpaper}
                 onSelectWallpaper={setWallpaper}

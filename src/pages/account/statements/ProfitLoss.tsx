@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { formatNumber } from '../../../utils/configApi';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useT } from '../../../context/LanguageContext';
@@ -5,43 +6,7 @@ import { changeOf, trendOf, type Entry } from '../journal/reportData';
 import type { StatementData } from './FinancialStatementsPage';
 import StatementDoc from './StatementDoc';
 import { acct, linesByCategory, netOf, sumLines, within, type Line } from './statementData';
-import { useGlPnl } from '../gl/useGlPnl';
-
-const Zero = () => <span className="acc-fs-zero">–</span>;
-
-/** ຕົວເລກແຖວລາຍການ — 0 ສະແດງເປັນຂີດ ຕາມແບບໃບລາຍງານບັນຊີ */
-const amount = (value: number) => (value ? acct(value) : <Zero />);
-
-/** ປ່ຽນແປງ = ຜົນຕ່າງ + % ທຽບງວດກ່ອນ — good = ເພີ່ມຂຶ້ນແມ່ນດີບໍ່ (ລາຍຮັບ/ກຳໄລ ແມ່ນ, ລາຍຈ່າຍ ບໍ່ແມ່ນ) */
-const Change = ({ current, previous, good }: { current: number; previous: number; good: boolean }) => {
-  const t = useT();
-  const diff = current - previous;
-  if (!diff) return <td className="acc-fs-change"><Zero /></td>;
-  const up = diff > 0;
-  const change = changeOf(current, previous);
-  // ງວດກ່ອນເປັນ 0 = ລາຍການໃໝ່; ງວດກ່ອນຕິດລົບ (ຂາດທຶນ) % ບໍ່ມີຄວາມໝາຍ → ບໍ່ສະແດງ
-  const pill = change !== null
-    ? <><i className={`fa-solid ${up ? 'fa-caret-up' : 'fa-caret-down'}`} /> {Math.abs(change).toFixed(1)}%</>
-    : previous === 0 ? t('fsNew') : null;
-  return (
-    <td className={`acc-fs-change ${up === good ? 'is-good' : 'is-bad'}`}>
-      <span className="acc-fs-diff">{up ? '+' : '−'}{formatNumber(Math.abs(diff))}</span>
-      {pill && <span className="acc-fs-pill">{pill}</span>}
-    </td>
-  );
-};
-
-/** ສັດສ່ວນຂອງແຖວໃນຍອດລວມໝວດ (ງວດນີ້) */
-const Share = ({ value, total }: { value: number; total: number }) => {
-  if (!value || total <= 0) return <td className="acc-fs-share"><Zero /></td>;
-  const pct = (value / total) * 100;
-  return (
-    <td className="acc-fs-share">
-      <span className="acc-fs-share-bar"><i style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} /></span>
-      {pct.toFixed(1)}%
-    </td>
-  );
-};
+import { Change, KpiDelta, PlotFrame, SectionRow, Share, amount, niceAxis } from './StatementBits';
 
 /**
  * ໃບລາຍງານຜົນດຳເນີນງານ (ກຳໄລ-ຂາດທຶນ) — ລາຍຮັບ − ລາຍຈ່າຍ ແຍກຕາມປະເພດ, ທຽບຊ່ວງກ່ອນ.
@@ -55,8 +20,8 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
   const expenses = data.expenses.filter(inCur);
 
   // ລະບົບບັນຊີຄູ່ມີລາຍການແລ້ວ → ແຖວຕາມບັນຊີໃນຜັງ (LAK, ລວມບັນທຶກທົ່ວໄປ ເຊັ່ນ ຄ່າຫຼຸ້ຍຫ້ຽນ);
-  // ຍັງບໍ່ມີ → ຕາມປະເພດລາຍຮັບ-ລາຍຈ່າຍ ຂອງສະກຸນທີ່ເລືອກ ຄືເດີມ
-  const gl = useGlPnl(range, prev);
+  // ຍັງບໍ່ມີ → ຕາມປະເພດລາຍຮັບ-ລາຍຈ່າຍ ຂອງສະກຸນທີ່ເລືອກ ຄືເດີມ (ໜ້າຫຼັກບັງຄັບສະກຸນເປັນ LAK ເມື່ອມີ gl)
+  const { gl } = data;
   const unit = gl ? 'LAK' : currency ?? '';
   const sym = gl ? '₭' : symbol;
   const revenueLines = gl ? gl.revenue : linesByCategory(incomes, range, prev, netOf, t('notSpecified'));
@@ -74,27 +39,15 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
   const asNet = (list: Entry[]) => list.filter((e) => within(e.date, range)).map((e) => ({ ...e, amount: netOf(e) }));
   const inTrend = trendOf(asNet(incomes), range);
   const outTrend = trendOf(asNet(expenses), range);
-  const peak = Math.max(1, ...inTrend.slots.map((s) => s.total), ...outTrend.slots.map((s) => s.total));
-  const labelEvery = inTrend.slots.length > 16 ? 5 : 1;
+  const axis = niceAxis(0, Math.max(1, ...inTrend.slots.map((s) => s.total), ...outTrend.slots.map((s) => s.total)));
+  const todayKey = moment().format(inTrend.daily ? 'YYYY-MM-DD' : 'YYYY-MM');
+  const future = inTrend.slots.findIndex((s) => s.key > todayKey);
 
   const rangeText = `${range.start.format('DD/MM/YYYY')} – ${range.end.format('DD/MM/YYYY')}`;
   const prevText = `${prev.start.format('DD/MM/YYYY')} – ${prev.end.format('DD/MM/YYYY')}`;
   const pct = (value: number | null) => (value === null ? '—' : `${value.toFixed(1)}%`);
 
   const noCurrent = !revenue.current && !expense.current && !!(revenue.previous || expense.previous);
-
-  /** ຫົວໝວດ — ແຖບສີ: ລາຍຮັບ ຂຽວ, ລາຍຈ່າຍ ແດງ */
-  const renderSection = (tone: 'in' | 'out', label: string, count: number) => (
-    <tr className={`is-section is-${tone}`}>
-      <td colSpan={5}>
-        <span className="acc-fs-section">
-          <i className={`fa-solid ${tone === 'in' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} />
-          {label}
-          {count > 0 && <small>{count}</small>}
-        </span>
-      </td>
-    </tr>
-  );
 
   const renderLines = (lines: Line[], total: number, good: boolean) =>
     lines.length ? lines.map((l) => (
@@ -144,12 +97,12 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
         <div className="acc-rp-kpi">
           <small>{t('fsTotalRevenue')}</small>
           <b className="is-in">{sym} {formatNumber(revenue.current)}</b>
-          <em className="is-flat">{t('rpVsPrevious')} {formatNumber(revenue.previous)}</em>
+          <KpiDelta current={revenue.current} previous={revenue.previous} good />
         </div>
         <div className="acc-rp-kpi">
           <small>{t('fsTotalExpenses')}</small>
           <b className="is-out">{sym} {formatNumber(expense.current)}</b>
-          <em className="is-flat">{t('rpVsPrevious')} {formatNumber(expense.previous)}</em>
+          <KpiDelta current={expense.current} previous={expense.previous} good={false} />
         </div>
         <div className="acc-rp-kpi">
           <small>{t('fsExpenseRatio')}</small>
@@ -167,26 +120,23 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
             <span><i className="is-out" /> {t('fsExpenses')}</span>
           </small>
         </header>
-        <span className="acc-rp-tick">{formatNumber(peak)}</span>
-        <div className="acc-fs-pairs" style={{ gridTemplateColumns: `repeat(${inTrend.slots.length}, minmax(0, 1fr))` }}>
-          {inTrend.slots.map((s, i) => {
-            const out = outTrend.slots[i];
-            const tip = `${s.tip} · +${formatNumber(s.total)} / −${formatNumber(out.total)} = ${acct(s.total - out.total)}`;
-            return (
-              <span key={s.key} className={`acc-fs-pair${i >= inTrend.slots.length / 2 ? ' is-late' : ''}`}
-                data-tip={tip} aria-label={tip} tabIndex={s.count || out.count ? 0 : -1}
-              >
-                <i className="is-in" style={{ height: s.total ? `max(2px, ${(s.total / peak) * 100}%)` : 0 }} />
-                <i className="is-out" style={{ height: out.total ? `max(2px, ${(out.total / peak) * 100}%)` : 0 }} />
-              </span>
-            );
-          })}
-        </div>
-        <div className="acc-rp-axis" style={{ gridTemplateColumns: `repeat(${inTrend.slots.length}, minmax(0, 1fr))` }}>
-          {inTrend.slots.map((s, i) => (
-            <span key={s.key}>{i % labelEvery === 0 || i === inTrend.slots.length - 1 ? s.label : ''}</span>
-          ))}
-        </div>
+        <PlotFrame ticks={axis.ticks} labels={inTrend.slots.map((s) => s.label)} future={future < 0 ? undefined : future}>
+          <div className="acc-fs-pairs" style={{ gridTemplateColumns: `repeat(${inTrend.slots.length}, minmax(0, 1fr))` }}>
+            {inTrend.slots.map((s, i) => {
+              const out = outTrend.slots[i];
+              const tip = `${s.tip} · +${formatNumber(s.total)} / −${formatNumber(out.total)} = ${acct(s.total - out.total)}`;
+              const height = (v: number) => (v ? `max(2px, ${(v / axis.max) * 100}%)` : 0);
+              return (
+                <span key={s.key} className={`acc-fs-pair${i >= inTrend.slots.length / 2 ? ' is-late' : ''}`}
+                  data-tip={tip} aria-label={tip} tabIndex={s.count || out.count ? 0 : -1}
+                >
+                  <i className="is-in" style={{ height: height(s.total) }} />
+                  <i className="is-out" style={{ height: height(out.total) }} />
+                </span>
+              );
+            })}
+          </div>
+        </PlotFrame>
       </section>
 
       {/* ---- ໃບລາຍງານ (ສ່ວນທີ່ພິມ) ---- */}
@@ -225,7 +175,7 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
               </tr>
             </thead>
             <tbody>
-              {renderSection('in', t('fsRevenue'), revenueLines.length)}
+              <SectionRow tone="in" icon="fa-arrow-trend-up" label={t('fsRevenue')} count={revenueLines.length} span={5} />
               {renderLines(revenueLines, revenue.current, true)}
               <tr className="is-subtotal">
                 <td>{t('fsTotalRevenue')}</td>
@@ -235,7 +185,7 @@ const ProfitLoss = ({ data }: { data: StatementData }) => {
                 <Change current={revenue.current} previous={revenue.previous} good />
               </tr>
 
-              {renderSection('out', t('fsExpenses'), expenseLines.length)}
+              <SectionRow tone="out" icon="fa-arrow-trend-down" label={t('fsExpenses')} count={expenseLines.length} span={5} />
               {renderLines(expenseLines, expense.current, false)}
               <tr className="is-subtotal">
                 <td>{t('fsTotalExpenses')}</td>

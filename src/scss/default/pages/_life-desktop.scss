@@ -746,6 +746,16 @@ $account-themes: (
 
 .settings-menu-row-label i { width: 14px; color: #5edbff; text-align: center; }
 
+// ຄຳອະທິບາຍນ້ອຍໃຕ້ຊື່ຕົວເລືອກ
+.settings-menu-row-hint {
+  display: block;
+  margin-top: 2px;
+  color: rgba(234, 246, 255, 0.55);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 .settings-menu-row-control {
   display: flex;
   align-items: center;
@@ -1787,17 +1797,79 @@ $account-themes: (
 .acc-glance {
   display: flex;
   width: var(--glance-w);
+  max-width: calc(100% - 16px);
   max-height: calc(100% - var(--glance-top) - 72px);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  animation: life-desktop-enter 650ms 160ms both;
+  container-type: inline-size;
+
+  button { font: inherit; cursor: pointer; }
+}
+
+// ເນື້ອໃນເລື່ອນໄດ້ — ຂອບລາກ (.acc-glance-resize) ຢູ່ນອກ ບໍ່ເລື່ອນຕາມ
+.acc-glance-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 12px;
   padding: 14px;
   overflow-y: auto;
-  border-radius: 20px;
-  animation: life-desktop-enter 650ms 160ms both;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
 
-  button { font: inherit; cursor: pointer; }
+// ຂອບຊ້າຍ/ຂວາ ລາກຂະຫຍາຍ — ເຫັນຂີດຈັບຕອນຊີ້ ຫຼື ກຳລັງລາກ
+.acc-glance-resize {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  bottom: 18px;
+  display: grid;
+  width: 12px;
+  place-items: center;
+  cursor: ew-resize;
+  touch-action: none;
+  outline: none;
+
+  &.is-left { left: 0; }
+  &.is-right { right: 0; }
+
+  i {
+    display: block;
+    width: 4px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease, height 0.15s ease, background 0.15s ease;
+  }
+
+  &:hover i,
+  &:focus-visible i { height: 64px; opacity: 1; }
+  &:focus-visible i { background: #6ee7b7; }
+}
+
+.acc-glance:hover .acc-glance-resize i { opacity: 0.45; }
+
+.acc-glance.is-resizing {
+  user-select: none;
+
+  .acc-glance-resize i { opacity: 0.3; }
+  .acc-glance-resize:active i { height: 80px; background: #6ee7b7; opacity: 1; }
+}
+
+// ກວ້າງຂຶ້ນ → ບັດລຽງ 3 / 4 ຖັນ
+@container (min-width: 640px) {
+  .acc-glance .acc-glance-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .acc-glance .acc-glance-card.is-wide { grid-column: span 2; }
+}
+
+@container (min-width: 860px) {
+  .acc-glance .acc-glance-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .acc-glance .acc-glance-card.is-wide { grid-column: 1 / -1; }
 }
 
 .acc-glance.is-dragging {

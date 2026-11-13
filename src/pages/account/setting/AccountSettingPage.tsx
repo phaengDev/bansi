@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
 import AccountClassPage from './AccountClassPage';
@@ -14,6 +14,7 @@ import OpeningBalancePage from './OpeningBalancePage';
 import PaymentMethodPage from './PaymentMethodPage';
 import TaxPage from './TaxPage';
 import { ACCOUNT_SETTING_MENU, firstRailKey, toRailNav } from '../config/SidebarPopup';
+import { useRailKey } from '../windowMemory';
 
 type AccountSettingPageProps = {
   /** ຫົວຂໍ້ຂອງໜ້າຕ່າງ popup — ເປີດເປັນ route ເສີຍໆບໍ່ສົ່ງມາ */
@@ -67,7 +68,7 @@ const firstReadyKey =
  */
 const AccountSettingPage = ({ title, onClose }: AccountSettingPageProps) => {
   const t = useT();
-  const [activeKey, setActiveKey] = useState(firstReadyKey);
+  const [activeKey, setActiveKey] = useRailKey('settings', ACCOUNT_SETTING_MENU, firstReadyKey);
 
   const railNav = useMemo(() => toRailNav(ACCOUNT_SETTING_MENU, t), [t]);
   const active = railNav.find((item) => item.key === activeKey);

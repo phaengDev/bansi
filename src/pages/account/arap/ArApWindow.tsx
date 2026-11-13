@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
-import { PAYABLES_MENU, RECEIVABLES_MENU, firstRailKey, toRailNav } from '../config/SidebarPopup';
+import { PAYABLES_MENU, RECEIVABLES_MENU, toRailNav } from '../config/SidebarPopup';
 import { AR, type Kind } from './arapApi';
 import ArApOverview from './ArApOverview';
 import DocPage from './DocPage';
 import PaymentPage from './PaymentPage';
 import PartnerPage from './PartnerPage';
 import AgingPage, { PartnerStatement } from './AgingPage';
+import { useRailKey } from '../windowMemory';
 
 /**
  * ໜ້າຕ່າງ ລູກໜີ້ (kind 1) / ເຈົ້າໜີ້ (kind 2) — ແຖບຊ້າຍ: ພາບລວມ, ໃບແຈ້ງໜີ້/ໃບບິນ, ຮັບ/ຈ່າຍຊຳລະ, ລູກຄ້າ/ຜູ້ສະໜອງ, ອາຍຸໜີ້.
@@ -16,7 +17,7 @@ import AgingPage, { PartnerStatement } from './AgingPage';
 const ArApWindow = ({ kind }: { kind: Kind }) => {
   const t = useT();
   const menu = kind === AR ? RECEIVABLES_MENU : PAYABLES_MENU;
-  const [activeKey, setActiveKey] = useState(firstRailKey(menu));
+  const [activeKey, setActiveKey] = useRailKey(`arap-${kind}`, menu);
   const railNav = useMemo(() => toRailNav(menu, t), [menu, t]);
   const active = railNav.find((item) => item.key === activeKey);
   const [statement, setStatement] = useState<{ _uuid: number; name: string; partner_code?: string } | null>(null);

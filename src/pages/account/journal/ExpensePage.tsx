@@ -24,7 +24,8 @@ const ACTIVE = 1;
  * ໂຄງດຽວກັບ IncomePage (ສີແດງ .acc-jr.is-expense): ຍອດລວມເດືອນ (ແຍກສະກຸນ) + ກຣາຟລາຍວັນ (ກົດແທ່ງ = ກັ່ນມື້ນັ້ນ).
  * ບັນທຶກ/ແກ້ໄຂ ຜ່ານ ExpenseForm; ຍົກເລີກ = ຄືນເງິນເຂົ້າບັນຊີທີ່ຈ່າຍ
  */
-const ExpensePage = () => {
+/** startNew = ເປີດມາພ້ອມຟອມບັນທຶກໃໝ່ (ປຸ່ມ + ຂອງໜ້າພາບລວມ) */
+const ExpensePage = ({ startNew = false }: { startNew?: boolean }) => {
   const t = useT();
   const [month, setMonth] = useState(() => moment().startOf('month'));
   const [rows, setRows] = useState<Expense[]>([]);
@@ -36,7 +37,7 @@ const ExpensePage = () => {
   /** ມື້ທີ່ກັ່ນຈາກກຣາຟ (YYYY-MM-DD) — null = ທັງເດືອນ */
   const [day, setDay] = useState<string | null>(null);
   /** undefined = ປິດຟອມ, null = ບັນທຶກໃໝ່, ມີແຖວ = ແກ້ໄຂ */
-  const [editing, setEditing] = useState<Expense | null | undefined>(undefined);
+  const [editing, setEditing] = useState<Expense | null | undefined>(startNew && canCreate ? null : undefined);
   const [viewing, setViewing] = useState<Expense | null>(null);
 
   const fetchData = async () => {

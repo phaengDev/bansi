@@ -1118,6 +1118,243 @@
 }
 
 // ສັນປຶ້ມ + ເສັ້ນຫຍິບ
+// ---- ເງິນສົດ ແລະ ທະນາຄານ: ສະຫຼັບມຸມມອງ (ບັດ / ພາບລວມ / ກຣາບ) ----
+.acc-view-switch button i { margin-right: 3px; font-size: 12px; }
+
+// ພາບລວມ: ທະນາຄານ × ສະກຸນເງິນ + ບັນຊີທັງໝົດ
+.acc-ov { display: flex; flex-direction: column; gap: 14px; }
+
+.acc-ov-card {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e6ecf1;
+  border-radius: 16px;
+}
+
+.acc-ov-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #14314d;
+  font-size: 14px;
+  font-weight: 700;
+
+  i { color: #1d8fd6; }
+}
+
+.acc-ov-matrix,
+.acc-ov-table {
+  width: 100%;
+
+  .is-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .is-negative { color: #c4343a; }
+
+  tfoot td {
+    color: #14314d;
+    background: #f8fafc;
+    border-top: 2px solid #d5dee6;
+    font-weight: 800;
+  }
+}
+
+.acc-ov-bank {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  > span { display: flex; flex-direction: column; }
+  b { color: #14314d; }
+  small { color: #7a8b99; font-size: 11.5px; }
+
+  &.is-small { gap: 7px; }
+}
+
+.acc-ov-logo {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  color: #7a8b99;
+  background: #fff;
+  border: 1px solid #e6ecf1;
+  border-radius: 8px;
+
+  img { width: 100%; height: 100%; object-fit: contain; }
+}
+
+.acc-ov-bank.is-small .acc-ov-logo { width: 24px; height: 24px; border-radius: 6px; }
+
+.acc-ov-table {
+  .acc-ov-group td {
+    color: #14314d;
+    background: #f6f9fc;
+    font-weight: 700;
+
+    em { margin-left: 6px; padding: 0 7px; color: #5b6f80; background: #eef3f7; border-radius: 10px; font-size: 11px; font-style: normal; }
+  }
+
+  tr.is-off td { opacity: 0.6; }
+  .acs-chip { margin-left: 6px; }
+}
+
+// ປ້າຍສະກຸນເງິນຂອງກຸ່ມ (ພາບລວມ + ຫົວກຸ່ມບັດ)
+.acc-cur-pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-left: 8px;
+  padding: 1px 9px;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &.is-lak { color: #1d5fa8; background: #e8f1fb; border-color: #9cc3ea; }
+  &.is-usd { color: #0b7a4f; background: #e3f6ed; border-color: #8fd1b2; }
+  &.is-thb { color: #a8620a; background: #fff3dc; border-color: #ecc078; }
+}
+
+.acc-ov-code { display: inline-block; margin-right: 6px; padding: 1px 8px; color: #fff; background: #d9930f; border-radius: 6px; font-size: 12px; }
+.acc-ov-name { color: #14314d; }
+.acc-ov-number { color: #3d5266; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.03em; }
+.acc-ov-total { color: #14314d; font-weight: 800; }
+
+// ກຣາບ: ບັດລະສະກຸນເງິນ — ແທ່ງລຽງຈາກຫຼາຍໄປໜ້ອຍ ແຕ່ລະທະນາຄານ (ສີດຽວ, ≤ 24px, ປາຍມົນ 4px)
+.acc-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.acc-chart-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e6ecf1;
+  border-radius: 16px;
+
+  > header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eef2f5;
+
+    em { margin-left: auto; color: #7a8b99; font-size: 12px; font-style: normal; text-align: right; }
+  }
+}
+
+.acc-chart-cur {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  color: #1d6fb8;
+  background: #e6f1fb;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.acc-chart-head {
+  display: flex;
+  flex-direction: column;
+
+  small { color: #7a8b99; font-size: 12px; }
+  b { color: #14314d; font-size: 22px; font-variant-numeric: tabular-nums; }
+  b.is-negative { color: #c4343a; }
+}
+
+.acc-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr) 118px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border-radius: 10px;
+    outline: none;
+
+    &:hover, &:focus-visible { background: #f5f9fc; }
+    &:focus-visible { box-shadow: inset 0 0 0 2px #1d8fd6; }
+    &:hover .acc-chart-tip, &:focus-visible .acc-chart-tip { display: block; }
+  }
+}
+
+.acc-chart-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  b { overflow: hidden; color: #14314d; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .acc-ov-logo { width: 24px; height: 24px; border-radius: 6px; }
+}
+
+// ແທ່ງເລີ່ມຈາກເສັ້ນຖານດຽວກັນ (ຊ້າຍ) — ປາຍມົນ, ຖານສີ່ຫຼ່ຽມ
+.acc-chart-track {
+  position: relative;
+  height: 16px;
+  border-left: 1px solid #cfd8e0;
+
+  i { position: absolute; inset: 0 auto 0 0; background: #2b7fc9; border-radius: 0 4px 4px 0; }
+}
+
+.acc-chart-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+
+  b { color: #14314d; font-size: 13px; font-variant-numeric: tabular-nums; }
+  small { color: #7a8b99; font-size: 11.5px; }
+  &.is-negative b { color: #c4343a; }
+}
+
+// ບັນຊີໃນທະນາຄານ (ຊີ້ / focus ແຖວ)
+.acc-chart-tip {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% - 4px);
+  left: 130px;
+  display: none;
+  min-width: 240px;
+  max-width: 360px;
+  padding: 10px 12px;
+  color: #fff;
+  background: #14314d;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(20, 49, 77, 0.25);
+  font-size: 12.5px;
+  pointer-events: none;
+
+  > b { display: block; margin-bottom: 6px; }
+
+  > span {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+
+    em { font-style: normal; font-variant-numeric: tabular-nums; }
+  }
+}
+
 // ລາກຍ້າຍບັດ (ໜ້າ ເງິນສົດ ແລະ ທະນາຄານ) — ຈັບຫົວບັດ; ບັດທີ່ກຳລັງລາກຈາງລົງ + ຂອບປະ
 .acc-pb.is-sortable .acc-pb-cover { cursor: grab; }
 .acc-pb.is-sortable .acc-pb-cover button { cursor: pointer; }
@@ -6609,16 +6846,256 @@
   i { width: 10px; height: 10px; border-radius: 3px; }
   .is-in { background: #0e9f86; }
   .is-out { background: #e5484d; }
+  .is-line { width: 16px; height: 3px; background: #0e9f86; border-radius: 2px; }
+}
+
+// ປ່ຽນແປງໃນບັດຕົວເລກສະຫຼຸບ — ▲ % (ສີດີ/ບໍ່ດີ) · ທຽບຊ່ວງກ່ອນ (ເທົາ)
+.acc-rp-kpi em {
+  flex-wrap: wrap;
+
+  .acc-fs-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 7px;
+    background: #f1f4f7;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  &.is-good .acc-fs-delta { background: #e3f5f1; }
+  &.is-bad .acc-fs-delta { background: #fdecec; }
+  .acc-fs-delta-ref { color: var(--rp-muted); }
+}
+
+.acc-rp-kpi.is-main em i { font-size: 11px; }
+
+// ໃບທີ່ມາຈາກສະໝຸດບັນຊີ — ປ້າຍຫົວໜ່ວຍແທນປຸ່ມເລືອກສະກຸນ
+.acc-fs-ledger-chip {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  color: #3d5266;
+  background: #f1f4f7;
+  border-radius: 10px;
+  font-family: var(--rp-font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+
+  i { color: var(--rp-accent); }
+}
+
+// ກຣາບຍອດເງິນ (ໃບກະແສເງິນສົດ) — ເສັ້ນ SVG ເຕັມພື້ນທີ່ + ຊ່ອງຊີ້ (tooltip) ແຕ່ລະຊ່ອງເວລາ
+.acc-fs-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.acc-fs-hits {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.acc-fs-hit {
+  position: relative;
+  outline: none;
+
+  i {
+    position: absolute;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+    background: #fff;
+    border: 2px solid #0e9f86;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &.is-moved i { opacity: 1; }
+
+  &:hover,
+  &:focus-visible { background: rgba(20, 49, 77, 0.04); border-radius: 4px; }
+
+  &:hover i,
+  &:focus-visible i { opacity: 1; background: #0e9f86; border-color: #fff; box-shadow: 0 0 0 2px #0e9f86; }
+
+  &:hover::before,
+  &:focus-visible::before {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 2;
+    bottom: calc(100% + 6px);
+    left: 0;
+    padding: 4px 8px;
+    color: #fff;
+    background: #14314d;
+    border-radius: 6px;
+    font-family: var(--rp-font);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &.is-late:hover::before,
+  &.is-late:focus-visible::before { right: 0; left: auto; }
+}
+
+// ໂຄງສ້າງຊັບສົມບັດ — ສອງແຖບຊ້ອນ: ຊັບສິນ ທຽບ ໜີ້ສິນ + ທຶນ (ເສັ້ນຂາວ 2px ລະຫວ່າງສ່ວນ)
+.acc-fs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.acc-fs-stack-row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.acc-fs-stack-label {
+  display: flex;
+  flex-direction: column;
+  color: #3d5266;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+
+  b { color: var(--rp-text); font-family: var(--rp-font); font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+}
+
+.acc-fs-stack-track {
+  display: flex;
+  height: 22px;
+  gap: 2px;
+
+  i {
+    position: relative;
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    outline: none;
+
+    &:first-child { border-radius: 4px 0 0 4px; }
+    &:last-child { border-radius: 0 4px 4px 0; }
+    &:only-child { border-radius: 4px; }
+
+    &:hover,
+    &:focus-visible { filter: brightness(1.08); box-shadow: 0 0 0 2px #fff, 0 0 0 3px #14314d; }
+
+    &:hover::before,
+    &:focus-visible::before {
+      content: attr(data-tip);
+      position: absolute;
+      z-index: 2;
+      bottom: calc(100% + 8px);
+      left: 0;
+      padding: 4px 8px;
+      color: #fff;
+      background: #14314d;
+      border-radius: 6px;
+      font-family: var(--rp-font);
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  }
+}
+
+.acc-fs-stack-track i,
+.acc-fs-stack-legend i {
+  &.is-ca { background: #0e9f86; }
+  &.is-na { background: #3b6fd8; }
+  &.is-cl { background: #e8912b; }
+  &.is-nl { background: #b4532a; }
+  &.is-eq { background: #7c5cd6; }
+}
+
+.acc-fs-stack-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e3eaf0;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #3d5266;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.is-none { opacity: 0.55; }
+  }
+
+  i { width: 10px; height: 10px; border-radius: 3px; }
+  b { color: var(--rp-text); font-family: var(--rp-font); font-weight: 700; font-variant-numeric: tabular-nums; }
+}
+
+// ກອບກຣາບ (StatementBits PlotFrame) — ແກນ Y ຊ້າຍ, ເສັ້ນຕາຕະລາງຕາມຂັ້ນ, ຊ່ອງເວລາທີ່ຍັງບໍ່ຮອດ ພື້ນອ່ອນ
+.acc-fs-plot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+.acc-fs-yaxis {
+  display: flex;
+  height: calc(var(--fs-plot-h, 168px) + 12px);
+  flex-direction: column;
+  justify-content: space-between;
+  margin: -6px 0;
+  color: var(--rp-muted);
+  font-family: var(--rp-font);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.acc-fs-plot-main { min-width: 0; }
+
+.acc-fs-plot-area {
+  position: relative;
+  height: var(--fs-plot-h, 168px);
+  background: linear-gradient(#eef2f5 1px, transparent 1px) 0 0 / 100% calc(100% / var(--fs-rows, 4));
+  border-bottom: 1px solid #c9d4dd;
+}
+
+.acc-fs-future {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, rgba(123, 138, 151, 0.07) 0 6px, transparent 6px 12px);
+  border-left: 1px dashed #c9d4dd;
+  pointer-events: none;
 }
 
 // ລາຍຮັບ (ຂຽວ) + ລາຍຈ່າຍ (ແດງ) ຄູ່ກັນໃນແຕ່ລະຊ່ອງເວລາ
 .acc-fs-pairs {
+  position: relative;
   display: grid;
-  height: 170px;
+  height: 100%;
   align-items: end;
   gap: 4px;
-  background: linear-gradient(#eef2f5 1px, transparent 1px) 0 0 / 100% 25%;
-  border-bottom: 1px solid #d5dee6;
 }
 
 .acc-fs-pair {
@@ -6630,9 +7107,12 @@
   gap: 2px;
   outline: none;
 
-  i { display: block; width: 45%; max-width: 16px; border-radius: 3px 3px 0 0; }
+  i { display: block; width: 45%; max-width: 18px; border-radius: 4px 4px 0 0; }
   i.is-in { background: linear-gradient(180deg, #3fd0a4 0%, #0e9f86 100%); }
   i.is-out { background: linear-gradient(180deg, #f07a7f 0%, #e5484d 100%); }
+
+  &:hover,
+  &:focus-visible { background: rgba(20, 49, 77, 0.04); border-radius: 4px; }
 
   &:hover i,
   &:focus-visible i { filter: brightness(1.1); }
@@ -6773,6 +7253,14 @@
 
     tr.is-section.is-in { --fs-tone: #0e9f86; --fs-tint: #effaf6; --fs-ink: #08735f; }
     tr.is-section.is-out { --fs-tone: #e5484d; --fs-tint: #fdf3f3; --fs-ink: #b42d33; }
+    tr.is-section.is-asset { --fs-tone: #0e9f86; --fs-tint: #effaf6; --fs-ink: #08735f; }
+    tr.is-section.is-liability { --fs-tone: #e8912b; --fs-tint: #fff6ea; --fs-ink: #9a5a0c; }
+    tr.is-section.is-equity { --fs-tone: #7c5cd6; --fs-tint: #f4f0fd; --fs-ink: #5b3fb0; }
+
+    tr.is-group td { padding-top: 10px; color: #3d5266; font-size: 12.5px; }
+    tr.is-strong td { border-bottom: 1px solid #e3eaf0; }
+    tr.is-plain td { font-weight: 700; border-top: 1px solid #e3eaf0; }
+    tr.is-subtotal.is-gap td { border-top: 1px solid #9fb0bf; border-bottom: 10px solid #fff; }
 
     tr.is-line td { border-bottom: 1px dashed #e8edf1; }
     tr.is-line:hover td { background: #f8fbfd; }
@@ -6890,7 +7378,17 @@
   text-align: center;
 }
 
-.acc-fs-subhead { margin: 24px 0 8px; color: var(--rp-text); font-size: 14px; font-weight: 800; }
+.acc-fs-subhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 26px 0 8px;
+  color: var(--rp-text);
+  font-size: 14px;
+  font-weight: 800;
+
+  i { color: var(--rp-accent, #0e9f86); font-size: 13px; }
+}
 
 .acc-fs-account {
   display: flex;

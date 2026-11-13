@@ -13,6 +13,9 @@ import {
 type DesktopSettingsProps = {
   taskbarPinned: boolean;
   onToggleTaskbarPinned: (pinned: boolean) => void;
+  /** ຈື່ໜ້າຕ່າງທີ່ເປີດໄວ້ — ໂຫຼດໜ້າເວັບໃໝ່ (F5) ແລ້ວເປີດຄືນ ແລະ ກັບໄປເມນູເກົ່າ */
+  keepWindows: boolean;
+  onToggleKeepWindows: (on: boolean) => void;
   /** "Arrange icons" — snaps every desktop icon back to the default tidy grid. */
   onArrangeIcons: () => void;
   wallpaper: WallpaperId;
@@ -128,6 +131,8 @@ const WallpaperSwatch: React.FC<WallpaperSwatchProps> = ({ id, label, selected, 
 const DesktopSettings: React.FC<DesktopSettingsProps> = ({
   taskbarPinned,
   onToggleTaskbarPinned,
+  keepWindows,
+  onToggleKeepWindows,
   onArrangeIcons,
   wallpaper,
   onSelectWallpaper,
@@ -150,6 +155,27 @@ const DesktopSettings: React.FC<DesktopSettingsProps> = ({
             checked={taskbarPinned}
             onChange={onToggleTaskbarPinned}
             label={<span className="visually-hidden">{t('lifeSettingsTaskbarRowLabel')}</span>}
+          />
+        </span>
+      </div>
+
+      <div className="settings-menu-section">{t('lifeSettingsWindowsSection')}</div>
+      <div className="settings-menu-row">
+        <span className="settings-menu-row-label">
+          <i className="fa-solid fa-window-restore" aria-hidden="true" />
+          <span>
+            {t('lifeSettingsKeepWindowsLabel')}
+            <small className="settings-menu-row-hint">{t('lifeSettingsKeepWindowsHint')}</small>
+          </span>
+        </span>
+        <span className="settings-menu-row-control">
+          <span className="settings-menu-row-state">
+            {keepWindows ? t('lifeOn') : t('lifeOff')}
+          </span>
+          <Toggle
+            checked={keepWindows}
+            onChange={onToggleKeepWindows}
+            label={<span className="visually-hidden">{t('lifeSettingsKeepWindowsLabel')}</span>}
           />
         </span>
       </div>

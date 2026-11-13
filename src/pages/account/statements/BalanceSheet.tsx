@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Loader } from 'rsuite';
 import type { Moment } from 'moment';
-import { postApi } from '../../../utils/configApi';
+import { formatNumber, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useLangField, useT } from '../../../context/LanguageContext';
@@ -10,6 +10,8 @@ import { GlNotReady, useChartAccounts } from '../gl/glKit';
 import type { StatementData } from './FinancialStatementsPage';
 import StatementDoc from './StatementDoc';
 import { useFiscalYears, type FiscalYear } from '../../../utils/selectOption';
+import { Change, KpiDelta, SectionRow, Zero } from './StatementBits';
+import { acct } from './statementData';
 
 
 /** ໝວດໃນໃບສະຫຼຸບຊັບສົມບັດ — ລຽງຕາມ account_type */
@@ -113,20 +115,45 @@ const BalanceSheet = ({ data }: { data: StatementData }) => {
   const nowText = endNow.format('DD/MM/YYYY');
   const beforeText = endBefore.format('DD/MM/YYYY');
 
-  const lineRow = (key: string | number, label: string, now: number, before: number, className = '', code?: string) => (
-    <tr key={key} className={className}>
+  /** ຍອດ ນ ວັນທີ — 0 = ຂີດ; good = ເພີ່ມຂຶ້ນແມ່ນດີບໍ່ (ຊັບສິນ/ທຶນ ແມ່ນ, ໜີ້ສິນ ບໍ່ແມ່ນ) */
+  const lineRow = (key: string | number, label: string, now: number, before: number, good: boolean, className = '', code?: string) => (
+    <tr key={key} className={className || 'is-line'}>
       <td className={className ? '' : 'is-indent'}>{code && <span className="acc-fs-code">{code}</span>}{label}</td>
-      <td>{money(now)}</td>
-      <td className="is-previous">{money(before)}</td>
+      <td>{Math.abs(now) >= 0.005 ? money(now) : <Zero />}</td>
+      <td className="is-previous">{Math.abs(before) >= 0.005 ? money(before) : <Zero />}</td>
+      <Change current={now} previous={before} good={good} />
     </tr>
   );
-  const sectionRows = (s: (typeof sections)[number]) => [
-    <tr key={`${s.key}-h`} className="is-group"><td colSpan={3}>{t(s.label)}</td></tr>,
-    ...(s.lines.length
-      ? s.lines.map((l) => lineRow(l.account._uuid, lf(l.account, 'name'), l.now, l.before, '', l.account.account_code))
-      : [<tr key={`${s.key}-e`} className="is-empty"><td className="is-indent" colSpan={3}>{t('rpEmpty')}</td></tr>]),
-    lineRow(`${s.key}-t`, `${t('total')}${t(s.label)}`, s.now, s.before, 'is-subtotal is-light'),
+  // ໝວດຍ່ອຍທີ່ບໍ່ມີບັນຊີມີຍອດ ບໍ່ສະແດງ (ບໍ່ໃຫ້ມີແຖວ "ບໍ່ມີຂໍ້ມູນ" ຫຼາຍແຖວ); ທັງກຸ່ມບໍ່ມີ = ແຖວດຽວ
+  const groupRows = (group: 1 | 2, good: boolean) => {
+    const list = sections.filter((s) => s.group === group && s.lines.length);
+    if (!list.length) return <tr className="is-empty"><td className="is-indent" colSpan={4}>{t('rpEmpty')}</td></tr>;
+    return list.map((s) => (
+      <Fragment key={s.key}>
+        <tr className="is-group"><td colSpan={4}>{t(s.label)}</td></tr>
+        {s.lines.map((l) => lineRow(l.account._uuid, lf(l.account, 'name'), l.now, l.before, good, '', l.account.account_code))}
+        {lineRow(`${s.key}-t`, `${t('total')}${t(s.label)}`, s.now, s.before, good, 'is-subtotal is-light')}
+      </Fragment>
+    ));
+  };
+
+  // ໂຄງສ້າງ: ຊັບສິນ (ໝູນວຽນ / ບໍ່ໝູນວຽນ) ທຽບ ໜີ້ສິນ + ທຶນ — ແຕ້ມສະເພາະເມື່ອທຸກສ່ວນບໍ່ຕິດລົບ
+  const part = (key: string) => sections.find((s) => s.key === key)?.now ?? 0;
+  const bars = [
+    { key: 'a', label: t('glGroupAsset'), parts: [
+      { key: 'ca', label: t('glBsCurrentAssets'), value: part('currentAssets'), tone: 'is-ca' },
+      { key: 'na', label: t('glBsNoncurrentAssets'), value: part('noncurrentAssets'), tone: 'is-na' },
+    ] },
+    { key: 'le', label: t('glBsLiabEquity'), parts: [
+      { key: 'cl', label: t('glBsCurrentLiabilities'), value: part('currentLiabilities'), tone: 'is-cl' },
+      { key: 'nl', label: t('glBsNoncurrentLiabilities'), value: part('noncurrentLiabilities'), tone: 'is-nl' },
+      { key: 'eq', label: t('glGroupEquity'), value: equity.now, tone: 'is-eq' },
+    ] },
   ];
+  const scale = Math.max(assets.now, totalLE.now);
+  const drawable = scale > 0 && bars.every((b) => b.parts.every((p) => p.value >= 0));
+  const currentRatio = part('currentLiabilities') > 0 ? part('currentAssets') / part('currentLiabilities') : null;
+  const liabShare = assets.now > 0 ? (liabilities.now / assets.now) * 100 : null;
 
   const exportRows = () => {
     const c = { item: t('fsItem'), now: nowText, before: beforeText };
@@ -148,45 +175,121 @@ const BalanceSheet = ({ data }: { data: StatementData }) => {
   };
 
   return (
-    <StatementDoc
-      title={t('fsBalanceSheet')}
-      period={`${t('glBsAsOf')} ${nowText}`}
-      unit="LAK"
-      onExcel={exportRows}
-      note={<>
-        <p className={balanced ? 'acc-gl-ok' : 'acc-gl-bad'}>
-          <i className={`fa-solid ${balanced ? 'fa-circle-check' : 'fa-triangle-exclamation'}`} /> {t(balanced ? 'glBsBalanced' : 'glBsUnbalanced')}
-        </p>
-        <p>{t('glBsNote')}</p>
-      </>}
-    >
-      <table className="acc-fs-table is-balance">
-        <thead>
-          <tr>
-            <th>{t('fsItem')}</th>
-            <th>{t('glBsAsOf')}<small>{nowText}</small></th>
-            <th>{t('glBsAsOf')}<small>{beforeText}</small></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="is-section"><td colSpan={3}>{t('glGroupAsset')}</td></tr>
-          {sections.filter((s) => s.group === 1).flatMap(sectionRows)}
-          {lineRow('assets', t('glBsTotalAssets'), assets.now, assets.before, 'is-total')}
+    <>
+      {/* ---- ຕົວເລກສະຫຼຸບ ---- */}
+      <div className="acc-rp-kpis">
+        <div className={`acc-rp-kpi is-main${balanced ? '' : ' is-loss'}`}>
+          <small>{t('glBsTotalAssets')} · {nowText}</small>
+          <b>₭ {acct(assets.now)}</b>
+          <em>
+            <i className={`fa-solid ${balanced ? 'fa-circle-check' : 'fa-triangle-exclamation'}`} /> {t(balanced ? 'glBsBalanced' : 'glBsUnbalanced')}
+          </em>
+        </div>
+        <div className="acc-rp-kpi">
+          <small>{t('glBsTotalLiabilities')}</small>
+          <b className="is-out">₭ {acct(liabilities.now)}</b>
+          <KpiDelta current={liabilities.now} previous={liabilities.before} good={false} />
+        </div>
+        <div className="acc-rp-kpi">
+          <small>{t('glBsTotalEquity')}</small>
+          <b className={equity.now < 0 ? 'is-out' : 'is-in'}>₭ {acct(equity.now)}</b>
+          <KpiDelta current={equity.now} previous={equity.before} good />
+        </div>
+        <div className="acc-rp-kpi">
+          <small>{t('glBsCurrentRatio')}</small>
+          <b>{currentRatio === null ? '—' : `${currentRatio.toFixed(2)} ${t('glBsTimes')}`}</b>
+          <em className="is-flat">
+            {t('glBsCurrentRatioHint')}
+            {liabShare !== null && <> · {t('glGroupLiability')} {liabShare.toFixed(1)}% {t('glBsOfAssets')}</>}
+          </em>
+        </div>
+      </div>
 
-          <tr className="is-section"><td colSpan={3}>{t('glGroupLiability')}</td></tr>
-          {sections.filter((s) => s.group === 2).flatMap(sectionRows)}
-          {lineRow('liabilities', t('glBsTotalLiabilities'), liabilities.now, liabilities.before, 'is-subtotal')}
+      {/* ---- ໂຄງສ້າງ: ຊັບສິນ ທຽບ ໜີ້ສິນ + ທຶນ (ບໍ່ພິມ) ---- */}
+      {drawable && (
+        <section className="acc-rp-card">
+          <header>
+            <h4><i className="fa-solid fa-scale-balanced" /> {t('glBsStructure')}</h4>
+            <small>{t('glBsAsOf')} {nowText}</small>
+          </header>
+          <div className="acc-fs-stack">
+            {bars.map((b) => {
+              const total = b.parts.reduce((n, p) => n + p.value, 0);
+              return (
+                <div key={b.key} className="acc-fs-stack-row">
+                  <span className="acc-fs-stack-label">{b.label}<b>{formatNumber(total)}</b></span>
+                  <span className="acc-fs-stack-track">
+                    {b.parts.filter((p) => p.value > 0).map((p) => {
+                      const tip = `${p.label} · ${formatNumber(p.value)} · ${((p.value / scale) * 100).toFixed(1)}%`;
+                      return <i key={p.key} className={p.tone} style={{ width: `${(p.value / scale) * 100}%` }} data-tip={tip} aria-label={tip} tabIndex={0} />;
+                    })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="acc-fs-stack-legend">
+            {bars.flatMap((b) => b.parts).map((p) => (
+              <span key={p.key} className={p.value ? '' : 'is-none'}>
+                <i className={p.tone} />
+                {p.label}
+                <b>{p.value ? `${formatNumber(p.value)} · ${((p.value / scale) * 100).toFixed(1)}%` : '–'}</b>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
-          <tr className="is-section"><td colSpan={3}>{t('glGroupEquity')}</td></tr>
-          {equity.lines.map((l) => lineRow(l.account._uuid, lf(l.account, 'name'), l.now, l.before, '', l.account.account_code))}
-          {lineRow('prior', t('glBsPriorEarnings'), equity.prior.now, equity.prior.before)}
-          {lineRow('current', t('glBsCurrentEarnings'), equity.current.now, equity.current.before)}
-          {lineRow('equity', t('glBsTotalEquity'), equity.now, equity.before, 'is-subtotal')}
+      {/* ---- ໃບລາຍງານ (ສ່ວນທີ່ພິມ) ---- */}
+      <StatementDoc
+        title={t('fsBalanceSheet')}
+        period={`${t('glBsAsOf')} ${nowText}`}
+        unit="LAK"
+        onExcel={exportRows}
+        note={<>
+          <p className={balanced ? 'acc-gl-ok' : 'acc-gl-bad'}>
+            <i className={`fa-solid ${balanced ? 'fa-circle-check' : 'fa-triangle-exclamation'}`} /> {t(balanced ? 'glBsBalanced' : 'glBsUnbalanced')}
+          </p>
+          <p>{t('glBsNote')}</p>
+        </>}
+      >
+        <div className="acc-rp-scroll">
+          <table className="acc-fs-table is-compare is-balance">
+            <colgroup>
+              <col />
+              <col className="is-num" />
+              <col className="is-num" />
+              <col className="is-change" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>{t('fsItem')}</th>
+                <th>{t('glBsAsOf')}<small>{nowText}</small></th>
+                <th>{t('glBsAsOf')}<small>{beforeText}</small></th>
+                <th>{t('fsChange')}<small>{t('fsChangeHint')}</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <SectionRow tone="asset" icon="fa-building-columns" label={t('glGroupAsset')} span={4} />
+              {groupRows(1, true)}
+              {lineRow('assets', t('glBsTotalAssets'), assets.now, assets.before, true, 'is-total')}
 
-          {lineRow('le', t('glBsTotalLiabilitiesEquity'), totalLE.now, totalLE.before, `is-total${balanced ? '' : ' is-negative'}`)}
-        </tbody>
-      </table>
-    </StatementDoc>
+              <SectionRow tone="liability" icon="fa-file-invoice-dollar" label={t('glGroupLiability')} span={4} />
+              {groupRows(2, false)}
+              {lineRow('liabilities', t('glBsTotalLiabilities'), liabilities.now, liabilities.before, false, 'is-subtotal')}
+
+              <SectionRow tone="equity" icon="fa-hand-holding-dollar" label={t('glGroupEquity')} span={4} />
+              {equity.lines.map((l) => lineRow(l.account._uuid, lf(l.account, 'name'), l.now, l.before, true, '', l.account.account_code))}
+              {lineRow('prior', t('glBsPriorEarnings'), equity.prior.now, equity.prior.before, true)}
+              {lineRow('current', t('glBsCurrentEarnings'), equity.current.now, equity.current.before, true)}
+              {lineRow('equity', t('glBsTotalEquity'), equity.now, equity.before, true, 'is-subtotal')}
+
+              {lineRow('le', t('glBsTotalLiabilitiesEquity'), totalLE.now, totalLE.before, true, `is-total${balanced ? '' : ' is-negative'}`)}
+            </tbody>
+          </table>
+        </div>
+      </StatementDoc>
+    </>
   );
 };
 

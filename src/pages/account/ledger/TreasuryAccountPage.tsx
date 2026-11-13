@@ -10,13 +10,22 @@ import TreasuryAccountForm, { type TreasuryAccount, type TreasuryBank } from './
 import AccountStatement from './AccountStatement';
 import AccountMovementLog from './AccountMovementLog';
 import TransferMoneyForm from './TransferMoneyForm';
-import { currencySymbol } from './currency';
+import { CurrencyPill, TreasuryCharts, TreasuryTable } from './TreasuryOverview';
+import { currencySymbol, kipFirst } from './currency';
 import { toneOf } from '../setting/accountTone';
 import { toneStyle, useLogoTones } from './logoTone';
 import { CASH_CLASS_CODE } from '../journal/journalKit';
 import { SearchBox } from '../setting/settingKit';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
+/** ວິທີສະແດງ: ບັດ (ລາກຈັດລຽງໄດ້), ພາບລວມ (ຕາຕະລາງເຫັນທຸກບັນຊີ), ກຣາບ (ແຕ່ລະສະກຸນ ແຕ່ລະທະນາຄານ) */
+type View = 'cards' | 'table' | 'chart';
+const VIEWS: { key: View; icon: string; label: string }[] = [
+  { key: 'cards', icon: 'fa-id-card', label: 'treasuryViewCards' },
+  { key: 'table', icon: 'fa-table-list', label: 'treasuryViewTable' },
+  { key: 'chart', icon: 'fa-chart-simple', label: 'treasuryViewChart' },
+];
+const VIEW_KEY = 'treasuryView';
 type Currency = NonNullable<AccountType['currency']>;
 
 /** key ຂອງ chip ທະນາຄານສຳລັບປຶ້ມບັນຊີທີ່ບໍ່ຜູກທະນາຄານ */
@@ -102,6 +111,22 @@ const TreasuryAccountPage = () => {
   const [bankId, setBankId] = useState<number | null>(null);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const [view, setView] = useState<View>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      return VIEWS.some((v) => v.key === saved) ? (saved as View) : 'cards';
+    } catch {
+      return 'cards';
+    }
+  });
+  const pickView = (next: View) => {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // storage ປິດ — ຈື່ສະເພາະຄັ້ງນີ້
+    }
+  };
   /** undefined = ປິດຟອມ, null = ເພີ່ມໃໝ່, ມີແຖວ = ແກ້ໄຂແຖວນັ້ນ */
   const [editing, setEditing] = useState<TreasuryAccount | null | undefined>(undefined);
   /** ບັນຊີທີ່ກຳລັງເບິ່ງປະຫວັດເງິນເຂົ້າ-ອອກ */
@@ -218,7 +243,9 @@ const TreasuryAccountPage = () => {
 
   const activeCount = rows.filter(isActive).length;
   /** ຍອດເງິນລວມແຍກຕາມສະກຸນເງິນ — ບວກຂ້າມສະກຸນບໍ່ໄດ້ */
-  const balanceKpis = [...currencyMap.entries()].map(([id, cur]) => ({
+  /** ສະກຸນເງິນທີ່ມີ — ກີບກ່ອນ (ກ່ອງຍອດລວມ ແລະ ປຸ່ມກັ່ນ) */
+  const currencies = kipFirst([...currencyMap.entries()], ([, cur]) => cur);
+  const balanceKpis = currencies.map(([id, cur]) => ({
     id,
     cur,
     total: sumTotal(rows.filter((r) => currencyIdOf(r) === id)),
@@ -304,6 +331,16 @@ const TreasuryAccountPage = () => {
               </button>
             ))}
           </div>
+          {/* ສະຫຼັບວິທີສະແດງ — ຈື່ໄວ້ໃນເຄື່ອງນີ້ */}
+          <div className="acc-type-segment acc-view-switch" role="tablist" aria-label={t('treasuryViewLabel')}>
+            {VIEWS.map((v) => (
+              <button key={v.key} type="button" role="tab" aria-selected={view === v.key}
+                className={view === v.key ? 'is-active' : ''} onClick={() => pickView(v.key)}
+              >
+                <i className={`fa-solid ${v.icon}`} /> {t(v.label)}
+              </button>
+            ))}
+          </div>
           {hasFilter && (
             <button type="button" className="acc-type-clear" onClick={clearFilters}>
               <i className="fa-solid fa-filter-circle-xmark" /> {t('accountTypeClearFilter')}
@@ -317,7 +354,7 @@ const TreasuryAccountPage = () => {
             <button type="button" className={`acc-type-chip${currencyId == null ? ' is-active' : ''}`} onClick={() => setCurrencyId(null)}>
               {t('all')} <em>{byBank.length}</em>
             </button>
-            {[...currencyMap.entries()].map(([id, cur]) => (
+            {currencies.map(([id, cur]) => (
               <button key={id} type="button"
                 className={`acc-type-chip${currencyId === id ? ' is-active' : ''}${currencyCounts[id] ? '' : ' is-empty'}`}
                 onClick={() => setCurrencyId(currencyId === id ? null : id)}
@@ -350,6 +387,12 @@ const TreasuryAccountPage = () => {
       {/* ---- ລາຍການ ---- */}
       {isLoading ? (
         <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>
+      ) : groups.length && view === 'table' ? (
+        <TreasuryTable rows={shown} typeOf={typeOf} onStatement={setViewing} onMovements={setTracing}
+          onTransfer={(r) => setTransferFrom(r._uuid)} onEdit={setEditing}
+        />
+      ) : groups.length && view === 'chart' ? (
+        <TreasuryCharts rows={shown} typeOf={typeOf} />
       ) : groups.length ? (
         groups.map(({ id, type, items }) => {
           const open = !collapsed.has(id);
@@ -361,6 +404,7 @@ const TreasuryAccountPage = () => {
                 <span className="acc-type-group-code">{type?.treasury_code ?? '—'}</span>
                 <span className="acc-type-group-name">{type?.treasury_name ?? t('notSpecified')}</span>
                 <span className="acc-type-group-count">{items.length}</span>
+                <CurrencyPill cur={cur} />
                 {/* ຍອດລວມຂອງກຸ່ມ — ກ່ອງຂາວຂອບສີໝວດ ໃຫ້ເດັ່ນກວ່າຫົວກຸ່ມ */}
                 <span className={`acc-book-group-sum${groupTotal < 0 ? ' is-negative' : ''}`}>
                   <small>{t('treasuryBalanceTotal')}</small>

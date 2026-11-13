@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import moment from 'moment';
 import { formatNumber, getApi, postApi } from '../../utils/configApi';
 import { useT } from '../../context/LanguageContext';
@@ -68,6 +68,12 @@ const POSITION_KEY = 'accountGlancePosition';
 const EDGE = 8;
 const TASKBAR_GAP = 72;
 const MIN_VISIBLE = 140;
+/** ຄວາມກວ້າງທີ່ລາກຂອບຊ້າຍ/ຂວາ ໄວ້ (px) — ບໍ່ມີ = ຕາມຈໍ (--glance-w ຂອງ CSS) */
+const WIDTH_KEY = 'accountGlanceWidth';
+const MIN_WIDTH = 320;
+const MAX_WIDTH = 980;
+/** ກົດລູກສອນຊ້າຍ/ຂວາ ທີ່ຂອບ = ຂະຫຍາຍ/ຫຍໍ້ເທື່ອລະ */
+const KEY_STEP = 24;
 const BASE = '₭';
 
 const failOf = (error: unknown): Failed => (isNotReady(error) ? 'notReady' : 'error');
@@ -231,15 +237,50 @@ const savePosition = (point: Point | null) => {
   }
 };
 
+const readWidth = (): number | null => {
+  try {
+    const value = Number(localStorage.getItem(WIDTH_KEY));
+    return Number.isFinite(value) && value >= MIN_WIDTH ? Math.min(MAX_WIDTH, value) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveWidth = (width: number | null) => {
+  try {
+    if (width) localStorage.setItem(WIDTH_KEY, String(width));
+    else localStorage.removeItem(WIDTH_KEY);
+  } catch {
+    // storage ຖືກປິດ — ຈື່ສະເພາະໃນໜ້ານີ້
+  }
+};
+
+type Side = 'left' | 'right';
+
 /**
  * ລາກພາບລວມໄປວາງບ່ອນໃດກໍໄດ້ໃນ desktop (ຈັບທີ່ຫົວ) — ຈື່ໄວ້ໃນ browser ນີ້, ກົດສອງເທື່ອທີ່ຫົວ = ກັບບ່ອນເດີມ.
- * ຢູ່ໃນຂອບ desktop ສະເໝີ (ຈໍປ່ຽນຂະໜາດກໍ່ດຶງກັບເຂົ້າມາ)
+ * ລາກຂອບຊ້າຍ/ຂວາ = ຂະຫຍາຍເຂົ້າ-ອອກ (ກົດສອງເທື່ອທີ່ຂອບ = ກວ້າງເທົ່າເດີມ). ຄວາມກວ້າງຕັ້ງເປັນ --glance-w ຂອງ desktop
+ * ໃຫ້ພື້ນທີ່ໄອຄອນຫຼົບຕາມ. ຢູ່ໃນຂອບ desktop ສະເໝີ (ຈໍປ່ຽນຂະໜາດກໍ່ດຶງກັບເຂົ້າມາ)
  */
 const useGlanceDrag = () => {
   const panelRef = useRef<HTMLElement>(null);
   const dragRef = useRef<{ pointerId: number; dx: number; dy: number; last: Point | null } | null>(null);
+  const resizeRef = useRef<{ pointerId: number; side: Side; startX: number; startW: number; startLeft: number; top: number; moved: boolean } | null>(null);
   const [position, setPosition] = useState<Point | null>(readPosition);
   const [dragging, setDragging] = useState(false);
+  const [width, setWidth] = useState<number | null>(readWidth);
+  const [resizing, setResizing] = useState(false);
+
+  // ຄວາມກວ້າງ → --glance-w ຂອງ desktop (ພາບລວມ + ພື້ນທີ່ໄອຄອນ ໃຊ້ຮ່ວມກັນ)
+  useEffect(() => {
+    const stage = panelRef.current?.offsetParent as HTMLElement | null;
+    if (!stage) return;
+    if (width) stage.style.setProperty('--glance-w', `${width}px`);
+    else stage.style.removeProperty('--glance-w');
+    return () => {
+      stage.style.removeProperty('--glance-w');
+    };
+  }, [width]);
 
   const clamp = useCallback((point: Point): Point => {
     const panel = panelRef.current;
@@ -291,6 +332,77 @@ const useGlanceDrag = () => {
     savePosition(null);
   };
 
+  /**
+   * ຄວາມກວ້າງໃໝ່ຈາກຂອບທີ່ລາກ: ຂວາ = ຊ້າຍຢູ່ກັບທີ່; ຊ້າຍ = ຂວາຢູ່ກັບທີ່ (ບ່ອນເດີມຍັງຕິດຂວາຄືເກົ່າ, ຖືກຍ້າຍແລ້ວ = ເລື່ອນ x).
+   * ບໍ່ໃຫ້ລົ້ນຂອບ desktop
+   */
+  const applyWidth = (side: Side, startLeft: number, startW: number, nextW: number, top: number) => {
+    const stage = panelRef.current?.offsetParent as HTMLElement | null;
+    const stageW = stage?.clientWidth ?? window.innerWidth;
+    const right = startLeft + startW;
+    const room = side === 'right' ? stageW - EDGE - startLeft : right - EDGE;
+    const next = Math.round(Math.max(MIN_WIDTH, Math.min(nextW, MAX_WIDTH, room)));
+    setWidth(next);
+    // ຂວາ ຫຼື ຖືກຍ້າຍແລ້ວ → ຕຳແໜ່ງຊັດເຈນ; ຊ້າຍ ຢູ່ບ່ອນເດີມ → ຍັງຕິດຂວາ (ບໍ່ຕ້ອງມີຕຳແໜ່ງ)
+    const point = side === 'right' ? { x: startLeft, y: top } : position ? { x: right - next, y: top } : null;
+    if (point) setPosition(point);
+    return { width: next, point };
+  };
+
+  const onResizeDown = (side: Side) => (event: PointerEvent<HTMLElement>) => {
+    const panel = panelRef.current;
+    if (event.button !== 0 || !panel) return;
+    event.preventDefault();
+    event.stopPropagation();
+    resizeRef.current = { pointerId: event.pointerId, side, startX: event.clientX, startW: panel.offsetWidth, startLeft: panel.offsetLeft, top: panel.offsetTop, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setResizing(true);
+  };
+
+  const onResizeMove = (event: PointerEvent<HTMLElement>) => {
+    const r = resizeRef.current;
+    if (!r || r.pointerId !== event.pointerId) return;
+    const dx = event.clientX - r.startX;
+    r.moved = true;
+    applyWidth(r.side, r.startLeft, r.startW, r.side === 'right' ? r.startW + dx : r.startW - dx, r.top);
+  };
+
+  const onResizeUp = (event: PointerEvent<HTMLElement>) => {
+    const r = resizeRef.current;
+    if (!r || r.pointerId !== event.pointerId) return;
+    const panel = panelRef.current;
+    if (r.moved && panel) {
+      saveWidth(panel.offsetWidth);
+      if (r.side === 'right' || position) savePosition({ x: panel.offsetLeft, y: panel.offsetTop });
+    }
+    resizeRef.current = null;
+    setResizing(false);
+  };
+
+  const onResizeKey = (side: Side) => (event: KeyboardEvent<HTMLElement>) => {
+    const panel = panelRef.current;
+    if (!panel || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+    event.preventDefault();
+    const outward = side === 'right' ? event.key === 'ArrowRight' : event.key === 'ArrowLeft';
+    const result = applyWidth(side, panel.offsetLeft, panel.offsetWidth, panel.offsetWidth + (outward ? KEY_STEP : -KEY_STEP), panel.offsetTop);
+    saveWidth(result.width);
+    if (result.point) savePosition(result.point);
+  };
+
+  const resetWidth = () => {
+    setWidth(null);
+    saveWidth(null);
+  };
+
+  const resizer = (side: Side) => ({
+    onPointerDown: onResizeDown(side),
+    onPointerMove: onResizeMove,
+    onPointerUp: onResizeUp,
+    onPointerCancel: onResizeUp,
+    onKeyDown: onResizeKey(side),
+    onDoubleClick: resetWidth,
+  });
+
   const style = position
     ? { left: position.x, top: position.y, right: 'auto', maxHeight: `calc(100% - ${position.y}px - ${TASKBAR_GAP}px)` }
     : undefined;
@@ -298,6 +410,8 @@ const useGlanceDrag = () => {
   return {
     panelRef,
     dragging,
+    resizing,
+    resizer,
     style,
     handle: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onDoubleClick: reset },
   };
@@ -323,7 +437,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   const [loading, setLoading] = useState(false);
   const [tick, setTick] = useState(0);
   const lastWindows = useRef(openWindows);
-  const { panelRef, dragging, style, handle } = useGlanceDrag();
+  const { panelRef, dragging, resizing, resizer, style, handle } = useGlanceDrag();
 
   const accessOf = (id: ShortcutId): Access => {
     const menu = menus.find((m) => m.id === id);
@@ -545,7 +659,15 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   const anyOpen = Object.values(access).some((a) => a === 'open');
 
   return (
-    <aside ref={panelRef} className={`acc-glance${dragging ? ' is-dragging' : ''}`} style={style} aria-label={t('glanceTitle')}>
+    <aside ref={panelRef} className={`acc-glance${dragging ? ' is-dragging' : ''}${resizing ? ' is-resizing' : ''}`} style={style} aria-label={t('glanceTitle')}>
+      {(['left', 'right'] as const).map((side) => (
+        <span key={side} className={`acc-glance-resize is-${side}`} role="separator" aria-orientation="vertical" tabIndex={0}
+          title={t('glanceResizeHint')} aria-label={t('glanceResizeHint')} {...resizer(side)}
+        >
+          <i />
+        </span>
+      ))}
+      <div className="acc-glance-body">
       <header className="acc-glance-head" title={t('glanceDragHint')} {...handle}>
         <span>
           <b>{t('glanceTitle')}</b>
@@ -593,6 +715,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
           )}
         </section>
       )}
+      </div>
     </aside>
   );
 };

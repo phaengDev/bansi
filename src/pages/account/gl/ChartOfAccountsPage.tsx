@@ -1,10 +1,11 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
-import { CHART_MENU, firstRailKey, toRailNav } from '../config/SidebarPopup';
+import { CHART_MENU, toRailNav } from '../config/SidebarPopup';
 import ChartTreePage from './ChartTreePage';
 import GlMappingPage from './GlMappingPage';
 import GlSetupPage from './GlSetupPage';
+import { useRailKey } from '../windowMemory';
 
 /** ໜ້າຕ່າງ ຜັງບັນຊີ — ແຖບຊ້າຍ: ຜັງບັນຊີ / ຜູກບັນຊີ / ການເປີດໃຊ້ (ສະຖານະ + ລົງບັນຊີຍ້ອນຫຼັງ) */
 const PAGES: Record<string, ReactNode> = {
@@ -15,7 +16,7 @@ const PAGES: Record<string, ReactNode> = {
 
 const ChartOfAccountsPage = () => {
   const t = useT();
-  const [activeKey, setActiveKey] = useState(firstRailKey(CHART_MENU));
+  const [activeKey, setActiveKey] = useRailKey('chart', CHART_MENU);
   const railNav = useMemo(() => toRailNav(CHART_MENU, t), [t]);
   const active = railNav.find((item) => item.key === activeKey);
 

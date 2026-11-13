@@ -1,19 +1,20 @@
 import { useMemo, useState } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
-import { PAYROLL_MENU, firstRailKey, toRailNav } from '../../account/config/SidebarPopup';
+import { PAYROLL_MENU, toRailNav } from '../../account/config/SidebarPopup';
 import { useHrPending } from '../hrPending';
 import PayrollList from './PayrollList';
 import PayrollDetail from './PayrollDetail';
 import PayrollSettingPage from './PayrollSettingPage';
 import AdvancePage from './AdvancePage';
+import { useRailKey } from '../../account/windowMemory';
 
 /**
  * ໜ້າຕ່າງ ເງິນເດືອນ — ແຖບຊ້າຍ: ໃບເງິນເດືອນປະຈຳເດືອນ (ລາຍການ → ລາຍລະອຽດ), ເງິນເບີກລ່ວງໜ້າ ແລະ ຕັ້ງຄ່າ (ປກສ, ອາກອນ, ການຫັກ)
  */
 const PayrollWindow = () => {
   const t = useT();
-  const [activeKey, setActiveKey] = useState(firstRailKey(PAYROLL_MENU));
+  const [activeKey, setActiveKey] = useRailKey('payroll', PAYROLL_MENU);
   const [openId, setOpenId] = useState<number | null>(null);
   const [listVersion, setListVersion] = useState(0);
   const pending = useHrPending();

@@ -1,7 +1,7 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import AppPage from '../../components/Elements/AppPage';
 import { useT } from '../../context/LanguageContext';
-import { HR_MENU, firstRailKey, toRailNav } from '../account/config/SidebarPopup';
+import { HR_MENU, toRailNav } from '../account/config/SidebarPopup';
 import UserPage from './UserPage';
 import CompanyPage from './CompanyPage';
 import DepartmentPage from './DepartmentPage';
@@ -10,6 +10,7 @@ import HrOptionPage from './HrOptionPage';
 import SkillPage from './SkillPage';
 import OrgChartPage from './org/OrgChartPage';
 import AppReleasePage from './AppReleasePage';
+import { useRailKey } from '../account/windowMemory';
 
 /** key ຂອງເມນູ (HR_MENU) → ໜ້າ */
 const HR_PAGES: Record<string, ReactNode> = {
@@ -30,7 +31,7 @@ const HR_PAGES: Record<string, ReactNode> = {
  */
 const HrWindow = () => {
   const t = useT();
-  const [activeKey, setActiveKey] = useState(firstRailKey(HR_MENU));
+  const [activeKey, setActiveKey] = useRailKey('hr', HR_MENU);
   const railNav = useMemo(() => toRailNav(HR_MENU, t), [t]);
   const active = railNav.find((item) => item.key === activeKey);
   const title = t('accountAppHr');
