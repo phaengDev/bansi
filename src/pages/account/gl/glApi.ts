@@ -124,6 +124,12 @@ export const ROLES = [
   { key: 'PIT_PAYABLE', label: 'glRolePitPayable', hint: 'glRolePitPayableHint', groups: [2] },
   { key: 'PAYROLL_DEDUCTION', label: 'glRolePayrollDeduction', hint: 'glRolePayrollDeductionHint', groups: [1, 2] },
   { key: 'EMPLOYEE_ADVANCE', label: 'glRoleEmployeeAdvance', hint: 'glRoleEmployeeAdvanceHint', groups: [1] },
+  { key: 'ACCUM_DEPRECIATION', label: 'glRoleAccumDepreciation', hint: 'glRoleAccumDepreciationHint', groups: [1] },
+  { key: 'DEPRECIATION_EXPENSE', label: 'glRoleDepreciationExpense', hint: 'glRoleDepreciationExpenseHint', groups: [5] },
+  { key: 'ASSET_DISPOSAL_LOSS', label: 'glRoleAssetDisposalLoss', hint: 'glRoleAssetDisposalLossHint', groups: [5] },
+  { key: 'INCOME_TAX_EXPENSE', label: 'glRoleIncomeTaxExpense', hint: 'glRoleIncomeTaxExpenseHint', groups: [5] },
+  { key: 'PROFIT_TAX_PAYABLE', label: 'glRoleProfitTaxPayable', hint: 'glRoleProfitTaxPayableHint', groups: [2] },
+  { key: 'WHT_PAYABLE', label: 'glRoleWhtPayable', hint: 'glRoleWhtPayableHint', groups: [2] },
 ] as const;
 export const roleLabelOf = (key: string) => ROLES.find((r) => r.key === key)?.label ?? key;
 
@@ -142,6 +148,12 @@ export const SOURCES: Record<string, { label: string; icon: string; tone: string
   PAYROLL: { label: 'glSourcePayroll', icon: 'fa-money-check-dollar', tone: 'is-violet' },
   ADVANCE: { label: 'glSourceAdvance', icon: 'fa-hand-holding-dollar', tone: 'is-violet' },
   ADVANCE_REPAY: { label: 'glSourceAdvanceRepay', icon: 'fa-money-bill-wave', tone: 'is-violet' },
+  DEPRECIATION: { label: 'glSourceDepreciation', icon: 'fa-chart-line', tone: 'is-gold' },
+  ASSET_OPENING: { label: 'glSourceAssetOpening', icon: 'fa-building', tone: 'is-gold' },
+  ASSET_DISPOSAL: { label: 'glSourceAssetDisposal', icon: 'fa-building-circle-xmark', tone: 'is-gold' },
+  FX_REVAL: { label: 'glSourceFxReval', icon: 'fa-arrow-right-arrow-left', tone: 'is-sky' },
+  PROFIT_TAX: { label: 'glSourceProfitTax', icon: 'fa-percent', tone: 'is-slate' },
+  WHT: { label: 'glSourceWht', icon: 'fa-hand-holding-dollar', tone: 'is-slate' },
 };
 export const sourceOf = (type: string) => SOURCES[type] ?? { label: type, icon: 'fa-file', tone: 'is-slate' };
 

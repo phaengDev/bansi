@@ -8,6 +8,8 @@ export type SidebarPopupItem = {
   icon: string;
   /** key ຂອງ src/i18n/lao-dict.ts */
   label: string;
+  /** ຂຶ້ນສະເພາະເມື່ອບໍລິສັດເປີດຟັງຊັນນີ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ເບິ່ງ withFeatures() */
+  feature?: 'use_vat' | 'use_fixed_assets' | 'use_withholding' | 'use_fx_revaluation' | 'use_bank_reconciliation';
 };
 
 export type SidebarPopupGroup = {
@@ -21,6 +23,7 @@ export const ACCOUNT_SETTING_MENU: SidebarPopupGroup[] = [
   {
     group: 'accountSetGroupGeneral',
     items: [
+      { key: 'general', icon: 'fa-solid fa-sliders', label: 'accountSetGeneral' },
       { key: 'fiscalYear', icon: 'fa-solid fa-calendar-check', label: 'accountSetFiscalYear' },
       { key: 'currency', icon: 'fa-solid fa-coins', label: 'accountSetCurrency' },
     ],
@@ -102,6 +105,14 @@ export const STATEMENTS_MENU: SidebarPopupGroup[] = [
       { key: 'profitLoss', icon: 'fa-solid fa-scale-balanced', label: 'fsProfitLoss' },
       { key: 'cashFlow', icon: 'fa-solid fa-money-bill-transfer', label: 'fsCashFlow' },
       { key: 'balanceSheet', icon: 'fa-solid fa-landmark', label: 'fsBalanceSheet' },
+      { key: 'equity', icon: 'fa-solid fa-chart-column', label: 'fsEquityChanges' },
+      { key: 'notes', icon: 'fa-solid fa-file-lines', label: 'fsNotes' },
+    ],
+  },
+  {
+    group: 'fsGroupTax',
+    items: [
+      { key: 'vat', icon: 'fa-solid fa-receipt', label: 'fsVatReport', feature: 'use_vat' },
     ],
   },
 ];
@@ -205,6 +216,37 @@ export const PAYROLL_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ເມນູຂອງໜ້າຕ່າງ ປິດງວດບັນຊີ — ວຽກທ້າຍເດືອນ (ປິດງວດ, ກະທົບຍອດ, ປັບອັດຕາ) ແລະ ອາກອນ */
+export const CLOSING_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'closeGroupMonth',
+    items: [
+      { key: 'periodClose', icon: 'fa-solid fa-calendar-check', label: 'closePeriodClose' },
+      { key: 'bankRec', icon: 'fa-solid fa-scale-unbalanced-flip', label: 'closeBankRec', feature: 'use_bank_reconciliation' },
+      { key: 'fxReval', icon: 'fa-solid fa-arrow-right-arrow-left', label: 'closeFxReval', feature: 'use_fx_revaluation' },
+    ],
+  },
+  {
+    group: 'closeGroupTax',
+    items: [
+      { key: 'profitTax', icon: 'fa-solid fa-percent', label: 'closeProfitTax' },
+      { key: 'withholding', icon: 'fa-solid fa-hand-holding-dollar', label: 'closeWithholding', feature: 'use_withholding' },
+    ],
+  },
+];
+
+/** ເມນູຂອງໜ້າຕ່າງ ຊັບສົມບັດຄົງທີ່ */
+export const FIXED_ASSET_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppFixedAssets',
+    items: [
+      { key: 'register', icon: 'fa-solid fa-building', label: 'faRegister' },
+      { key: 'depreciation', icon: 'fa-solid fa-chart-line', label: 'faDepreciation' },
+      { key: 'schedule', icon: 'fa-solid fa-table-list', label: 'faSchedule' },
+    ],
+  },
+];
+
 /** ເມນູຂອງໜ້າຕ່າງ ຜັງບັນຊີ — ຜັງບັນຊີ, ຜູກບັນຊີ ແລະ ການເປີດໃຊ້ລະບົບບັນຊີຄູ່ */
 export const CHART_MENU: SidebarPopupGroup[] = [
   {
@@ -225,6 +267,12 @@ export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => strin
   groups.flatMap(({ group, items }) =>
     items.map((item) => ({ ...item, label: t(item.label), group: t(group) }))
   );
+
+/** ເອົາລາຍການທີ່ບໍລິສັດປິດຟັງຊັນໄວ້ອອກ (ກຸ່ມທີ່ບໍ່ເຫຼືອລາຍການ ຖືກເອົາອອກນຳ) */
+export const withFeatures = (groups: SidebarPopupGroup[], on: (feature: NonNullable<SidebarPopupItem['feature']>) => boolean) =>
+  groups
+    .map((g) => ({ ...g, items: g.items.filter((item) => !item.feature || on(item.feature)) }))
+    .filter((g) => g.items.length);
 
 /** ລາຍການທຳອິດ — ໃຊ້ເປັນຄ່າຕັ້ງຕົ້ນຂອງ `railActiveKey` */
 export const firstRailKey = (groups: SidebarPopupGroup[]) => groups[0]?.items[0]?.key ?? '';

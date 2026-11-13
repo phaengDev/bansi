@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CurrencyPicker } from '../../../components/Elements/CurrencyPicker';
 import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker, Textarea } from 'rsuite';
 import moment from 'moment';
 import { postApi } from '../../../utils/configApi';
@@ -56,7 +57,7 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const { rows: partners, reload: reloadPartners } = usePartners();
   const { rows: accounts, loading: accountsLoading } = useChartAccounts();
   const lineOptions = useAccountOptions(accounts, (a) => (cfg.lineGroups as readonly number[]).includes(Number(a.account_group)));
-  const currencies = useCurrency() as unknown as { label: string; value: number; rate: number }[];
+  const currencies = useCurrency();
   const taxes = useTaxes();
   const [partner, setPartner] = useState<number | null>(partnerId ?? null);
   const [addingPartner, setAddingPartner] = useState(false);
@@ -252,8 +253,8 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
             <FormStep no={3} done={linesValid && !!partner} title={t('arapStepTotals')} hint={t('arapStepTotalsHint')}>
               <div className="rs-form-group">
                 <label className="form-label">{t('accountTypeCurrency')}</label>
-                <SelectPicker block data={currencies} value={currencyId} placeholder="LAK" popupClassName="acc-book-menu"
-                  onChange={(v) => { setCurrencyId(v as number | null); setRate(null); }}
+                <CurrencyPicker value={currencyId} placeholder="LAK"
+                  onChange={(v) => { setCurrencyId(v); setRate(null); }}
                 />
               </div>
               {isBase ? (

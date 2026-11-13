@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
-import { Form, SelectPicker, Textarea } from 'rsuite';
+import { Form, Textarea } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { InputField } from '../../../utils/inputFields';
 import { createModel, requiredField } from '../../../utils/validate';
-import { useCurrency } from '../../../utils/selectOption';
+import { CurrencyPicker } from '../../../components/Elements/CurrencyPicker';
 import { putApi, postApi } from '../../../utils/configApi';
 import { useLangField, useT } from '../../../context/LanguageContext';
 import { ChoiceTiles, FormSection, PickerField, SettingModal } from '../setting/settingKit';
@@ -45,7 +45,6 @@ const ChartAccountForm = ({ data, parentId, accounts, onClose, onSaved }: {
 }) => {
   const t = useT();
   const lf = useLangField();
-  const currencies = useCurrency();
   const formRef = useRef<FormInstance>(null);
   const [saving, setSaving] = useState(false);
   const isSystem = Number(data?.is_system) === 1;
@@ -165,8 +164,8 @@ const ChartAccountForm = ({ data, parentId, accounts, onClose, onSaved }: {
         <FormSection title={t('acsInfo')}>
           <div className="rs-form-group is-wide">
             <label className="form-label">{t('glCurrencyLock')}</label>
-            <SelectPicker block data={currencies as any[]} value={inputs.currency_id} placeholder={t('glAnyCurrency')}
-              onChange={(value) => setInputs((prev: any) => ({ ...prev, currency_id: value }))} popupClassName="acc-book-menu"
+            <CurrencyPicker value={inputs.currency_id} placeholder={t('glAnyCurrency')}
+              onChange={(value) => setInputs((prev: any) => ({ ...prev, currency_id: value }))}
             />
           </div>
           <div className="is-wide">

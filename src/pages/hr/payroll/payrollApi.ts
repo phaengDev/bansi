@@ -149,8 +149,11 @@ export type LineResult = Pick<PayrollLine,
 
 export const kip = (value: number) => formatNumber(Math.round(Number(value) || 0));
 /** formatter ຂອງ NumberInput ເງິນກີບ — ບໍ່ມີທົດສະນິຍົມ (backend ປັດເປັນກີບເຕັມ); ຊ່ອງຫວ່າງຍັງຫວ່າງ */
+// ຂັ້ນດ້ວຍຈຸດ (,) ສະເໝີ ບໍ່ຂຶ້ນກັບຮູບແບບຕົວເລກຂອງບໍລິສັດ — InputNumber ອ່ານຄ່າທີ່ພິມກັບຄືນດ້ວຍການຕັດ "," ອອກ
 export const kipFormatter = (value: unknown) =>
-  value === '' || value === null || value === undefined ? '' : kip(Number(String(value).replace(/,/g, '')));
+  value === '' || value === null || value === undefined
+    ? ''
+    : Math.round(Number(String(value).replace(/,/g, '')) || 0).toLocaleString('en-US');
 export const accountText = (a?: PayrollAccount | null) =>
   a ? [a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · ') : '';
 

@@ -23,10 +23,13 @@ import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
+import ClosingWindow from './closing/ClosingWindow';
+import FixedAssetWindow from './assets/FixedAssetWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import MenuContextMenu from './MenuContextMenu';
 import { MenuLockForm, type MenuLockMode } from './setting/MenuLockPage';
 import { refreshAccountMenus, useAccountMenus, useAccountMenusLoaded } from './accountMenus';
+import { featureOn, refreshAccountSetting, useAccountSetting, useAccountSettingLoaded } from './accountSettings';
 import { keepWindowsOn, readOpenWindows, saveKeepWindows, saveOpenWindows } from './windowMemory';
 import {
   langLabels,
@@ -55,6 +58,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   receivables: <ArApWindow kind={1} />,
   payables: <ArApWindow kind={2} />,
   budget: <BudgetWindow />,
+  fixedAssets: <FixedAssetWindow />,
+  closing: <ClosingWindow />,
   employees: <AppPage showHeader={false}><EmployeePage /></AppPage>,
   tasks: <AppPage showHeader={false}><TaskPage /></AppPage>,
   hr: <HrWindow />,
@@ -99,8 +104,11 @@ const AccountShell: React.FC = () => {
   const taskbarVisible = taskbarPinned || taskbarRevealed;
   const userName = localStorage.getItem('user_name');
   const { wallpaper, setWallpaper } = useWallpaper();
-  /** ເມນູບັນຊີຈາກ GET /menu/main (ລຳດັບ, ຊື່, ໄອຄອນ, ລັອກ) — ຍັງບໍ່ມີກໍ່ໃຊ້ shortcuts ຂອງໜ້າເວັບ */
-  const menus = useAccountMenus();
+  /** ເມນູທີ່ຜູ້ໃຊ້ຄົນນີ້ເຂົ້າໄດ້ ຈາກ GET /menu/main (ລຳດັບ, ຊື່, ໄອຄອນ, ລັອກ) — ບໍ່ຢູ່ໃນລາຍການ = ເປີດບໍ່ໄດ້ */
+  const setting = useAccountSetting();
+  const settingLoaded = useAccountSettingLoaded();
+  // ຊັບສົມບັດຄົງທີ່ ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ລໍຮູ້ຕັ້ງຄ່າກ່ອນ ບໍ່ໃຫ້ກະພິບຂຶ້ນ
+  const menus = useAccountMenus().filter((menu) => menu.id !== 'fixedAssets' || (settingLoaded && featureOn(setting, 'use_fixed_assets')));
   const menusLoaded = useAccountMenusLoaded();
   /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop */
   const desktopLayout = useDesktopLayout(menus.map((menu) => menu.id));
@@ -120,6 +128,8 @@ const AccountShell: React.FC = () => {
   const trialBalanceWindow = usePopupWindow();
   const statementsWindow = usePopupWindow();
   const budgetWindow = usePopupWindow();
+  const fixedAssetsWindow = usePopupWindow();
+  const closingWindow = usePopupWindow();
   const employeesWindow = usePopupWindow();
   const tasksWindow = usePopupWindow();
   const hrWindow = usePopupWindow();
@@ -137,6 +147,8 @@ const AccountShell: React.FC = () => {
     trialBalance: trialBalanceWindow,
     financialStatements: statementsWindow,
     budget: budgetWindow,
+    fixedAssets: fixedAssetsWindow,
+    closing: closingWindow,
     employees: employeesWindow,
     tasks: tasksWindow,
     hr: hrWindow,
@@ -183,8 +195,10 @@ const AccountShell: React.FC = () => {
 
   // ເມນູທີ່ຕັ້ງລະຫັດໄວ້ (ໜ້າ ຕັ້ງຄ່າບັນຊີ → ລະຫັດຜ່ານເມນູ) ຖາມລະຫັດທຸກເທື່ອທີ່ເປີດໃໝ່;
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ແລ້ວ (ລວມທັງຫຍໍ້ລົງ taskbar) ບໍ່ຖາມຊ້ຳ — ປິດໜ້າຕ່າງແລ້ວຈຶ່ງລັອກຄືນ
+  // ເມນູທີ່ບໍ່ໄດ້ສິດ (ຟອມຜູ້ໃຊ້ → ເມນູທີ່ໃຊ້ໄດ້) ບໍ່ຢູ່ໃນ menus — ເປີດບໍ່ໄດ້ຈາກທຸກທາງ
   const openShortcut = (id: ShortcutId) => {
     setStartOpen(false);
+    if (!menuOf(id)) return;
     if (menuOf(id)?.locked && !popupWindows[id]?.open) {
       setUnlocking(id);
       return;
@@ -192,9 +206,26 @@ const AccountShell: React.FC = () => {
     showShortcut(id);
   };
 
+  // ສິດເຂົ້າເມນູອາດຖືກປ່ຽນຈາກເຄື່ອງອື່ນ — ກວດຄືນທຸກເທື່ອທີ່ກັບມາທີ່ແຖບນີ້
   useEffect(() => {
     refreshAccountMenus();
+    refreshAccountSetting();
+    const refreshOnReturn = () => {
+      if (document.visibilityState === 'visible') refreshAccountMenus();
+    };
+    document.addEventListener('visibilitychange', refreshOnReturn);
+    return () => document.removeEventListener('visibilitychange', refreshOnReturn);
   }, []);
+
+  // ຖືກຖອນສິດເມນູທີ່ເປີດຢູ່ → ປິດໜ້າຕ່າງນັ້ນ
+  const menuSignature = menus.map((menu) => menu.id).join(',');
+  useEffect(() => {
+    if (!menusLoaded) return;
+    shortcuts.forEach((shortcut) => {
+      const popup = popupWindows[shortcut.id];
+      if (popup?.open && !menuOf(shortcut.id)) popup.setOpen(false);
+    });
+  }, [menusLoaded, menuSignature]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- ຈື່ໜ້າຕ່າງທີ່ເປີດໄວ້ (ຕັ້ງຄ່າ Desktop) ----
   const openSignature = shortcuts
@@ -397,16 +428,18 @@ const AccountShell: React.FC = () => {
                 <img src="/assets/img/user.webp" alt="" />
                 <span>{userName}</span>
               </div>
-              <button
-                type="button"
-                className="life-desktop-brand-menu-item"
-                onClick={() => {
-                  setUserMenuOpen(false);
-                  openShortcut('settings');
-                }}
-              >
-                <i className="fa-solid fa-gear" aria-hidden="true" /> {t('settings')}
-              </button>
+              {menuOf('settings') && (
+                <button
+                  type="button"
+                  className="life-desktop-brand-menu-item"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    openShortcut('settings');
+                  }}
+                >
+                  <i className="fa-solid fa-gear" aria-hidden="true" /> {t('settings')}
+                </button>
+              )}
               <button type="button" className="life-desktop-brand-menu-item is-danger" onClick={handleLogout}>
                 <i className="fa-solid fa-right-from-bracket" aria-hidden="true" /> {t('logOut')}
               </button>
@@ -642,7 +675,9 @@ const AccountShell: React.FC = () => {
                   title={menuName(shortcut.id)}
                   aria-label={menuName(shortcut.id)}
                 >
-                  <i className={menuOf(shortcut.id)?.iconClass ?? `fa-solid ${shortcut.icon}`} aria-hidden="true" />
+                  <span className={`life-taskbar-app-icon is-${menuOf(shortcut.id)?.tone ?? shortcut.tone}`} aria-hidden="true">
+                    <i className={menuOf(shortcut.id)?.iconClass ?? `fa-solid ${shortcut.icon}`} />
+                  </span>
                 </button>
               );
             })}

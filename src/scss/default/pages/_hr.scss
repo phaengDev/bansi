@@ -1270,6 +1270,138 @@
   b { font-weight: 700; }
 }
 
+// ---- ເມນູທີ່ໃຊ້ໄດ້ (ຟອມຜູ້ໃຊ້): ກຸ່ມ ບັນຊີ / ບຸກຄະລາກອນ / ທົ່ວໄປ, ແຕ່ລະເມນູເປັນບັດມີໄອຄອນສີຂອງເມນູ ----
+// ສີ gradient ຂອງ .hr-menu-icon.is-<tone> ຢູ່ _life-desktop.scss (ໃຊ້ຮ່ວມກັບໄອຄອນ desktop)
+.hr-menu-icon {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.38), 0 3px 8px rgba(0, 15, 66, 0.16);
+}
+
+.hr-menu-access {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hr-menu-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5b6f80;
+  font-size: 12.5px;
+
+  > span { margin-right: auto; }
+  b { color: #075c47; font-size: 14px; }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    color: #3d5163;
+    background: #f4f7f9;
+    border: 1px solid #dfe6ec;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &:hover { color: #075c47; background: #eef8f4; border-color: #9fd5c2; }
+  }
+}
+
+.hr-menu-group {
+  padding: 10px 12px 12px;
+  background: #f8fafb;
+  border: 1px solid #eaf0f4;
+  border-radius: 12px;
+}
+
+.hr-menu-group-head {
+  margin: 0 0 8px;
+
+  .rs-checkbox-checker { min-height: 0; padding: 0; }
+  label { display: inline-flex; align-items: center; margin: 0; cursor: pointer; }
+  .rs-checkbox-label { display: inline-flex; align-items: center; gap: 6px; padding: 0 0 0 8px; color: #2f4354; font-weight: 800; }
+  .rs-checkbox-label i { color: #0b8a6a; font-size: 13px; }
+  small { color: #8695a3; font-weight: 600; }
+}
+
+.hr-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.hr-menu-pick {
+  min-width: 0;
+  margin: 0;
+
+  .rs-checkbox-checker { min-height: 0; padding: 0; }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    margin: 0;
+    padding: 7px 10px;
+    color: #5b6f80;
+    background: #fff;
+    border: 1px solid #dfe6ec;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .rs-checkbox-control { flex: none; }
+  .rs-checkbox-label { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 0; }
+  .hr-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  // ບໍ່ຕິກ = ໄອຄອນຈາງ ເຫັນທັນທີວ່າເມນູໃດຖືກປິດ
+  &:not(.is-on) .hr-menu-icon { filter: grayscale(0.85); opacity: 0.55; }
+  &:hover label { border-color: #b8d9cd; }
+  &.is-on label { color: #075c47; background: #eef8f4; border-color: #9fd5c2; }
+  &[data-disabled='true'] label { cursor: not-allowed; }
+}
+
+// ບັດຜູ້ໃຊ້: ເມນູທີ່ໃຊ້ໄດ້ — ທຸກເມນູ ຫຼື ໄອຄອນສີນ້ອຍ + ຈຳນວນ
+.hr-user-menus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 18px 0;
+  padding: 6px 10px;
+  color: #3d5163;
+  background: #f4f7fb;
+  border-radius: 10px;
+  font-size: 12px;
+
+  > i { color: #2f8fd0; font-size: 12px; }
+  > span:not(.hr-user-menu-icons) { color: #6b7d8c; }
+  > b { margin-left: auto; font-weight: 700; white-space: nowrap; }
+  &.is-all > b { color: #0b7f58; }
+
+  .hr-user-menu-icons {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .hr-menu-icon { width: 20px; height: 20px; border-radius: 6px; font-size: 10px; box-shadow: none; }
+  em { color: #6b7d8c; font-size: 11px; font-style: normal; font-weight: 700; }
+}
+
 .hr-user-perms {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

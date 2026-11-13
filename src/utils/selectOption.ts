@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getApi } from "./configApi";
 import { getErrorMessage } from './useCRUD';
 
 /**
  * ຂໍ້ມູນສຳລັບຊ່ອງເລືອກ (SelectPicker, ChoiceTiles…) ທັງໝົດຂອງລະບົບ — ດຶງຈາກ api-bansi ບ່ອນດຽວນີ້.
  * ທຸກ hook ຄືນ array ຂອງ option: ຖັນເດີມຂອງແຖວ (ເຊັ່ນ rate ຂອງອາກອນ) + label / value (ໃສ່ SelectPicker ໄດ້ເລີຍ)
- * ແລະ `.loading`. ແຂວງ/ເມືອງ ໂຫຼດເທື່ອດຽວຕໍ່ການເປີດໜ້າເວັບ (ບໍ່ປ່ຽນ); ອັນອື່ນໂຫຼດໃໝ່ທຸກເທື່ອທີ່ component ເປີດ
+ * ແລະ `.loading`. ແຂວງ/ເມືອງ ແລະ ສະກຸນເງິນ ໂຫຼດເທື່ອດຽວຕໍ່ການເປີດໜ້າເວັບ (ສະກຸນເງິນ: refreshCurrencies() ຫຼັງແກ້);
+ * ອັນອື່ນໂຫຼດໃໝ່ທຸກເທື່ອທີ່ component ເປີດ
  * ເພື່ອໃຫ້ເຫັນຂໍ້ມູນທີ່ຫາກໍ່ແກ້ໃນໜ້າຕັ້ງຄ່າ — ຄຳຂໍ url ດຽວກັນທີ່ຍິງພ້ອມກັນ (ເຊັ່ນ useDepartments + usePositions) ໃຊ້ຄຳຕອບດຽວ
  */
 
@@ -126,12 +127,6 @@ const byCode = (a: { type_code?: string }, b: { type_code?: string }) =>
 
 // ===================== ແປງແຖວເປັນ option (ຢູ່ນອກ hook ໃຫ້ useMemo ບໍ່ຄິດໃໝ່ທຸກ render) =====================
 
-const toCurrencyOption = (i: any) => ({ 
-  label: i.name, 
-  value: i._id, 
-  icon: i.icon, 
-  genus: i.genus, 
-  rate: Number(i.reate ?? 0) });
 const toCodeName = <T extends { _uuid: number; 
   type_code: string; 
   type_name: string }>(i: T) =>
@@ -152,8 +147,65 @@ const toUserType = (i: UserType) => ({ ...i, label: i.names, value: i._uuid });
 
 // ===================== ບັນຊີ / ການເງິນ =====================
 /** ສະກຸນເງິນ (GET /currency) — icon = ທຸງ, genus = ສັນຍາລັກ (₭, $, ฿), rate = ອັດຕາແລກປ່ຽນປັດຈຸບັນ */
-export function useCurrency() {
-  return useApiOptions<any>('/currency', toCurrencyOption);
+// ===================== ສະກຸນເງິນ — ໂຫຼດເທື່ອດຽວ ໃຊ້ຮ່ວມກັນທຸກບ່ອນ =====================
+
+/** ແຖວ tbl_currency + label (ລະຫັດ LAK/USD…) / value (_id) ໃສ່ SelectPicker ໄດ້ເລີຍ; rate = ອັດຕາປັດຈຸບັນ (reate) */
+export type CurrencyOption = {
+  _id: number;
+  name: string;
+  laos?: string | null;
+  icon?: string | null;
+  genus?: string | null;
+  reate?: string | number | null;
+  updatedAt?: string;
+  value: number;
+  label: string;
+  rate: number;
+};
+
+const toCurrencyOption = (i: any): CurrencyOption => ({ ...i, value: Number(i._id), label: i.name, rate: Number(i.reate ?? 0) });
+
+let currencyList: CurrencyOption[] | null = null;
+let currencyLoading: Promise<void> | null = null;
+const currencyListeners = new Set<() => void>();
+
+/**
+ * ດຶງສະກຸນເງິນໃໝ່ ແລ້ວທຸກບ່ອນທີ່ໃຊ້ useCurrency() ອັບເດດພ້ອມກັນ — ເອີ້ນຫຼັງແກ້ສະກຸນ/ອັດຕາ (ໜ້າ ສະກຸນເງິນ ແລະ ອັດຕາແລກປ່ຽນ)
+ */
+export const refreshCurrencies = () => {
+  currencyLoading = getApi('/currency')
+    .then((res) => {
+      const rows = Array.isArray(res.data) ? res.data : res.data?.data;
+      currencyList = (Array.isArray(rows) ? rows : []).map(toCurrencyOption);
+    })
+    .catch((e) => {
+      console.error(getErrorMessage(e));
+      currencyList = currencyList ?? [];
+    })
+    .finally(() => {
+      currencyLoading = null;
+      currencyListeners.forEach((notify) => notify());
+    });
+  return currencyLoading;
+};
+
+const subscribeCurrencies = (notify: () => void) => {
+  currencyListeners.add(notify);
+  return () => {
+    currencyListeners.delete(notify);
+  };
+};
+
+/**
+ * ສະກຸນເງິນທັງໝົດ (LAK, THB, USD…) — ດຶງເທື່ອດຽວຕໍ່ການເປີດໜ້າເວັບ ແລ້ວໃຊ້ຮ່ວມກັນທຸກຟອມ/ໜ້າ (ບໍ່ດຶງໃໝ່ທຸກເທື່ອທີ່ເປີດຟອມ);
+ * ແກ້ສະກຸນແລ້ວ refreshCurrencies() ເທື່ອດຽວ ທຸກບ່ອນເຫັນ. ຊ່ອງເລືອກສະກຸນໃຊ້ <CurrencyPicker> / <CurrencyField>
+ */
+export function useCurrency(): OptionList<CurrencyOption> {
+  const list = useSyncExternalStore(subscribeCurrencies, () => currencyList);
+  useEffect(() => {
+    if (!currencyList && !currencyLoading) refreshCurrencies();
+  }, []);
+  return useMemo(() => Object.assign([...(list ?? [])], { loading: list === null }) as OptionList<CurrencyOption>, [list]);
 }
 
 /** ປະເພດລາຍຮັບ (kind 1) ຫຼື ລາຍຈ່າຍ (kind 2) ທີ່ໃຊ້ງານ — label "ລະຫັດ ຊື່" */

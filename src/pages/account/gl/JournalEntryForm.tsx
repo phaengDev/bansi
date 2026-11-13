@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { CurrencyPicker } from '../../../components/Elements/CurrencyPicker';
 import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { postApi } from '../../../utils/configApi';
@@ -23,7 +24,7 @@ const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
  */
 const JournalEntryForm = ({ accounts, onClose, onSaved }: { accounts: ChartAccount[]; onClose: () => void; onSaved: () => void }) => {
   const t = useT();
-  const currencies = useCurrency() as unknown as { label: string; value: number; rate: number }[];
+  const currencies = useCurrency();
   const options = useAccountOptions(accounts);
   const [date, setDate] = useState<Date>(new Date());
   const [reference, setReference] = useState('');
@@ -125,8 +126,8 @@ const JournalEntryForm = ({ accounts, onClose, onSaved }: { accounts: ChartAccou
             </div>
             <div className="rs-form-group">
               <label className="form-label">{t('accountTypeCurrency')}</label>
-              <SelectPicker block data={currencies} value={currencyId} placeholder="LAK" popupClassName="acc-book-menu"
-                onChange={(v) => { setCurrencyId(v as number | null); setRate(null); }}
+              <CurrencyPicker value={currencyId} placeholder="LAK"
+                onChange={(v) => { setCurrencyId(v); setRate(null); }}
               />
             </div>
             <div className="rs-form-group">

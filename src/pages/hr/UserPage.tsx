@@ -15,6 +15,9 @@ import {
   type ApprovalKey, type PermissionKey, type User, type UserType,
 } from './hrApi';
 import { HrAvatar } from './hrKit';
+import {
+  MENU_GROUPS, USER_ADMIN_MENU_PATH, menuGroupOf, refreshAccountMenus, useAllAccountMenus, type AccountMenu,
+} from '../account/accountMenus';
 
 const { StringType, NumberType } = Schema.Types;
 const MIN_PASSWORD = 6;
@@ -33,9 +36,73 @@ const employeeLabel = (_: unknown, item: any) => item && (
   </span>
 );
 
-const UserForm = ({ data, types, onClose, onSaved }: {
+/** ເມນູທີ່ຕິກໄວ້ ຈາກຄ່າຂອງບັນຊີ — null (ທຸກເມນູ) / ບັນຊີໃໝ່ = ຕິກທັງໝົດ */
+const initialMenuIds = (menus: AccountMenu[], access: number[] | null | undefined) => {
+  const ids = menus.flatMap((menu) => (menu.menuId ? [menu.menuId] : []));
+  return access ? ids.filter((id) => access.includes(id)) : ids;
+};
+
+/**
+ * ຕິກເມນູທີ່ບັນຊີນີ້ໃຊ້ໄດ້ — ແບ່ງກຸ່ມ ບັນຊີ / ບຸກຄະລາກອນ / ທົ່ວໄປ, ຕິກຫົວກຸ່ມ = ທັງກຸ່ມ.
+ * lockedId = ເມນູທີ່ເອົາອອກບໍ່ໄດ້ (ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ ຂອງບັນຊີຕົນເອງ)
+ */
+const MenuAccessPicker = ({ menus, value, onChange, lockedId }: {
+  menus: AccountMenu[];
+  value: number[];
+  onChange: (next: number[]) => void;
+  lockedId?: number;
+}) => {
+  const t = useT();
+  const allIds = menus.flatMap((menu) => (menu.menuId ? [menu.menuId] : []));
+  const keep = (ids: number[]) => (lockedId && !ids.includes(lockedId) ? [...ids, lockedId] : ids);
+  const setGroup = (ids: number[], on: boolean) =>
+    onChange(keep(on ? [...new Set([...value, ...ids])] : value.filter((id) => !ids.includes(id))));
+
+  return (
+    <div className="is-wide hr-menu-access">
+      <div className="hr-menu-tools">
+        <span><b>{value.length}</b> / {allIds.length}</span>
+        <button type="button" onClick={() => onChange(allIds)}><i className="fa-solid fa-check-double" /> {t('hrMenuSelectAll')}</button>
+        <button type="button" onClick={() => onChange(keep([]))}><i className="fa-solid fa-eraser" /> {t('hrMenuClear')}</button>
+      </div>
+      {MENU_GROUPS.map((group) => {
+        const items = menus.filter((menu) => menu.menuId && menuGroupOf(menu.path) === group.key);
+        if (!items.length) return null;
+        const ids = items.map((menu) => menu.menuId!);
+        const picked = ids.filter((id) => value.includes(id)).length;
+        return (
+          <div key={group.key} className="hr-menu-group">
+            <Checkbox className="hr-menu-group-head" checked={picked === ids.length} indeterminate={picked > 0 && picked < ids.length}
+              onChange={(_, checked) => setGroup(ids, checked)}
+            >
+              <i className={`fa-solid ${group.icon}`} /> {t(group.label)} <small>{picked} / {ids.length}</small>
+            </Checkbox>
+            <div className="hr-menu-grid">
+              {items.map((menu) => {
+                const on = value.includes(menu.menuId!);
+                return (
+                  <Checkbox key={menu.id} checked={on} disabled={menu.menuId === lockedId}
+                    className={`hr-menu-pick${on ? ' is-on' : ''}`}
+                    onChange={(_, checked) => setGroup([menu.menuId!], checked)}
+                  >
+                    <span className={`hr-menu-icon is-${menu.tone}`}><i className={menu.iconClass} /></span>
+                    <span className="hr-menu-name">{menu.name}</span>
+                  </Checkbox>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const UserForm = ({ data, types, menus, onClose, onSaved }: {
   data: User | null;
   types: UserType[];
+  /** ທຸກເມນູ (GET /menu/all) — null = ກຳລັງໂຫຼດ */
+  menus: AccountMenu[] | null;
   onClose: () => void;
   onSaved: () => void;
 }) => {
@@ -56,6 +123,10 @@ const UserForm = ({ data, types, onClose, onSaved }: {
   const [approvals, setApprovals] = useState<Record<ApprovalKey, boolean>>(
     Object.fromEntries(APP_APPROVALS.map((a) => [a.key, Number(data?.[a.key]) === 1])) as Record<ApprovalKey, boolean>,
   );
+  /** ເມນູທີ່ຕິກ — null = ຍັງບໍ່ໄດ້ແຕະ (ໃຊ້ຄ່າເດີມຂອງບັນຊີ ເມື່ອລາຍການເມນູໂຫຼດແລ້ວ) */
+  const [menuPick, setMenuPick] = useState<number[] | null>(null);
+  const menuIds = menuPick ?? (menus ? initialMenuIds(menus, data?.menu_access) : []);
+  const adminMenuId = isSelf ? menus?.find((menu) => menu.path === USER_ADMIN_MENU_PATH)?.menuId : undefined;
   const [inputs, setInputs] = useState<any>({
     user_name: data?.user_name ?? '',
     phones: data?.phones ?? '',
@@ -104,8 +175,13 @@ const UserForm = ({ data, types, onClose, onSaved }: {
     setInputs(next);
   };
 
+  const hasMenus = !!menus?.length;
   const submit = async () => {
     if (!formRef.current?.check()) return;
+    if (hasMenus && !menuIds.length) {
+      Notific.warning('hrMenuNeedOne');
+      return;
+    }
     const payload = {
       user_name: String(inputs.user_name).trim(),
       phones: String(inputs.phones).replace(/[\s-]/g, ''),
@@ -114,6 +190,8 @@ const UserForm = ({ data, types, onClose, onSaved }: {
       ...Object.fromEntries(PERMISSIONS.map((p) => [p.key, perms[p.key] ? ALLOW : DENY])),
       // ບໍ່ຜູກພະນັກງານ = ອະນຸມັດໃນ app ບໍ່ໄດ້ (backend ລ້າງໃຫ້ຄືກັນ)
       ...Object.fromEntries(APP_APPROVALS.map((a) => [a.key, inputs.employee_id && approvals[a.key] ? 1 : 0])),
+      // ຕິກຄົບ = null (ທຸກເມນູ ລວມເມນູທີ່ເພີ່ມພາຍຫຼັງ); ລາຍການເມນູໂຫຼດບໍ່ໄດ້ = ບໍ່ສົ່ງ (ຄົງຄ່າເດີມ)
+      ...(hasMenus ? { menu_access: menuIds.length >= menus!.filter((m) => m.menuId).length ? null : menuIds } : {}),
       ...(data ? {} : { password: inputs.password, status: 1 }),
     };
     if (await runSave(() => saveSetting('/user', data?.user_uuid, payload), setSaving)) {
@@ -121,6 +199,7 @@ const UserForm = ({ data, types, onClose, onSaved }: {
         // ສິດໃນໜ້າເວັບອ່ານຕອນ login — ອັບເດດໄວ້ ແລະ ບອກໃຫ້ເຂົ້າລະບົບໃໝ່
         localStorage.setItem('user_name', payload.user_name);
         PERMISSIONS.forEach((p) => localStorage.setItem(p.key, String(perms[p.key] ? ALLOW : DENY)));
+        refreshAccountMenus();
         Notific.warning('hrSelfReloginNote');
       }
       onSaved();
@@ -169,6 +248,18 @@ const UserForm = ({ data, types, onClose, onSaved }: {
               );
             })}
           </div>
+        </FormSection>
+        {/* ເມນູທີ່ໃຊ້ໄດ້: ບໍ່ຕິກ = ເມນູບໍ່ຂຶ້ນໃນ desktop / Start menu / taskbar ຂອງບັນຊີນີ້ (backend ກັ່ນ GET /menu/main) */}
+        <FormSection title={t('hrMenuAccess')}>
+          {menus === null ? (
+            <p className="is-wide hr-app-hint"><i className="fa-solid fa-spinner fa-spin" /> {t('loadingDots')}</p>
+          ) : hasMenus && (
+            <>
+              <MenuAccessPicker menus={menus} value={menuIds} onChange={setMenuPick} lockedId={adminMenuId} />
+              <p className="is-wide hr-app-hint"><i className="fa-solid fa-table-cells-large" /> {t('hrMenuAccessHint')}</p>
+              {isSelf && <p className="is-wide hr-app-hint is-warn"><i className="fa-solid fa-lock" /> {t('hrMenuSelfNote')}</p>}
+            </>
+          )}
         </FormSection>
         {/* ຈັດການຜ່ານແອັບ: ຜູ້ໄດ້ສິດຮັບແຈ້ງເຕືອນຄຳຂໍໃໝ່ ແລະ ອະນຸມັດໃນແອັບ (ເມນູເຫັນສະເພາະຄົນທີ່ໄດ້ສິດ) */}
         <FormSection title={t('hrAppApprovals')}>
@@ -236,12 +327,43 @@ const PasswordForm = ({ user, onClose }: { user: User; onClose: () => void }) =>
   );
 };
 
+const MAX_MENU_ICONS = 9;
+
+/** ແຖວເມນູທີ່ໃຊ້ໄດ້ໃນບັດຜູ້ໃຊ້ — null = "ທຸກເມນູ", ບໍ່ດັ່ງນັ້ນ ໄອຄອນສີ (ເກີນ MAX_MENU_ICONS ສະແດງ +n) */
+const UserMenus = ({ access, menus }: { access: number[] | null | undefined; menus: AccountMenu[] }) => {
+  const t = useT();
+  const total = menus.filter((menu) => menu.menuId).length;
+  const allowed = access ? menus.filter((menu) => menu.menuId && access.includes(menu.menuId)) : null;
+  const names = allowed?.map((menu) => menu.name).join(' · ');
+  return (
+    <div className={`hr-user-menus${allowed ? '' : ' is-all'}`} title={names ?? t('hrMenuAll')}>
+      <i className="fa-solid fa-table-cells-large" />
+      <span>{t('hrMenuAccess')}</span>
+      {allowed ? (
+        <>
+          <span className="hr-user-menu-icons">
+            {allowed.slice(0, MAX_MENU_ICONS).map((menu) => (
+              <span key={menu.id} className={`hr-menu-icon is-${menu.tone}`}><i className={menu.iconClass} /></span>
+            ))}
+            {allowed.length > MAX_MENU_ICONS && <em>+{allowed.length - MAX_MENU_ICONS}</em>}
+          </span>
+          <b>{allowed.length} / {total}</b>
+        </>
+      ) : (
+        <b>{t('hrMenuAll')}</b>
+      )}
+    </div>
+  );
+};
+
 /**
  * ບັດຜູ້ໃຊ້ — ແຖບສີຕາມລະດັບ (1 ສູງສຸດ = ມ່ວງ, 2 ທຳມະດາ = ຟ້າ, 3 ທົ່ວໄປ = ຂຽວ) + ຮູບໃຫຍ່, ຊື່ / ປະເພດ, ເບີເຂົ້າລະບົບ + ພະນັກງານທີ່ຜູກ,
  * ສິດ 3 ຊ່ອງ (ເພີ່ມ / ແກ້ໄຂ / ລຶບ) ແລະ ປຸ່ມ ແກ້ໄຂ · ປ່ຽນລະຫັດຜ່ານ · ລຶບ. ເປີດ/ປິດບັນຊີຢູ່ມຸມຂວາເທິງ (ບັນຊີຕົນເອງປິດບໍ່ໄດ້)
  */
-const UserCard = ({ user, isSelf, toggling, onToggle, onEdit, onPassword, onDelete }: {
+const UserCard = ({ user, menus, isSelf, toggling, onToggle, onEdit, onPassword, onDelete }: {
   user: User;
+  /** ທຸກເມນູ — ສະແດງເມນູທີ່ບັນຊີນີ້ໃຊ້ໄດ້ */
+  menus: AccountMenu[] | null;
   isSelf: boolean;
   toggling: boolean;
   onToggle: (on: boolean) => void;
@@ -309,6 +431,9 @@ const UserCard = ({ user, isSelf, toggling, onToggle, onEdit, onPassword, onDele
         })}
       </div>
 
+      {/* ເມນູທີ່ໃຊ້ໄດ້ — ທຸກເມນູ ຫຼື ໄອຄອນສີຂອງແຕ່ລະເມນູ */}
+      {!!menus?.length && <UserMenus access={user.menu_access} menus={menus} />}
+
       {/* ສິດອະນຸມັດຜ່ານແອັບ (ສະເພາະທີ່ໄດ້) */}
       {!!employee && APP_APPROVALS.some((a) => Number(user[a.key]) === 1) && (
         <p className="hr-user-app" title={t('hrAppApprovalsHint')}>
@@ -339,6 +464,7 @@ const UserPage = () => {
   const t = useT();
   const { rows, loading, reload } = useHrList<User>('/user/fetch', 'post');
   const types = useUserTypes();
+  const menus = useAllAccountMenus();
   const statusToggle = useStatusToggle('/user', reload);
   const [keyword, setKeyword] = useState('');
   const [editing, setEditing] = useState<User | null | undefined>(undefined);
@@ -379,7 +505,7 @@ const UserPage = () => {
           {shown.map((r) => {
             const isSelf = r.user_uuid === me;
             return (
-              <UserCard key={r.user_uuid} user={r} isSelf={isSelf}
+              <UserCard key={r.user_uuid} user={r} menus={menus} isSelf={isSelf}
                 toggling={statusToggle.busyId === r.user_uuid}
                 onToggle={(on) => statusToggle.toggle(r.user_uuid, on)}
                 onEdit={() => setEditing(r)}
@@ -391,7 +517,7 @@ const UserPage = () => {
         </div>
       </ListState>
 
-      {editing !== undefined && <UserForm data={editing} types={types} onClose={() => setEditing(undefined)} onSaved={reload} />}
+      {editing !== undefined && <UserForm data={editing} types={types} menus={menus} onClose={() => setEditing(undefined)} onSaved={reload} />}
       {password && <PasswordForm user={password} onClose={() => setPassword(null)} />}
     </div>
   );

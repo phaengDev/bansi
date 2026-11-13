@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import CurrencyFlag from '../../../components/Elements/CurrencyFlag';
 import { Loader } from 'rsuite';
 import { deleteApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -61,8 +62,8 @@ const AccountTypePage = () => {
   /** ສະກຸນເງິນຂອງແຖວ — ໃຊ້ຂອງທີ່ backend include ມາ, ບໍ່ມີກໍ່ຊອກຈາກລາຍການສະກຸນເງິນຕາມ currencyId */
   const currencyOf = (item: AccountType) => {
     if (item.currency) return item.currency;
-    const opt = (currencies as any[]).find((c) => Number(c.value) === Number(item.currencyId));
-    return opt ? { name: String(opt.label), icon: opt.icon as string | undefined, laos: undefined as string | undefined } : null;
+    const opt = currencies.find((c) => c.value === Number(item.currencyId));
+    return opt ? { name: opt.label, icon: opt.icon ?? undefined, laos: opt.laos ?? undefined } : null;
   };
   const classOf = (item: AccountType) => item.types ?? classes.find((c) => c._uuid === item.typeId);
 
@@ -80,7 +81,7 @@ const AccountTypePage = () => {
   const currencyCounts = countBy(byClass, 'currencyId');
   const allCurrencyCounts = countBy(rows, 'currencyId');
   /** ສະແດງສະເພາະສະກຸນເງິນທີ່ມີປະເພດບັນຊີໃຊ້ຢູ່ (ແລະ ອັນທີ່ກຳລັງເລືອກ) — ບໍ່ໃຫ້ chip ຫວ່າງລົ້ນແຖວ */
-  const currencyChips = (currencies as any[]).filter((c) => allCurrencyCounts[Number(c.value)] || Number(c.value) === currencyId);
+  const currencyChips = currencies.filter((c) => allCurrencyCounts[c.value] || c.value === currencyId);
 
   const activeCount = rows.filter(isActive).length;
   const usedClassCount = Object.keys(countBy(rows, 'typeId')).length;
@@ -207,7 +208,7 @@ const AccountTypePage = () => {
                   className={`acc-type-chip${currencyId === id ? ' is-active' : ''}${currencyCounts[id] ? '' : ' is-empty'}`}
                   onClick={() => setCurrencyId(currencyId === id ? null : id)}
                 >
-                  {c.icon && <span className="acc-type-cur-icon">{c.icon}</span>} {c.label} <em>{currencyCounts[id] ?? 0}</em>
+                  <CurrencyFlag icon={c.icon} currency={c.label} /> {c.label} <em>{currencyCounts[id] ?? 0}</em>
                 </button>
               );
             })}
@@ -266,7 +267,7 @@ const AccountTypePage = () => {
                           </div>
                           <div>
                             <small><i className="fa-solid fa-coins" /> {t('accountTypeCurrency')}</small>
-                            {cur ? <b>{cur.icon} {cur.name}{cur.laos ? ` · ${cur.laos}` : ''}</b> : <em>{t('notSpecified')}</em>}
+                            {cur ? <b><CurrencyFlag icon={cur.icon} currency={cur.name} /> {cur.name}{cur.laos ? ` · ${cur.laos}` : ''}</b> : <em>{t('notSpecified')}</em>}
                           </div>
                         </div>
                       </article>
@@ -293,7 +294,6 @@ const AccountTypePage = () => {
         <AccountTypeForm
           data={editing}
           classes={classes}
-          currencies={currencies as any}
           usedCodes={rows.map((r) => String(r.treasury_code))}
           onClose={() => setEditing(undefined)}
           onSaved={fetchData}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import CurrencyFlag from '../../../components/Elements/CurrencyFlag';
 import { Loader } from 'rsuite';
 import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -359,7 +360,7 @@ const TreasuryAccountPage = () => {
                 className={`acc-type-chip${currencyId === id ? ' is-active' : ''}${currencyCounts[id] ? '' : ' is-empty'}`}
                 onClick={() => setCurrencyId(currencyId === id ? null : id)}
               >
-                {cur.genus && <span className="acc-type-cur-icon">{cur.genus}</span>} {cur.name} <em>{currencyCounts[id] ?? 0}</em>
+                <CurrencyFlag icon={cur.icon} currency={cur.name} /> {cur.name} <em>{currencyCounts[id] ?? 0}</em>
               </button>
             ))}
           </div>

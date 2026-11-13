@@ -45,6 +45,36 @@ const withAuth = (config?: AxiosRequestConfig): AxiosRequestConfig => {
 };
 
 // ── ✅ Format functions ───────────────────────────────────
+/**
+ * ຮູບແບບຕົວເລກຂອງບໍລິສັດ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ): 1 = 1,250,000.50, 2 = 1.250.000,50 (ກົດໝາຍບັນຊີ ມາດຕາ 7).
+ * ມີຜົນກັບທຸກບ່ອນທີ່ສະແດງຕົວເລກຜ່ານ formatNumber / formatDecimal / numeral; ຊ່ອງປ້ອນຕົວເລກ (InputNumber) ຄືເກົ່າ.
+ * ຈື່ໄວ້ໃນ localStorage ໃຫ້ໂຫຼດໜ້າໃໝ່ແລ້ວໃຊ້ທັນທີ ກ່ອນດຶງຕັ້ງຄ່າຈາກ api
+ */
+export type NumberStyle = 1 | 2;
+const NUMBER_STYLE_KEY = 'numberFormat';
+numeral.register('locale', 'lo-dot', {
+    delimiters: { thousands: '.', decimal: ',' },
+    abbreviations: { thousand: 'k', million: 'm', billion: 'b', trillion: 't' },
+    ordinal: () => '',
+    currency: { symbol: '₭' },
+});
+export const applyNumberStyle = (style: NumberStyle) => {
+    numeral.locale(style === 2 ? 'lo-dot' : 'en');
+    try {
+        localStorage.setItem(NUMBER_STYLE_KEY, String(style));
+    } catch {
+        // ບໍ່ມີ localStorage — ໃຊ້ໄດ້ສະເພາະຮອບນີ້
+    }
+};
+const storedNumberStyle = (): NumberStyle => {
+    try {
+        return localStorage.getItem(NUMBER_STYLE_KEY) === '2' ? 2 : 1;
+    } catch {
+        return 1;
+    }
+};
+applyNumberStyle(storedNumberStyle());
+
 /** ຟໍແມັດຕົວເລກ:  1,000,000 */
 export const formatNumber = (val: number | string | null | undefined): string => {
     return numeral(val ?? 0).format('0,0');

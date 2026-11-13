@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import CurrencyFlag from '../../../components/Elements/CurrencyFlag';
 import { DatePicker, Form, Loader, NumberInput, Textarea } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import moment from 'moment';
@@ -11,9 +12,11 @@ import { Notific } from '../../../utils/Notification';
 import { canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { CardAction, FormSection, ListState, SettingModal, SettingToolbar } from './settingKit';
-import { postfixProp, runSave, toApiDate, useSettingList } from './settingApi';
+import { postfixProp, runSave, toApiDate } from './settingApi';
+import { refreshCurrencies, useCurrency, type CurrencyOption } from '../../../utils/selectOption';
 
-type Currency = { _id: number; name: string; laos?: string; icon?: string; genus?: string; reate?: string | number; updatedAt?: string };
+/** ສະກຸນເງິນຈາກລາຍການກາງ (useCurrency) */
+type Currency = CurrencyOption;
 
 type RateRow = { _uuid: number; currencyId: number; rate: string | number; rate_date: string; description?: string; createby?: string };
 
@@ -115,7 +118,10 @@ const CurrencyForm = ({ currency, onClose, onSaved }: { currency: Currency; onCl
  */
 const CurrencyRatePage = () => {
   const t = useT();
-  const { rows: currencies, loading, reload } = useSettingList<Currency>('/currency');
+  // ລາຍການກາງ (ໂຫຼດເທື່ອດຽວ) — ແກ້ແລ້ວ refreshCurrencies() ທຸກຊ່ອງເລືອກສະກຸນໃນລະບົບອັບເດດນຳ
+  const currencies = useCurrency();
+  const loading = currencies.loading;
+  const reload = refreshCurrencies;
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [history, setHistory] = useState<RateRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -183,7 +189,7 @@ const CurrencyRatePage = () => {
               >
                 <span className="acs-cur-symbol">{symbolOf(c)}</span>
                 <span className="acs-cur-name">
-                  <b>{c.name}</b>
+                  <b><CurrencyFlag icon={c.icon} currency={c.name} /> {c.name}</b>
                   <small>{c.laos}</small>
                 </span>
                 <span className="acs-cur-rate">

@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import AppPage from '../../../components/Elements/AppPage';
 import { useT } from '../../../context/LanguageContext';
 import AccountClassPage from './AccountClassPage';
+import AccountGeneralPage from './AccountGeneralPage';
 import AccountTypePage from './AccountTypePage';
 import BankDirectoryPage from './BankDirectoryPage';
 import CurrencyRatePage from './CurrencyRatePage';
@@ -41,6 +42,7 @@ type SettingPage = {
  * key ທີ່ຍັງບໍ່ມີໃນນີ້ຈະຂຶ້ນເປັນ "ກຳລັງພັດທະນາ" ໃຫ້ເອງ.
  */
 const SETTING_PAGES: Record<string, SettingPage> = {
+  general: { element: <AccountGeneralPage />, footer: false },
   fiscalYear: { element: <FiscalYearPage /> },
   currency: { element: <CurrencyRatePage /> },
   accountClass: { element: <AccountClassPage /> },

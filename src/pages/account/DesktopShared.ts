@@ -115,6 +115,8 @@ export type ShortcutId =
   | 'trialBalance'
   | 'financialStatements'
   | 'budget'
+  | 'fixedAssets'
+  | 'closing'
   | 'employees'
   | 'tasks'
   | 'hr'
@@ -125,6 +127,8 @@ export type ShortcutId =
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
 export const shortcutNameKeys: Record<ShortcutId, string> = {
+  fixedAssets: 'accountAppFixedAssets',
+  closing: 'accountAppClosing',
   journal: 'accountAppJournal',
   chartOfAccounts: 'accountAppChartOfAccounts',
   generalLedger: 'accountAppGeneralLedger',
@@ -154,6 +158,8 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   trialBalance: 'accountAppTrialBalanceDesc',
   financialStatements: 'accountAppFinancialStatementsDesc',
   budget: 'accountAppBudgetDesc',
+  fixedAssets: 'accountAppFixedAssetsDesc',
+  closing: 'accountAppClosingDesc',
   employees: 'accountAppEmployeesDesc',
   tasks: 'accountAppTasksDesc',
   hr: 'accountAppHrDesc',
@@ -179,6 +185,8 @@ export const shortcuts: ReadonlyArray<{
   { id: 'trialBalance', icon: 'fa-scale-balanced', tone: 'violet', path: '/account/trial-balance', popup: true },
   { id: 'financialStatements', icon: 'fa-chart-pie', tone: 'emerald', path: '/account/statements', popup: true },
   { id: 'budget', icon: 'fa-bullseye', tone: 'gold', path: '/account/budget', popup: true },
+  { id: 'fixedAssets', icon: 'fa-building', tone: 'gold', path: '/account/fixed-assets', popup: true },
+  { id: 'closing', icon: 'fa-clipboard-check', tone: 'violet', path: '/account/closing', popup: true },
   { id: 'employees', icon: 'fa-id-card', tone: 'cyan', path: '/hr/employees', popup: true },
   { id: 'tasks', icon: 'fa-list-check', tone: 'sky', path: '/hr/tasks', popup: true },
   { id: 'hr', icon: 'fa-users-gear', tone: 'violet', path: '/hr', popup: true },

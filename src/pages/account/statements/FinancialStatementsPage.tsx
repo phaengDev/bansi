@@ -5,7 +5,7 @@ import AppPage from '../../../components/Elements/AppPage';
 import { postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { useT } from '../../../context/LanguageContext';
-import { STATEMENTS_MENU, toRailNav } from '../config/SidebarPopup';
+import { STATEMENTS_MENU, toRailNav, withFeatures } from '../config/SidebarPopup';
 import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import type { Income } from '../journal/IncomeForm';
 import type { Expense } from '../journal/ExpenseForm';
@@ -15,6 +15,10 @@ import type { PartnerPayment } from '../arap/arapApi';
 import ProfitLoss from './ProfitLoss';
 import CashFlow from './CashFlow';
 import BalanceSheet from './BalanceSheet';
+import EquityChanges from './EquityChanges';
+import Notes from './Notes';
+import VatReport from './VatReport';
+import { featureOn, useAccountSetting } from '../accountSettings';
 import { useGlPnl } from '../gl/useGlPnl';
 import { isKip } from '../ledger/currency';
 import { useRailKey } from '../windowMemory';
@@ -43,8 +47,12 @@ export type StatementData = {
  */
 const FinancialStatementsPage = () => {
   const t = useT();
-  const railNav = useMemo(() => toRailNav(STATEMENTS_MENU, t), [t]);
-  const [activeKey, setActiveKey] = useRailKey('statements', STATEMENTS_MENU);
+  const setting = useAccountSetting();
+  // ລາຍງານອາກອນ ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດຟັງຊັນນັ້ນ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ)
+  const menu = useMemo(() => withFeatures(STATEMENTS_MENU, (f) => featureOn(setting, f)), [setting]);
+  const railNav = useMemo(() => toRailNav(menu, t), [menu, t]);
+  const [savedKey, setActiveKey] = useRailKey('statements', STATEMENTS_MENU);
+  const activeKey = railNav.some((item) => item.key === savedKey) ? savedKey : railNav[0]?.key ?? 'profitLoss';
   const [period, setPeriod] = useState<Period>('month');
   const [range, setRange] = useState<Range>(() => rangeOf('month'));
   const [currency, setCurrency] = useState<string | null>(null);
@@ -102,7 +110,7 @@ const FinancialStatementsPage = () => {
 
   const gl = useGlPnl(range, prev);
   // ໃບທີ່ມາຈາກສະໝຸດບັນຊີ (ຊັບສົມບັດ, ຜົນດຳເນີນງານເມື່ອມີລາຍການບັນຊີຄູ່) ເປັນ LAK ສະເໝີ — ບໍ່ມີປຸ່ມເລືອກສະກຸນ
-  const ledgerOnly = activeKey === 'balanceSheet' || (activeKey === 'profitLoss' && !!gl);
+  const ledgerOnly = ['balanceSheet', 'equity', 'notes', 'vat'].includes(activeKey) || (activeKey === 'profitLoss' && !!gl);
   const currencies = currenciesOf([...incomes, ...expenses], accounts);
   const kip = currencies.find((c) => isKip({ name: c.key, genus: c.symbol }))?.key ?? 'LAK';
   const curKey = ledgerOnly ? kip : currency && currencies.some((c) => c.key === currency) ? currency : currencies[0]?.key ?? null;
@@ -115,6 +123,9 @@ const FinancialStatementsPage = () => {
     profitLoss: <ProfitLoss data={data} />,
     cashFlow: <CashFlow data={data} />,
     balanceSheet: <BalanceSheet data={data} />,
+    equity: <EquityChanges data={data} />,
+    notes: <Notes data={data} />,
+    vat: <VatReport data={data} />,
   };
   const periods: { key: Exclude<Period, 'custom'>; label: string }[] = [
     { key: 'month', label: t('mvThisMonth') },

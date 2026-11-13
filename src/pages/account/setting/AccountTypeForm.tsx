@@ -1,4 +1,7 @@
 import { useRef, useState } from 'react';
+import CurrencyFlag from '../../../components/Elements/CurrencyFlag';
+import { CurrencyField } from '../../../components/Elements/CurrencyPicker';
+import { useCurrency } from '../../../utils/selectOption';
 import { Button, Form, Modal, Textarea, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { postApi, putApi } from '../../../utils/configApi';
@@ -24,15 +27,11 @@ export type AccountType = {
   types?: AccountClass;
 };
 
-/** ຕົວເລືອກສະກຸນເງິນຈາກ useCurrency() — icon = ທຸງ, genus = ສັນຍາລັກ (₭, $, ฿) */
-type CurrencyOption = { label: string; value: number; icon?: string; genus?: string };
-
 type Props = {
   /** null = ເພີ່ມໃໝ່ */
   data: AccountType | null;
   /** ໝວດບັນຊີທັງໝົດ — ລະຫັດປະເພດໃໝ່ຂຶ້ນຕົ້ນດ້ວຍລະຫັດໝວດທີ່ເລືອກ */
   classes: AccountClass[];
-  currencies: CurrencyOption[];
   /** ລະຫັດປະເພດທີ່ມີແລ້ວ — ໃຊ້ເດົາລະຫັດທີ່ຈະໄດ້ ໃຫ້ກົງກັບ codeType ຂອງ backend */
   usedCodes: string[];
   onClose: () => void;
@@ -41,22 +40,14 @@ type Props = {
   onDelete?: () => void;
 };
 
-/** ສະກຸນເງິນໃນ PickerField — ທຸງ + ລະຫັດ + ສັນຍາລັກ */
-const currencyLabel = (_: unknown, item: any) => item && (
-  <span className="acc-book-opt">
-    {item.icon && <i className="acc-book-opt-flag">{item.icon}</i>}
-    <span>{item.label}</span>
-    {item.genus && <em>{item.genus}</em>}
-  </span>
-);
-
 /**
  * ຟອມເພີ່ມ/ແກ້ໄຂປະເພດບັນຊີ — POST /type-treasury/create, PUT /type-treasury/:id (id ເປັນ base64).
  * ຕອນເພີ່ມ ສົ່ງລະຫັດໝວດໄປເປັນ `treasury_code` ແລ້ວ backend (codeType) ຕໍ່ເລກລຳດັບໃຫ້ເອງ ເຊັ່ນ 101 → 1011, 1012.
  * ຊ້າຍ: ບັດຕົວຢ່າງແບບດຽວກັບໃນລາຍການ (AccountTypePage) ທີ່ອັບເດດຕາມທີ່ປ້ອນ + ສະຖານະ. ຂວາ: ຊ່ອງປ້ອນເປັນຂັ້ນຕອນ.
  */
-const AccountTypeForm = ({ data, classes, currencies, usedCodes, onClose, onSaved, onDelete }: Props) => {
+const AccountTypeForm = ({ data, classes, usedCodes, onClose, onSaved, onDelete }: Props) => {
   const t = useT();
+  const currencies = useCurrency();
   const formRef = useRef<FormInstance>(null);
   const [saving, setSaving] = useState(false);
   const [inputs, setInputs] = useState<any>({
@@ -165,7 +156,7 @@ const AccountTypeForm = ({ data, classes, currencies, usedCodes, onClose, onSave
                   </div>
                   <div>
                     <small><i className="fa-solid fa-coins" /> {t('accountTypeCurrency')}</small>
-                    {currency ? <b>{currency.icon} {currency.label}</b> : <em>{t('notSpecified')}</em>}
+                    {currency ? <b><CurrencyFlag icon={currency.icon} currency={currency.label} /> {currency.label}</b> : <em>{t('notSpecified')}</em>}
                   </div>
                 </div>
               </article>
@@ -199,10 +190,7 @@ const AccountTypeForm = ({ data, classes, currencies, usedCodes, onClose, onSave
             </FormStep>
 
             <FormStep no={2} done={!!inputs.currencyId && !!name} title={t('accountTypeStepInfo')} hint={t('accountTypeStepInfoHint')}>
-              <PickerField name="currencyId" label={t('accountTypeCurrency')} data={currencies}
-                cleanable={false} placeholder={t('select')}
-                renderOption={currencyLabel} renderValue={currencyLabel}
-              />
+              <CurrencyField name="currencyId" label={t('accountTypeCurrency')} cleanable={false} />
               <InputField name="treasury_name" label={t('name')} placeholder={t('accountTypeNamePlaceholder')}
                 icon={<i className="fa-solid fa-tag" />}
               />
