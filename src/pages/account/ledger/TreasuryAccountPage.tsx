@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Loader } from 'rsuite';
-import { formatNumber, postApi } from '../../../utils/configApi';
+import { formatNumber, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canCreate, canEdit } from '../../../utils/localStorage';
@@ -110,6 +110,22 @@ const TreasuryAccountPage = () => {
   const [tracing, setTracing] = useState<TreasuryAccount | null>(null);
   /** ຟອມໂອນຍ້າຍເງິນ: undefined = ປິດ, null = ເປີດຈາກຫົວໜ້າ, ຕົວເລກ = ເປີດຈາກບັດ (ບັນຊີໂອນອອກ) */
   const [transferFrom, setTransferFrom] = useState<number | null | undefined>(undefined);
+  /** ລາກຍ້າຍບັດ: grabId = ກົດຄ້າງຢູ່ຫົວບັດ (ບັດນັ້ນລາກໄດ້), dragId = ກຳລັງລາກ; startOrder = ລຳດັບກ່ອນລາກ (ທຽບວ່າປ່ຽນບໍ) */
+  const [grabId, setGrabId] = useState<number | null>(null);
+  const [dragId, setDragId] = useState<number | null>(null);
+  const startOrder = useRef('');
+  /** ລຳດັບລ່າສຸດຕອນປ່ອຍ (dragend ອາດມາກ່ອນ render ຂອງການຍ້າຍສຸດທ້າຍ) */
+  const rowsRef = useRef(rows);
+  useEffect(() => {
+    rowsRef.current = rows;
+  }, [rows]);
+  // ກົດຫົວບັດແລ້ວປ່ອຍ (ບໍ່ໄດ້ລາກ) ບ່ອນໃດກໍ່ໄດ້ = ເລີກຈັບ — ບັດກັບມາເລືອກຂໍ້ຄວາມໄດ້ຄືເກົ່າ
+  useEffect(() => {
+    if (grabId === null) return;
+    const release = () => setGrabId(null);
+    window.addEventListener('pointerup', release);
+    return () => window.removeEventListener('pointerup', release);
+  }, [grabId]);
 
   const fetchData = async () => {
     try {
@@ -138,6 +154,38 @@ const TreasuryAccountPage = () => {
     fetchTypes();
     fetchData();
   }, []);
+
+  /** ລຳດັບບັດຂອງກຸ່ມ (ປະເພດບັນຊີ) ທັງໝົດ — ລວມບັດທີ່ຖືກກັ່ນອອກ */
+  const groupIds = (list: TreasuryAccount[], typeId: number) => list.filter((r) => r.type_treasuryid === typeId).map((r) => r._uuid);
+
+  /** ລາກຜ່ານບັດອື່ນໃນກຸ່ມດຽວກັນ = ຍ້າຍໄປບ່ອນນັ້ນເລີຍ (ເຫັນລຳດັບໃໝ່ທັນທີ) */
+  const dragOver = (target: TreasuryAccount) => {
+    setRows((list) => {
+      const from = list.findIndex((r) => r._uuid === dragId);
+      const to = list.findIndex((r) => r._uuid === target._uuid);
+      if (from < 0 || to < 0 || from === to || list[from].type_treasuryid !== target.type_treasuryid) return list;
+      const next = [...list];
+      next.splice(to, 0, ...next.splice(from, 1));
+      return next;
+    });
+  };
+
+  /** ປ່ອຍ = ບັນທຶກລຳດັບໃໝ່ຂອງກຸ່ມ (ປ່ຽນແທ້ເທົ່ານັ້ນ); ບັນທຶກບໍ່ໄດ້ = ໂຫຼດຄືນ */
+  const dragEnd = async () => {
+    const id = dragId;
+    setDragId(null);
+    setGrabId(null);
+    const dragged = rowsRef.current.find((r) => r._uuid === id);
+    if (!dragged) return;
+    const ids = groupIds(rowsRef.current, dragged.type_treasuryid);
+    if (ids.join(',') === startOrder.current) return;
+    try {
+      await putApi('/treasury-account/sort', { ids });
+    } catch (error) {
+      Notific.error(getErrorMessage(error));
+      fetchData();
+    }
+  };
 
   const typeOf = (r: TreasuryAccount) => r.treasury ?? types.find((x) => x._uuid === r.type_treasuryid);
   /** ສີຈາກໂລໂກ້ທະນາຄານ — ບັດທີ່ຜູກທະນາຄານໃຊ້ສີນີ້ແທນສີໝວດ; ບັນຊີເງິນສົດ (ບໍ່ມີໂລໂກ້) ຄົງສີໝວດຄືເດີມ */
@@ -333,12 +381,35 @@ const TreasuryAccountPage = () => {
                     const tag = [bank?.abbr, cur?.name && `(${cur.name})`].filter(Boolean).join('/');
                     return (
                       // ບັດແບບປຶ້ມບັນຊີທະນາຄານ: ສັນປຶ້ມ + ປົກ (ທະນາຄານ) + ໜ້າເຈ້ຍມີເສັ້ນ (ຊື່/ເລກບັນຊີ + ຍອດເງິນແບບບັນຊີ)
-                      <article key={item._uuid} className={`acc-pb${active ? '' : ' is-off'}`}
+                      // ລາກຍ້າຍ: ຈັບຫົວບັດ (ບໍ່ແມ່ນປຸ່ມ) ແລ້ວລາກໄປບ່ອນອື່ນໃນກຸ່ມດຽວກັນ — ໜ້າເຈ້ຍຍັງເລືອກ copy ເລກບັນຊີໄດ້
+                      <article key={item._uuid}
+                        className={`acc-pb${active ? '' : ' is-off'}${canEdit ? ' is-sortable' : ''}${dragId === item._uuid ? ' is-dragging' : ''}`}
                         style={toneStyle(bank?.url ? logoTones[bank.url] : null)}
+                        draggable={canEdit && grabId === item._uuid}
+                        onDragStart={(e) => {
+                          e.dataTransfer.effectAllowed = 'move';
+                          e.dataTransfer.setData('text/plain', String(item._uuid));
+                          startOrder.current = groupIds(rows, item.type_treasuryid).join(',');
+                          setDragId(item._uuid);
+                        }}
+                        onDragOver={(e) => {
+                          const dragged = rows.find((r) => r._uuid === dragId);
+                          if (!dragged || dragged.type_treasuryid !== item.type_treasuryid) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          if (dragId !== item._uuid) dragOver(item);
+                        }}
+                        onDrop={(e) => e.preventDefault()}
+                        onDragEnd={dragEnd}
                       >
                         <span className="acc-pb-spine" aria-hidden="true" />
                         <div className="acc-pb-body">
-                          <header className="acc-pb-cover">
+                          <header className="acc-pb-cover" title={canEdit ? t('treasuryDragHint') : undefined}
+                            onPointerDown={(e) => {
+                              if (canEdit && e.button === 0 && !(e.target as HTMLElement).closest('button')) setGrabId(item._uuid);
+                            }}
+                          >
+                            {canEdit && <i className="fa-solid fa-grip-vertical acc-pb-grip" aria-hidden="true" />}
                             <span className="acc-pb-logo">
                               {bank?.url ? <img src={bank.url} alt={bankName(bank)} /> : <i className="fa-solid fa-wallet" />}
                             </span>

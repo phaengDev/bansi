@@ -2082,6 +2082,7 @@ export const laoDict = {
   lvTypeNamePlaceholder: { la: 'ເຊັ່ນ ລາພັກປະຈຳປີ', en: 'e.g. Annual leave', cn: '如 年假' },
   lvTypePay: { la: 'ເງິນເດືອນໃນມື້ລາ', en: 'Pay on leave days', cn: '请假日工资' },
   lvTypeWho: { la: 'ໃຜລາໄດ້', en: 'Who can take it', cn: '适用人员' },
+  treasuryDragHint: { la: 'ຈັບຫົວບັດລາກໄປບ່ອນອື່ນໃນກຸ່ມ ເພື່ອຈັດລຽງ', en: 'Drag the card header within its group to reorder', cn: '拖动卡片标题可在组内排序' },
   lvGenderAll: { la: 'ທຸກຄົນ', en: 'Everyone', cn: '所有人' },
   lvGenderAllHint: { la: 'ພະນັກງານຍິງ ແລະ ຊາຍ', en: 'Women and men', cn: '女性和男性' },
   lvGenderFemale: { la: 'ສະເພາະຍິງ', en: 'Women only', cn: '仅限女性' },

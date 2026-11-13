@@ -1118,6 +1118,31 @@
 }
 
 // ສັນປຶ້ມ + ເສັ້ນຫຍິບ
+// ລາກຍ້າຍບັດ (ໜ້າ ເງິນສົດ ແລະ ທະນາຄານ) — ຈັບຫົວບັດ; ບັດທີ່ກຳລັງລາກຈາງລົງ + ຂອບປະ
+.acc-pb.is-sortable .acc-pb-cover { cursor: grab; }
+.acc-pb.is-sortable .acc-pb-cover button { cursor: pointer; }
+.acc-pb.is-sortable .acc-pb-cover:active { cursor: grabbing; }
+
+.acc-pb-grip {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.acc-pb.is-sortable:hover .acc-pb-grip { opacity: 1; }
+
+.acc-pb.is-dragging {
+  opacity: 0.45;
+  outline: 2px dashed var(--tone-b, #1d8fd6);
+  outline-offset: -2px;
+}
+
 .acc-pb-spine {
   position: relative;
   width: 14px;
