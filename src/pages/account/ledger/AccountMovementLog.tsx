@@ -29,6 +29,7 @@ type MovementRow = {
   created_by_name: string | null;
   counterpart: {
     _uuid: number;
+    account_code?: string | null;
     acountName: string;
     acount_number?: string;
     banks?: { abbr?: string; name_la?: string; url?: string | null } | null;
@@ -183,7 +184,7 @@ const AccountMovementLog = ({ account, type, onClose }: {
             <em className="acc-mv-eyebrow"><i className="fa-solid fa-timeline" /> {t('mvOpen')}</em>
             <Drawer.Title>{account.acountName}</Drawer.Title>
             <small>
-              {[account.acount_number, bank?.abbr, type?.treasury_name].filter(Boolean).join(' · ')}
+              {[account.account_code, account.acount_number, bank?.abbr, type?.treasury_name].filter(Boolean).join(' · ')}
             </small>
           </span>
           <span className="acc-stmt-balance">
@@ -334,7 +335,7 @@ const AccountMovementLog = ({ account, type, onClose }: {
                               {isTransfer && other && (
                                 <span className="acc-mv-bank" title={other.banks?.name_la}>
                                   {other.banks?.url ? <img src={other.banks.url} alt={other.banks.abbr ?? ''} /> : <i className="fa-solid fa-wallet" />}
-                                  {other.acount_number || other.banks?.abbr}
+                                  {[other.account_code, other.acount_number || other.banks?.abbr].filter(Boolean).join(' · ')}
                                 </span>
                               )}
                               <span>

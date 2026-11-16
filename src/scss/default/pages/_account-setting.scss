@@ -4709,7 +4709,48 @@
   }
 }
 
-// ປ້າຍສະກຸນເງິນ (ແທນຍອດເງິນ ໃນຟອມລາຍຮັບ / ໃບຮັບເງິນ) — ₭ LAK / ฿ THB / $ USD
+// ຍອດໃຊ້ໄດ້ + ສະກຸນເງິນ ຢູ່ທ້າຍແຖວບັນຊີ (ທຸກ picker ບັນຊີເງິນຄັງ)
+.acc-xfer-opt-bal {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+
+  > b {
+    color: #14314d;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  > em.acc-xfer-cur { margin-left: 0; }
+}
+
+// ລະຫັດບັນຊີເງິນຄັງ (10211) — ປ້າຍນ້ອຍໜ້າຊື່ (ບັດບັນຊີ, ຕາຕະລາງ, ໂອນເງິນ)
+.acc-code-tag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 6px;
+  color: #0f5c8a;
+  background: #e6f1fa;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  vertical-align: 1px;
+}
+
+td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
+
+// ປ້າຍສະກຸນເງິນ — LAK / THB / USD
 .acc-xfer-opt > em.acc-xfer-cur,
 .acc-inv-account > em.acc-xfer-cur {
   flex: none;

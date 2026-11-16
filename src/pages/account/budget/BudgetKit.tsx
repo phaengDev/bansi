@@ -1,5 +1,9 @@
+import type { ReactNode } from 'react';
 import { useT } from '../../../context/LanguageContext';
-import { BUDGET_STATUS, kip, percentOf, percentText, statusOf, type BudgetCheck, type BudgetStatus } from './budgetApi';
+import {
+  BUDGET_STATUS, kip, percentOf, percentText, statusOf,
+  type BudgetCheck, type BudgetRow, type BudgetStatus, type Unbudgeted,
+} from './budgetApi';
 
 export const BudgetStatusPill = ({ status }: { status: BudgetStatus }) => {
   const t = useT();
@@ -10,6 +14,31 @@ export const BudgetStatusPill = ({ status }: { status: BudgetStatus }) => {
     </span>
   );
 };
+
+/** ປ້າຍລາຍການຍ່ອຍທີ່ງົບຜູກ (› ຄ່ານ້ຳ) — payroll = ແຖວເງິນເດືອນ (ບໍ່ມີລາຍການຍ່ອຍ) */
+export const BudgetSubTag = ({ name, payroll }: { name?: string | null; payroll?: boolean }) => {
+  const t = useT();
+  if (!name && !payroll) return null;
+  return (
+    <em className={`acc-bg-sub${payroll ? ' is-payroll' : ''}`}>
+      <i className={`fa-solid ${payroll ? 'fa-users' : 'fa-angle-right'}`} /> {name ?? t('expenseFromPayroll')}
+    </em>
+  );
+};
+
+/**
+ * ຊື່ງົບໃນຕາຕະລາງ (ຕິດຕາມງົບ, ລາຍເດືອນ) — ລະຫັດ + ຊື່ປະເພດ + ປ້າຍລາຍການຍ່ອຍ; children = ແຖວຂໍ້ຄວາມນ້ອຍລຸ່ມຊື່
+ */
+export const BudgetName = ({ row, children }: { row: BudgetRow | Unbudgeted; children?: ReactNode }) => (
+  <span className="acc-bg-cat">
+    <b className="acc-gl-code acc-tone is-coral">{row.category?.type_code ?? '—'}</b>
+    <span>
+      {row.category?.type_name ?? `#${row.category_id}`}
+      <BudgetSubTag name={row.sub?.name} payroll={'payroll' in row && row.payroll} />
+      {children && <small className="acc-gl-ref">{children}</small>}
+    </span>
+  </span>
+);
 
 /**
  * ແຖບຄວາມຄືບໜ້າ — ສີຕາມສະຖານະ, ເກີນງົບ = ເຕັມແຖບ; plan = ງົບທີ່ຄວນໃຊ້ຮອດມື້ນີ້ (ຂີດຕັ້ງ) —
@@ -58,7 +87,7 @@ export const BudgetHint = ({ check }: { check: BudgetCheck | null }) => {
   return (
     <div className={`acc-bg-hint${over ? ' is-over' : ''}`}>
       <div className="acc-bg-hint-head">
-        <span><i className="fa-solid fa-bullseye" /> {t('accountAppBudget')} {check.fiscal_code}</span>
+        <span><i className="fa-solid fa-bullseye" /> {t('accountAppBudget')} {check.fiscal_code} <BudgetSubTag name={check.sub_name} /></span>
         <b>{kip(check.used + adding)} / {kip(check.budget)}</b>
       </div>
       <BudgetBar budget={check.budget} used={check.used + adding} />

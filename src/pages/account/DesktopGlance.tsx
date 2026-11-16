@@ -7,7 +7,7 @@ import { currencySymbol } from './ledger/currency';
 import { CASH_CLASS_CODE } from './journal/journalKit';
 import type { PartnerDoc } from './arap/arapApi';
 import { isNotReady, type Balance, type ChartAccount } from './gl/glApi';
-import { percentOf, percentText, planToDate, statusOf, type BudgetData } from './budget/budgetApi';
+import { budgetName, percentOf, percentText, planToDate, statusOf, type BudgetData } from './budget/budgetApi';
 import { useAccountMenusLoaded, type AccountMenu } from './accountMenus';
 import type { ShortcutId } from './DesktopShared';
 
@@ -184,7 +184,7 @@ const loadBudget = async (): Promise<BudgetSummary> => {
       .filter((r) => r.actual > 0)
       .sort((a, b) => percentOf(b.amount, b.actual) - percentOf(a.amount, a.actual))
       .slice(0, MAX_BUDGET_LINES)
-      .map((r) => ({ id: r._uuid, name: r.category?.type_name ?? '', amount: r.amount, used: r.actual })),
+      .map((r) => ({ id: r._uuid, name: budgetName(r), amount: r.amount, used: r.actual })),
   };
 };
 

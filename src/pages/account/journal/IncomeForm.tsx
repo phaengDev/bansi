@@ -260,7 +260,7 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
 
   const existingFile = data?.file_url && !removeFile && !file;
   // ບໍ່ສະແດງຍອດເງິນຂອງບັນຊີໃນຟອມລາຍຮັບ
-  const renderAccount = renderAccountOption(t('treasuryNoBank'), false);
+  const renderAccount = renderAccountOption(t('treasuryNoBank'));
 
   // keyboard={false}: Esc ຕອນຊ່ອງເລືອກເປີດຢູ່ ຈະປິດທັງຟອມ ແລ້ວຂໍ້ມູນທີ່ປ້ອນຫາຍ
   return (

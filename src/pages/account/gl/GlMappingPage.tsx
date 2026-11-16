@@ -12,6 +12,7 @@ type Mapping = { source_type: string; source_key: string; account_id: number };
 type Category = { _uuid: number; type_code: string; type_name: string; typestatus: number; status: number };
 type Treasury = {
   _uuid: number;
+  account_code?: string | null;
   acountName: string;
   acount_number?: string;
   status: number;
@@ -169,7 +170,7 @@ const GlMappingPage = () => {
           type: 'TREASURY_ACCOUNT', k: a._uuid,
           icon: <i className={`fa-solid ${a.isCash ? 'fa-money-bill-wave' : 'fa-building-columns'}`} />,
           title: a.acountName,
-          sub: [a.banks?.abbr ?? (a.isCash ? t('glCash') : null), a.acount_number, a.treasury?.currency?.name].filter(Boolean).join(' · '),
+          sub: [a.account_code, a.banks?.abbr ?? (a.isCash ? t('glCash') : null), a.acount_number, a.treasury?.currency?.name].filter(Boolean).join(' · '),
           options: assetOptions,
           fallback: roleAccount(a.isCash ? 'DEFAULT_CASH' : 'DEFAULT_BANK'),
         }))}

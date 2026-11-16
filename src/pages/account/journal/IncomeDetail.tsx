@@ -146,7 +146,7 @@ const IncomeDetail = ({ income, onClose, onEdit, onCancel }: {
                   </span>
                   <span className="acc-xfer-opt-text">
                     <b>{acc?.acountName ?? '—'}</b>
-                    <small>{[acc?.banks?.abbr ?? t('treasuryNoBank'), acc?.acount_number].filter(Boolean).join(' · ')}</small>
+                    <small>{[acc?.account_code, acc?.banks?.abbr ?? t('treasuryNoBank'), acc?.acount_number].filter(Boolean).join(' · ')}</small>
                   </span>
                   {cur?.name && <em className="acc-xfer-cur">{symbol !== cur.name ? `${symbol} ` : ''}{cur.name}</em>}
                 </span>

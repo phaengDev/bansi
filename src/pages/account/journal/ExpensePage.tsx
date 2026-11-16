@@ -114,7 +114,7 @@ const ExpensePage = ({ startNew = false }: { startNew?: boolean }) => {
   const shown = rows.filter((r) =>
     (status === 'all' || (status === 'active') === isActive(r))
     && (!day || dayKeyOf(r) === day)
-    && (!q || [r.number, r.expense_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.payee_name,
+    && (!q || [r.number, r.expense_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.acount?.account_code, r.payee_name,
       r.partner?.name, r.partner?.partner_code, r.partner?.phone, r.bill_no, r.description, ...(r.items ?? []).map((i) => i.item_name)]
       .join(' ').toLowerCase().includes(q)));
 
@@ -280,7 +280,7 @@ const ExpensePage = ({ startNew = false }: { startNew?: boolean }) => {
                             {acc?.banks?.url ? <img src={acc.banks.url} alt="" /> : <i className="fa-solid fa-wallet" />}
                           </span>
                           <span className="acc-jr-dest-text">
-                            <small>{t('expensePayFrom')}</small>
+                            <small>{t('expensePayFrom')}{acc?.account_code ? ` · ${acc.account_code}` : ''}</small>
                             <b title={acc?.acountName}>{acc?.acountName ?? '—'}</b>
                             {/* ຊື່ຜູ້ຮັບຢູ່ປ້າຍລູກຄ້າແລ້ວ — ບ່ອນນີ້ສະເພາະບັນຊີຜູ້ຮັບ (ເງິນໂອນ) */}
                             {(r.payeeBank || r.payee_account_number) && (

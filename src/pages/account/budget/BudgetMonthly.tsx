@@ -1,12 +1,13 @@
 import moment from 'moment';
 import { formatNumber } from '../../../utils/configApi';
 import { useT } from '../../../context/LanguageContext';
-import { kip, monthLabel, statusOf, type BudgetData, type BudgetRow, type Unbudgeted } from './budgetApi';
+import { budgetKey, kip, monthLabel, statusOf, type BudgetData, type BudgetRow, type Unbudgeted } from './budgetApi';
+import { BudgetName } from './BudgetKit';
 
 const num = (value: number | undefined) => (value ? formatNumber(Math.round(value)) : '–');
 
 /**
- * ງົບ ທຽບ ໃຊ້ຈິງ ລາຍເດືອນ — ແຖວ = ປະເພດລາຍຈ່າຍ, ຖັນ = ເດືອນຂອງປີການເງິນ. ງົບທີ່ແບ່ງລາຍເດືອນ: ຕົວໃຫຍ່ = ໃຊ້ຈິງ,
+ * ງົບ ທຽບ ໃຊ້ຈິງ ລາຍເດືອນ — ແຖວ = ງົບ (ປະເພດ ຫຼື ລາຍການຍ່ອຍ), ຖັນ = ເດືອນຂອງປີການເງິນ. ງົບທີ່ແບ່ງລາຍເດືອນ: ຕົວໃຫຍ່ = ໃຊ້ຈິງ,
  * ຕົວນ້ອຍ = ງົບເດືອນ, ສີຕາມສະຖານະຂອງເດືອນນັ້ນ; ງົບທັງປີ ແລະ ປະເພດທີ່ບໍ່ມີງົບ ສະແດງແຕ່ຍອດໃຊ້ຈິງ
  */
 const BudgetMonthly = ({ budget, onView }: { budget: BudgetData; onView: (row: BudgetRow | Unbudgeted) => void }) => {
@@ -43,15 +44,9 @@ const BudgetMonthly = ({ budget, onView }: { budget: BudgetData; onView: (row: B
             {all.map((r) => {
               const planned = '_uuid' in r ? r : null;
               return (
-                <tr key={r.category_id} className={`is-click${planned ? '' : ' is-loose'}`} onClick={() => onView(r)}>
+                <tr key={budgetKey(r)} className={`is-click${planned ? '' : ' is-loose'}`} onClick={() => onView(r)}>
                   <td>
-                    <span className="acc-bg-cat">
-                      <b className="acc-gl-code acc-tone is-coral">{r.category?.type_code ?? '—'}</b>
-                      <span>
-                        {r.category?.type_name ?? `#${r.category_id}`}
-                        {!planned && <small className="acc-gl-ref">{t('budgetUnbudgetedShort')}</small>}
-                      </span>
-                    </span>
+                    <BudgetName row={r}>{!planned && t('budgetUnbudgetedShort')}</BudgetName>
                   </td>
                   {months.map((m) => {
                     const used = r.actual_months[m] ?? 0;

@@ -125,6 +125,8 @@ export type PartnerPayment = {
   partner?: { _uuid: number; partner_code: string; name: string } | null;
   account?: {
     _uuid: number;
+    /** ລະຫັດບັນຊີເງິນຄັງ (10211) */
+    account_code?: string | null;
     acountName: string;
     acount_number?: string | null;
     banks?: { abbr?: string; url?: string | null } | null;

@@ -299,6 +299,30 @@ const LocalizedPicker = ({ pickerLocale, ...rest }: Record<string, any>) => (
   <SelectPicker data={[]} {...rest} locale={pickerLocale} />
 );
 
+/**
+ * ລະຫັດທີ່ລະບົບອອກໃຫ້ (ອ່ານຢ່າງດຽວ) — ຕອນເພີ່ມ: ລະຫັດທີ່ຈະໄດ້ (✨), ຕອນແກ້ໄຂ: ລັອກ (🔒).
+ * ໃຊ້ຮ່ວມ: ປະເພດບັນຊີ (1011), ບັນຊີເງິນຄັງ (10211). compact = ຊ່ອງແຄບ (ຄູ່ກັບຊື່ໃນ .acs-code-name) — ຄຳອະທິບາຍເປັນ tooltip
+ */
+export const AutoCodeField = ({ label, code, locked, tone = '', autoText, lockedText, className = '', compact }: {
+  label: string;
+  code: string | null | undefined;
+  locked: boolean;
+  tone?: string;
+  autoText: string;
+  lockedText: string;
+  className?: string;
+  compact?: boolean;
+}) => (
+  <div className={`rs-form-group ${className}`}>
+    <label className="form-label">{label}</label>
+    <div className={`acc-book-code-field acc-tone ${tone}${code ? '' : ' is-empty'}`} title={compact ? (locked ? lockedText : autoText) : undefined}>
+      <i className={`fa-solid ${locked ? 'fa-lock' : 'fa-wand-magic-sparkles'}`} />
+      <b>{code || '—'}</b>
+      {!compact && <small>{locked ? lockedText : autoText}</small>}
+    </div>
+  </div>
+);
+
 /** SelectPicker ໃນຟອມ — ຂຽນ Form.Group ເອງ ເພາະ InputField ບໍ່ສົ່ງ renderOption/renderValue ຕໍ່ */
 export const PickerField = ({ name, label, data, required = true, className, locale, ...rest }: {
   name: string;

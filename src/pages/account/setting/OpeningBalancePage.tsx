@@ -176,7 +176,7 @@ const OpeningBalancePage = () => {
                                 </span>
                                 <span>
                                   <b title={a.acountName}>{a.acountName}</b>
-                                  <small>{[a.banks?.abbr, a.acount_number].filter(Boolean).join(' · ') || '—'}</small>
+                                  <small>{[a.account_code, a.banks?.abbr, a.acount_number].filter(Boolean).join(' · ') || '—'}</small>
                                 </span>
                               </div>
                             </td>

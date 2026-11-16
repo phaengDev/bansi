@@ -83,3 +83,15 @@ export const nextCode = (prefix: string, codes: string[], digits = 3) => {
  * ແຕ່ InputField ສົ່ງ prop ທີ່ເຫຼືອຕໍ່ໃຫ້ accepter ຢູ່ແລ້ວ: ໃຊ້ {...postfixProp('%')}
  */
 export const postfixProp = (postfix: string) => ({ postfix }) as object;
+
+/**
+ * ລະຫັດລູກຖັດໄປ — ລະຫັດແມ່ + ເລກທຳອິດທີ່ຍັງວ່າງ (101 → 1011, 1012…; 1021 → 10211…), ສູດດຽວກັບ codeType ຂອງ backend.
+ * ໃຊ້ສະແດງລະຫັດທີ່ຈະໄດ້ກ່ອນບັນທຶກ (ປະເພດບັນຊີ, ບັນຊີເງິນຄັງ)
+ */
+export const nextChildCode = (prefix: string | null | undefined, used: (string | null | undefined)[]) => {
+  if (!prefix) return '';
+  const taken = new Set(used.filter(Boolean).map(String));
+  let n = 1;
+  while (taken.has(`${prefix}${n}`)) n++;
+  return `${prefix}${n}`;
+};

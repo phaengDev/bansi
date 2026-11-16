@@ -352,3 +352,60 @@
 
 .acc-arap-watch.is-click { cursor: pointer; }
 .acc-arap-watch.is-click:hover { background: #fffaf0; }
+
+// ລາຍການຍ່ອຍທີ່ງົບຜູກ (› ຄ່ານ້ຳ) — ປ້າຍຕໍ່ທ້າຍຊື່ປະເພດ; ແຖວເງິນເດືອນສີມ່ວງ
+.acc-bg-sub {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 8px 1px 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  color: #8e2440;
+  background: #ffeceb;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: 1px;
+
+  i { flex: none; font-size: 9.5px; opacity: 0.7; }
+
+  &.is-payroll { color: #5b3f9a; background: #f0eafd; }
+}
+
+// ແຖວຂໍ້ຄວາມນ້ອຍລຸ່ມຊື່ ຂຶ້ນແຖວໃໝ່ສະເໝີ (ປ້າຍລາຍການຍ່ອຍຢູ່ແຖວດຽວກັບຊື່)
+.acc-bg-cat > span > small.acc-gl-ref { display: block; }
+
+// ຟອມງົບ: ຄຳອະທິບາຍຂອງ "ທັງປະເພດ / ລາຍການຍ່ອຍ" ລຸ່ມຊ່ອງເລືອກ
+.acc-bg-field-hint {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+  color: #6b7c8b;
+  font-size: 12px;
+  line-height: 1.45;
+
+  i { color: #8a9aa8; font-size: 11px; }
+}
+
+// ຕົວເລືອກລາຍການຍ່ອຍໃນຟອມງົບ — "ທັງປະເພດ" ເນັ້ນ, ອັນທີ່ມີງົບແລ້ວບອກເຫດຜົນທ້າຍແຖວ
+.acc-sub-opt {
+  &.is-whole { font-weight: 700; }
+  &.is-whole > i { color: #d94867; opacity: 1; }
+
+  > small {
+    margin-left: 4px;
+    padding: 0 7px;
+    border-radius: 999px;
+    color: #7b8a97;
+    background: #eef2f6;
+    font-size: 11px;
+    font-weight: 600;
+  }
+}

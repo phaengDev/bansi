@@ -7,6 +7,7 @@ import { useT } from '../../../context/LanguageContext';
 
 export type CashAccount = {
   _uuid: number;
+  account_code?: string | null;
   acountName: string;
   acount_number?: string | null;
   balance_treasury: number;
@@ -43,7 +44,7 @@ export const LakAccountSelect = ({ accounts, value, onChange, amount, direction 
   const t = useT();
   const options = accounts.map((a) => ({
     value: a._uuid,
-    label: [a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · '),
+    label: [a.account_code, a.banks?.abbr, a.acountName, a.acount_number].filter(Boolean).join(' · '),
   }));
   const account = accounts.find((a) => a._uuid === value);
   const short = direction === 'out' && !!account && account.balance_treasury < amount;

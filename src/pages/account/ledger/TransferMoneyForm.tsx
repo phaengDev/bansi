@@ -11,7 +11,7 @@ import type { AccountType } from '../setting/AccountTypeForm';
 import { FormStep, PickerField } from '../setting/settingKit';
 import type { TreasuryAccount } from './TreasuryAccountForm';
 import { currencySymbol } from './currency';
-import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from './accountOption';
+import { ACCOUNT_POPUP_STYLE, AccountCode, accountOption, renderAccountOption } from './accountOption';
 
 const { NumberType } = Schema.Types;
 
@@ -172,7 +172,7 @@ const TransferMoneyForm = ({ accounts, types, defaultFrom, onClose, onSaved }: P
                         {account.banks?.url ? <img src={account.banks.url} alt="" /> : <i className="fa-solid fa-wallet" />}
                       </span>
                       <span className="acc-xfer-opt-text">
-                        <b>{account.acountName}</b>
+                        <b><AccountCode code={account.account_code} /> {account.acountName}</b>
                         <small>{t(dir === 'out' ? 'stmtOut' : 'stmtIn')} {delta >= 0 ? '+' : '−'}{formatNumber(Math.abs(delta))}</small>
                       </span>
                       <span className="acc-xfer-preview-bal">

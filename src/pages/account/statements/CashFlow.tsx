@@ -283,7 +283,7 @@ const CashFlow = ({ data }: { data: StatementData }) => {
                       </span>
                       <span>
                         <b>{bankOf(f.account)}</b>
-                        <small>{[f.account.acountName, f.account.acount_number].filter(Boolean).join(' · ')}</small>
+                        <small>{[f.account.account_code, f.account.acountName, f.account.acount_number].filter(Boolean).join(' · ')}</small>
                       </span>
                     </span>
                   </td>

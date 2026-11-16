@@ -1,4 +1,5 @@
 import { formatNumber } from '../../../utils/configApi';
+import { AccountCode } from './accountOption';
 import { canCreate, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import type { AccountType } from '../setting/AccountTypeForm';
@@ -165,6 +166,7 @@ export const TreasuryTable = ({ rows, typeOf, onStatement, onMovements, onTransf
                     return (
                       <tr key={r._uuid} className={isActive(r) ? '' : 'is-off'}>
                         <td>
+                          <AccountCode code={r.account_code} />
                           <b className="acc-ov-name">{r.acountName}</b>
                           {!isActive(r) && <span className="acs-chip">{t('inactive')}</span>}
                         </td>
@@ -254,7 +256,7 @@ export const TreasuryCharts = ({ rows, typeOf }: Shared) => {
                     <div className="acc-chart-tip" role="tooltip">
                       <b>{b.name} · {cur.name}</b>
                       {b.accounts.map((r) => (
-                        <span key={r._uuid}><span>{r.acountName}{r.acount_number ? ` · ${r.acount_number}` : ''}</span><em>{formatNumber(totalOf(r))}</em></span>
+                        <span key={r._uuid}><span>{[r.account_code, r.acountName, r.acount_number].filter(Boolean).join(' · ')}</span><em>{formatNumber(totalOf(r))}</em></span>
                       ))}
                     </div>
                   </li>

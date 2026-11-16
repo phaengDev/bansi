@@ -11,6 +11,8 @@ import { GlNotReady, SourceChip, amountFormatter } from '../gl/glKit';
 
 type BankAccount = {
   id: number;
+  /** ລະຫັດບັນຊີເງິນຄັງ (10211) */
+  code: string | null;
   name: string;
   number: string | null;
   bank: string | null;
@@ -130,7 +132,7 @@ const BankRecPage = () => {
             className={a.id === selected ? 'is-active' : ''} onClick={() => setSelected(a.id)}
           >
             <b>{a.name}</b>
-            <small>{[a.bank, a.number, a.currency].filter(Boolean).join(' · ')}</small>
+            <small>{[a.code, a.bank, a.number, a.currency].filter(Boolean).join(' · ')}</small>
             <span>{t('bankRecBook')} <em>{formatDecimal(a.book_balance)}</em></span>
             <span>
               {a.last ? <>{t('bankRecLast')} {moment(a.last.statement_date).format('DD/MM/YYYY')}</> : t('bankRecNever')}
@@ -142,7 +144,7 @@ const BankRecPage = () => {
 
       <section className="acc-rp-card acc-bankrec-work">
         <header>
-          <h4><i className="fa-solid fa-scale-unbalanced-flip" /> {account?.name} {cur && <small>({cur})</small>}</h4>
+          <h4><i className="fa-solid fa-scale-unbalanced-flip" /> {[account?.code, account?.name].filter(Boolean).join(' ')} {cur && <small>({cur})</small>}</h4>
           <small>{t('bankRecHint')}</small>
         </header>
 

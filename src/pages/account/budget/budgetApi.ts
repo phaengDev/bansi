@@ -5,7 +5,8 @@ import { getErrorMessage } from '../../../utils/useCRUD';
 import type { FiscalYear } from '../../../utils/selectOption';
 
 /**
- * ງົບປະມານລາຍຈ່າຍ (api-bansi /budget/*) — ຕັ້ງຕາມປະເພດລາຍຈ່າຍ ຕໍ່ປີການເງິນ, ແບ່ງລາຍເດືອນໄດ້, ເປັນ LAK.
+ * ງົບປະມານລາຍຈ່າຍ (api-bansi /budget/*) — ຕັ້ງຕາມປະເພດລາຍຈ່າຍ ທັງປະເພດ ຫຼື ແຍກແຕ່ລະລາຍການຍ່ອຍ ຕໍ່ປີການເງິນ,
+ * ແບ່ງລາຍເດືອນໄດ້, ເປັນ LAK. ປະເພດໜຶ່ງເລືອກໄດ້ແບບດຽວ: ງົບທັງປະເພດ (ລວມເງິນເດືອນ) ຫຼື ງົບແຍກລາຍການຍ່ອຍ.
  * ຍອດໃຊ້ຈິງ = ຍອດຈ່າຍອອກແທ້ (ລວມອາກອນ) ຂອງລາຍຈ່າຍທີ່ໃຊ້ງານ ແປງເປັນ LAK ຕາມອັດຕາຂອງວັນທີຈ່າຍ (backend ຄິດໃຫ້)
  */
 
@@ -13,6 +14,9 @@ import type { FiscalYear } from '../../../utils/selectOption';
 export type { FiscalYear };
 
 export type BudgetCategory = { _uuid: number; type_code: string; type_name: string; status?: number };
+
+/** ລາຍການຍ່ອຍ (tbl_finance_sub_category) ທີ່ງົບຜູກໄວ້ */
+export type BudgetSub = { _uuid: number; name: string };
 
 /** "YYYY-MM" → ຍອດ */
 export type MonthAmounts = Record<string, number>;
@@ -22,6 +26,9 @@ export type BudgetRow = {
   fiscal_id: number;
   category_id: number;
   category: BudgetCategory | null;
+  /** null = ງົບທັງປະເພດ (ທຸກລາຍການຍ່ອຍ + ເງິນເດືອນ) */
+  sub_category_id: number | null;
+  sub: BudgetSub | null;
   /** ງົບທັງປີ (= ຜົນລວມທຸກເດືອນ ເມື່ອແບ່ງລາຍເດືອນ) */
   amount: number;
   is_monthly: 0 | 1;
@@ -34,8 +41,13 @@ export type BudgetRow = {
   count: number;
 };
 
-/** ປະເພດລາຍຈ່າຍທີ່ມີການຈ່າຍໃນປີ ແຕ່ຍັງບໍ່ໄດ້ຕັ້ງງົບ */
-export type Unbudgeted = Pick<BudgetRow, 'category_id' | 'category' | 'actual' | 'actual_months' | 'count'>;
+/**
+ * ລາຍຈ່າຍໃນປີທີ່ຍັງບໍ່ມີງົບ — ປະເພດທີ່ບໍ່ມີງົບເລີຍ (sub null) ຫຼື ລາຍການຍ່ອຍທີ່ບໍ່ມີງົບ ຂອງປະເພດທີ່ແຍກງົບ;
+ * payroll = ເງິນເດືອນທີ່ລົງປະເພດທີ່ແຍກງົບຕາມລາຍການຍ່ອຍ (ຕັ້ງງົບໃຫ້ບໍ່ໄດ້ ເພາະເງິນເດືອນບໍ່ມີລາຍການຍ່ອຍ)
+ */
+export type Unbudgeted = Pick<BudgetRow, 'category_id' | 'category' | 'sub_category_id' | 'sub' | 'actual' | 'actual_months' | 'count'> & {
+  payroll?: boolean;
+};
 
 export type BudgetData = {
   fiscal: FiscalYear;
@@ -54,6 +66,8 @@ export type BudgetCheck =
       has_budget: true;
       budget_id: number;
       fiscal_code: string;
+      /** ງົບຂອງລາຍການຍ່ອຍນີ້ — null = ງົບທັງປະເພດ */
+      sub_name: string | null;
       period: string;
       budget: number;
       used: number;
@@ -122,6 +136,21 @@ export const planToDate = (row: Pick<BudgetRow, 'amount' | 'is_monthly' | 'month
     return sum + amount * (today.date() / today.daysInMonth());
   }, 0);
 };
+
+/** key ບໍ່ຊ້ຳຂອງແຖວ (ປະເພດ + ລາຍການຍ່ອຍ; ແຖວເງິນເດືອນແຍກຕ່າງຫາກ) */
+export const budgetKey = (row: BudgetRow | Unbudgeted) =>
+  `${row.category_id}:${row.sub_category_id ?? 0}${'payroll' in row && row.payroll ? ':payroll' : ''}`;
+
+/** ຊື່ງົບເປັນຂໍ້ຄວາມ "ປະເພດ › ລາຍການຍ່ອຍ" (ໜ້າສະຫຼຸບ desktop) — payrollLabel = ຊື່ແຖວເງິນເດືອນ */
+export const budgetName = (row: BudgetRow | Unbudgeted, payrollLabel = '') => {
+  const category = row.category?.type_name ?? `#${row.category_id}`;
+  const part = row.sub?.name ?? ('payroll' in row && row.payroll ? payrollLabel : '');
+  return part ? `${category} › ${part}` : category;
+};
+
+/** ຊື່ເຕັມພ້ອມລະຫັດ "EX-001 ປະເພດ › ລາຍການຍ່ອຍ" (Excel, ຢືນຢັນລຶບ) */
+export const budgetTitle = (row: BudgetRow | Unbudgeted, payrollLabel = '') =>
+  `${row.category?.type_code ?? ''} ${budgetName(row, payrollLabel)}`.trim();
 
 /** ຈຳນວນເງິນ LAK ເຕັມ (0 = "0" ບໍ່ແມ່ນຂີດ ຄື money() ຂອງ GL — ງົບ 0 ມີຄວາມໝາຍ) */
 export const kip = (value: number) => `₭ ${formatNumber(Math.round(Number(value) || 0))}`;

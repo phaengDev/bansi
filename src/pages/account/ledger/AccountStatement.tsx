@@ -22,6 +22,7 @@ type StatementRow = {
   createby: string | null;
   counterpart: {
     _uuid: number;
+    account_code?: string | null;
     acountName: string;
     acount_number?: string;
     /** ຕົວຫຍໍ້ທະນາຄານ (ບໍ່ມີກໍ່ເປັນຊື່) */
@@ -154,7 +155,7 @@ const AccountStatement = ({ account, type, onClose }: {
           <span className="acc-stmt-title">
             <Drawer.Title>{account.acountName}</Drawer.Title>
             <small>
-              {[account.acount_number, bank?.abbr, type?.treasury_name].filter(Boolean).join(' · ')}
+              {[account.account_code, account.acount_number, bank?.abbr, type?.treasury_name].filter(Boolean).join(' · ')}
             </small>
           </span>
           <span className="acc-stmt-balance">
@@ -264,7 +265,7 @@ const AccountStatement = ({ account, type, onClose }: {
                                 {other ? other.acountName : t('stmtDeletedAccount')}
                               </b>
                               <small>
-                                {[other ? other.bank ?? t('treasuryNoBank') : null, other?.acount_number, moment(r.createdAt).format('HH:mm')].filter(Boolean).join(' · ')}
+                                {[other?.account_code, other ? other.bank ?? t('treasuryNoBank') : null, other?.acount_number, moment(r.createdAt).format('HH:mm')].filter(Boolean).join(' · ')}
                                 {r.createby && ` · ${t('stmtBy')} ${r.createby}`}
                               </small>
                               {r.description && <p>{r.description}</p>}

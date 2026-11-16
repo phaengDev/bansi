@@ -5,13 +5,15 @@ import { formatNumber, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { useT } from '../../../context/LanguageContext';
 import { kip, monthLabel, planToDate, statusOf, type BudgetData, type BudgetRow, type Unbudgeted } from './budgetApi';
-import { BudgetProgress, BudgetStatusPill } from './BudgetKit';
+import { BudgetProgress, BudgetStatusPill, BudgetSubTag } from './BudgetKit';
 
 type BudgetExpense = {
   _uuid: number;
   number: string;
   expense_date: string;
   expense_title: string;
+  /** ລາຍການຍ່ອຍຂອງລາຍຈ່າຍ (ເງິນເດືອນບໍ່ມີ) */
+  sub_name?: string | null;
   payee_name: string | null;
   account_name: string | null;
   currency: { _id: number; name: string; genus: string | null } | null;
@@ -21,7 +23,7 @@ type BudgetExpense = {
 };
 
 /**
- * ລາຍລະອຽດງົບຂອງປະເພດໜຶ່ງ — ສະຫຼຸບ, ແຖບລາຍເດືອນ (ໃຊ້ຈິງ ທຽບ ງົບເດືອນ) ແລະ ລາຍຈ່າຍທັງໝົດໃນປີ (POST /budget/expenses).
+ * ລາຍລະອຽດງົບຂອງປະເພດ ຫຼື ລາຍການຍ່ອຍໜຶ່ງ — ສະຫຼຸບ, ແຖບລາຍເດືອນ (ໃຊ້ຈິງ ທຽບ ງົບເດືອນ) ແລະ ລາຍຈ່າຍທັງໝົດໃນປີ (POST /budget/expenses).
  * row ທີ່ບໍ່ມີ _uuid = ປະເພດທີ່ຍັງບໍ່ມີງົບ
  */
 const BudgetDetail = ({ row, budget, onClose }: { row: BudgetRow | Unbudgeted; budget: BudgetData; onClose: () => void }) => {
@@ -34,11 +36,18 @@ const BudgetDetail = ({ row, budget, onClose }: { row: BudgetRow | Unbudgeted; b
   const peak = Math.max(1, ...budget.months.map((m) => Math.max(row.actual_months[m] ?? 0, planned?.months[m] ?? 0)));
   const currentMonth = moment().format('YYYY-MM');
 
+  const payrollOnly = 'payroll' in row && !!row.payroll;
+
   useEffect(() => {
-    postApi('/budget/expenses', { fiscal_id: budget.fiscal._uuid, category_id: row.category_id })
+    postApi('/budget/expenses', {
+      fiscal_id: budget.fiscal._uuid,
+      category_id: row.category_id,
+      sub_category_id: row.sub_category_id ?? undefined,
+      payroll_only: payrollOnly ? 1 : undefined,
+    })
       .then((res) => setList(res.data?.data ?? []))
       .catch((err) => setError(getErrorMessage(err)));
-  }, [budget.fiscal._uuid, row.category_id]);
+  }, [budget.fiscal._uuid, row.category_id, row.sub_category_id, payrollOnly]);
 
   return (
     <Modal open onClose={onClose} size="md" className="acc-gl-ledger-modal acc-bg-detail">
@@ -48,6 +57,7 @@ const BudgetDetail = ({ row, budget, onClose }: { row: BudgetRow | Unbudgeted; b
           <span>
             <Modal.Title>
               {row.category ? `${row.category.type_code} ${row.category.type_name}` : `#${row.category_id}`}{' '}
+              <BudgetSubTag name={row.sub?.name} payroll={payrollOnly} />{' '}
               {status && <BudgetStatusPill status={status} />}
             </Modal.Title>
             <small>{budget.fiscal.fiscal_name || budget.fiscal.fiscal_code} · {row.count} {t('journalExpense')}</small>
@@ -113,6 +123,8 @@ const BudgetDetail = ({ row, budget, onClose }: { row: BudgetRow | Unbudgeted; b
                       </td>
                       <td>
                         {e.expense_title}
+                        {/* ງົບທັງປະເພດ — ບອກວ່າລາຍຈ່າຍນີ້ເປັນລາຍການຍ່ອຍໃດ (ຖ້າຫົວຂໍ້ບໍ່ແມ່ນຊື່ລາຍການຍ່ອຍຢູ່ແລ້ວ) */}
+                        {!row.sub && e.sub_name && e.sub_name !== e.expense_title && <BudgetSubTag name={e.sub_name} />}
                         <small className="acc-gl-ref">{[e.payee_name, e.account_name].filter(Boolean).join(' · ')}</small>
                       </td>
                       <td className="is-num">{`${e.currency?.genus ?? ''} ${formatNumber(e.balance_expense)}`.trim()}</td>

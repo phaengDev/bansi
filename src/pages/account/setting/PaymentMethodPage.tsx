@@ -20,7 +20,7 @@ type PaymentMethod = {
   sort: number;
   description?: string;
   status: number;
-  account?: { _uuid: number; acountName: string; acount_number?: string } | null;
+  account?: { _uuid: number; account_code?: string | null; acountName: string; acount_number?: string } | null;
 };
 
 
@@ -154,7 +154,7 @@ const PaymentMethodPage = () => {
                 subtitle={`${r.method_code} · ${t(type.label)}`}
                 meta={
                   <>
-                    <MetaChip icon="fa-vault">{r.account ? r.account.acountName : t('pmNoAccount')}</MetaChip>
+                    <MetaChip icon="fa-vault">{r.account ? [r.account.account_code, r.account.acountName].filter(Boolean).join(' · ') : t('pmNoAccount')}</MetaChip>
                     {Number(r.require_ref) === 1 && <MetaChip icon="fa-hashtag" tone="gold">{t('pmRequireRef')}</MetaChip>}
                     {fee > 0 && <MetaChip icon="fa-percent">{fee}%</MetaChip>}
                   </>

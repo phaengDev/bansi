@@ -11,6 +11,7 @@ import { money } from '../gl/glApi';
 import { GlNotReady } from '../gl/glKit';
 import { AR, KINDS, amountText, usePartnerPayments, usePartners, type Kind, type PartnerPayment } from './arapApi';
 import PaymentForm from './PaymentForm';
+import { AccountCode } from '../ledger/accountOption';
 import { SearchBox } from '../setting/settingKit';
 
 type Period = 'month' | 'year' | 'all';
@@ -57,7 +58,7 @@ const PaymentPage = ({ kind }: { kind: Kind }) => {
       [c.no]: p.pay_number,
       [c.date]: moment(p.pay_date).format('DD/MM/YYYY'),
       [c.partner]: p.partner?.name ?? '',
-      [c.account]: p.account?.acountName ?? '',
+      [c.account]: [p.account?.account_code, p.account?.acountName].filter(Boolean).join(' '),
       [c.amount]: Number(p.amount),
       [c.cur]: p.account?.treasury?.currency?.name ?? 'LAK',
       [c.docs]: p.allocations.map((a) => a.doc?.doc_number).filter(Boolean).join(', '),
@@ -121,6 +122,7 @@ const PaymentPage = ({ kind }: { kind: Kind }) => {
                       <td>
                         <span className="acc-arap-account">
                           <span className="acc-xfer-logo">{p.account?.banks?.url ? <img src={p.account.banks.url} alt="" /> : <i className="fa-solid fa-wallet" />}</span>
+                          <AccountCode code={p.account?.account_code} />
                           {p.account?.acountName}
                         </span>
                       </td>

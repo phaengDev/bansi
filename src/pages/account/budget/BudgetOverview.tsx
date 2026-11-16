@@ -2,10 +2,10 @@ import { useState } from 'react';
 import moment from 'moment';
 import { useT } from '../../../context/LanguageContext';
 import {
-  BUDGET_STATUS, STATUS_ORDER, elapsedOf, kip, percentText, planToDate, statusOf,
+  BUDGET_STATUS, STATUS_ORDER, budgetKey, elapsedOf, kip, percentText, planToDate, statusOf,
   type BudgetData, type BudgetRow, type BudgetStatus, type Unbudgeted,
 } from './budgetApi';
-import { BudgetProgress, BudgetStatusPill } from './BudgetKit';
+import { BudgetName, BudgetProgress, BudgetStatusPill, BudgetSubTag } from './BudgetKit';
 
 type Props = {
   budget: BudgetData;
@@ -13,14 +13,15 @@ type Props = {
   canAdd: boolean;
   canChange: boolean;
   canRemove: boolean;
-  onAdd: (categoryId?: number) => void;
+  /** ຕັ້ງງົບໃໝ່ — ເລືອກປະເພດ / ລາຍການຍ່ອຍໄວ້ໃຫ້ (ຈາກລາຍການ "ຍັງບໍ່ມີງົບ") */
+  onAdd: (categoryId?: number, subId?: number | null) => void;
   onEdit: (row: BudgetRow) => void;
   onDelete: (row: BudgetRow) => void;
   onView: (row: BudgetRow | Unbudgeted) => void;
 };
 
 /**
- * ຕິດຕາມງົບປະມານຂອງປີ — ຕົວເລກລວມ, ຕາຕະລາງແຕ່ລະປະເພດ (ງົບ / ໃຊ້ແລ້ວ / ຄົງເຫຼືອ / ແຖບຄວາມຄືບໜ້າ + ຂີດຕາມແຜນ / ສະຖານະ)
+ * ຕິດຕາມງົບປະມານຂອງປີ — ຕົວເລກລວມ, ຕາຕະລາງແຕ່ລະງົບ (ປະເພດ ຫຼື ລາຍການຍ່ອຍ) (ງົບ / ໃຊ້ແລ້ວ / ຄົງເຫຼືອ / ແຖບຄວາມຄືບໜ້າ + ຂີດຕາມແຜນ / ສະຖານະ)
  * ແລະ ປະເພດທີ່ມີລາຍຈ່າຍແຕ່ຍັງບໍ່ມີງົບ. ກົດແຖວ = ລາຍລະອຽດ + ລາຍຈ່າຍຂອງປະເພດນັ້ນ
  */
 const BudgetOverview = ({ budget, canAdd, canChange, canRemove, onAdd, onEdit, onDelete, onView }: Props) => {
@@ -121,19 +122,13 @@ const BudgetOverview = ({ budget, canAdd, canChange, canRemove, onAdd, onEdit, o
                   return (
                     <tr key={r._uuid} className="is-click" onClick={() => onView(r)}>
                       <td>
-                        <span className="acc-bg-cat">
-                          <b className="acc-gl-code acc-tone is-coral">{r.category?.type_code ?? '—'}</b>
-                          <span>
-                            {r.category?.type_name ?? `#${r.category_id}`}
-                            <small className="acc-gl-ref">
-                              {r.count} {t('journalExpense')}
-                              {r.is_monthly === 1 && <> · <i className="fa-solid fa-calendar-days" /> {t('budgetSplitMonthly')}</>}
-                              {r.is_monthly === 1 && monthBudget !== undefined && (
-                                <> · {t('thisMonth')} {kip(r.actual_months[currentMonth] ?? 0)} / {kip(monthBudget)}</>
-                              )}
-                            </small>
-                          </span>
-                        </span>
+                        <BudgetName row={r}>
+                          {r.count} {t('journalExpense')}
+                          {r.is_monthly === 1 && <> · <i className="fa-solid fa-calendar-days" /> {t('budgetSplitMonthly')}</>}
+                          {r.is_monthly === 1 && monthBudget !== undefined && (
+                            <> · {t('thisMonth')} {kip(r.actual_months[currentMonth] ?? 0)} / {kip(monthBudget)}</>
+                          )}
+                        </BudgetName>
                       </td>
                       <td className="is-num">{kip(r.amount)}</td>
                       <td className="is-num">{kip(r.actual)}</td>
@@ -178,17 +173,18 @@ const BudgetOverview = ({ budget, canAdd, canChange, canRemove, onAdd, onEdit, o
             <small>{t('budgetUnbudgetedHint')}</small>
           </header>
           {unbudgeted.map((r) => (
-            <div key={r.category_id} className="acc-arap-watch is-click" onClick={() => onView(r)}>
+            <div key={budgetKey(r)} className="acc-arap-watch is-click" onClick={() => onView(r)}>
               <b className="acc-gl-code acc-tone is-coral">{r.category?.type_code ?? '—'}</b>
               <span className="acc-arap-watch-text">
-                <b>{r.category?.type_name ?? `#${r.category_id}`}</b>
-                <small>{r.count} {t('journalExpense')}</small>
+                <b>{r.category?.type_name ?? `#${r.category_id}`} <BudgetSubTag name={r.sub?.name} payroll={r.payroll} /></b>
+                <small>{r.count} {t('journalExpense')}{r.payroll && ` · ${t('budgetPayrollLoose')}`}</small>
               </span>
               <span className="acc-arap-watch-amount">{kip(r.actual)}</span>
-              {canAdd && (
+              {/* ເງິນເດືອນໃນປະເພດທີ່ແຍກງົບຕາມລາຍການຍ່ອຍ ຕັ້ງງົບໃຫ້ບໍ່ໄດ້ (ບໍ່ມີລາຍການຍ່ອຍ) */}
+              {canAdd && !r.payroll && (
                 <button type="button" className="acc-rp-btn" onClick={(e) => {
                   e.stopPropagation();
-                  onAdd(r.category_id);
+                  onAdd(r.category_id, r.sub_category_id);
                 }}
                 >
                   <i className="fa-solid fa-bullseye" /> {t('budgetSetFor')}

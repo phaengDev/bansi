@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import CurrencyFlag from '../../../components/Elements/CurrencyFlag';
 import { Loader } from 'rsuite';
 import { formatNumber, postApi, putApi } from '../../../utils/configApi';
+import { AccountCode } from './accountOption';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canCreate, canEdit } from '../../../utils/localStorage';
@@ -231,7 +232,7 @@ const TreasuryAccountPage = () => {
   const q = keyword.trim().toLowerCase();
   const base = rows.filter((r) => {
     const type = typeOf(r);
-    const text = [r.acountName, r.acount_number, type?.treasury_code, type?.treasury_name, r.banks?.abbr, r.banks?.name_la];
+    const text = [r.account_code, r.acountName, r.acount_number, type?.treasury_code, type?.treasury_name, r.banks?.abbr, r.banks?.name_la];
     return (status === 'all' || (status === 'active') === isActive(r))
       && (!q || text.join(' ').toLowerCase().includes(q));
   });
@@ -486,6 +487,7 @@ const TreasuryAccountPage = () => {
                             <dl className="acc-pb-holder">
                               <dt>{t('accountName')}</dt>
                               <dd className="acc-pb-name">
+                                <AccountCode code={item.account_code} />
                                 <b title={item.acountName}>{item.acountName}</b>
                                 {tag && <em className="acc-pb-tag">{tag}</em>}
                               </dd>
@@ -559,6 +561,7 @@ const TreasuryAccountPage = () => {
         <TreasuryAccountForm
           data={editing}
           types={types}
+          usedCodes={rows.map((r) => r.account_code)}
           onClose={() => setEditing(undefined)}
           onSaved={fetchData}
         />

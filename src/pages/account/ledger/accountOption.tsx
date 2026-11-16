@@ -10,21 +10,20 @@ import { currencySymbol } from './currency';
 export const accountOption = (account: TreasuryAccount, type?: AccountType) => {
   const currency = (type ?? account.treasury)?.currency;
   return {
-    label: `${account.acountName} ${account.acount_number ?? ''} ${account.banks?.abbr ?? ''} ${currency?.name ?? ''}`,
+    label: `${account.account_code ?? ''} ${account.acountName} ${account.acount_number ?? ''} ${account.banks?.abbr ?? ''} ${currency?.name ?? ''}`,
     value: account._uuid,
     account,
     symbol: currencySymbol(currency),
-    /** ລະຫັດສະກຸນເງິນ ເຊັ່ນ LAK / THB — ສະແດງແທນຍອດເງິນເມື່ອເຊື່ອງຍອດ */
+    /** ລະຫັດສະກຸນເງິນ ເຊັ່ນ LAK / THB */
     currency: currency?.name ?? '',
   };
 };
 
 /**
- * ບັນຊີໃນ picker — ໂລໂກ້ທະນາຄານ + ຊື່ + ທະນາຄານ · ເລກບັນຊີ + ຍອດໃຊ້ໄດ້ (noBank = ປ້າຍບັນຊີບໍ່ຜູກທະນາຄານ).
- * showBalance = false ເຊື່ອງຍອດເງິນ (ຟອມລາຍຮັບ — ຜູ້ບັນທຶກບໍ່ຈຳເປັນເຫັນຍອດບັນຊີ) ແລະ ສະແດງສະກຸນເງິນແທນ
- * ໃຫ້ຮູ້ວ່າເປັນບັນຊີກີບ ຫຼື ເງິນຕາຕ່າງປະເທດ
+ * ບັນຊີໃນ picker (ລາຍຮັບ, ລາຍຈ່າຍ, ໂອນເງິນ, ຮັບ/ຈ່າຍຊຳລະ — ແບບດຽວກັນທຸກບ່ອນ): ໂລໂກ້ທະນາຄານ + ຊື່ +
+ * ລະຫັດບັນຊີ · ທະນາຄານ · ເລກບັນຊີ (noBank = ປ້າຍບັນຊີບໍ່ຜູກທະນາຄານ) + ຍອດໃຊ້ໄດ້ ແລະ ສະກຸນເງິນ
  */
-export const renderAccountOption = (noBank: string, showBalance = true) => (_: unknown, item: any) => {
+export const renderAccountOption = (noBank: string) => (_: unknown, item: any) => {
   const account: TreasuryAccount | undefined = item?.account;
   if (!account) return null;
   return (
@@ -34,14 +33,19 @@ export const renderAccountOption = (noBank: string, showBalance = true) => (_: u
       </span>
       <span className="acc-xfer-opt-text">
         <b>{account.acountName}</b>
-        <small>{[account.banks?.abbr ?? noBank, account.acount_number].filter(Boolean).join(' · ')}</small>
+        <small>{[account.account_code, account.banks?.abbr ?? noBank, account.acount_number].filter(Boolean).join(' · ')}</small>
       </span>
-      {showBalance
-        ? <em>{item.symbol} {formatNumber(account.balance_treasury)}</em>
-        : item.currency && <em className="acc-xfer-cur">{item.symbol !== item.currency ? `${item.symbol} ` : ''}{item.currency}</em>}
+      <span className="acc-xfer-opt-bal">
+        <b>{item.symbol} {formatNumber(account.balance_treasury)}</b>
+        {item.currency && <em className="acc-xfer-cur">{item.currency}</em>}
+      </span>
     </span>
   );
 };
+
+/** ລະຫັດບັນຊີເງິນຄັງ (10211) — ປ້າຍນ້ອຍໜ້າຊື່ບັນຊີ ແບບດຽວກັນທຸກໜ້າ (ບັດ, ຕາຕະລາງ, ໂອນເງິນ) */
+export const AccountCode = ({ code }: { code?: string | null }) =>
+  code ? <span className="acc-code-tag">{code}</span> : null;
 
 /** ລາຍການບັນຊີກວ້າງກວ່າຊ່ອງ — ຊື່ບັນຊີຍາວ + ຍອດເງິນ ບໍ່ຖືກຕັດ */
 export const ACCOUNT_POPUP_STYLE = { minWidth: 420 };

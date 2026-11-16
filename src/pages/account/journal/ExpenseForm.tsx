@@ -211,7 +211,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   /** ບໍ່ສະແດງຍອດຂອງບັນຊີ — ບອກພຽງວ່າພໍຈ່າຍບໍ່ (backend ກວດຊ້ຳຕອນບັນທຶກ) */
   const insufficient = !isEdit && !!account && calc.total > Number(account.balance_treasury ?? 0);
 
-  // ---- ງົບປະມານຂອງປະເພດທີ່ເລືອກ (ເຕືອນເທົ່ານັ້ນ ບໍ່ກັ້ນການບັນທຶກ) ----
+  // ---- ງົບປະມານຂອງລາຍການຍ່ອຍ (ຫຼື ທັງປະເພດ) ທີ່ເລືອກ (ເຕືອນເທົ່ານັ້ນ ບໍ່ກັ້ນການບັນທຶກ) ----
   const [budgetCheck, setBudgetCheck] = useState<BudgetCheck | null>(null);
   const budget = inputs.category_id ? budgetCheck : null;
   const budgetDate = inputs.expense_date ? moment(inputs.expense_date).format('YYYY-MM-DD') : '';
@@ -222,6 +222,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
     const timer = setTimeout(() => {
       postApi('/budget/check', {
         category_id: inputs.category_id,
+        sub_category_id: inputs.sub_category_id ?? undefined,
         expense_date: budgetDate,
         acount_id_fk: inputs.acount_id_fk ?? undefined,
         amount: calc.total,
@@ -234,7 +235,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [inputs.category_id, budgetDate, inputs.acount_id_fk, calc.total, data?._uuid]);
+  }, [inputs.category_id, inputs.sub_category_id, budgetDate, inputs.acount_id_fk, calc.total, data?._uuid]);
   /** ຍອດທີ່ຈະເກີນງົບ (ປີ ຫຼື ເດືອນ ອັນໃດຫຼາຍກວ່າ) — 0 = ບໍ່ເກີນ */
   const budgetOver = budget?.has_budget
     ? Math.max(0, -budget.after, budget.month ? -budget.month.after : 0)
@@ -367,7 +368,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   };
 
   const existingFile = data?.file_url && !removeFile && !file;
-  const renderAccount = renderAccountOption(t('treasuryNoBank'), false);
+  const renderAccount = renderAccountOption(t('treasuryNoBank'));
   const infoDone = !!inputs.expense_date && !!inputs.sub_category_id;
 
   // keyboard={false}: Esc ຕອນຊ່ອງເລືອກເປີດຢູ່ ຈະປິດທັງຟອມ ແລ້ວຂໍ້ມູນທີ່ປ້ອນຫາຍ

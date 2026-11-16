@@ -13,7 +13,8 @@ import { canDelete } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import type { AccountClass } from './AccountClassForm';
 import { toneOf } from './accountTone';
-import { FormStep, PickerField, StatusPill, codeLabel } from './settingKit';
+import { AutoCodeField, FormStep, PickerField, StatusPill, codeLabel } from './settingKit';
+import { nextChildCode } from './settingApi';
 
 export type AccountType = {
   _uuid: number;
@@ -78,15 +79,7 @@ const AccountTypeForm = ({ data, classes, usedCodes, onClose, onSaved, onDelete 
   const currency = currencies.find((c) => Number(c.value) === Number(inputs.currencyId));
   const name = String(inputs.treasury_name ?? '').trim();
 
-  /** ເລກທຳອິດທີ່ຍັງວ່າງ — ຄືກັບ codeType ຂອງ backend (101 → 1011, 1012, …) */
-  const nextCode = (() => {
-    if (!classCode) return '';
-    const used = new Set(usedCodes);
-    let n = 1;
-    while (used.has(`${classCode}${n}`)) n++;
-    return `${classCode}${n}`;
-  })();
-  const code = data ? data.treasury_code : nextCode;
+  const code = data ? data.treasury_code : nextChildCode(classCode, usedCodes);
 
   const handleSubmit = async () => {
     if (!formRef.current?.check()) return;
@@ -179,14 +172,9 @@ const AccountTypeForm = ({ data, classes, usedCodes, onClose, onSaved, onDelete 
                 renderOption={codeLabel} renderValue={codeLabel}
               />
               {/* ລະຫັດອ່ານຢ່າງດຽວ — ຕອນເພີ່ມ backend ຕໍ່ເລກໃຫ້, ຕອນແກ້ໄຂລັອກໄວ້ */}
-              <div className="rs-form-group">
-                <label className="form-label">{t('accountTypeCode')}</label>
-                <div className={`acc-book-code-field acc-tone ${tone}${code ? '' : ' is-empty'}`}>
-                  <i className={`fa-solid ${data ? 'fa-lock' : 'fa-wand-magic-sparkles'}`} />
-                  <b>{code || '—'}</b>
-                  <small>{data ? t('accountTypeCodeLocked') : t('accountTypeCodeAutoShort')}</small>
-                </div>
-              </div>
+              <AutoCodeField label={t('accountTypeCode')} code={code} locked={!!data} tone={tone}
+                autoText={t('accountTypeCodeAutoShort')} lockedText={t('accountTypeCodeLocked')}
+              />
             </FormStep>
 
             <FormStep no={2} done={!!inputs.currencyId && !!name} title={t('accountTypeStepInfo')} hint={t('accountTypeStepInfoHint')}>

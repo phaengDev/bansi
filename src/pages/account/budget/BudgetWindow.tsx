@@ -10,7 +10,7 @@ import { exportExcel } from '../../../utils/exportHelpers';
 import { useT } from '../../../context/LanguageContext';
 import { BUDGET_MENU, toRailNav } from '../config/SidebarPopup';
 import {
-  BUDGET_STATUS, monthLabel, percentText, statusOf, useBudgets,
+  BUDGET_STATUS, budgetTitle, monthLabel, percentText, statusOf, useBudgets,
   type BudgetRow, type Unbudgeted,
 } from './budgetApi';
 import { useFiscalYears } from '../../../utils/selectOption';
@@ -35,8 +35,8 @@ const BudgetWindow = () => {
   const years = useFiscalYears();
   const [fiscalId, setFiscalId] = useState<number | null>(null);
   const { data, loading, error, reload } = useBudgets(fiscalId);
-  /** row null = ຕັ້ງງົບໃໝ່ (categoryId = ປະເພດທີ່ເລືອກໄວ້ໃຫ້) */
-  const [editing, setEditing] = useState<{ row: BudgetRow | null; categoryId?: number } | null>(null);
+  /** row null = ຕັ້ງງົບໃໝ່ (categoryId / subId = ປະເພດ ແລະ ລາຍການຍ່ອຍທີ່ເລືອກໄວ້ໃຫ້) */
+  const [editing, setEditing] = useState<{ row: BudgetRow | null; categoryId?: number; subId?: number | null } | null>(null);
   const [viewing, setViewing] = useState<BudgetRow | Unbudgeted | null>(null);
 
   const fiscal = data?.fiscal;
@@ -49,7 +49,7 @@ const BudgetWindow = () => {
   }));
 
   const remove = (row: BudgetRow) =>
-    Notific.confirm(`${t('budgetDeleteConfirm')} ${row.category?.type_name ?? ''}`, async () => {
+    Notific.confirm(`${t('budgetDeleteConfirm')} ${budgetTitle(row)}`, async () => {
       try {
         await deleteApi(`/budget/${btoa(String(row._uuid))}`);
         Notific.success('acsDeleted');
@@ -63,7 +63,7 @@ const BudgetWindow = () => {
   const exportRows = () => {
     if (!data) return;
     const name = t('expenseCategory');
-    const categoryText = (r: BudgetRow | Unbudgeted) => `${r.category?.type_code ?? ''} ${r.category?.type_name ?? ''}`.trim();
+    const categoryText = (r: BudgetRow | Unbudgeted) => budgetTitle(r, t('expenseFromPayroll'));
     const sheet = `${title} ${data.fiscal.fiscal_name || data.fiscal.fiscal_code} (LAK)`;
     if (activeKey === 'monthly') {
       const rows: (BudgetRow | Unbudgeted)[] = [...data.data, ...data.unbudgeted];
@@ -95,7 +95,7 @@ const BudgetWindow = () => {
         <BudgetMonthly budget={data} onView={setViewing} />
       ) : (
         <BudgetOverview budget={data} canAdd={open && canCreate} canChange={open && canEdit} canRemove={open && canDelete}
-          onAdd={(categoryId) => setEditing({ row: null, categoryId })}
+          onAdd={(categoryId, subId) => setEditing({ row: null, categoryId, subId })}
           onEdit={(row) => setEditing({ row })}
           onDelete={remove}
           onView={setViewing}
@@ -133,7 +133,7 @@ const BudgetWindow = () => {
       </div>
 
       {editing && data && (
-        <BudgetForm fiscal={data.fiscal} months={data.months} budgets={data.data} data={editing.row} presetCategoryId={editing.categoryId}
+        <BudgetForm fiscal={data.fiscal} months={data.months} budgets={data.data} data={editing.row} presetCategoryId={editing.categoryId} presetSubId={editing.subId}
           onClose={() => setEditing(null)} onSaved={reload}
         />
       )}

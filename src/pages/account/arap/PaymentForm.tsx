@@ -124,7 +124,7 @@ const PaymentForm = ({ kind, partnerId, docId, onClose, onSaved }: {
     }
   };
 
-  const renderAccount = renderAccountOption(t('treasuryNoBank'), kind === AP);
+  const renderAccount = renderAccountOption(t('treasuryNoBank'));
 
   return (
     <Modal open onClose={onClose} size="lg" className={`acc-book-modal is-steps is-xfer acc-arap-form${kind === AP ? ' is-expense' : ''}`}>

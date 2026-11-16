@@ -243,7 +243,7 @@ const BankDirectoryPage = () => {
                           <li key={a._uuid} className={Number(a.status) === 1 ? '' : 'is-off'}>
                             <span className="acs-bank-acc">
                               <b title={a.acountName}>{a.acountName}</b>
-                              <small>{a.acount_number || '—'}{cur ? ` · ${cur.name}` : ''}</small>
+                              <small>{[a.account_code, a.acount_number || '—', cur?.name].filter(Boolean).join(' · ')}</small>
                             </span>
                             <span className={`acs-bank-balance${balance < 0 ? ' is-negative' : ''}`}>
                               <small>{currencySymbol(cur)}</small> {formatNumber(balance)}

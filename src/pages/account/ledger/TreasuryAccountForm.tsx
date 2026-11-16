@@ -10,7 +10,8 @@ import { toThousands } from '../../../utils/formater';
 import { useT } from '../../../context/LanguageContext';
 import type { AccountType } from '../setting/AccountTypeForm';
 import { toneOf } from '../setting/accountTone';
-import { FormStep, PickerField, codeLabel } from '../setting/settingKit';
+import { AutoCodeField, FormStep, PickerField, codeLabel } from '../setting/settingKit';
+import { nextChildCode } from '../setting/settingApi';
 import { CASH_CLASS_CODE } from '../journal/journalKit';
 import { currencySymbol } from './currency';
 
@@ -27,6 +28,8 @@ export type TreasuryAccount = {
   _uuid: number;
   type_treasuryid: number;
   bankId: number | null;
+  /** ລະຫັດບັນຊີ (1021 → 10211) — ອອກໃຫ້ເອງຕອນສ້າງ */
+  account_code?: string | null;
   acountName: string;
   acount_number?: string;
   balance_treasury: number;
@@ -41,6 +44,8 @@ type Props = {
   data: TreasuryAccount | null;
   /** ປະເພດບັນຊີທີ່ໃຊ້ງານ (tbl_type_treasury ພ້ອມ types + currency) — ປຶ້ມບັນຊີໃຊ້ສະກຸນເງິນຕາມອັນທີ່ເລືອກ */
   types: AccountType[];
+  /** ລະຫັດບັນຊີທີ່ມີແລ້ວ — ໃຊ້ຄາດລະຫັດທີ່ຈະໄດ້ (ປະເພດ 1021 → 10211, 10212…) */
+  usedCodes: (string | null | undefined)[];
   onClose: () => void;
   onSaved: () => void;
 };
@@ -59,8 +64,9 @@ const bankLabel = (label: ReactNode, item: any) => (
  * ເລືອກ "ໝວດບັນຊີ" (tbl_type_account) ກ່ອນ ແລ້ວ "ປະເພດບັນຊີ" (tbl_type_treasury ຈາກ getTypeTreasury) ຈຶ່ງກັ່ນສະເພາະຂອງໝວດນັ້ນ.
  * ຕອນແກ້ໄຂ ປະເພດ ແລະ ຍອດເງິນປ່ຽນບໍ່ໄດ້ — ຍອດຜູກກັບສະກຸນເງິນແລ້ວ ແລະ ປ່ຽນຜ່ານການໂອນເງິນເທົ່ານັ້ນ.
  * ໝວດເງິນສົດ (101) ບໍ່ມີທະນາຄານ — ເຊື່ອງຊ່ອງເລືອກທະນາຄານ ແລະ ສົ່ງ bankId ເປັນ null.
+ * ລະຫັດບັນຊີ = ລະຫັດປະເພດ + ເລກຖັດໄປ (backend ອອກໃຫ້ຕອນສ້າງ, ປ່ຽນບໍ່ໄດ້) — ຟອມສະແດງລະຫັດທີ່ຈະໄດ້ລ່ວງໜ້າ.
  */
-const TreasuryAccountForm = ({ data, types, onClose, onSaved }: Props) => {
+const TreasuryAccountForm = ({ data, types, usedCodes, onClose, onSaved }: Props) => {
   const t = useT();
   const formRef = useRef<FormInstance>(null);
   const [banks, setBanks] = useState<TreasuryBank[]>([]);
@@ -129,6 +135,8 @@ const TreasuryAccountForm = ({ data, types, onClose, onSaved }: Props) => {
 
   const selectedType = typeList.find((r) => r._uuid === inputs.type_treasuryid);
   const currency = selectedType?.currency;
+  const tone = toneOf(selectedClass?.type_code ?? '');
+  const code = data ? data.account_code : nextChildCode(selectedType?.treasury_code, usedCodes);
   const bank = isCash ? null : banks.find((b) => b._uuid === inputs.bankId) ?? (inputs.bankId === data?.bankId ? data?.banks : null);
   const usable = Number(inputs.balance_treasury) || 0;
   const unable = Number(inputs.balance_unable) || 0;
@@ -193,7 +201,7 @@ const TreasuryAccountForm = ({ data, types, onClose, onSaved }: Props) => {
             <div className={`acc-book-cp${selectedType ? '' : ' is-empty'}${active ? '' : ' is-off'}`}>
               <div className="acc-book-cp-top">
                 <span className="acc-book-cp-type">
-                  <b>{selectedType?.treasury_code ?? '····'}</b>
+                  <b>{code || selectedType?.treasury_code || '····'}</b>
                   <small>{selectedType?.treasury_name ?? t('treasuryFieldType')}</small>
                 </span>
                 <span className="acc-book-cp-bank" title={bank?.name_la ?? t('treasuryNoBank')}>
@@ -250,13 +258,22 @@ const TreasuryAccountForm = ({ data, types, onClose, onSaved }: Props) => {
             </FormStep>
 
             <FormStep no={2} done={!!String(inputs.acountName ?? '').trim()} title={t('treasurySectionInfo')} hint={t('treasuryStepInfoHint')}>
-              {/* ສະແດງເປັນພິມໃຫຍ່ດ້ວຍ CSS ຂະນະພິມ (ບໍ່ປ່ຽນ value ທຸກຕົວອັກສອນ — cursor ຈະບໍ່ກະໂດດໄປທ້າຍ), ປ່ຽນແທ້ຕອນບັນທຶກ */}
-              <InputField name="acountName" label={t('accountName')} placeholder={t('accountNameDots')}
-                className="acc-book-upper" icon={<i className="fa-solid fa-signature" />}
-              />
-              <InputField name="acount_number" label={t('accountNumber')} placeholder="XXX-XXXX-XXXXX" required={false}
-                icon={<i className="fa-solid fa-hashtag" />}
-              />
+              {/* ແຖວ 1: ລະຫັດບັນຊີ (ແຄບ — ຕາມປະເພດທີ່ເລືອກ 1021 → 10211, ຕອນແກ້ໄຂລັອກ) + ຊື່ບັນຊີ (ກວ້າງ) */}
+              <div className="is-wide acs-code-name">
+                <AutoCodeField label={t('glAccountCode')} code={code} locked={!!data} tone={tone} compact
+                  autoText={t('accountTypeCodeAutoShort')} lockedText={t('accountTypeCodeLocked')}
+                />
+                {/* ສະແດງເປັນພິມໃຫຍ່ດ້ວຍ CSS ຂະນະພິມ (ບໍ່ປ່ຽນ value ທຸກຕົວອັກສອນ — cursor ຈະບໍ່ກະໂດດໄປທ້າຍ), ປ່ຽນແທ້ຕອນບັນທຶກ */}
+                <InputField name="acountName" label={t('accountName')} placeholder={t('accountNameDots')}
+                  className="acc-book-upper" icon={<i className="fa-solid fa-signature" />}
+                />
+              </div>
+              {/* ແຖວ 2–3: ເລກບັນຊີ ແລະ ທະນາຄານ ເຕັມແຖວ */}
+              <div className="is-wide">
+                <InputField name="acount_number" label={t('accountNumber')} placeholder="XXX-XXXX-XXXXX" required={false}
+                  icon={<i className="fa-solid fa-hashtag" />}
+                />
+              </div>
               {!isCash && (
                 <PickerField name="bankId" label={t('bank')} required={false} className="is-wide" data={bankOptions}
                   placeholder={t('treasuryNoBank')}

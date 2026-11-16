@@ -117,7 +117,7 @@ const IncomePage = ({ startNew = false }: { startNew?: boolean }) => {
   const shown = rows.filter((r) =>
     (status === 'all' || (status === 'active') === isActive(r))
     && (!day || dayKeyOf(r) === day)
-    && (!q || [r.number, r.incom_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.description, r.payer_account_name,
+    && (!q || [r.number, r.incom_title, r.sub?.category?.type_name, r.sub?.category?.type_code, r.sub?.name, r.acount?.acountName, r.acount?.account_code, r.description, r.payer_account_name,
       r.payer_name, r.partner?.name, r.partner?.partner_code, r.partner?.phone]
       .join(' ').toLowerCase().includes(q)));
 
@@ -269,7 +269,7 @@ const IncomePage = ({ startNew = false }: { startNew?: boolean }) => {
                             {acc?.banks?.url ? <img src={acc.banks.url} alt="" /> : <i className="fa-solid fa-wallet" />}
                           </span>
                           <span className="acc-jr-dest-text">
-                            <small>{t('incomeInto')}</small>
+                            <small>{t('incomeInto')}{acc?.account_code ? ` · ${acc.account_code}` : ''}</small>
                             <b title={acc?.acountName}>{acc?.acountName ?? '—'}</b>
                             {isTransfer ? (
                               <em>
