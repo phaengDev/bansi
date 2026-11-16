@@ -6,7 +6,7 @@ import { Notific } from '../../../utils/Notification';
 import { useT } from '../../../context/LanguageContext';
 import { ChoiceTiles, FormSection, SettingModal } from '../../account/setting/settingKit';
 import { runSave } from '../../account/setting/settingApi';
-import { fullName } from '../hrApi';
+import { fullName, workTimeText } from '../hrApi';
 import { HrAvatar } from '../hrKit';
 import { PAID_LEAVE, PRESENT, UNPAID_LEAVE, dayLabel, weekdayKey, type AttendanceEmployee, type AttendanceRecord } from './attendanceApi';
 
@@ -17,12 +17,15 @@ const toHHmm = (value: Date | null) => (value ? moment(value).format('HH:mm') : 
  * HR ບັນທຶກ / ແກ້ໄຂ ການເຂົ້າວຽກຂອງ 1 ຄົນ 1 ມື້ (POST /attendance/save) — ລືມສະແກນ, ສະແກນບໍ່ໄດ້, ລາພັກ.
  * ເວລາທີ່ບໍ່ປ່ຽນ backend ຮັກສາເວລາສະແກນຈິງ ແລະ ພິກັດໄວ້
  */
-const AttendanceForm = ({ employee, date, record, workStart, workEnd, onClose, onSaved }: {
+const AttendanceForm = ({ employee, date, record, workStart, workEnd, breakStart, breakEnd, onClose, onSaved }: {
   employee: AttendanceEmployee;
   date: string;
   record: AttendanceRecord | null;
   workStart: string;
   workEnd: string;
+  /** ພັກທ່ຽງ (null = ບໍ່ມີ) — ສະແດງໃນຫົວຟອມ */
+  breakStart?: string | null;
+  breakEnd?: string | null;
   onClose: () => void;
   onSaved: () => void;
 }) => {
@@ -61,7 +64,7 @@ const AttendanceForm = ({ employee, date, record, workStart, workEnd, onClose, o
   );
 
   return (
-    <SettingModal title={t(record ? 'attEdit' : 'attAdd')} hint={`${t(weekdayKey(date))} ${dayLabel(date)} · ${t('hrCompanyWorkTime')} ${workStart}–${workEnd}`}
+    <SettingModal title={t(record ? 'attEdit' : 'attAdd')} hint={`${t(weekdayKey(date))} ${dayLabel(date)} · ${t('hrQrWorkHours')} ${workTimeText(workStart, workEnd, breakStart, breakEnd, t('hrLunchBreak'))}`}
       icon="fa-user-clock" saving={saving} onClose={onClose} onSubmit={submit}
     >
       <Form fluid>

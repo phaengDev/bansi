@@ -10,7 +10,7 @@ import { printElementByFrame } from '../../utils/Print';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import { saveBlob } from '../account/journal/journalKit';
-import type { Company } from './hrApi';
+import { workTimeText, type Company } from './hrApi';
 
 /** GET/PUT /company/scan-qr — payload = ຂໍ້ຄວາມໃນ QR (BANSI-ATT:<token>) ທີ່ app ມືຖືສົ່ງໄປ POST /attendance/scan { qr } */
 type ScanQr = { payload: string | null; require_qr: boolean; token_at: string | null };
@@ -125,7 +125,7 @@ const CompanyScanQr = ({ company }: { company: Company }) => {
               {image ? <img src={image} alt="QR" /> : <Loader size="md" />}
             </div>
             <div className="hr-qr-poster-foot">
-              <span><i className="fa-solid fa-clock" /> {t('hrQrWorkHours')} {company.work_start} – {company.work_end}</span>
+              <span><i className="fa-solid fa-clock" /> {t('hrQrWorkHours')} {workTimeText(company.work_start, company.work_end, company.break_start, company.break_end, t('hrLunchBreak'))}</span>
               <small>{t('hrQrPosterHint')}</small>
             </div>
           </div>

@@ -213,7 +213,7 @@ const AttendanceDaily = () => {
       )}
 
       {editing && data && (
-        <AttendanceForm employee={editing.employee} date={date} record={editing.record} workStart={data.work_start} workEnd={data.work_end}
+        <AttendanceForm employee={editing.employee} date={date} record={editing.record} workStart={data.work_start} workEnd={data.work_end} breakStart={data.break_start} breakEnd={data.break_end}
           onClose={() => setEditing(null)} onSaved={reload}
         />
       )}

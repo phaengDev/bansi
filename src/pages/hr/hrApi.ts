@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 import { getApi, postApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
@@ -344,6 +345,9 @@ export type Company = {
   /** "HH:mm" */
   work_start: string;
   work_end: string;
+  /** ພັກທ່ຽງ "HH:mm" — null = ບໍລິສັດບໍ່ມີເວລາພັກທ່ຽງ (ບໍ່ບັງຄັບ) */
+  break_start: string | null;
+  break_end: string | null;
   /** ວັນພັກປະຈຳອາທິດ — 0 ອາທິດ … 6 ເສົາ (Date.getDay()) */
   days_off: number[];
   /** ເຄື່ອງແບບປະຈຳວັນ 7 ຄ່າ (ດັດຊະນີ = Date.getDay()) — 0 ບໍ່ກຳນົດ, 1 ໂປໂລບໍລິສັດ, 2 ເສື້ອເຊີດ, 3 ເສື້ອທຳມະດາ */
@@ -353,6 +357,18 @@ export type Company = {
   district?: DistrictRef | null;
   updatedAt: string;
 };
+
+/** ຊົ່ວໂມງເຮັດວຽກຕໍ່ວັນ ຈາກ "HH:mm" ໂດຍບໍ່ນັບພັກທ່ຽງ (ອອກກ່ອນເຂົ້າ = 0) — ສູດດຽວກັບ workRulesOf ຂອງ backend */
+export const workHours = (start: string, end: string, breakStart?: string | null, breakEnd?: string | null) => {
+  const min = (hhmm: string) => moment(hhmm, 'HH:mm').hours() * 60 + moment(hhmm, 'HH:mm').minutes();
+  if (!start || !end || end <= start) return 0;
+  const lunch = breakStart && breakEnd && start < breakStart && breakStart < breakEnd && breakEnd < end ? min(breakEnd) - min(breakStart) : 0;
+  return Number(((min(end) - min(start) - lunch) / 60).toFixed(1));
+};
+
+/** "08:00–17:00 · ພັກທ່ຽງ 12:00–13:00" (ບໍ່ມີພັກທ່ຽງ = ແຕ່ເວລາເຂົ້າ-ອອກ) — ຫົວຟອມ, ໂປສເຕີ QR */
+export const workTimeText = (start: string, end: string, breakStart: string | null | undefined, breakEnd: string | null | undefined, lunchLabel: string) =>
+  `${start}–${end}${breakStart && breakEnd ? ` · ${lunchLabel} ${breakStart}–${breakEnd}` : ''}`;
 
 export const fullName = (e: Pick<EmployeeRef, 'first_name' | 'last_name'> | null | undefined) =>
   e ? [e.first_name, e.last_name].filter(Boolean).join(' ') : '';

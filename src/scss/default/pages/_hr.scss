@@ -859,6 +859,17 @@
   small { color: #6b7f90; font-size: 12px; font-weight: 600; }
   b { color: var(--book-ink); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
   > i { color: #9fb3c2; font-size: 18px; }
+
+  // ພັກທ່ຽງລະຫວ່າງເວລາເຂົ້າ-ອອກ — ນ້ອຍກວ່າ ແລະ ສີອ່ອນ (ບໍ່ແມ່ນເວລາເຮັດວຽກ)
+  > div.is-break {
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: #fff6e6;
+
+    small { color: #a5650b; }
+    small i { font-size: 11px; }
+    b { color: #8a5208; font-size: 17px; }
+  }
 }
 
 .hr-days.is-static > span { cursor: default; }

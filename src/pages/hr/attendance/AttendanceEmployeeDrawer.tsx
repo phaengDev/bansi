@@ -129,7 +129,7 @@ const AttendanceEmployeeDrawer = ({ employee, period, focusDate, onClose, onChan
       </Drawer.Body>
 
       {editing && data && (
-        <AttendanceForm employee={employee} date={editing.date} record={editing.record} workStart={data.work_start} workEnd={data.work_end}
+        <AttendanceForm employee={employee} date={editing.date} record={editing.record} workStart={data.work_start} workEnd={data.work_end} breakStart={data.break_start} breakEnd={data.break_end}
           onClose={() => setEditing(null)} onSaved={changed}
         />
       )}

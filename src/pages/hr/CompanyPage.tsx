@@ -9,8 +9,8 @@ import { InputField } from '../../utils/inputFields';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import { useDistricts, useProvinces } from '../../utils/selectOption';
-import { FormStep, PickerField } from '../account/setting/settingKit';
-import { MAX_FILE, type Company } from './hrApi';
+import { ChoiceTiles, FormStep, PickerField } from '../account/setting/settingKit';
+import { MAX_FILE, workHours, type Company } from './hrApi';
 import { LocationModal, LocationPreview, type CompanyLocationValue } from './CompanyLocation';
 import CompanyScanQr from './CompanyScanQr';
 
@@ -73,12 +73,9 @@ const UniformImage = ({ id, photos }: { id: number; photos?: (string | null)[] }
 
 const toTime = (value: string | undefined, fallback: string) => moment(value || fallback, 'HH:mm').toDate();
 const toHHmm = (value: Date | null | undefined) => (value ? moment(value).format('HH:mm') : '');
-/** ຊົ່ວໂມງເຮັດວຽກຕໍ່ວັນ ຈາກ "HH:mm" (ອອກກ່ອນເຂົ້າ = 0) */
-const workHours = (start: string, end: string) =>
-  start && end && end > start ? Number((moment(end, 'HH:mm').diff(moment(start, 'HH:mm'), 'minutes') / 60).toFixed(1)) : 0;
 
 type CompanyValues = Pick<Company, 'name_la' | 'name_en' | 'phone1' | 'phone2' | 'district_id' | 'village' | 'latitude'
-  | 'longitude' | 'scan_radius' | 'work_start' | 'work_end' | 'days_off' | 'uniform_days'>;
+  | 'longitude' | 'scan_radius' | 'work_start' | 'work_end' | 'break_start' | 'break_end' | 'days_off' | 'uniform_days'>;
 
 /** body ຂອງ PUT /company (multipart) — ໂລໂກ້ຕື່ມເອງ (ບໍ່ສົ່ງ = backend ບໍ່ແຕະໂລໂກ້) */
 const companyBody = (v: CompanyValues) => {
@@ -95,6 +92,9 @@ const companyBody = (v: CompanyValues) => {
   body.append('scan_radius', String(v.scan_radius));
   body.append('work_start', v.work_start);
   body.append('work_end', v.work_end);
+  // ພັກທ່ຽງ: ວ່າງ = ບໍລິສັດບໍ່ມີເວລາພັກທ່ຽງ
+  body.append('break_start', v.break_start ?? '');
+  body.append('break_end', v.break_end ?? '');
   body.append('days_off', v.days_off.join(','));
   body.append('uniform_days', v.uniform_days.join(','));
   return body;
@@ -344,7 +344,11 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
     village: data?.village ?? '',
     work_start: toTime(data?.work_start, '08:00'),
     work_end: toTime(data?.work_end, '17:00'),
+    break_start: toTime(data?.break_start ?? undefined, '12:00'),
+    break_end: toTime(data?.break_end ?? undefined, '13:00'),
   });
+  /** ມີເວລາພັກທ່ຽງບໍ່ (ບໍ່ບັງຄັບ — ບາງບໍລິສັດກຳນົດແຕ່ເວລາເຂົ້າ-ອອກ) */
+  const [lunch, setLunch] = useState(!!data?.break_start && !!data?.break_end);
   const districts = useDistricts(inputs.province_id);
 
   useEffect(() => () => {
@@ -385,7 +389,9 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
 
   const start = toHHmm(inputs.work_start);
   const end = toHHmm(inputs.work_end);
-  const hours = workHours(start, end);
+  const breakStart = lunch ? toHHmm(inputs.break_start) : '';
+  const breakEnd = lunch ? toHHmm(inputs.break_end) : '';
+  const hours = workHours(start, end, breakStart, breakEnd);
   const pinned = location.lat !== null && location.lng !== null;
   const uniformsDone = WEEK.every((day) => daysOff.includes(day) || uniforms[day] > 0);
 
@@ -394,6 +400,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
     // ແຂວງບໍ່ໄດ້ບັນທຶກແຍກ — ເລືອກແຂວງແລ້ວຕ້ອງເລືອກເມືອງນຳ ບໍ່ດັ່ງນັ້ນແຂວງຈະຫາຍ
     if (inputs.province_id && !inputs.district_id) return Notific.warning('hrCompanyDistrictRequired');
     if (!start || !end || end <= start) return Notific.warning('hrCompanyTimeOrder');
+    if (lunch && !(start < breakStart && breakStart < breakEnd && breakEnd < end)) return Notific.warning('hrLunchOrder');
     const body = companyBody({
       name_la: inputs.name_la,
       name_en: inputs.name_en,
@@ -406,6 +413,8 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
       scan_radius: location.radius,
       work_start: start,
       work_end: end,
+      break_start: breakStart || null,
+      break_end: breakEnd || null,
       days_off: daysOff,
       uniform_days: uniforms,
     });
@@ -486,6 +495,27 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
               <ControlField name="work_end" label={t('hrCompanyWorkEnd')} accepter={TimePicker} format="HH:mm" block cleanable={false}
                 hideMinutes={(minute: number) => minute % 5 !== 0}
               />
+              {/* ພັກທ່ຽງ (ບໍ່ບັງຄັບ) — ມີ = ຊົ່ວໂມງວຽກ ແລະ ນາທີມາຊ້າ/ອອກກ່ອນ ບໍ່ນັບເວລາພັກ */}
+              <ChoiceTiles<number>
+                className="is-wide"
+                label={t('hrLunchBreak')}
+                value={lunch ? 1 : 0}
+                onChange={(value) => setLunch(value === 1)}
+                options={[
+                  { value: 0, label: t('hrLunchNone'), icon: 'fa-business-time', hint: t('hrLunchNoneHint') },
+                  { value: 1, label: t('hrLunchHas'), icon: 'fa-utensils', hint: t('hrLunchHasHint') },
+                ]}
+              />
+              {lunch && (
+                <>
+                  <ControlField name="break_start" label={t('hrLunchStart')} accepter={TimePicker} format="HH:mm" block cleanable={false}
+                    hideMinutes={(minute: number) => minute % 5 !== 0}
+                  />
+                  <ControlField name="break_end" label={t('hrLunchEnd')} accepter={TimePicker} format="HH:mm" block cleanable={false}
+                    hideMinutes={(minute: number) => minute % 5 !== 0}
+                  />
+                </>
+              )}
               <div className="is-wide rs-form-group">
                 <label className="form-label">{t('hrCompanyDaysOff')}</label>
                 <WeekDays daysOff={daysOff} onToggle={toggleDay} />
@@ -535,7 +565,7 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
   const address = [company.village, company.district?.district_name, company.district?.province?.province_name].filter(Boolean).join(', ');
   const phones = [company.phone1, company.phone2].filter((phone): phone is string => !!phone);
   const { latitude: lat, longitude: lng } = company;
-  const hours = workHours(company.work_start, company.work_end);
+  const hours = workHours(company.work_start, company.work_end, company.break_start, company.break_end);
 
   const saveLocation = async (next: { lat: number; lng: number; radius: number }) => {
     try {
@@ -602,6 +632,15 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
           <div className="hr-company-hours">
             <div><small>{t('hrCompanyWorkStart')}</small><b>{company.work_start}</b></div>
             <i className="fa-solid fa-arrow-right-long" />
+            {company.break_start && company.break_end && (
+              <>
+                <div className="is-break">
+                  <small><i className="fa-solid fa-utensils" /> {t('hrLunchBreak')}</small>
+                  <b>{company.break_start}–{company.break_end}</b>
+                </div>
+                <i className="fa-solid fa-arrow-right-long" />
+              </>
+            )}
             <div><small>{t('hrCompanyWorkEnd')}</small><b>{company.work_end}</b></div>
           </div>
           <WeekDays daysOff={company.days_off} />

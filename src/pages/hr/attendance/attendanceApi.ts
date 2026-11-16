@@ -84,6 +84,9 @@ export type DailyData = {
   holiday: string | null;
   work_start: string;
   work_end: string;
+  /** ພັກທ່ຽງ — null = ບໍ່ມີ */
+  break_start: string | null;
+  break_end: string | null;
   grace: number;
   /** ເດືອນນີ້ຈ່າຍເງິນເດືອນແລ້ວ — ແກ້ບໍ່ໄດ້ */
   locked: boolean;
@@ -97,6 +100,8 @@ export type MonthlyData = {
   today: string;
   work_start: string;
   work_end: string;
+  break_start: string | null;
+  break_end: string | null;
   grace: number;
   locked: boolean;
   days: DayInfo[];
@@ -109,6 +114,8 @@ export type EmployeeMonthData = {
   employee: AttendanceEmployee;
   work_start: string;
   work_end: string;
+  break_start: string | null;
+  break_end: string | null;
   grace: number;
   days: (DayInfo & { state: DayState; record: AttendanceRecord | null })[];
   summary: MonthStats;
