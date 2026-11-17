@@ -207,6 +207,7 @@ export const PAYROLL_MENU: SidebarPopupGroup[] = [
     items: [
       { key: 'runs', icon: 'fa-solid fa-money-check-dollar', label: 'payRuns' },
       { key: 'advances', icon: 'fa-solid fa-hand-holding-dollar', label: 'advMenu' },
+      { key: 'taxReport', icon: 'fa-solid fa-file-invoice', label: 'ptrMenu' },
     ],
   },
   {

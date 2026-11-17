@@ -8343,3 +8343,14 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   i { display: block; width: 70%; height: 56px; border-bottom: 1px dotted #9aa9b6; }
   em { margin-top: 4px; color: #3b5166; font-style: normal; font-weight: 600; }
 }
+
+// ລາຍງານອາກອນເງິນເດືອນ — ແຖບເລືອກເດືອນ, ຖັນຕົວເລກຊິດຂວາ (ຍົກເວັ້ນຖັນພະນັກງານ)
+.acc-ptr-months { flex-wrap: wrap; align-self: flex-start; margin-bottom: 4px; }
+.acc-ptr-table {
+  th:not(:first-child),
+  td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  th:first-child,
+  td:first-child { text-align: left; }
+  td.is-strong { font-weight: 800; }
+  td small { display: block; margin-top: 2px; color: var(--rp-muted); font-size: 11px; }
+}

@@ -7,6 +7,7 @@ import PayrollList from './PayrollList';
 import PayrollDetail from './PayrollDetail';
 import PayrollSettingPage from './PayrollSettingPage';
 import AdvancePage from './AdvancePage';
+import PayrollTaxReport from './PayrollTaxReport';
 import { useRailKey } from '../../account/windowMemory';
 
 /**
@@ -37,6 +38,8 @@ const PayrollWindow = () => {
         <PayrollSettingPage />
       ) : activeKey === 'advances' ? (
         <AdvancePage />
+      ) : activeKey === 'taxReport' ? (
+        <PayrollTaxReport />
       ) : openId ? (
         <PayrollDetail id={openId} onBack={() => setOpenId(null)} onChanged={() => setListVersion((v) => v + 1)} />
       ) : (
