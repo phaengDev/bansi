@@ -8270,7 +8270,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 // ໃບເກັບເງິນອາກອນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe).
-// 1 ສະບັບ = 1 ໜ້າ A4; ສີຂອງສະບັບ (--iv) ໃຊ້ທັງລາຍພື້ນຫຼັງ ແລະ ຫົວຂໍ້: ຜູ້ຊື້ = ຂຽວ, ຜູ້ຂາຍ = ມ່ວງ
+// 1 ສະບັບ = 1 ໜ້າ A4; ສີສົ້ມຄືແບບຟອມທາງການ: ລາຍພື້ນຫຼັງ #e74e3d (ART_COLOR), ຫົວຂໍ້/ຕາຕະລາງ (--iv) ສົ້ມແດງເຂັ້ມກວ່າ ໃຫ້ອ່ານຊັດ
 .acc-ivp {
   position: fixed;
   left: -10000px;
@@ -8278,8 +8278,8 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 .acc-ivp-page {
-  --iv: #0b7a62;
-  --iv-soft: #e7f4ef;
+  --iv: #c0392b;
+  --iv-soft: #fdeeeb;
   --iv-ink: #1d2b36;
   --iv-muted: #5b6f80;
 
@@ -8295,7 +8295,6 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   break-after: page;
   page-break-after: always;
 
-  &.is-seller { --iv: #5a3ea8; --iv-soft: #efeafb; }
   &:last-child { break-after: auto; page-break-after: auto; }
 }
 

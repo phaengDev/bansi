@@ -20,10 +20,13 @@ const PRINT_CSS = `
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 `;
 
-/** ສະບັບ: 1 ສຳລັບຜູ້ຊື້ (ສີຂຽວ), 2 ສຳລັບຜູ້ຂາຍ ເກັບໄວ້ (ສີມ່ວງ) — ລາຍພື້ນຫຼັງດຽວກັນ ຕ່າງແຕ່ສີ */
+/** ສີລາຍພື້ນຫຼັງ = ສີສົ້ມຂອງແບບຟອມທາງການ (ຂອບ #e74e3d; ໂລ່/ກະໜົກ/ລັດສະໝີ ເປັນສີດຽວກັນແຕ່ຈາງ) */
+const ART_COLOR = '#e74e3d';
+
+/** ສະບັບ: 1 ສຳລັບຜູ້ຊື້, 2 ສຳລັບຜູ້ຂາຍ ເກັບໄວ້ — ສີ ແລະ ລາຍດຽວກັນ (ຄືແບບຟອມທາງການ), ແຍກດ້ວຍປ້າຍສະບັບ */
 const COPIES = [
-  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer', tone: 'is-buyer', color: '#0b7a62' },
-  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller', tone: 'is-seller', color: '#5a3ea8' },
+  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer' },
+  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller' },
 ];
 
 /** ແຖວຕ່ຳສຸດຂອງຕາຕະລາງ (ເຕີມແຖວວ່າງ ໃຫ້ໃບເບິ່ງຄົບຄືແບບຟອມ) */
@@ -97,8 +100,8 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
   };
 
   const page = (copy: (typeof COPIES)[number]) => (
-    <section key={copy.no} className={`acc-ivp-page ${copy.tone}`}>
-      <InvoiceBackground color={copy.color} />
+    <section key={copy.no} className="acc-ivp-page">
+      <InvoiceBackground color={ART_COLOR} />
       <div className="acc-ivp-body">
         <p className="acc-ivp-nation">
           <span>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</span>

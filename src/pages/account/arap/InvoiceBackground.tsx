@@ -2,8 +2,8 @@ import { useEffect, useId, useState } from 'react';
 
 /**
  * ພາບພື້ນຫຼັງທາງການຂອງໃບເກັບເງິນອາກອນ (ຂອບ, ລາຍກະໜົກ, ໂລ່ ສ່ວຍສາອາກອນ — ຕ້ອງຄືແບບຟອມຂອງກົມສ່ວຍສາອາກອນທຸກເສັ້ນ):
- * ວາງໄຟລ໌ A4 ຕັ້ງ (ລາຍສີດຽວເທິງພື້ນຂາວ ຫຼື ໂປ່ງໃສ, ≥ 1240×1754px) ໄວ້ທີ່ public/assets/. ລະບົບປ່ຽນສີໃຫ້ຕາມສະບັບ
- * (ລາຍຄືເກົ່າ ຕ່າງແຕ່ສີ). ບໍ່ມີໄຟລ໌ = ໃຊ້ລາຍທີ່ແຕ້ມດ້ວຍ SVG ລຸ່ມນີ້ແທນ (ສຳລັບທົດລອງເທົ່ານັ້ນ)
+ * ວາງໄຟລ໌ A4 ຕັ້ງ (ລາຍສີດຽວ/ຂາວດຳ ເທິງພື້ນຂາວ, ≥ 1240×1754px) ໄວ້ທີ່ public/assets/. ລະບົບລົງສີຕາມ `color`
+ * (ຄວາມເຂັ້ມຂອງລາຍຄືເດີມ). ບໍ່ມີໄຟລ໌ = ໃຊ້ລາຍທີ່ແຕ້ມດ້ວຍ SVG ລຸ່ມນີ້ແທນ (ສຳລັບທົດລອງເທົ່ານັ້ນ)
  */
 const ARTWORK_URLS = ['/assets/invoice-background.png', '/assets/invoice-background.jpg'];
 
@@ -37,8 +37,10 @@ const tintArtwork = (img: HTMLImageElement, color: string) => {
   const hex = color.replace('#', '');
   const [tr, tg, tb] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
   const px = data.data;
+  // ລາຍເຂັ້ມທີ່ສຸດທີ່ສີນີ້ໃຫ້ໄດ້ = ເຕັມສີ (alpha 1): ລາຍທີ່ເຂັ້ມເທົ່າສີ (ຂອບ) ອອກມາເປັນສີນັ້ນພໍດີ, ລາຍຈາງ ຈາງຕາມສັດສ່ວນ
+  const full = 255 - Math.min(tr, tg, tb) || 255;
   for (let i = 0; i < px.length; i += 4) {
-    const ink = 255 - Math.min(px[i], px[i + 1], px[i + 2]);
+    const ink = Math.min(255, ((255 - Math.min(px[i], px[i + 1], px[i + 2])) * 255) / full);
     px[i + 3] = Math.round((ink * px[i + 3]) / 255);
     px[i] = tr;
     px[i + 1] = tg;
@@ -154,7 +156,7 @@ const LAUREL = Array.from({ length: 9 }, (_, i) => {
   return { x: r(x), y: r(y), deg: r(deg) };
 });
 
-/** ພື້ນຫຼັງຂອງສະບັບ — color = ສີຂອງສະບັບ (ພາບທາງການຖືກປ່ຽນເປັນສີນີ້) */
+/** ພື້ນຫຼັງຂອງໃບເກັບເງິນ — color = ສີລາຍ (ພາບທາງການຖືກລົງສີນີ້) */
 const InvoiceBackground = ({ color }: { color: string }) => {
   const art = useOfficialArtwork(color);
   if (art) return <img className="acc-ivp-bg" src={art} alt="" aria-hidden="true" />;
