@@ -96,7 +96,7 @@ export type PartnerDoc = {
   paid: string | number;
   open: number;
   status: number;
-  partner?: { _uuid: number; partner_code: string; name: string; phone?: string | null } | null;
+  partner?: { _uuid: number; partner_code: string; name: string; phone?: string | null; address?: string | null; tax_number?: string | null } | null;
   lines: {
     _uuid: number;
     line_no: number;

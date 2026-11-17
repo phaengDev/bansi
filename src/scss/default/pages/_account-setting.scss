@@ -8246,3 +8246,100 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   em.is-bad { color: #c4343a; }
   > .acc-rp-btn { align-self: flex-start; margin-top: 8px; }
 }
+
+// ໃບເກັບເງິນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe)
+.acc-ivp {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 186mm;
+  color: #14314d;
+  font-family: 'NotoSerifLao', 'Open Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #fff;
+}
+
+.acc-ivp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #14314d;
+
+  img { width: 64px; height: 64px; object-fit: contain; }
+  > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  h2 { margin: 0; font-size: 18px; font-weight: 800; }
+  p { margin: 0; color: #3d5266; font-size: 12px; }
+  small { color: #3d5266; font-size: 11px; }
+}
+
+.acc-ivp-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+
+  b { font-size: 18px; font-weight: 800; }
+  em { color: #6b7c8b; font-size: 11px; font-style: normal; letter-spacing: 0.12em; }
+}
+
+.acc-ivp-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  margin: 14px 0;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    border: 1px solid #d5dee6;
+    border-radius: 8px;
+
+    small { color: #6b7c8b; font-size: 11px; font-weight: 700; }
+    b { font-size: 14px; }
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 12px;
+    margin: 0;
+    align-content: start;
+
+    dt { color: #6b7c8b; font-weight: 600; }
+    dd { margin: 0; font-weight: 700; text-align: right; }
+  }
+}
+
+.acc-ivp-lines {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td { padding: 6px 8px; border-bottom: 1px solid #e3eaf0; text-align: left; }
+  th { color: #fff; background: #14314d; font-size: 11.5px; }
+  th:first-child,
+  td:first-child { width: 32px; text-align: center; }
+  th:last-child,
+  td:last-child { width: 34%; text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { border-bottom: 0; font-weight: 700; }
+  tfoot td:first-child { width: auto; text-align: right; }
+  tfoot tr.is-total td { border-top: 2px solid #14314d; font-size: 14px; font-weight: 800; }
+}
+
+.acc-ivp-note { margin: 10px 0 0; color: #3d5266; font-size: 11.5px; }
+
+.acc-ivp-signs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  margin-top: 36px;
+  text-align: center;
+  break-inside: avoid;
+
+  span { display: flex; flex-direction: column; align-items: center; }
+  i { display: block; width: 70%; height: 56px; border-bottom: 1px dotted #9aa9b6; }
+  em { margin-top: 4px; color: #3b5166; font-style: normal; font-weight: 600; }
+}

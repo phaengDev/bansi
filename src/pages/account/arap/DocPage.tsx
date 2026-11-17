@@ -14,6 +14,7 @@ import {
   type Kind, type PartnerDoc,
 } from './arapApi';
 import DocForm from './DocForm';
+import { useInvoicePrint } from './InvoicePrint';
 import PaymentForm from './PaymentForm';
 import { SearchBox } from '../setting/settingKit';
 
@@ -43,6 +44,8 @@ const DocDetail = ({ kind, doc, onClose, onPay, onCancel }: {
   const cfg = KINDS[kind];
   const status = docStatusOf(doc);
   const payments = doc.allocations.filter((a) => Number(a.payment?.status) === 1);
+  // ໃບເກັບເງິນໃຫ້ລູກຄ້າ (ສະເພາະລູກໜີ້ — ໃບບິນເຈົ້າໜີ້ມາຈາກຜູ້ຂາຍ)
+  const invoice = useInvoicePrint(doc);
   return (
     <Modal open onClose={onClose} size="md" className="acc-gl-ledger-modal">
       <Modal.Header>
@@ -90,6 +93,12 @@ const DocDetail = ({ kind, doc, onClose, onPay, onCancel }: {
         </div>
       </Modal.Body>
       <Modal.Footer>
+        {kind === AR && invoice.sheet}
+        {kind === AR && status !== 'cancelled' && (
+          <button type="button" className="acc-rp-btn" onClick={invoice.print}>
+            <i className="fa-solid fa-print" /> {t('ivpPrint')}
+          </button>
+        )}
         {status !== 'cancelled' && Number(doc.paid) <= 0 && (
           <button type="button" className="acc-rp-btn is-danger" disabled={!canDelete} onClick={onCancel}>
             <i className="fa-solid fa-ban" /> {t('cancelDoc')}
