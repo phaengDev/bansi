@@ -7666,11 +7666,33 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 // ---- ກະທົບຍອດທະນາຄານ ----
+// ຈໍກວ້າງ: ໜ້າສູງເທົ່າໜ້າຕ່າງ (ບໍ່ເລື່ອນທັງໜ້າ) — ລາຍການບັນຊີທາງຊ້າຍເລື່ອນເອງ, ລາຍລະອຽດທາງຂວາຢູ່ກັບທີ່
+// (ເລື່ອນເອງສະເພາະເມື່ອຍາວກວ່າໜ້າຕ່າງ)
 .acc-bankrec {
   @media (min-width: 1000px) {
     display: grid;
+    flex: 1 1 auto;
+    min-height: 0;
     grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     align-items: start;
+
+    > .acc-bankrec-accounts {
+      align-self: stretch;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      // ກອບສີຂອງບັດທີ່ເລືອກ (box-shadow 3px) ບໍ່ຖືກຕັດ + ຫ່າງຈາກແຖບເລື່ອນ
+      padding: 3px 6px 3px 3px;
+      scrollbar-width: thin;
+      scrollbar-color: #c5d0d9 transparent;
+    }
+
+    > .acc-bankrec-work {
+      max-height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
   }
 }
 
