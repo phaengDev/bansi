@@ -8279,6 +8279,9 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 
 .acc-ivp-page {
   --iv-ink: #000;
+  // ເສັ້ນທຸກເສັ້ນ: ດຳ ບາງ ຄົມ (ພິມ ≈ 0.2mm); ເສັ້ນຫຼັກ (ຫົວຕາຕະລາງ/ຍອດລວມ) ໜາກວ່າເລັກນ້ອຍ
+  --iv-line: 0.2mm solid #000;
+  --iv-line-strong: 0.35mm solid #000;
 
   position: relative;
   width: 210mm;
@@ -8397,7 +8400,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     width: 3.7mm;
     height: 4.6mm;
     place-items: center;
-    border: 0.25mm solid var(--iv-ink);
+    border: var(--iv-line);
     background: #fff;
     font-style: normal;
     font-weight: 700;
@@ -8415,7 +8418,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   gap: 5mm;
   // ເສັ້ນຂວາງທຳມະດາຂັ້ນຜູ້ຂາຍ-ຜູ້ຊື້ ຄືແບບຟອມທາງການ (ບໍ່ມີແຖບສີ / ກອບມົນ)
   padding: 2.4mm 0 0;
-  border-top: 0.3mm solid #9fb0bf;
+  border-top: var(--iv-line);
 
   > div > small { color: var(--iv-ink); font-size: 8pt; font-weight: 700; }
   > div > b { display: block; margin-bottom: 1.5mm; font-size: 11.5pt; font-weight: 800; }
@@ -8429,7 +8432,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 
   > small { margin-bottom: 0.5mm; color: var(--iv-ink); font-size: 8pt; font-weight: 700; }
   span { display: flex; align-items: center; gap: 2mm; }
-  span i { width: 3.6mm; height: 3.6mm; border: 0.3mm solid var(--iv-ink); border-radius: 0.6mm; background: #fff; }
+  span i { width: 3.6mm; height: 3.6mm; border: var(--iv-line); border-radius: 0.6mm; background: #fff; }
 }
 
 // ---- ລາຍການ ----
@@ -8440,11 +8443,11 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   font-variant-numeric: tabular-nums;
 
   th,
-  td { padding: 1.3mm 2mm; border: 0.25mm solid #b9c7d3; }
+  td { padding: 1.3mm 2mm; border: var(--iv-line); }
 
   th {
-    border-top: 0.45mm solid var(--iv-ink);
-    border-bottom: 0.45mm solid var(--iv-ink);
+    border-top: var(--iv-line-strong);
+    border-bottom: var(--iv-line-strong);
     color: var(--iv-ink);
     font-size: 8.5pt;
     font-weight: 700;
@@ -8482,14 +8485,14 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   dl {
     gap: 0;
     align-self: start;
-    border: 0.25mm solid #b9c7d3;
+    border: var(--iv-line);
 
     dt,
-    dd { padding: 1.4mm 2.5mm; border-bottom: 0.25mm solid #e0e7ee; }
+    dd { padding: 1.4mm 2.5mm; border-bottom: var(--iv-line); }
     // ເຕັມສູງແຖວ (ເສັ້ນຂອງ dt ແລະ dd ຕົງກັນ), ຕົວເລກຢູ່ກາງ-ຂວາ
     dd { display: flex; align-self: stretch; align-items: center; justify-content: flex-end; font-weight: 700; font-variant-numeric: tabular-nums; }
     dt.is-total,
-    dd.is-total { border-top: 0.45mm solid var(--iv-ink); border-bottom: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; }
+    dd.is-total { border-top: var(--iv-line-strong); border-bottom: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; }
   }
 }
 
@@ -8516,7 +8519,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   span { display: flex; flex-direction: column; align-items: center; }
   small { margin-bottom: 1mm; color: var(--iv-ink); font-size: 8pt; }
   b { font-size: 9.5pt; font-weight: 800; }
-  i { display: block; width: 72%; height: 11mm; border-bottom: 0.3mm dotted #8a9aa8; }
+  i { display: block; width: 72%; height: 11mm; border-bottom: 0.2mm dotted #000; }
   em { margin-top: 1mm; }
 }
 
@@ -8528,7 +8531,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   // ຫ່າງຈາກລາຍກະໜົກມຸມລຸ່ມ
   margin-inline: 12mm;
   padding-top: 2mm;
-  border-top: 0.25mm solid var(--iv-ink);
+  border-top: var(--iv-line);
   color: var(--iv-ink);
   font-size: 7.5pt;
 
