@@ -15,8 +15,15 @@ import { InputField } from '../../../utils/inputFields';
 const { StringType, NumberType, DateType } = Schema.Types;
 import { postfixProp, runSave } from '../setting/settingApi';
 
-/** ປະເພດລາຍໄດ້ — rate = ອັດຕາຕັ້ງຕົ້ນ (ແກ້ໄດ້); ອັດຕາ 10/10/5 ຕາມກົດໝາຍອາກອນລາຍໄດ້, ອື່ນໆ ໃຫ້ປ້ອນເອງ */
+/**
+ * ປະເພດລາຍໄດ້ — rate = ອັດຕາຕັ້ງຕົ້ນ (ແກ້ໄດ້) ຕາມກົດໝາຍອາກອນລາຍໄດ້ ເລກທີ 88/ສພຊ (ມີຜົນ ກາງປີ 2026):
+ * ຄ່ານາຍໜ້າ/ທີ່ປຶກສາ/ຄ່າບໍລິການ 10% (ເກົ່າ 5%), ກໍ່ສ້າງ-ສ້ອມແປງ 5% (ເກົ່າ 2%), ຂາຍອອນລາຍ 10% (ເກົ່າ 2%),
+ * ເງິນປັນຜົນ 10%, ດອກເບ້ຍ 10%, ຄ່າລິຂະສິດ 5%; ອື່ນໆ ໃຫ້ປ້ອນເອງ. ລຳດັບໃນລາຍການ = ທີ່ໃຊ້ເລື້ອຍກ່ອນ
+ */
 const INCOME_TYPES = [
+  { value: 6, label: 'whtTypeCommission', rate: 10 },
+  { value: 7, label: 'whtTypeConstruction', rate: 5 },
+  { value: 8, label: 'whtTypeOnline', rate: 10 },
   { value: 1, label: 'whtTypeService', rate: 0 },
   { value: 2, label: 'whtTypeDividend', rate: 10 },
   { value: 3, label: 'whtTypeInterest', rate: 10 },
@@ -66,8 +73,9 @@ const WhtForm = ({ onClose, onSaved }: { onClose: () => void; onSaved: () => voi
   const { rows: accounts } = useChartAccounts();
   const options = useAccountOptions(accounts, (a) => [2, 5].includes(Number(a.account_group)));
   const [inputs, setInputs] = useState<WhtInputs>({
-    wht_date: new Date(), income_type: 1, payee_name: '', payee_tax_id: '', gross_amount: null,
-    rate: 0, wht_amount: null, reference: '', debit_account_id: null, note: '',
+    // ເລີ່ມທີ່ປະເພດທີ່ໃຊ້ເລື້ອຍສຸດ (ຄ່ານາຍໜ້າ/ທີ່ປຶກສາ/ຄ່າບໍລິການ 10%)
+    wht_date: new Date(), income_type: 6, payee_name: '', payee_tax_id: '', gross_amount: null,
+    rate: 10, wht_amount: null, reference: '', debit_account_id: null, note: '',
   });
   const [postingOpen, setPostingOpen] = useState(false);
   const [saving, setSaving] = useState(false);
