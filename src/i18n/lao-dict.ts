@@ -654,7 +654,7 @@ export const laoDict = {
   acgModeFullNote: { la: 'ຟັງຊັນລຸ່ມນີ້ ເປີດ/ປິດແຍກໄດ້ຕາມທີ່ບໍລິສັດໃຊ້', en: 'Each feature below can still be switched on or off', cn: '下方各功能仍可单独开关' },
   acgInvoice: { la: 'ໃບເກັບເງິນອາກອນ', en: 'Tax invoice', cn: '增值税发票' },
   acgInvoiceHint: { la: 'ຂໍ້ມູນທີ່ພິມໃສ່ໃບເກັບເງິນ (ລູກໜີ້ → ໃບແຈ້ງໜີ້ → ພິມໃບເກັບເງິນ)', en: 'What is printed on invoices (Receivables → Invoices → Print invoice)', cn: '打印在发票上的信息（应收 → 发票 → 打印发票）' },
-  acgInvoiceLicenseHint: { la: 'ເລກທີທີ່ກົມສ່ວຍສາອາກອນອະນຸຍາດໃຫ້ນຳໃຊ້ໃບເກັບເງິນ — ພິມທ້າຍໃບ', en: 'The permit number from the Tax Department — printed at the bottom', cn: '税务局批准使用发票的编号 — 打印在页脚' },
+  acgInvoiceLicenseHint: { la: 'ເລກທີ ແລະ ວັນທີທີ່ສ່ວຍສາອາກອນອະນຸຍາດໃຫ້ພິມ/ນຳໃຊ້ໃບເກັບເງິນ (ດຳລັດ 297/ລບ ມາດຕາ 9) — ພິມທ້າຍທຸກໃບ', en: 'Permit number and date from the tax office (Decree 297 art. 9) — printed at the bottom of every invoice', cn: '税务部门批准印制/使用发票的编号及日期（第297号法令第9条）— 打印在每张发票底部' },
   acgInvoiceBank: { la: 'ບັນຊີທະນາຄານທີ່ພິມໃສ່ໃບ', en: 'Bank account on invoices', cn: '发票上的银行账户' },
   acgInvoiceBankHint: { la: 'ໃຫ້ລູກຄ້າໂອນເງິນເຂົ້າບັນຊີນີ້', en: 'Customers pay into this account', cn: '客户转账至此账户' },
   acgInvoiceBankNone: { la: 'ບໍ່ພິມບັນຊີ', en: 'Do not print an account', cn: '不打印账户' },

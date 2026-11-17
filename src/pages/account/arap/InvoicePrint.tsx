@@ -49,8 +49,8 @@ const TinBoxes = ({ value }: { value?: string | null }) => {
   );
 };
 
-/** ປ້າຍສອງພາສາ: ລາວ / English */
-const Bi = ({ la, en }: { la: string; en: string }) => <><span>{la}</span> <em>/ {en}</em></>;
+/** ປ້າຍສອງພາສາ — ດຳລັດ 297/ລບ ມາດຕາ 12: ພາສາຕ່າງປະເທດຢູ່ໃນວົງເລັບ ແລະ ໂຕນ້ອຍກວ່າ */
+const Bi = ({ la, en }: { la: string; en: string }) => <><span>{la}</span> <em>({en})</em></>;
 
 /**
  * ໃບເກັບເງິນອາກອນມູນຄ່າເພີ່ມ (ລູກໜີ້) ສຳລັບພິມ — ຮູບແບບຂອງລະບົບເຮົາ (ສອງພາສາ, ຜູ້ຂາຍຊ້າຍ / ຫົວໃບຂວາ) ເທິງພື້ນຫຼັງ
@@ -125,9 +125,9 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
             </dl>
           </div>
           <div className="acc-ivp-titlecard">
-            <span className="acc-ivp-copy">{t(copy.label)} · {copy.en}</span>
+            <span className="acc-ivp-copy">{t(copy.label)} <em>({copy.en})</em></span>
             <h1>{t('ivpTitle')}</h1>
-            <h2>{taxed ? 'TAX INVOICE' : 'INVOICE'}</h2>
+            <h2>({taxed ? 'TAX INVOICE' : 'INVOICE'})</h2>
             {taxed && <p>{t('ivpVatLine')}</p>}
             <dl>
               <dt><Bi la={t('ivpNumber')} en="No." /></dt><dd><b>{doc.doc_number}</b></dd>
@@ -153,9 +153,9 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
           </div>
           <div className="acc-ivp-pay">
             <small><Bi la={t('ivpPayment')} en="Payment" /></small>
-            <span><i /> {t('ivpCash')} <em>Cash</em></span>
-            <span><i /> {t('ivpTransfer')} <em>Transfer</em></span>
-            <span><i /> {t('ivpCredit')} <em>Credit</em></span>
+            <span><i /> {t('ivpCash')} <em>(Cash)</em></span>
+            <span><i /> {t('ivpTransfer')} <em>(Transfer)</em></span>
+            <span><i /> {t('ivpCredit')} <em>(Credit)</em></span>
           </div>
         </section>
 
@@ -163,12 +163,12 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
         <table className="acc-ivp-lines">
           <thead>
             <tr>
-              <th><span>{t('ivpNo')}</span><em>No.</em></th>
-              <th><span>{t('ivpItem')}</span><em>Description</em></th>
-              <th><span>{t('ivpUnit')}</span><em>Unit</em></th>
-              <th><span>{t('ivpQty')}</span><em>Qty</em></th>
-              <th><span>{t('ivpUnitPrice')}</span><em>Unit price</em></th>
-              <th><span>{t('ivpLineTotal')}</span><em>Amount ({code})</em></th>
+              <th><span>{t('ivpNo')}</span><em>(No.)</em></th>
+              <th><span>{t('ivpItem')}</span><em>(Description)</em></th>
+              <th><span>{t('ivpUnit')}</span><em>(Unit)</em></th>
+              <th><span>{t('ivpQty')}</span><em>(Qty)</em></th>
+              <th><span>{t('ivpUnitPrice')}</span><em>(Unit price)</em></th>
+              <th><span>{t('ivpLineTotal')}</span><em>(Amount {code})</em></th>
             </tr>
             <tr className="is-index"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6 = 4 × 5</td></tr>
           </thead>

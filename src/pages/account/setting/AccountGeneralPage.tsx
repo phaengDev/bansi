@@ -149,7 +149,7 @@ const AccountGeneralPage = () => {
             {full && (
             <FormStep no={nextNo()} done={!!values.invoice_license} title={t('acgInvoice')} hint={t('acgInvoiceHint')}>
               <Field label={t('ivpLicense')} hint={t('acgInvoiceLicenseHint')} wide>
-                <Input value={values.invoice_license ?? ''} onChange={(v) => set('invoice_license', v)} disabled={!canEdit} placeholder="2026/XXXX" />
+                <Input value={values.invoice_license ?? ''} onChange={(v) => set('invoice_license', v)} disabled={!canEdit} placeholder="2026/XXXX, 01/02/2026" />
               </Field>
               <Field label={t('acgInvoiceBank')} hint={t('acgInvoiceBankHint')} wide>
                 <SelectPicker block data={bankAccounts.map((a) => accountOption(a))} value={values.invoice_account_id}
