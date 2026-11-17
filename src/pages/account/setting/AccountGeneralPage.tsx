@@ -7,8 +7,21 @@ import { useT } from '../../../context/LanguageContext';
 import { ChoiceTiles, FormStep } from './settingKit';
 import { runSave } from './settingApi';
 import {
-  refreshAccountSetting, saveAccountSetting, useAccountSetting, useAccountSettingLoaded, type AccountSetting, type FeatureKey,
+  COMPLIANCE_FEATURES, FULL_MODE, SIMPLE_MODE, refreshAccountSetting, saveAccountSetting, useAccountSetting, useAccountSettingLoaded,
+  type AccountSetting, type AccountingMode, type FeatureKey,
 } from '../accountSettings';
+
+/** ສິ່ງທີ່ມີໃນແຕ່ລະຮູບແບບ — ສະແດງໃຕ້ປຸ່ມເລືອກ ໃຫ້ເຫັນຄວາມຕ່າງກ່ອນປ່ຽນ */
+const MODE_ITEMS: Record<AccountingMode, { on: string[]; off: string[] }> = {
+  1: {
+    on: ['acgModeItemBooks', 'acgModeItemArAp', 'acgModeItemReports', 'acgModeItemPayroll'],
+    off: ['acgModeItemTax', 'acgModeItemLegal'],
+  },
+  2: {
+    on: ['acgModeItemBooks', 'acgModeItemArAp', 'acgModeItemReports', 'acgModeItemTax', 'acgModeItemLegal', 'acgModeItemPayrollTax'],
+    off: [],
+  },
+};
 
 /** ຟັງຊັນທີ່ເປີດ/ປິດໄດ້ — ບໍລິສັດທີ່ບໍ່ໃຊ້ ປິດໄວ້ ເມນູ/ໜ້າຂອງມັນຈະບໍ່ຂຶ້ນ */
 const FEATURES: { key: FeatureKey; icon: string; title: string; hint: string }[] = [
@@ -52,6 +65,12 @@ const AccountGeneralPage = () => {
 
   const set = <K extends keyof AccountSetting>(key: K, value: AccountSetting[K]) => setValues({ ...values, [key]: value });
   const on = (key: FeatureKey) => Number(values[key]) === 1;
+  const full = Number(values.accounting_mode) !== SIMPLE_MODE;
+  // ແບບທຳມະດາ: ຟັງຊັນອາກອນ/ມາດຕະຖານ ບໍ່ສະແດງ (ຄ່າທີ່ຕັ້ງໄວ້ຍັງເກັບຢູ່ — ປ່ຽນກັບກໍ່ໃຊ້ຄືເກົ່າ)
+  const features = FEATURES.filter((f) => full || !COMPLIANCE_FEATURES.includes(f.key));
+  let step = 1;
+  const nextNo = () => ++step;
+  const mode = MODE_ITEMS[full ? FULL_MODE : SIMPLE_MODE];
   const dirty = JSON.stringify(values) !== JSON.stringify(current);
 
   const submit = () =>
@@ -64,9 +83,34 @@ const AccountGeneralPage = () => {
   return (
     <div className="acs-page hr-company pay-settings">
       <Form fluid className="acc-book-main">
+        {/* ຮູບແບບການໃຊ້ງານ — ແບບທຳມະດາ ເກັບຂໍ້ມູນພາຍໃນ (ບໍ່ມີອາກອນ), ແບບຄົບ ຕາມກົດໝາຍບັນຊີ ແລະ ອາກອນ */}
+        <FormStep no={1} done title={t('acgMode')} hint={t('acgModeHint')}>
+          <ChoiceTiles<AccountingMode>
+            className="is-wide acg-mode-tiles"
+            label={t('acgMode')}
+            value={full ? FULL_MODE : SIMPLE_MODE}
+            disabled={!canEdit}
+            onChange={(v) => set('accounting_mode', v)}
+            options={[
+              { value: SIMPLE_MODE, label: t('acgModeSimple'), hint: t('acgModeSimpleHint'), icon: 'fa-book' },
+              { value: FULL_MODE, label: t('acgModeFull'), hint: t('acgModeFullHint'), icon: 'fa-scale-balanced' },
+            ]}
+          />
+          <div className="is-wide acg-mode-detail">
+            <ul>
+              {mode.on.map((k) => <li key={k} className="is-on"><i className="fa-solid fa-circle-check" /> {t(k)}</li>)}
+              {mode.off.map((k) => <li key={k} className="is-off"><i className="fa-solid fa-circle-minus" /> {t(k)}</li>)}
+            </ul>
+            <small>
+              <i className="fa-solid fa-circle-info" /> {t(full ? 'acgModeFullNote' : 'acgModeSimpleNote')}
+            </small>
+          </div>
+        </FormStep>
+
         <div className="pay-settings-grid">
           <div className="pay-settings-col">
-            <FormStep no={1} done={!!(values.chief_accountant && values.director)} title={t('acgSigners')} hint={t('acgSignersHint')}>
+            {full && (
+            <FormStep no={nextNo()} done={!!(values.chief_accountant && values.director)} title={t('acgSigners')} hint={t('acgSignersHint')}>
               <Field label={t('acgTaxId')} wide>
                 <Input value={values.tax_id ?? ''} onChange={(v) => set('tax_id', v)} disabled={!canEdit} placeholder="xxx-xxx-xxx" />
               </Field>
@@ -77,8 +121,9 @@ const AccountGeneralPage = () => {
                 <Input value={values.director ?? ''} onChange={(v) => set('director', v)} disabled={!canEdit} />
               </Field>
             </FormStep>
+            )}
 
-            <FormStep no={2} done title={t('acgNumberFormat')} hint={t('acgNumberFormatHint')}>
+            <FormStep no={nextNo()} done title={t('acgNumberFormat')} hint={t('acgNumberFormatHint')}>
               <ChoiceTiles<1 | 2>
                 className="is-wide"
                 label={t('acgNumberFormat')}
@@ -92,18 +137,20 @@ const AccountGeneralPage = () => {
               />
             </FormStep>
 
-            <FormStep no={3} done title={t('acgProfitTax')} hint={t('acgProfitTaxHint')}>
+            {full && (
+            <FormStep no={nextNo()} done title={t('acgProfitTax')} hint={t('acgProfitTaxHint')}>
               <Field label={t('acgProfitTaxRate')}>
                 <NumberInput value={Number(values.profit_tax_rate)} onChange={(v) => set('profit_tax_rate', Number(v) || 0)}
                   postfix="%" min={0} max={100} step={0.5} disabled={!canEdit}
                 />
               </Field>
             </FormStep>
+            )}
           </div>
 
           <div className="pay-settings-col">
-            <FormStep no={4} done title={t('acgFeatures')} hint={t('acgFeaturesHint')}>
-              {FEATURES.map((f) => (
+            <FormStep no={nextNo()} done title={t('acgFeatures')} hint={t('acgFeaturesHint')}>
+              {features.map((f) => (
                 <label key={f.key} className={`is-wide pay-policy-row${on(f.key) ? ' is-on' : ''}`}>
                   <Toggle checked={on(f.key)} onChange={(checked) => set(f.key, checked ? 1 : 0)} disabled={!canEdit} />
                   <span>
@@ -115,7 +162,8 @@ const AccountGeneralPage = () => {
               ))}
             </FormStep>
 
-            <FormStep no={5} done={!!values.policies} title={t('acgPolicies')} hint={t('acgPoliciesHint')}
+            {full && (
+            <FormStep no={nextNo()} done={!!values.policies} title={t('acgPolicies')} hint={t('acgPoliciesHint')}
               note={canEdit && (
                 <button type="button" className="acc-rp-btn" onClick={() => set('policies', t(POLICY_TEMPLATE_KEY))}>
                   <i className="fa-solid fa-wand-magic-sparkles" /> {t('acgPolicyUseTemplate')}
@@ -128,6 +176,7 @@ const AccountGeneralPage = () => {
                 />
               </Field>
             </FormStep>
+            )}
           </div>
         </div>
 

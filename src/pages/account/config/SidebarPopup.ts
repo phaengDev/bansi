@@ -1,3 +1,4 @@
+import type { MenuFeature } from '../accountSettings';
 /**
  * ເມນູຂອງແຖບໄອຄອນຊ້າຍ (`railNav` ຂອງ <AppPage>) ໃນໜ້າ popup ຂອງ Account desktop.
  * `label` ແລະ `group` ເປັນ key ຂອງພາສາ — ໃຊ້ `toRailNav()` ແປກ່ອນສົ່ງໃຫ້ <AppPage>.
@@ -9,7 +10,7 @@ export type SidebarPopupItem = {
   /** key ຂອງ src/i18n/lao-dict.ts */
   label: string;
   /** ຂຶ້ນສະເພາະເມື່ອບໍລິສັດເປີດຟັງຊັນນີ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ເບິ່ງ withFeatures() */
-  feature?: 'use_vat' | 'use_fixed_assets' | 'use_withholding' | 'use_fx_revaluation' | 'use_bank_reconciliation';
+  feature?: MenuFeature;
 };
 
 export type SidebarPopupGroup = {
@@ -105,8 +106,8 @@ export const STATEMENTS_MENU: SidebarPopupGroup[] = [
       { key: 'profitLoss', icon: 'fa-solid fa-scale-balanced', label: 'fsProfitLoss' },
       { key: 'cashFlow', icon: 'fa-solid fa-money-bill-transfer', label: 'fsCashFlow' },
       { key: 'balanceSheet', icon: 'fa-solid fa-landmark', label: 'fsBalanceSheet' },
-      { key: 'equity', icon: 'fa-solid fa-chart-column', label: 'fsEquityChanges' },
-      { key: 'notes', icon: 'fa-solid fa-file-lines', label: 'fsNotes' },
+      { key: 'equity', icon: 'fa-solid fa-chart-column', label: 'fsEquityChanges', feature: 'full_mode' },
+      { key: 'notes', icon: 'fa-solid fa-file-lines', label: 'fsNotes', feature: 'full_mode' },
     ],
   },
   {
@@ -229,7 +230,7 @@ export const CLOSING_MENU: SidebarPopupGroup[] = [
   {
     group: 'closeGroupTax',
     items: [
-      { key: 'profitTax', icon: 'fa-solid fa-percent', label: 'closeProfitTax' },
+      { key: 'profitTax', icon: 'fa-solid fa-percent', label: 'closeProfitTax', feature: 'full_mode' },
       { key: 'withholding', icon: 'fa-solid fa-hand-holding-dollar', label: 'closeWithholding', feature: 'use_withholding' },
     ],
   },

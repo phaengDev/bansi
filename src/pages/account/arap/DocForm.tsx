@@ -14,6 +14,7 @@ import { money } from '../gl/glApi';
 import { accountOptionLabel, useAccountOptions, useChartAccounts, amountFormatter } from '../gl/glKit';
 import { AP, AR, KINDS, isPartnerOf, usePartners, type Kind, type Partner } from './arapApi';
 import { PartnerForm } from './PartnerPage';
+import { useVatOn } from '../accountSettings';
 
 type Line = { key: number; account_id: number | null; description: string; amount: number | null };
 let seq = 0;
@@ -69,6 +70,9 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const [currencyId, setCurrencyId] = useState<number | null>(null);
   const [rate, setRate] = useState<number | null>(null);
   const [taxId, setTaxId] = useState<number | null>(null);
+  const vatOn = useVatOn();
+  /** ຊ່ອງອາກອນ — ເປີດອາກອນມູນຄ່າເພີ່ມ ຫຼື ໃບນີ້ມີອາກອນຢູ່ແລ້ວ */
+  const taxOn = vatOn || !!taxId;
   const [lines, setLines] = useState<Line[]>(() => [blankLine()]);
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -257,14 +261,15 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
                   onChange={(v) => { setCurrencyId(v); setRate(null); }}
                 />
               </div>
-              {isBase ? (
+              {/* ອາກອນ: ປິດອາກອນມູນຄ່າເພີ່ມ / ແບບທຳມະດາ = ບໍ່ມີຊ່ອງ (ໃບເກົ່າທີ່ມີອາກອນ ຍັງສະແດງ) */}
+              {isBase ? (taxOn && (
                 <div className="rs-form-group">
                   <label className="form-label">{t('incomeTaxField')}</label>
                   <SelectPicker block data={taxes.map((x) => ({ value: x._uuid, label: `${x.tax_code} · ${x.name} (${Number(x.rate)}%)` }))}
                     value={taxId} onChange={(v) => setTaxId(v as number | null)} placeholder={t('arapNoTax')} popupClassName="acc-book-menu"
                   />
                 </div>
-              ) : (
+              )) : (
                 <div className="rs-form-group">
                   <label className="form-label">{t('glExchangeRate')} (1 {code})<span className="text-danger">*</span></label>
                   <NumberInput value={effectiveRate || ''} min={0} controls={false} formatter={amountFormatter}
@@ -273,7 +278,7 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
                   />
                 </div>
               )}
-              {!isBase && (
+              {!isBase && taxOn && (
                 <div className="rs-form-group">
                   <label className="form-label">{t('incomeTaxField')}</label>
                   <SelectPicker block data={taxes.map((x) => ({ value: x._uuid, label: `${x.tax_code} · ${x.name} (${Number(x.rate)}%)` }))}
@@ -290,10 +295,12 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
                   <small>{t('arapSubtotal')} · {filled.length} {t('incomeItems')}</small>
                   <b>{money(net)}</b>
                 </div>
-                <div>
-                  <small>{t('incomeTaxField')}</small>
-                  <b>{money(taxed.tax)}</b>
-                </div>
+                {taxOn && (
+                  <div>
+                    <small>{t('incomeTaxField')}</small>
+                    <b>{money(taxed.tax)}</b>
+                  </div>
+                )}
                 <div className="is-total">
                   <small>{t('total')} ({code})</small>
                   <b>{money(taxed.total)}</b>

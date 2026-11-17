@@ -64,6 +64,8 @@ const PayrollSettingPage = () => {
   const t = useT();
   const [values, setValues] = useState<PayrollSettings | null>(null);
   const [defaults, setDefaults] = useState<PayrollSettings | null>(null);
+  /** ບໍລິສັດໃຊ້ບັນຊີແບບທຳມະດາ — ບໍ່ຫັກອາກອນລາຍໄດ້ (backend ບັງຄັບ); ຄ່າທີ່ຕັ້ງໄວ້ຍັງເກັບຢູ່ */
+  const [taxLocked, setTaxLocked] = useState(false);
   const [brackets, setBrackets] = useState<Bracket[]>([]);
   const [saving, setSaving] = useState(false);
   const expenseCategories = useFinanceCategories(2);
@@ -78,6 +80,7 @@ const PayrollSettingPage = () => {
       .then((res) => {
         load(res.data.data);
         setDefaults(res.data.defaults);
+        setTaxLocked(!!res.data.tax_locked);
       })
       .catch((error) => Notific.error(getErrorMessage(error)));
   }, []);
@@ -113,6 +116,8 @@ const PayrollSettingPage = () => {
   const rate = (key: 'sso_employee_rate' | 'sso_employer_rate') => (
     <NumberInput value={values[key]} onChange={(v) => set(key, num(v))} postfix="%" min={0} max={100} step={0.5} disabled={!canEdit || !values.sso_enabled} />
   );
+  /** ຂັ້ນອາກອນໃຊ້ຢູ່ແທ້ — ເປີດໄວ້ ແລະ ບໍ່ຖືກລັອກໂດຍບັນຊີແບບທຳມະດາ */
+  const taxActive = values.tax_enabled && !taxLocked;
   const offNote = (text: string) => <p className="is-wide pay-policy-off"><i className="fa-solid fa-ban" /> {text}</p>;
 
   return (
@@ -157,11 +162,11 @@ const PayrollSettingPage = () => {
             </FormStep>
           </div>
           <div className="pay-settings-col">
-            <FormStep no={4} done={values.tax_enabled} title={t('payTaxBrackets')} hint={t('payTaxBracketsHint')}
-              note={<PolicySwitch on={values.tax_enabled} onChange={(on) => set('tax_enabled', on)} />}
+            <FormStep no={4} done={values.tax_enabled && !taxLocked} title={t('payTaxBrackets')} hint={t('payTaxBracketsHint')}
+              note={!taxLocked && <PolicySwitch on={values.tax_enabled} onChange={(on) => set('tax_enabled', on)} />}
             >
-              {!values.tax_enabled && offNote(t('payTaxOffNote'))}
-              <div className={`is-wide pay-brackets${values.tax_enabled ? '' : ' is-off'}`}>
+              {taxLocked ? offNote(t('payTaxLockedNote')) : !values.tax_enabled && offNote(t('payTaxOffNote'))}
+              <div className={`is-wide pay-brackets${taxActive ? '' : ' is-off'}`}>
                 <div className="pay-bracket is-head">
                   <span>{t('payBracketFrom')}</span>
                   <span>{t('payBracketTo')}</span>
@@ -178,14 +183,14 @@ const PayrollSettingPage = () => {
                         <span className="pay-bracket-open">{t('payBracketAbove')}</span>
                       ) : (
                         <NumberInput value={b.upto ?? 0} onChange={(v) => updateBracket(b.key, { upto: num(v) })} formatter={kipFormatter}
-                          controls={false} prefix="≤ ₭" min={0} disabled={!canEdit || !values.tax_enabled}
+                          controls={false} prefix="≤ ₭" min={0} disabled={!canEdit || !taxActive}
                         />
                       )}
                       <NumberInput value={b.rate} onChange={(v) => updateBracket(b.key, { rate: num(v) })} postfix="%" min={0} max={100} step={1}
-                        disabled={!canEdit || !values.tax_enabled}
+                        disabled={!canEdit || !taxActive}
                       />
                       <button type="button" className="acc-gl-act is-danger" title={t('delete')}
-                        disabled={!canEdit || !values.tax_enabled || brackets.length <= 1 || last}
+                        disabled={!canEdit || !taxActive || brackets.length <= 1 || last}
                         onClick={() => setBrackets((list) => list.filter((x) => x.key !== b.key))}
                       >
                         <i className="fa-solid fa-xmark" />
@@ -193,9 +198,9 @@ const PayrollSettingPage = () => {
                     </div>
                   );
                 })}
-                <button type="button" className="acc-rp-btn" disabled={!canEdit || !values.tax_enabled} onClick={addBracket}><i className="fa-solid fa-plus" /> {t('payBracketAdd')}</button>
+                <button type="button" className="acc-rp-btn" disabled={!canEdit || !taxActive} onClick={addBracket}><i className="fa-solid fa-plus" /> {t('payBracketAdd')}</button>
               </div>
-              <Field label={t('payOtTaxFree')} hint={t('payOtTaxFreeHint')}>{money('ot_tax_free_salary', !values.tax_enabled)}</Field>
+              <Field label={t('payOtTaxFree')} hint={t('payOtTaxFreeHint')}>{money('ot_tax_free_salary', !taxActive)}</Field>
             </FormStep>
 
             <FormStep no={5} done={values.advance_enabled} title={t('advMenu')} hint={t('advSettingHint')}

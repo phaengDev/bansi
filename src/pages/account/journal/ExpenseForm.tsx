@@ -22,6 +22,7 @@ import SubCategoryField from './SubCategoryField';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
 import { kip, type BudgetCheck } from '../budget/budgetApi';
 import { BudgetHint } from '../budget/BudgetKit';
+import { useVatOn } from '../accountSettings';
 
 const { NumberType, DateType } = Schema.Types;
 
@@ -129,6 +130,7 @@ type Props = {
  */
 const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const t = useT();
+  const vatOn = useVatOn();
   const formRef = useRef<FormInstance>(null);
   const isEdit = !!data;
   const [saving, setSaving] = useState(false);
@@ -556,8 +558,8 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
                 placeholder="XXX-XXXX-XXXXX" icon={<i className="fa-solid fa-hashtag" />}
               />
             )}
-            {/* ອາກອນ 3 ທາງເລືອກ ຄິດຈາກ "ລວມເປັນເງິນ" ຂອງທຸກລາຍການ */}
-            {!isEdit && (
+            {/* ອາກອນ 3 ທາງເລືອກ ຄິດຈາກ "ລວມເປັນເງິນ" ຂອງທຸກລາຍການ; ປິດອາກອນມູນຄ່າເພີ່ມ / ແບບທຳມະດາ = ບໍ່ມີ */}
+            {!isEdit && vatOn && (
             <ChoiceTiles<TaxMode>
               className="is-wide acc-jr-tax-tiles"
               label={t('incomeTaxField')}
@@ -600,10 +602,12 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
                 <small>{t('expenseSubtotal')} · {itemCount} {t('incomeItems')}</small>
                 <b>{money(subtotal)}</b>
               </div>
-              <div>
-                <small>{t('incomeTaxField')}</small>
-                <b>{money(calc.tax)}</b>
-              </div>
+              {(vatOn || calc.tax > 0) && (
+                <div>
+                  <small>{t('incomeTaxField')}</small>
+                  <b>{money(calc.tax)}</b>
+                </div>
+              )}
               <div className="is-total">
                 <small>{t('expenseTotal')}</small>
                 <b>−{money(calc.total)}</b>

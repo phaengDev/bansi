@@ -20,6 +20,7 @@ import {
 import { useAccountClasses, useFinanceCategories, useTaxes, type FinanceSubCategory } from '../../../utils/selectOption';
 import SubCategoryField from './SubCategoryField';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
+import { useVatOn } from '../accountSettings';
 
 export { CASH, TRANSFER };
 
@@ -85,6 +86,7 @@ type Props = {
  */
 const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const t = useT();
+  const vatOn = useVatOn();
   const formRef = useRef<FormInstance>(null);
   const isEdit = !!data;
   const [saving, setSaving] = useState(false);
@@ -347,7 +349,8 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
                     formatter={toThousands} prefix={symbol || undefined} controls={false}
                   />
                 </div>
-                {/* ອາກອນ 3 ທາງເລືອກ — ແຖວດຽວແບບນ້ອຍ, ແຄບກໍ່ເລື່ອນຂ້າງ (ບໍ່ຕົກແຖວ) */}
+                {/* ອາກອນ 3 ທາງເລືອກ — ແຖວດຽວແບບນ້ອຍ, ແຄບກໍ່ເລື່ອນຂ້າງ (ບໍ່ຕົກແຖວ); ປິດອາກອນມູນຄ່າເພີ່ມ / ແບບທຳມະດາ = ບໍ່ມີ */}
+                {vatOn && (
                 <ChoiceTiles<TaxMode>
                   className="acc-jr-tax-tiles"
                   label={t('incomeTaxField')}
@@ -359,6 +362,7 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
                     { value: 'manual', label: t('incomeTaxManual'), icon: 'fa-keyboard' },
                   ]}
                 />
+                )}
                 {taxMode === 'select' && (
                   <div className="is-wide">
                     <PickerField name="tax_id" label={t('incomeTaxPick')} data={taxOptions} placeholder={t('select')}
@@ -392,10 +396,12 @@ const IncomeForm = ({ data, accounts, onClose, onSaved }: Props) => {
                 <small>{t('incomeAmount')}</small>
                 <b>{money(isEdit ? Number(data.balances) || 0 : amount)}</b>
               </div>
-              <div>
-                <small>{t('incomeTaxField')}</small>
-                <b>{money(calc.tax)}</b>
-              </div>
+              {(vatOn || calc.tax > 0) && (
+                <div>
+                  <small>{t('incomeTaxField')}</small>
+                  <b>{money(calc.tax)}</b>
+                </div>
+              )}
               <div className="is-total">
                 <small>{t('incomeTotal')}</small>
                 <b>+{money(calc.total)}</b>

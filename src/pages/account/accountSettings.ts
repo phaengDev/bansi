@@ -2,7 +2,13 @@ import { useSyncExternalStore } from 'react';
 import { applyNumberStyle, getApi, putApi, type NumberStyle } from '../../utils/configApi';
 
 /** GET /account-setting — ຕັ້ງຄ່າບັນຊີຂອງບໍລິສັດ (ແຖວດຽວ) */
+/** 1 = ແບບທຳມະດາ (ເກັບຂໍ້ມູນພາຍໃນ ບໍ່ມີອາກອນ), 2 = ຄົບຕາມມາດຕະຖານ (ກົດໝາຍບັນຊີ + ອາກອນ) */
+export type AccountingMode = 1 | 2;
+export const SIMPLE_MODE: AccountingMode = 1;
+export const FULL_MODE: AccountingMode = 2;
+
 export type AccountSetting = {
+  accounting_mode: AccountingMode;
   number_format: NumberStyle;
   tax_id: string | null;
   chief_accountant: string | null;
@@ -21,8 +27,15 @@ export type AccountSetting = {
 /** ຟັງຊັນທີ່ບໍລິສັດເປີດ/ປິດໄດ້ — ປິດ = ເມນູ ແລະ ໜ້າທີ່ກ່ຽວຂ້ອງບໍ່ຂຶ້ນ */
 export type FeatureKey = 'use_vat' | 'use_fixed_assets' | 'use_withholding' | 'use_fx_revaluation' | 'use_bank_reconciliation';
 
+/** ຟັງຊັນທີ່ມີສະເພາະແບບຄົບຕາມມາດຕະຖານ — ແບບທຳມະດາປິດສະເໝີ (ບໍ່ສະແດງໃນໜ້າຕັ້ງຄ່າ) */
+export const COMPLIANCE_FEATURES: FeatureKey[] = ['use_vat', 'use_withholding', 'use_fx_revaluation'];
+
+/** ເງື່ອນໄຂຂອງເມນູ: ຟັງຊັນ ຫຼື 'full_mode' (ສະເພາະແບບຄົບຕາມມາດຕະຖານ ເຊັ່ນ ອາກອນກຳໄລ, ບົດອະທິບາຍງົບການເງິນ) */
+export type MenuFeature = FeatureKey | 'full_mode';
+
 /** ຄ່າຕັ້ງຕົ້ນ (ກົງກັບ model ຂອງ backend) — ໃຊ້ກ່ອນໂຫຼດແລ້ວ ຫຼື ໂຫຼດບໍ່ໄດ້ */
 export const DEFAULT_ACCOUNT_SETTING: AccountSetting = {
+  accounting_mode: FULL_MODE,
   number_format: 1,
   tax_id: null,
   chief_accountant: null,
@@ -44,6 +57,7 @@ const notify = () => listeners.forEach((fn) => fn());
 const accept = (row: Partial<AccountSetting> | null | undefined) => {
   setting = { ...DEFAULT_ACCOUNT_SETTING, ...(row ?? {}) };
   setting.number_format = Number(setting.number_format) === 2 ? 2 : 1;
+  setting.accounting_mode = Number(setting.accounting_mode) === SIMPLE_MODE ? SIMPLE_MODE : FULL_MODE;
   applyNumberStyle(setting.number_format);
   notify();
 };
@@ -78,4 +92,14 @@ export const useAccountSetting = (): AccountSetting => useSyncExternalStore(subs
 /** ໂຫຼດແລ້ວບໍ່ — ໜ້າທີ່ຂຶ້ນກັບຟັງຊັນ (ເຊັ່ນ ເມນູ) ລໍຖ້າອັນນີ້ ບໍ່ໃຫ້ເມນູທີ່ປິດໄວ້ກະພິບຂຶ້ນ */
 export const useAccountSettingLoaded = () => useSyncExternalStore(subscribe, () => setting !== null);
 
-export const featureOn = (s: AccountSetting, key: FeatureKey) => Number(s[key]) === 1;
+export const isFullMode = (s: AccountSetting) => Number(s.accounting_mode) !== SIMPLE_MODE;
+
+/** ເປີດໃຊ້ຢູ່ບໍ — ຟັງຊັນອາກອນ/ມາດຕະຖານ ປິດສະເໝີໃນແບບທຳມະດາ (ກົງກັບ featureOn ຂອງ backend) */
+export const featureOn = (s: AccountSetting, key: MenuFeature) => {
+  if (key === 'full_mode') return isFullMode(s);
+  if (COMPLIANCE_FEATURES.includes(key) && !isFullMode(s)) return false;
+  return Number(s[key]) === 1;
+};
+
+/** ອາກອນມູນຄ່າເພີ່ມໃຊ້ໄດ້ບໍ — ປິດ = ຟອມລາຍຮັບ-ລາຍຈ່າຍ/ໃບແຈ້ງໜີ້ ບໍ່ມີຊ່ອງອາກອນ */
+export const useVatOn = () => featureOn(useAccountSetting(), 'use_vat');

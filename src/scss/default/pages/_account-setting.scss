@@ -8152,3 +8152,49 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     font-weight: 700;
   }
 }
+
+// ຕັ້ງຄ່າທົ່ວໄປ: ຮູບແບບການໃຊ້ງານ — ລາຍການທີ່ມີ (✓) / ບໍ່ມີ (−) ຂອງຮູບແບບທີ່ເລືອກ
+.acg-mode-detail {
+  padding: 12px 14px;
+  border: 1px solid #e3eaf0;
+  border-radius: 12px;
+  background: #f8fafc;
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 18px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    color: #2b4257;
+    font-size: 13px;
+    line-height: 1.45;
+
+    i { flex: none; font-size: 12px; }
+    &.is-on i { color: #16a34a; }
+    &.is-off { color: #8a9aa8; text-decoration: line-through; text-decoration-color: #c5d0d9; }
+    &.is-off i { color: #b6c2cc; }
+  }
+
+  > small {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    color: #6b7c8b;
+    font-size: 12px;
+    line-height: 1.5;
+
+    i { color: #8a9aa8; }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .acg-mode-detail ul { grid-template-columns: 1fr; }
+}

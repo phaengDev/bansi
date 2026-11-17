@@ -12,6 +12,7 @@ import { currencySymbol } from '../ledger/currency';
 import { expenseDateOf, type Expense } from './ExpenseForm';
 import { RECEIPT_PRINT_CSS, TRANSFER, blobErrorMessage, formatQty, saveBlob } from './journalKit';
 import { CustomerLabel } from './CustomerField';
+import { useVatOn } from '../accountSettings';
 
 const ACTIVE = 1;
 
@@ -27,6 +28,7 @@ const ExpenseDetail = ({ expense, onClose, onEdit, onCancel }: {
   onCancel?: () => void;
 }) => {
   const t = useT();
+  const vatOn = useVatOn();
   const receiptRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [makingImage, setMakingImage] = useState(false);
@@ -110,8 +112,8 @@ const ExpenseDetail = ({ expense, onClose, onEdit, onCancel }: {
             <b>−{money(Number(expense.balance_expense) || 0)}</b>
             <span>
               {t('expenseSubtotal')} {money(Number(expense.subtotal) || 0)}
-              {' · '}
-              {t('incomeTaxField')} {money(Number(expense.tax) || 0)}
+              {/* ອາກອນ 0 ແລະ ບໍລິສັດບໍ່ໃຊ້ອາກອນມູນຄ່າເພີ່ມ = ບໍ່ຕ້ອງສະແດງ */}
+              {(vatOn || (Number(expense.tax) || 0) > 0) && <>{' · '}{t('incomeTaxField')} {money(Number(expense.tax) || 0)}</>}
             </span>
             {!active && <em className="acc-inv-stamp">{t('incomeCancelled')}</em>}
           </div>
