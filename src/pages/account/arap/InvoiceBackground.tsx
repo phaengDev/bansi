@@ -1,7 +1,72 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 /**
- * ພື້ນຫຼັງຂອງໃບເກັບເງິນອາກອນ (A4, ຫົວໜ່ວຍ mm) — ອົງປະກອບຄືແບບຟອມທາງການ: ເສັ້ນລາຍລະອຽດ (guilloche) ທົ່ວໜ້າ,
+ * ພາບພື້ນຫຼັງທາງການຂອງໃບເກັບເງິນອາກອນ (ຂອບ, ລາຍກະໜົກ, ໂລ່ ສ່ວຍສາອາກອນ — ຕ້ອງຄືແບບຟອມຂອງກົມສ່ວຍສາອາກອນທຸກເສັ້ນ):
+ * ວາງໄຟລ໌ A4 ຕັ້ງ (ລາຍສີດຽວເທິງພື້ນຂາວ ຫຼື ໂປ່ງໃສ, ≥ 1240×1754px) ໄວ້ທີ່ public/assets/. ລະບົບປ່ຽນສີໃຫ້ຕາມສະບັບ
+ * (ລາຍຄືເກົ່າ ຕ່າງແຕ່ສີ). ບໍ່ມີໄຟລ໌ = ໃຊ້ລາຍທີ່ແຕ້ມດ້ວຍ SVG ລຸ່ມນີ້ແທນ (ສຳລັບທົດລອງເທົ່ານັ້ນ)
+ */
+const ARTWORK_URLS = ['/assets/invoice-background.png', '/assets/invoice-background.jpg'];
+
+/** ພາບທາງການທີ່ໂຫຼດໄດ້ (null = ບໍ່ມີໄຟລ໌) — ໂຫຼດເທື່ອດຽວຕໍ່ການເປີດໜ້າ */
+let artworkPromise: Promise<HTMLImageElement | null> | null = null;
+const loadArtwork = () => {
+  artworkPromise ??= ARTWORK_URLS.reduce<Promise<HTMLImageElement | null>>(
+    (prev, url) => prev.then((found) => found ?? new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.naturalWidth > 0 ? img : null);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    })),
+    Promise.resolve(null),
+  );
+  return artworkPromise;
+};
+
+/** ສີ → ພາບທີ່ປ່ຽນສີແລ້ວ (data URL) — ຄວາມເຂັ້ມຂອງລາຍ = ຄວາມຕ່າງຈາກສີຂາວ, ສີ = ສີຂອງສະບັບ */
+const tinted = new Map<string, string>();
+const tintArtwork = (img: HTMLImageElement, color: string) => {
+  const cached = tinted.get(color);
+  if (cached) return cached;
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0);
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const hex = color.replace('#', '');
+  const [tr, tg, tb] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const px = data.data;
+  for (let i = 0; i < px.length; i += 4) {
+    const ink = 255 - Math.min(px[i], px[i + 1], px[i + 2]);
+    px[i + 3] = Math.round((ink * px[i + 3]) / 255);
+    px[i] = tr;
+    px[i + 1] = tg;
+    px[i + 2] = tb;
+  }
+  ctx.putImageData(data, 0, 0);
+  const url = canvas.toDataURL('image/png');
+  tinted.set(color, url);
+  return url;
+};
+
+/** ພາບທາງການໃນສີທີ່ກຳນົດ — undefined = ກຳລັງກວດ, null = ບໍ່ມີໄຟລ໌ (ໃຊ້ SVG) */
+const useOfficialArtwork = (color: string) => {
+  const [url, setUrl] = useState<string | null | undefined>(() => tinted.get(color));
+  useEffect(() => {
+    let alive = true;
+    loadArtwork().then((img) => {
+      if (alive) setUrl(img ? tintArtwork(img, color) : null);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [color]);
+  return url;
+};
+
+/**
+ * ພື້ນຫຼັງທີ່ແຕ້ມເອງ (ໃຊ້ເມື່ອຍັງບໍ່ມີໄຟລ໌ທາງການ) (A4, ຫົວໜ່ວຍ mm): ເສັ້ນລາຍລະອຽດ (guilloche) ທົ່ວໜ້າ,
  * ເສັ້ນລັດສະໝີຈາກກາງ, ວົງລາຍຄື້ນອ້ອມກາງ, ຂອບລາຍເຊືອກ 2 ຊັ້ນ, ລາຍກະໜົກຢູ່ 4 ມຸມ, ດອກບົວຂ້າງຊ້າຍ-ຂວາ ແລະ
  * ໂລ່ "ສ່ວຍສາອາກອນ" ຈາງໆຢູ່ກາງ. ສີທັງໝົດ = currentColor (ສີຂອງສະບັບ — ກຳນົດຈາກ CSS color ຂອງ <svg>)
  */
@@ -89,7 +154,14 @@ const LAUREL = Array.from({ length: 9 }, (_, i) => {
   return { x: r(x), y: r(y), deg: r(deg) };
 });
 
-const InvoiceBackground = () => {
+/** ພື້ນຫຼັງຂອງສະບັບ — color = ສີຂອງສະບັບ (ພາບທາງການຖືກປ່ຽນເປັນສີນີ້) */
+const InvoiceBackground = ({ color }: { color: string }) => {
+  const art = useOfficialArtwork(color);
+  if (art) return <img className="acc-ivp-bg" src={art} alt="" aria-hidden="true" />;
+  return <DrawnBackground />;
+};
+
+const DrawnBackground = () => {
   const id = useId().replace(/:/g, '');
   return (
     <svg className="acc-ivp-bg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">

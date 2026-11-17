@@ -22,22 +22,29 @@ const PRINT_CSS = `
 
 /** ສະບັບ: 1 ສຳລັບຜູ້ຊື້ (ສີຂຽວ), 2 ສຳລັບຜູ້ຂາຍ ເກັບໄວ້ (ສີມ່ວງ) — ລາຍພື້ນຫຼັງດຽວກັນ ຕ່າງແຕ່ສີ */
 const COPIES = [
-  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer', tone: 'is-buyer' },
-  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller', tone: 'is-seller' },
+  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer', tone: 'is-buyer', color: '#0b7a62' },
+  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller', tone: 'is-seller', color: '#5a3ea8' },
 ];
 
 /** ແຖວຕ່ຳສຸດຂອງຕາຕະລາງ (ເຕີມແຖວວ່າງ ໃຫ້ໃບເບິ່ງຄົບຄືແບບຟອມ) */
-const MIN_ROWS = 7;
+const MIN_ROWS = 5;
 
-/** ກ່ອງເລກປະຈຳຕົວຜູ້ເສຍອາກອນ: 9 ຕົວ - 3 ຕົວ (ຫວ່າງ = ກ່ອງເປົ່າໃຫ້ຂຽນເອງ) */
+/** ກ່ອງເລກປະຈຳຕົວຜູ້ເສຍອາກອນ ແບບຟອມທາງການ: 9 - 1 - 2 ຕົວ (ເຊັ່ນ 574155778-0-00); ຫວ່າງ = ກ່ອງເປົ່າໃຫ້ຂຽນເອງ */
+const TIN_GROUPS = [9, 1, 2];
 const TinBoxes = ({ value }: { value?: string | null }) => {
   const digits = String(value ?? '').replace(/\D/g, '').split('');
-  const box = (i: number) => <i key={i}>{digits[i] ?? ''}</i>;
+  let index = 0;
   return (
     <span className="acc-ivp-tin">
-      {Array.from({ length: 9 }, (_, i) => box(i))}
-      <b>-</b>
-      {Array.from({ length: Math.max(3, digits.length - 9) }, (_, i) => box(9 + i))}
+      {TIN_GROUPS.map((size, g) => (
+        <span key={g}>
+          {g > 0 && <b>-</b>}
+          {Array.from({ length: size }, () => {
+            const i = index++;
+            return <i key={i}>{digits[i] ?? ''}</i>;
+          })}
+        </span>
+      ))}
     </span>
   );
 };
@@ -78,8 +85,8 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
   const address = [company?.village && `${t('ivpVillage')} ${company.village}`, company?.district?.district_name && `${t('ivpDistrict')} ${company.district.district_name}`,
     company?.district?.province?.province_name && `${t('ivpProvince')} ${company.district.province.province_name}`].filter(Boolean).join(', ');
   const phones = [company?.phone1, company?.phone2].filter(Boolean).join(', ');
-  const bankText = bankAccount
-    ? [bankAccount.acount_number, bankAccount.banks?.name_la || bankAccount.banks?.abbr, bankAccount.acountName].filter(Boolean).join(' · ')
+  const bankName = bankAccount?.banks
+    ? `${bankAccount.banks.name_la ?? ''}${bankAccount.banks.abbr ? ` (${bankAccount.banks.abbr})` : ''}`.trim()
     : '';
   const partner = doc.partner;
   const rows = [...doc.lines.map((l) => ({ ...l, empty: false })), ...Array.from({ length: Math.max(0, MIN_ROWS - doc.lines.length) }, () => null)];
@@ -91,8 +98,12 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
 
   const page = (copy: (typeof COPIES)[number]) => (
     <section key={copy.no} className={`acc-ivp-page ${copy.tone}`}>
-      <InvoiceBackground />
+      <InvoiceBackground color={copy.color} />
       <div className="acc-ivp-body">
+        <p className="acc-ivp-nation">
+          <span>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</span>
+          <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</span>
+        </p>
         {/* ---- ຫົວ: ຜູ້ຂາຍ (ຊ້າຍ) + ບັດຫົວໃບ (ຂວາ) ---- */}
         <header className="acc-ivp-top">
           <div className="acc-ivp-seller">
@@ -107,7 +118,9 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
             <dl>
               <dt><Bi la={t('ivpAddress')} en="Address" /></dt><dd>{address || '……………………………………'}</dd>
               <dt><Bi la={t('ivpPhone')} en="Tel" /></dt><dd>{phones || '……………………'}</dd>
-              <dt><Bi la={t('ivpBankAcc')} en="Bank account" /></dt><dd>{bankText || '……………………………………'}</dd>
+              <dt><Bi la={t('ivpAccNo')} en="Account no." /></dt><dd>{bankAccount?.acount_number || '……………………………………'}</dd>
+              <dt><Bi la={t('ivpAccName')} en="Account name" /></dt><dd>{bankAccount?.acountName || '……………………………………'}</dd>
+              <dt><Bi la={t('ivpBankName')} en="Bank" /></dt><dd>{bankName || '……………………………………'}</dd>
               <dt><Bi la={t('acgTaxId')} en="TIN" /></dt><dd><TinBoxes value={setting.tax_id} /></dd>
             </dl>
           </div>
@@ -133,7 +146,8 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
             <dl>
               <dt><Bi la={t('ivpAddress')} en="Address" /></dt><dd>{partner?.address || '……………………………………'}</dd>
               <dt><Bi la={t('ivpPhone')} en="Tel" /></dt><dd>{partner?.phone || '……………………'}</dd>
-              <dt><Bi la={t('ivpBankAcc')} en="Bank account" /></dt><dd>……………………………………</dd>
+              <dt><Bi la={t('ivpAccNo')} en="Account no." /></dt><dd>……………………………………</dd>
+              <dt><Bi la={t('ivpBankName')} en="Bank" /></dt><dd>……………………………………</dd>
               <dt><Bi la={t('acgTaxId')} en="TIN" /></dt><dd><TinBoxes value={partner?.tax_number} /></dd>
             </dl>
           </div>

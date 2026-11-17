@@ -8305,6 +8305,21 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   width: 100%;
   height: 100%;
   color: var(--iv);
+  object-fit: fill;
+}
+
+// ຫົວປະເທດ (ຄືແບບຟອມທາງການ)
+.acc-ivp-nation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: -2mm 0 -1mm;
+  font-size: 9.5pt;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+
+  span:last-child { font-size: 8.5pt; font-weight: 600; }
 }
 
 .acc-ivp-body {
@@ -8313,8 +8328,8 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   height: 100%;
   box-sizing: border-box;
   flex-direction: column;
-  gap: 3mm;
-  padding: 15mm 15.5mm 12.5mm;
+  gap: 2.4mm;
+  padding: 13.5mm 15.5mm 12mm;
 
   // ປ້າຍສອງພາສາ: ລາວ / English (ພາສາອັງກິດນ້ອຍກວ່າ)
   em { color: var(--iv-muted); font-style: normal; font-size: 0.82em; }
@@ -8322,7 +8337,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   dl {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 0.9mm 3mm;
+    gap: 0.5mm 3mm;
     margin: 0;
   }
 
@@ -8397,7 +8412,8 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     font-size: 9pt;
   }
 
-  b { color: var(--iv); }
+  b { color: var(--iv); margin: 0 0.3mm; }
+  > span { display: inline-flex; align-items: center; gap: 0.45mm; }
 }
 
 // ---- ຜູ້ຊື້ ----
@@ -8457,13 +8473,13 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   th:nth-child(5) { width: 27mm; }
   th:nth-child(6) { width: 31mm; }
 
-  tbody td { height: 5.6mm; padding-top: 0.8mm; padding-bottom: 0.8mm; }
+  tbody td { height: 5.2mm; padding-top: 0.6mm; padding-bottom: 0.6mm; }
   tbody td:nth-child(1),
   tbody td:nth-child(3),
   tbody td:nth-child(4) { text-align: center; }
   tbody td:nth-child(5),
   tbody td:nth-child(6) { text-align: right; }
-  tbody tr.is-blank td { height: 5.6mm; }
+  tbody tr.is-blank td { height: 5.2mm; }
 }
 
 // ---- ລວມ ----
@@ -8514,7 +8530,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   span { display: flex; flex-direction: column; align-items: center; }
   small { margin-bottom: 1mm; color: var(--iv-muted); font-size: 8pt; }
   b { font-size: 9.5pt; font-weight: 800; }
-  i { display: block; width: 72%; height: 14mm; border-bottom: 0.3mm dotted #8a9aa8; }
+  i { display: block; width: 72%; height: 11mm; border-bottom: 0.3mm dotted #8a9aa8; }
   em { margin-top: 1mm; }
 }
 
