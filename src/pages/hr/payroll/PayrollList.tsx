@@ -8,6 +8,7 @@ import { useT } from '../../../context/LanguageContext';
 import { ListState } from '../../account/setting/settingKit';
 import { periodLabel } from '../attendance/attendanceApi';
 import { PAID, accountText, employeeDeductions, kip, usePayrolls, type Payroll } from './payrollApi';
+import ViewSwitch, { useSavedView, type ViewOption } from '../../../components/Elements/ViewSwitch';
 
 const MONTH_KEYS = [
   'january', 'february', 'march', 'april', 'may', 'june',
@@ -64,6 +65,189 @@ const PayrollBook = ({ run, onOpen }: { run: Payroll; onOpen: () => void }) => {
 
 type PageKind = 'upcoming' | 'current' | 'missed';
 
+/** ວິທີສະແດງ: ປຶ້ມ (ໜ້າລະເດືອນ) ຫຼື ພາບລວມປີ (ກຣາບ 12 ເດືອນ + ຕາຕະລາງ) — ຈື່ໄວ້ໃນເຄື່ອງນີ້ */
+type View = 'book' | 'year';
+const VIEWS: ViewOption<View>[] = [
+  { key: 'book', icon: 'fa-book-open', label: 'payViewBook' },
+  { key: 'year', icon: 'fa-chart-column', label: 'payViewYear' },
+];
+
+/** 57,629,255 → "57.6" (ລ້ານ) ສຳລັບປ້າຍເທິງແທ່ງກຣາບ */
+const millions = (value: number) => {
+  const m = value / 1_000_000;
+  return m >= 100 ? Math.round(m).toString() : m.toFixed(1);
+};
+
+type MonthCell = { period: string; run?: Payroll; kind?: PageKind };
+
+/**
+ * ພາບລວມປີ — ຕົວເລກລວມຂອງປີ, ກຣາບແທ່ງສຸດທິ 12 ເດືອນ (ຈ່າຍແລ້ວ = ຂຽວ, ຮ່າງ = ສົ້ມລາຍ, ຍັງບໍ່ສ້າງ = ເສັ້ນປະ)
+ * ແລະ ຕາຕະລາງລາຍເດືອນ + ລວມ. ກົດເດືອນທີ່ມີ = ເປີດລາຍລະອຽດ; ເດືອນທີ່ສ້າງໄດ້ = ປຸ່ມສ້າງ
+ */
+const PayrollYearView = ({ year, months, creating, onOpen, onCreate }: {
+  year: number;
+  months: MonthCell[];
+  creating: string | null;
+  onOpen: (id: number) => void;
+  onCreate: (period: string) => void;
+}) => {
+  const t = useT();
+  const monthName = useMonthName();
+  const runs = months.filter((m) => m.run).map((m) => m.run!);
+  const paid = runs.filter((r) => Number(r.status) === PAID);
+  const drafts = runs.filter((r) => Number(r.status) !== PAID);
+  const sum = (list: Payroll[], pick: (r: Payroll) => number) => list.reduce((n, r) => n + (Number(pick(r)) || 0), 0);
+  const peak = Math.max(1, ...runs.map((r) => Number(r.total_net) || 0));
+  const remit = sum(paid, (r) => Number(r.total_sso_employee) + Number(r.total_sso_employer) + Number(r.total_tax));
+
+  /** ປຸ່ມ/ສະຖານະຂອງເດືອນທີ່ບໍ່ມີເງິນເດືອນ */
+  const emptyAction = (cell: MonthCell) => {
+    if (cell.kind === 'upcoming') return <span className="pay-yr-muted"><i className="fa-solid fa-lock" /> {t('payOpensOn')} {moment(`${cell.period}-01`).format('DD/MM')}</span>;
+    if (cell.kind) {
+      return (
+        <button type="button" className="acc-rp-btn is-primary" disabled={!canCreate || creating === cell.period} onClick={() => onCreate(cell.period)}>
+          <i className={`fa-solid ${creating === cell.period ? 'fa-spinner fa-spin' : 'fa-plus'}`} /> {t('payCreate')}
+        </button>
+      );
+    }
+    return <span className="pay-yr-muted">—</span>;
+  };
+
+  return (
+    <div className="pay-yr">
+      <div className="pay-yr-kpis">
+        <div className="is-main">
+          <small>{t('payYrPaid')} · {paid.length} {t('payYrMonths')}</small>
+          <b>₭ {kip(sum(paid, (r) => r.total_net))}</b>
+          <em>{t('payGross')} ₭ {kip(sum(paid, (r) => r.total_gross))}</em>
+        </div>
+        <div className={drafts.length ? 'is-warn' : ''}>
+          <small>{t('payYrDraft')} · {drafts.length} {t('payYrMonths')}</small>
+          <b>₭ {kip(sum(drafts, (r) => r.total_net))}</b>
+          <em>{drafts.length ? t('payYrDraftHint') : t('payYrNoDraft')}</em>
+        </div>
+        <div>
+          <small>{t('payYrRemit')}</small>
+          <b>₭ {kip(remit)}</b>
+          <em>{t('payYrRemitHint')}</em>
+        </div>
+        <div>
+          <small>{t('payYrPeople')}</small>
+          <b>{runs.length ? Math.max(...runs.map((r) => Number(r.employees) || 0)) : 0} {t('hrPeople')}</b>
+          <em>{t('payYrPeopleHint')}</em>
+        </div>
+      </div>
+
+      <section className="pay-yr-card">
+        <header>
+          <h4><i className="fa-solid fa-chart-column" /> {t('payYrChart')} {year}</h4>
+          <span className="pay-yr-legend">
+            <span className="is-paid" /> {t('payStatusPaid')}
+            <span className="is-draft" /> {t('payStatusDraft')}
+            <small>{t('payYrUnit')}</small>
+          </span>
+        </header>
+        <div className="pay-yr-bars">
+          {months.map((cell) => {
+            const net = Number(cell.run?.total_net) || 0;
+            const state = cell.run ? (Number(cell.run.status) === PAID ? 'is-paid' : 'is-draft') : cell.kind ? `is-${cell.kind}` : 'is-none';
+            const content = (
+              <>
+                <span className="pay-yr-track">
+                  {cell.run
+                    ? <><em>{millions(net)}</em><i style={{ height: `${Math.max(4, (net / peak) * 100)}%` }} /></>
+                    : cell.kind && cell.kind !== 'upcoming' ? <b><i className="fa-solid fa-plus" /></b>
+                      : cell.kind === 'upcoming' ? <b><i className="fa-solid fa-lock" /></b> : null}
+                </span>
+                <small>{moment(`${cell.period}-01`).format('MM')}</small>
+              </>
+            );
+            const title = cell.run ? `${monthName(cell.period)} · ₭ ${kip(net)}` : monthName(cell.period);
+            if (cell.run) {
+              return <button key={cell.period} type="button" className={`pay-yr-bar ${state}`} title={title} onClick={() => onOpen(cell.run!._uuid)}>{content}</button>;
+            }
+            if (cell.kind && cell.kind !== 'upcoming') {
+              return (
+                <button key={cell.period} type="button" className={`pay-yr-bar ${state}`} title={`${t('payCreate')} · ${monthName(cell.period)}`}
+                  disabled={!canCreate || creating === cell.period} onClick={() => onCreate(cell.period)}
+                >
+                  {content}
+                </button>
+              );
+            }
+            return <span key={cell.period} className={`pay-yr-bar ${state}`} title={title}>{content}</span>;
+          })}
+        </div>
+      </section>
+
+      <section className="pay-yr-card">
+        <div className="pay-yr-scroll">
+          <table className="pay-yr-table">
+            <thead>
+              <tr>
+                <th>{t('payYrMonth')}</th>
+                <th>{t('status')}</th>
+                <th>{t('hrPeople')}</th>
+                <th>{t('payGross')}</th>
+                <th>{t('payDeductionTotal')}</th>
+                <th>{t('paySsoEmployer')}</th>
+                <th>{t('payNet')}</th>
+                <th>{t('payYrPaidOn')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {months.map((cell) => {
+                const run = cell.run;
+                if (!run) {
+                  return (
+                    <tr key={cell.period} className="is-empty">
+                      <td><b>{monthName(cell.period)}</b></td>
+                      <td colSpan={6}>{cell.kind ? <span className="pay-yr-muted">{t(PAGE_LABEL[cell.kind])}</span> : <span className="pay-yr-muted">{t('payYrNone')}</span>}</td>
+                      <td>{emptyAction(cell)}</td>
+                    </tr>
+                  );
+                }
+                const isPaid = Number(run.status) === PAID;
+                const deductions = employeeDeductions(run);
+                return (
+                  <tr key={cell.period} className="is-click" onClick={() => onOpen(run._uuid)}>
+                    <td><b>{monthName(cell.period)}</b><small>{run.workdays} {t('attWorkdays')}</small></td>
+                    <td>
+                      <span className={`pay-yr-pill ${isPaid ? 'is-paid' : 'is-draft'}`}>
+                        <i className={`fa-solid ${isPaid ? 'fa-circle-check' : 'fa-pen-ruler'}`} /> {t(isPaid ? 'payStatusPaid' : 'payStatusDraft')}
+                      </span>
+                    </td>
+                    <td>{run.employees}</td>
+                    <td>{kip(run.total_gross)}</td>
+                    <td className="is-minus">{deductions ? `−${kip(deductions)}` : '0'}</td>
+                    <td>{kip(run.total_sso_employer)}</td>
+                    <td className="is-net">{kip(run.total_net)}</td>
+                    <td>
+                      {isPaid
+                        ? <>{moment(run.pay_date).format('DD/MM/YYYY')}{run.account && <small>{accountText(run.account)}</small>}</>
+                        : <span className="pay-yr-muted"><i className="fa-solid fa-hand-pointer" /> {t('payOpenToPay')}</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={3}>{t('total')} · {runs.length} {t('payYrMonths')}</td>
+                <td>{kip(sum(runs, (r) => r.total_gross))}</td>
+                <td className="is-minus">−{kip(sum(runs, (r) => employeeDeductions(r)))}</td>
+                <td>{kip(sum(runs, (r) => r.total_sso_employer))}</td>
+                <td className="is-net">{kip(sum(runs, (r) => r.total_net))}</td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+};
+
 const PAGE_LABEL: Record<PageKind, string> = { upcoming: 'payUpcomingMonth', current: 'payNewMonth', missed: 'payMissedMonth' };
 
 /**
@@ -101,6 +285,7 @@ const PayrollList = ({ onOpen }: { onOpen: (id: number) => void }) => {
   const thisYear = moment().year();
   const [year, setYear] = useState(thisYear);
   const [creating, setCreating] = useState<string | null>(null);
+  const [view, setView] = useSavedView('payrollView', VIEWS, 'book');
   const { rows, currentPeriod, loading } = usePayrolls(year);
   const current = currentPeriod ?? moment().format('YYYY-MM');
   const previous = moment(`${current}-01`).subtract(1, 'month').format('YYYY-MM');
@@ -147,15 +332,25 @@ const PayrollList = ({ onOpen }: { onOpen: (id: number) => void }) => {
           </button>
         </div>
         <span className="pay-year-hint"><i className="fa-solid fa-circle-info" /> {t('payYearHint')}</span>
+        <ViewSwitch views={VIEWS} value={view} onChange={setView} label="payViewLabel" className="pay-year-switch" />
       </div>
 
       <ListState loading={loading && !rows.length} empty={!rows.length && !pages.length} icon="fa-book">
+        {view === 'year' ? (
+          <PayrollYearView year={year} creating={creating} onOpen={onOpen} onCreate={create}
+            months={Array.from({ length: 12 }, (_, i) => {
+              const period = `${year}-${String(i + 1).padStart(2, '0')}`;
+              return timeline.find((c) => c.period === period) ?? { period };
+            })}
+          />
+        ) : (
         <div className="pay-books">
           {timeline.map((item) => (item.run
             ? <PayrollBook key={item.period} run={item.run} onOpen={() => onOpen(item.run!._uuid)} />
             : <NewMonthPage key={item.period} period={item.period} kind={item.kind!} busy={creating === item.period} onCreate={() => create(item.period)} />
           ))}
         </div>
+        )}
       </ListState>
     </div>
   );

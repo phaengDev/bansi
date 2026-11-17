@@ -13,19 +13,17 @@ import {
   buildOrgTree, inMainTree, isExecutive, personName, realDepartments, suggestBoss, toneClass, useOrgData,
   type OrgData, type OrgNode, type OrgTree,
 } from './orgModel';
+import ViewSwitch, { useSavedView, type ViewOption } from '../../../components/Elements/ViewSwitch';
 
 type View = 'tree' | 'dept';
 const VIEW_KEY = 'hr.orgChart.view';
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.4;
 
-const readView = (): View => {
-  try {
-    return localStorage.getItem(VIEW_KEY) === 'dept' ? 'dept' : 'tree';
-  } catch {
-    return 'tree';
-  }
-};
+const VIEWS: ViewOption<View>[] = [
+  { key: 'tree', icon: 'fa-sitemap', label: 'hrReportLine' },
+  { key: 'dept', icon: 'fa-table-columns', label: 'hrOrgByDept' },
+];
 
 /** ຂໍ້ມູນຮ່ວມຂອງການແຕ້ມ — ຄຳຄົ້ນຫາ ແລະ ປຸ່ມປ່ຽນຫົວໜ້າສາຍງານ */
 type Ctx = { query: string; onEdit?: (node: OrgNode) => void };
@@ -410,7 +408,7 @@ const BossModal = ({ node, data, tree, onClose, onSaved }: {
 const OrgChartPage = () => {
   const t = useT();
   const org = useOrgData();
-  const [view, setView] = useState<View>(readView);
+  const [view, saveView] = useSavedView(VIEW_KEY, VIEWS, 'tree');
   const [keyword, setKeyword] = useState('');
   const [zoom, setZoom] = useState(1);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -430,10 +428,7 @@ const OrgChartPage = () => {
   const chooseView = (next: View) => {
     // ມຸມມອງໃໝ່ກວ້າງບໍ່ເທົ່າກັນ — ພໍດີຈໍຄືນເມື່ອວັດຂະໜາດໃໝ່ແລ້ວ
     if (next !== view) fitted.current = false;
-    setView(next);
-    try {
-      localStorage.setItem(VIEW_KEY, next);
-    } catch { /* ບໍ່ມີບ່ອນເກັບ — ໃຊ້ຄ່າເລີ່ມຕົ້ນຄັ້ງໜ້າ */ }
+    saveView(next);
   };
 
   // ຂະໜາດແທ້ຂອງຮູບ (transform ບໍ່ປ່ຽນ offsetWidth) — ໃຊ້ກັບກ່ອງເລື່ອນ ແລະ ການພິມ
@@ -538,14 +533,7 @@ const OrgChartPage = () => {
         onKeyword={setKeyword}
         placeholder={t('hrOrgSearch')}
       >
-        <div className="acc-type-segment" role="tablist">
-          <button type="button" role="tab" aria-selected={view === 'tree'} className={view === 'tree' ? 'is-active' : ''} onClick={() => chooseView('tree')}>
-            <i className="fa-solid fa-sitemap" /> {t('hrReportLine')}
-          </button>
-          <button type="button" role="tab" aria-selected={view === 'dept'} className={view === 'dept' ? 'is-active' : ''} onClick={() => chooseView('dept')}>
-            <i className="fa-solid fa-table-columns" /> {t('hrOrgByDept')}
-          </button>
-        </div>
+        <ViewSwitch views={VIEWS} value={view} onChange={chooseView} />
         <div className="org-zoom">
           <button type="button" className="acc-gl-act" title={t('hrZoomOut')} aria-label={t('hrZoomOut')} onClick={() => step(-0.1)} disabled={zoom <= ZOOM_MIN}>
             <i className="fa-solid fa-minus" />

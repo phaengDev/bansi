@@ -2121,3 +2121,199 @@
   em { color: #0f7a5c; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
 }
 
+
+// ---- ໃບເງິນເດືອນ: ປຸ່ມສະຫຼັບວິທີສະແດງ (ຊິດຂວາຂອງແຖບປີ) ----
+.pay-year-switch { margin-left: auto; }
+
+// ---- ພາບລວມປີ: ຕົວເລກລວມ, ກຣາບແທ່ງ 12 ເດືອນ, ຕາຕະລາງລາຍເດືອນ ----
+.pay-yr {
+  --yr-ink: #14314d;
+  --yr-muted: #7b8a97;
+  --yr-line: #e3eaf0;
+  --yr-paid: #0e9f86;
+  --yr-paid-deep: #08735f;
+  --yr-draft: #e0a43a;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pay-yr-kpis {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 10px;
+
+  > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 14px 16px;
+    border: 1px solid var(--yr-line);
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  small { color: #5b6f80; font-size: 12px; font-weight: 700; }
+  b { color: var(--yr-ink); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  em { color: var(--yr-muted); font-size: 11.5px; font-style: normal; }
+
+  > .is-main {
+    border-color: transparent;
+    background: linear-gradient(135deg, #064e3b 0%, var(--yr-paid-deep) 100%);
+
+    small { color: rgba(255, 255, 255, 0.75); }
+    b { color: #fff; font-size: 24px; }
+    em { align-self: flex-start; padding: 2px 9px; border-radius: 10px; color: #fff; background: rgba(255, 255, 255, 0.16); }
+  }
+
+  > .is-warn { border-color: #f3d39a; background: #fffaf0; }
+  > .is-warn b { color: #9a6408; }
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.pay-yr-card {
+  padding: 14px 16px;
+  border: 1px solid var(--yr-line);
+  border-radius: 14px;
+  background: #fff;
+
+  > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  h4 { margin: 0; color: var(--yr-ink); font-size: 14px; font-weight: 800; }
+  h4 i { margin-right: 6px; color: var(--yr-paid); }
+}
+
+.pay-yr-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #5b6f80;
+  font-size: 12px;
+
+  > span { width: 12px; height: 12px; margin-left: 8px; border-radius: 3px; }
+  > span.is-paid { background: var(--yr-paid); }
+  > span.is-draft { background: repeating-linear-gradient(135deg, var(--yr-draft) 0 4px, #f6d18f 4px 8px); }
+  small { margin-left: 10px; color: var(--yr-muted); font-size: 11px; }
+}
+
+// ກຣາບ: 12 ຖັນເທົ່າກັນ — ແທ່ງສູງຕາມສຸດທິ (ສູງສຸດຂອງປີ = 100%)
+.pay-yr-bars {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
+  height: 200px;
+}
+
+.pay-yr-bar {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+
+  > small { color: var(--yr-muted); font-size: 11.5px; font-weight: 700; text-align: center; }
+
+  .pay-yr-track {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    border-radius: 8px;
+    background: #f4f7fa;
+
+    > i { display: block; width: 62%; border-radius: 6px 6px 0 0; transition: height 0.3s ease; }
+    > em { margin-bottom: 4px; color: var(--yr-ink); font-size: 11px; font-style: normal; font-weight: 800; font-variant-numeric: tabular-nums; }
+    > b { margin: auto; color: #9fb3c2; font-size: 14px; }
+  }
+
+  &.is-paid .pay-yr-track > i { background: linear-gradient(180deg, #3fd0a4 0%, var(--yr-paid) 100%); }
+  &.is-draft .pay-yr-track > i { background: repeating-linear-gradient(135deg, var(--yr-draft) 0 6px, #f6d18f 6px 12px); }
+  &.is-current .pay-yr-track,
+  &.is-missed .pay-yr-track { border: 1.5px dashed #9fd9c9; background: #f3fbf8; }
+  &.is-current .pay-yr-track > b,
+  &.is-missed .pay-yr-track > b { color: var(--yr-paid); }
+  &.is-upcoming .pay-yr-track { border: 1.5px dashed #d5dee6; }
+  &.is-none .pay-yr-track { opacity: 0.55; }
+
+  &:is(button):not(:disabled) { cursor: pointer; }
+  &:is(button):not(:disabled):hover .pay-yr-track { background: #eaf1f6; box-shadow: inset 0 0 0 1.5px #c8d6e2; }
+  &:is(button):focus-visible { outline: 2px solid var(--yr-paid); outline-offset: 2px; border-radius: 8px; }
+}
+
+.pay-yr-scroll { overflow-x: auto; }
+
+.pay-yr-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  color: var(--yr-ink);
+  font-size: 13px;
+
+  th {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--yr-line);
+    color: #5b6f80;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef3f7;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    vertical-align: middle;
+  }
+
+  // ຖັນເດືອນ ແລະ ສະຖານະ ຊິດຊ້າຍ (ແຖວລວມໃຊ້ colSpan — ຖັນທີ 2 ຂອງມັນເປັນຕົວເລກ ຈຶ່ງບໍ່ນັບ)
+  th:first-child,
+  td:first-child,
+  th:nth-child(2),
+  tbody td:nth-child(2) { text-align: left; }
+
+  td small { display: block; margin-top: 1px; color: var(--yr-muted); font-size: 11px; }
+  td.is-minus { color: #c4343a; }
+  td.is-net { font-weight: 800; }
+
+  tbody tr.is-click { cursor: pointer; }
+  tbody tr.is-click:hover td { background: #f6f9fb; }
+  tbody tr.is-empty td { color: var(--yr-muted); background: #fbfcfd; }
+  tbody tr.is-empty td:nth-child(2) { text-align: left; }
+
+  tfoot td { border-top: 2px solid var(--yr-ink); border-bottom: 0; font-weight: 800; }
+  tfoot td:first-child { text-align: left; }
+}
+
+.pay-yr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.is-paid { color: var(--yr-paid-deep); background: #e3f5f1; }
+  &.is-draft { color: #9a6408; background: #fff1d6; }
+}
+
+.pay-yr-muted { color: var(--yr-muted); font-size: 12px; }

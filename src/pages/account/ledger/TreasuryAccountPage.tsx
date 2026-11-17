@@ -18,11 +18,12 @@ import { toneOf } from '../setting/accountTone';
 import { toneStyle, useLogoTones } from './logoTone';
 import { CASH_CLASS_CODE } from '../journal/journalKit';
 import { SearchBox } from '../setting/settingKit';
+import ViewSwitch, { useSavedView, type ViewOption } from '../../../components/Elements/ViewSwitch';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 /** ວິທີສະແດງ: ບັດ (ລາກຈັດລຽງໄດ້), ພາບລວມ (ຕາຕະລາງເຫັນທຸກບັນຊີ), ກຣາບ (ແຕ່ລະສະກຸນ ແຕ່ລະທະນາຄານ) */
 type View = 'cards' | 'table' | 'chart';
-const VIEWS: { key: View; icon: string; label: string }[] = [
+const VIEWS: ViewOption<View>[] = [
   { key: 'cards', icon: 'fa-id-card', label: 'treasuryViewCards' },
   { key: 'table', icon: 'fa-table-list', label: 'treasuryViewTable' },
   { key: 'chart', icon: 'fa-chart-simple', label: 'treasuryViewChart' },
@@ -113,22 +114,7 @@ const TreasuryAccountPage = () => {
   const [bankId, setBankId] = useState<number | null>(null);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
-  const [view, setView] = useState<View>(() => {
-    try {
-      const saved = localStorage.getItem(VIEW_KEY);
-      return VIEWS.some((v) => v.key === saved) ? (saved as View) : 'cards';
-    } catch {
-      return 'cards';
-    }
-  });
-  const pickView = (next: View) => {
-    setView(next);
-    try {
-      localStorage.setItem(VIEW_KEY, next);
-    } catch {
-      // storage ປິດ — ຈື່ສະເພາະຄັ້ງນີ້
-    }
-  };
+  const [view, pickView] = useSavedView(VIEW_KEY, VIEWS, 'cards');
   /** undefined = ປິດຟອມ, null = ເພີ່ມໃໝ່, ມີແຖວ = ແກ້ໄຂແຖວນັ້ນ */
   const [editing, setEditing] = useState<TreasuryAccount | null | undefined>(undefined);
   /** ບັນຊີທີ່ກຳລັງເບິ່ງປະຫວັດເງິນເຂົ້າ-ອອກ */
@@ -334,15 +320,7 @@ const TreasuryAccountPage = () => {
             ))}
           </div>
           {/* ສະຫຼັບວິທີສະແດງ — ຈື່ໄວ້ໃນເຄື່ອງນີ້ */}
-          <div className="acc-type-segment acc-view-switch" role="tablist" aria-label={t('treasuryViewLabel')}>
-            {VIEWS.map((v) => (
-              <button key={v.key} type="button" role="tab" aria-selected={view === v.key}
-                className={view === v.key ? 'is-active' : ''} onClick={() => pickView(v.key)}
-              >
-                <i className={`fa-solid ${v.icon}`} /> {t(v.label)}
-              </button>
-            ))}
-          </div>
+          <ViewSwitch views={VIEWS} value={view} onChange={pickView} label="treasuryViewLabel" />
           {hasFilter && (
             <button type="button" className="acc-type-clear" onClick={clearFilters}>
               <i className="fa-solid fa-filter-circle-xmark" /> {t('accountTypeClearFilter')}
