@@ -966,8 +966,8 @@
   &:disabled { opacity: 0.5; }
 }
 
-// ແຖວລາຍການ: # | ບັນຊີ | ລາຍລະອຽດ | ຈຳນວນ | ລຶບ
-.acc-ex-row.acc-arap-row { grid-template-columns: 24px minmax(220px, 1.25fr) minmax(150px, 1fr) 160px 30px; }
+// ແຖວລາຍການ: # | ບັນຊີ | ລາຍລະອຽດ | ຈຳນວນ | ຫົວໜ່ວຍ | ລາຄາຫົວໜ່ວຍ | ຍອດ | ລຶບ
+.acc-ex-row.acc-arap-row { grid-template-columns: 24px minmax(170px, 1.2fr) minmax(130px, 1fr) 64px 86px 120px 112px 30px; }
 
 // ແຖວຕັດໜີ້: ☐ | ໃບ | ຄົບກຳນົດ | ຍອດຄ້າງ | ຈຳນວນທີ່ຕັດ
 .acc-ex-row.acc-arap-alloc-row {
@@ -989,6 +989,8 @@
 .acc-ex-row.acc-gl-jrow.is-head span { text-align: left; }
 
 .acc-ex-row.acc-arap-row.is-head span:nth-child(4),
+.acc-ex-row.acc-arap-row.is-head span:nth-child(6),
+.acc-ex-row.acc-arap-row.is-head span:nth-child(7),
 .acc-ex-row.acc-arap-alloc-row.is-head span:nth-child(4),
 .acc-ex-row.acc-arap-alloc-row.is-head span:nth-child(5),
 .acc-ex-row.acc-gl-jrow.is-head span:nth-child(4),
@@ -1033,7 +1035,7 @@
   .acc-ex-row.acc-gl-jrow,
   .acc-ex-row.acc-arap-alloc-row { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 
-  .acc-ex-row.acc-arap-row .acc-ex-cell.is-desc { grid-column: span 4; }
+  .acc-ex-row.acc-arap-row .acc-ex-cell.is-desc { grid-column: 1 / -1; }
   .acc-ex-row.acc-gl-jrow .acc-ex-cell.is-desc { grid-column: 1 / -1; }
   .acc-ex-row.acc-gl-jrow .acc-ex-cell.is-money { grid-column: span 3; }
   .acc-gl-jrow-actions { position: absolute; top: 8px; right: 8px; }

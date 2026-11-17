@@ -1,102 +1,221 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import moment from 'moment';
+import { formatNumber, postApi } from '../../../utils/configApi';
 import { printElementByFrame } from '../../../utils/Print';
-import { useLangField, useT } from '../../../context/LanguageContext';
+import { amountInLaoWords } from '../../../utils/laoWords';
+import { useT } from '../../../context/LanguageContext';
 import { useTaxes } from '../../../utils/selectOption';
 import { useCompany } from '../../hr/payroll/payrollApi';
 import { useAccountSetting } from '../accountSettings';
-import { amountText, type PartnerDoc } from './arapApi';
+import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
+import type { PartnerDoc } from './arapApi';
+import InvoiceBackground from './InvoiceBackground';
 
-/** ພິມສະເພາະໃບ — A4 ຕັ້ງ (ໃບຢູ່ນອກຈໍ ຈົນກວ່າຈະພິມ) */
+/** ພິມສະເພາະໃບ — A4 ຕັ້ງ ບໍ່ມີຂອບເຈ້ຍ (ພື້ນຫຼັງເຕັມໜ້າ), 1 ສະບັບ = 1 ໜ້າ */
 const PRINT_CSS = `
-  @page { size: A4 portrait; margin: 12mm; }
-  html, body { background: #fff !important; margin: 0; }
-  .acc-ivp { position: static !important; left: auto !important; width: auto !important; box-shadow: none !important; }
+  @page { size: A4 portrait; margin: 0; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  .acc-ivp { position: static !important; left: auto !important; }
+  .acc-ivp-page { box-shadow: none !important; margin: 0 !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 `;
 
+/** ສະບັບ: 1 ສຳລັບຜູ້ຊື້ (ສີຂຽວ), 2 ສຳລັບຜູ້ຂາຍ ເກັບໄວ້ (ສີມ່ວງ) — ລາຍພື້ນຫຼັງດຽວກັນ ຕ່າງແຕ່ສີ */
+const COPIES = [
+  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer', tone: 'is-buyer' },
+  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller', tone: 'is-seller' },
+];
+
+/** ແຖວຕ່ຳສຸດຂອງຕາຕະລາງ (ເຕີມແຖວວ່າງ ໃຫ້ໃບເບິ່ງຄົບຄືແບບຟອມ) */
+const MIN_ROWS = 7;
+
+/** ກ່ອງເລກປະຈຳຕົວຜູ້ເສຍອາກອນ: 9 ຕົວ - 3 ຕົວ (ຫວ່າງ = ກ່ອງເປົ່າໃຫ້ຂຽນເອງ) */
+const TinBoxes = ({ value }: { value?: string | null }) => {
+  const digits = String(value ?? '').replace(/\D/g, '').split('');
+  const box = (i: number) => <i key={i}>{digits[i] ?? ''}</i>;
+  return (
+    <span className="acc-ivp-tin">
+      {Array.from({ length: 9 }, (_, i) => box(i))}
+      <b>-</b>
+      {Array.from({ length: Math.max(3, digits.length - 9) }, (_, i) => box(9 + i))}
+    </span>
+  );
+};
+
+/** ປ້າຍສອງພາສາ: ລາວ / English */
+const Bi = ({ la, en }: { la: string; en: string }) => <><span>{la}</span> <em>/ {en}</em></>;
+
 /**
- * ໃບເກັບເງິນ (ລູກໜີ້) ສຳລັບພິມ — ຫົວບໍລິສັດ (ໂລໂກ້, ຊື່, ທີ່ຢູ່, ໂທ, ເລກອາກອນ), ລູກຄ້າ (ທີ່ຢູ່, ເລກອາກອນ), ລາຍການ,
- * ຍອດກ່ອນອາກອນ / ອາກອນມູນຄ່າເພີ່ມ / ລວມ ແລະ ບ່ອນເຊັນ. ມີອາກອນ = "ໃບເກັບເງິນອາກອນມູນຄ່າເພີ່ມ".
- * ໃບຢູ່ນອກຈໍ (ບໍ່ສະແດງ) — ກົດປຸ່ມແລ້ວພິມຜ່ານ iframe ຄືໃບລາຍງານອື່ນ
+ * ໃບເກັບເງິນອາກອນມູນຄ່າເພີ່ມ (ລູກໜີ້) ສຳລັບພິມ — ຮູບແບບຂອງລະບົບເຮົາ (ສອງພາສາ, ຜູ້ຂາຍຊ້າຍ / ຫົວໃບຂວາ) ເທິງພື້ນຫຼັງ
+ * ລາຍດຽວກັບແບບຟອມທາງການ (InvoiceBackground). ອົງປະກອບຕາມແບບຟອມ: ຜູ້ຂາຍ + ທີ່ຢູ່ + ບັນຊີທະນາຄານ + ເລກອາກອນ (ກ່ອງ),
+ * ຜູ້ຊື້ + ເລກອາກອນ, ຮູບການຊຳລະ, ລາຍການ (ລ/ດ · ເນື້ອໃນ · ຫົວໜ່ວຍ · ຈຳນວນ · ລາຄາຫົວໜ່ວຍ · ລວມ 6=4×5),
+ * ລວມບໍ່ມີອາກອນ / ອາກອນ % / ລວມທັງໝົດ, ຈຳນວນເງິນເປັນຕົວໜັງສື, ອັດຕາແລກປ່ຽນ (ສະກຸນຕ່າງປະເທດ), ບ່ອນເຊັນ ຜູ້ຊື້-ຜູ້ຂາຍ,
+ * ເລກທີໃບອະນຸຍາດນຳໃຊ້ໃບເກັບເງິນ. ພິມ 1 ຫຼື 2 ສະບັບ ຕາມ ຕັ້ງຄ່າບັນຊີ → ໃບເກັບເງິນອາກອນ.
+ * ໃບຢູ່ນອກຈໍ — ກົດປຸ່ມແລ້ວພິມຜ່ານ iframe
  */
 export const useInvoicePrint = (doc: PartnerDoc) => {
   const t = useT();
-  const lf = useLangField();
   const ref = useRef<HTMLDivElement>(null);
   const company = useCompany();
   const setting = useAccountSetting();
   const taxes = useTaxes();
+  const [bankAccount, setBankAccount] = useState<TreasuryAccount | null>(null);
+
+  // ບັນຊີທະນາຄານຂອງບໍລິສັດທີ່ພິມໃສ່ໃບ (ຕັ້ງຄ່າບັນຊີ → ໃບເກັບເງິນອາກອນ)
+  useEffect(() => {
+    if (!setting.invoice_account_id) return;
+    postApi('/treasury-account/fetch', {})
+      .then((res) => setBankAccount((res.data?.data ?? []).find((a: TreasuryAccount) => a._uuid === Number(setting.invoice_account_id)) ?? null))
+      .catch(() => setBankAccount(null));
+  }, [setting.invoice_account_id]);
+
   const tax = taxes.find((x) => x._uuid === doc.tax_id);
   const taxed = Number(doc.tax) > 0;
-  const address = [company?.village, company?.district?.district_name, company?.district?.province?.province_name].filter(Boolean).join(', ');
+  const code = String(doc.currency?.name ?? 'LAK').toUpperCase();
+  const foreign = code !== 'LAK';
+  const rate = Number(doc.exchange_rate) || 1;
+  const money = (v: unknown) => formatNumber(Number(v) || 0);
+  const address = [company?.village && `${t('ivpVillage')} ${company.village}`, company?.district?.district_name && `${t('ivpDistrict')} ${company.district.district_name}`,
+    company?.district?.province?.province_name && `${t('ivpProvince')} ${company.district.province.province_name}`].filter(Boolean).join(', ');
   const phones = [company?.phone1, company?.phone2].filter(Boolean).join(', ');
-  const partner = doc.partner as (PartnerDoc['partner'] & { address?: string | null; tax_number?: string | null }) | null | undefined;
-  const money = (v: string | number) => amountText(v, doc.currency);
+  const bankText = bankAccount
+    ? [bankAccount.acount_number, bankAccount.banks?.name_la || bankAccount.banks?.abbr, bankAccount.acountName].filter(Boolean).join(' · ')
+    : '';
+  const partner = doc.partner;
+  const rows = [...doc.lines.map((l) => ({ ...l, empty: false })), ...Array.from({ length: Math.max(0, MIN_ROWS - doc.lines.length) }, () => null)];
+  const copies = COPIES.slice(0, Number(setting.invoice_copies) === 1 ? 1 : 2);
+  const qtyText = (v: unknown) => {
+    const n = Number(v ?? 1) || 1;
+    return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
+  };
 
-  const sheet = (
-    <div ref={ref} className="acc-ivp" aria-hidden="true">
-      <header className="acc-ivp-head">
-        {company?.logo_url && <img src={company.logo_url} alt="" />}
-        <div>
-          <h2>{company?.name_la}</h2>
-          {company?.name_en && <p>{company.name_en}</p>}
-          {address && <small>{address}</small>}
-          {(phones || setting.tax_id) && (
-            <small>{[phones && `${t('ivpPhone')} ${phones}`, setting.tax_id && `${t('acgTaxIdShort')} ${setting.tax_id}`].filter(Boolean).join(' · ')}</small>
-          )}
-        </div>
-        <span className="acc-ivp-title">
-          <b>{t(taxed ? 'ivpTitleTax' : 'ivpTitle')}</b>
-          <em>{taxed ? 'TAX INVOICE' : 'INVOICE'}</em>
-        </span>
-      </header>
+  const page = (copy: (typeof COPIES)[number]) => (
+    <section key={copy.no} className={`acc-ivp-page ${copy.tone}`}>
+      <InvoiceBackground />
+      <div className="acc-ivp-body">
+        {/* ---- ຫົວ: ຜູ້ຂາຍ (ຊ້າຍ) + ບັດຫົວໃບ (ຂວາ) ---- */}
+        <header className="acc-ivp-top">
+          <div className="acc-ivp-seller">
+            <div className="acc-ivp-brand">
+              {company?.logo_url && <img src={company.logo_url} alt="" />}
+              <span>
+                <small><Bi la={t('ivpSeller')} en="Seller" /></small>
+                <b>{company?.name_la}</b>
+                {company?.name_en && <em>{company.name_en}</em>}
+              </span>
+            </div>
+            <dl>
+              <dt><Bi la={t('ivpAddress')} en="Address" /></dt><dd>{address || '……………………………………'}</dd>
+              <dt><Bi la={t('ivpPhone')} en="Tel" /></dt><dd>{phones || '……………………'}</dd>
+              <dt><Bi la={t('ivpBankAcc')} en="Bank account" /></dt><dd>{bankText || '……………………………………'}</dd>
+              <dt><Bi la={t('acgTaxId')} en="TIN" /></dt><dd><TinBoxes value={setting.tax_id} /></dd>
+            </dl>
+          </div>
+          <div className="acc-ivp-titlecard">
+            <span className="acc-ivp-copy">{t(copy.label)} · {copy.en}</span>
+            <h1>{t('ivpTitle')}</h1>
+            <h2>{taxed ? 'TAX INVOICE' : 'INVOICE'}</h2>
+            {taxed && <p>{t('ivpVatLine')}</p>}
+            <dl>
+              <dt><Bi la={t('ivpNumber')} en="No." /></dt><dd><b>{doc.doc_number}</b></dd>
+              <dt><Bi la={t('ivpDate')} en="Date" /></dt><dd>{moment(doc.doc_date).format('DD/MM/YYYY')}</dd>
+              <dt><Bi la={t('ivpDue')} en="Due" /></dt><dd>{moment(doc.due_date).format('DD/MM/YYYY')}</dd>
+              <dt><Bi la={t('ivpRef')} en="Ref." /></dt><dd>{doc.reference || '—'}</dd>
+            </dl>
+          </div>
+        </header>
 
-      <section className="acc-ivp-info">
-        <div>
-          <small>{t('ivpBillTo')}</small>
-          <b>{partner?.name}</b>
-          {partner?.address && <span>{partner.address}</span>}
-          {partner?.phone && <span>{t('ivpPhone')} {partner.phone}</span>}
-          {partner?.tax_number && <span>{t('acgTaxIdShort')} {partner.tax_number}</span>}
-        </div>
-        <dl>
-          <dt>{t('ivpNumber')}</dt><dd>{doc.doc_number}</dd>
-          <dt>{t('ivpDate')}</dt><dd>{moment(doc.doc_date).format('DD/MM/YYYY')}</dd>
-          <dt>{t('ivpDue')}</dt><dd>{moment(doc.due_date).format('DD/MM/YYYY')}</dd>
-          {doc.reference && <><dt>{t('ivpRef')}</dt><dd>{doc.reference}</dd></>}
-        </dl>
-      </section>
+        {/* ---- ຜູ້ຊື້ + ຮູບການຊຳລະ ---- */}
+        <section className="acc-ivp-buyer">
+          <div>
+            <small><Bi la={t('ivpBuyer')} en="Buyer" /></small>
+            <b>{partner?.name ?? '……………………………………'}</b>
+            <dl>
+              <dt><Bi la={t('ivpAddress')} en="Address" /></dt><dd>{partner?.address || '……………………………………'}</dd>
+              <dt><Bi la={t('ivpPhone')} en="Tel" /></dt><dd>{partner?.phone || '……………………'}</dd>
+              <dt><Bi la={t('ivpBankAcc')} en="Bank account" /></dt><dd>……………………………………</dd>
+              <dt><Bi la={t('acgTaxId')} en="TIN" /></dt><dd><TinBoxes value={partner?.tax_number} /></dd>
+            </dl>
+          </div>
+          <div className="acc-ivp-pay">
+            <small><Bi la={t('ivpPayment')} en="Payment" /></small>
+            <span><i /> {t('ivpCash')} <em>Cash</em></span>
+            <span><i /> {t('ivpTransfer')} <em>Transfer</em></span>
+            <span><i /> {t('ivpCredit')} <em>Credit</em></span>
+          </div>
+        </section>
 
-      <table className="acc-ivp-lines">
-        <thead>
-          <tr><th>#</th><th>{t('ivpItem')}</th><th>{t('fsAmount')}</th></tr>
-        </thead>
-        <tbody>
-          {doc.lines.map((l, i) => (
-            <tr key={l._uuid}>
-              <td>{i + 1}</td>
-              <td>{l.description || (l.account ? lf(l.account, 'name') : '')}</td>
-              <td>{money(l.amount)}</td>
+        {/* ---- ລາຍການ ---- */}
+        <table className="acc-ivp-lines">
+          <thead>
+            <tr>
+              <th><span>{t('ivpNo')}</span><em>No.</em></th>
+              <th><span>{t('ivpItem')}</span><em>Description</em></th>
+              <th><span>{t('ivpUnit')}</span><em>Unit</em></th>
+              <th><span>{t('ivpQty')}</span><em>Qty</em></th>
+              <th><span>{t('ivpUnitPrice')}</span><em>Unit price</em></th>
+              <th><span>{t('ivpLineTotal')}</span><em>Amount ({code})</em></th>
             </tr>
+            <tr className="is-index"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6 = 4 × 5</td></tr>
+          </thead>
+          <tbody>
+            {rows.map((l, i) => (l ? (
+              <tr key={l._uuid}>
+                <td>{i + 1}</td>
+                <td>{l.description || (l.account ? l.account.name_la : '')}</td>
+                <td>{l.unit || ''}</td>
+                <td>{qtyText(l.quantity)}</td>
+                <td>{money(l.unit_price ?? l.amount)}</td>
+                <td>{money(l.amount)}</td>
+              </tr>
+            ) : (
+              <tr key={`empty-${i}`} className="is-blank"><td /><td /><td /><td /><td /><td /></tr>
+            )))}
+          </tbody>
+        </table>
+
+        {/* ---- ລວມ + ຕົວໜັງສື ---- */}
+        <section className="acc-ivp-totals">
+          <div className="acc-ivp-words">
+            <small><Bi la={t('ivpInWords')} en="Amount in words" /></small>
+            <b>{amountInLaoWords(Number(doc.total) || 0, code)}</b>
+            {foreign && (
+              <em>
+                {t('ivpRate')} 1 {code} = {formatNumber(rate)} LAK · {t('ivpLakEquivalent')} {formatNumber(Math.round((Number(doc.total) || 0) * rate))} LAK
+                {taxed && <> · {t('ivpVatLak')} {formatNumber(Math.round((Number(doc.tax) || 0) * rate))} LAK</>}
+              </em>
+            )}
+          </div>
+          <dl>
+            <dt><Bi la={t('ivpSubtotal')} en="Subtotal" /></dt><dd>{money(doc.subtotal)}</dd>
+            <dt><Bi la={`${t('ivpVat')} ${tax ? `${Number(tax.rate)}%` : ''}`} en="VAT" /></dt><dd>{money(doc.tax)}</dd>
+            <dt className="is-total"><Bi la={t('ivpTotal')} en={`Total (${code})`} /></dt><dd className="is-total">{money(doc.total)}</dd>
+          </dl>
+        </section>
+
+        {doc.description && <p className="acc-ivp-note"><b>{t('ivpNote')}:</b> {doc.description}</p>}
+
+        {/* ---- ບ່ອນເຊັນ ---- */}
+        <footer className="acc-ivp-signs">
+          {[{ la: t('ivpBuyerSign'), en: 'Buyer' }, { la: t('ivpSellerSign'), en: 'Seller' }].map((s) => (
+            <span key={s.en}>
+              <small>{t('ivpDate')}: ……………………</small>
+              <b><Bi la={s.la} en={s.en} /></b>
+              <i />
+              <em>({t('ivpSignStamp')})</em>
+            </span>
           ))}
-        </tbody>
-        <tfoot>
-          <tr><td colSpan={2}>{t('arapSubtotal')}</td><td>{money(doc.subtotal)}</td></tr>
-          {taxed && <tr><td colSpan={2}>{tax ? `${tax.name} ${Number(tax.rate)}%` : t('incomeTaxField')}</td><td>{money(doc.tax)}</td></tr>}
-          <tr className="is-total"><td colSpan={2}>{t('ivpTotal')}</td><td>{money(doc.total)}</td></tr>
-        </tfoot>
-      </table>
+        </footer>
 
-      {doc.description && <p className="acc-ivp-note">{doc.description}</p>}
-
-      <footer className="acc-ivp-signs">
-        <span><b>{t('ivpIssuer')}</b><i /><em>{localStorage.getItem('user_name') || '........................'}</em></span>
-        <span><b>{t('ivpReceiver')}</b><i /><em>........................</em></span>
-      </footer>
-    </div>
+        <div className="acc-ivp-foot">
+          <span>{t('ivpLicense')}: <b>{setting.invoice_license || '……………………'}</b></span>
+          <span>{t('ivpCopyNo')} {copy.no}/{copies.length} · {t('ivpPage')} 1/1</span>
+        </div>
+      </div>
+    </section>
   );
 
+  const sheet = <div ref={ref} className="acc-ivp" aria-hidden="true">{copies.map(page)}</div>;
   const print = () => ref.current && printElementByFrame(ref.current, PRINT_CSS);
   return { sheet, print };
 };

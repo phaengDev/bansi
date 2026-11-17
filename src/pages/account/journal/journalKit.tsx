@@ -121,3 +121,6 @@ export const RECEIPT_PRINT_CSS = `
   .acc-inv-receipt { box-shadow: none !important; border: 1px solid #d5dee6 !important; margin: 0 auto; max-width: 100%; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 `;
+
+/** ຫົວໜ່ວຍທີ່ໃຊ້ເລື້ອຍ (ພິມອື່ນເອງໄດ້) — ລາຍການລາຍຈ່າຍ ແລະ ລາຍການໃບແຈ້ງໜີ້ / ໃບເກັບເງິນ */
+export const UNITS = ['ອັນ', 'ແພັກ', 'ກ່ອງ', 'ແກັດ', 'ຕຸກ', 'ກິໂລ', 'ລິດ', 'ຊຸດ', 'ໂຕ', 'ໃບ', 'ຫໍ່', 'ມັດ', 'ຄັ້ງ', 'ເດືອນ', 'ລາຍການ', 'ສັນຍາ'];

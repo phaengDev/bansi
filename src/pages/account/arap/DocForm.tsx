@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CurrencyPicker } from '../../../components/Elements/CurrencyPicker';
-import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker, Textarea } from 'rsuite';
+import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker, Textarea, AutoComplete } from 'rsuite';
 import moment from 'moment';
 import { postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -12,15 +12,18 @@ import { isFutureDay, type Tax } from '../journal/journalKit';
 import { FormStep } from '../setting/settingKit';
 import { money } from '../gl/glApi';
 import { accountOptionLabel, useAccountOptions, useChartAccounts, amountFormatter } from '../gl/glKit';
+import { UNITS } from '../journal/journalKit';
 import { AP, AR, KINDS, isPartnerOf, usePartners, type Kind, type Partner } from './arapApi';
 import { PartnerForm } from './PartnerPage';
 import { useVatOn } from '../accountSettings';
 
-type Line = { key: number; account_id: number | null; description: string; amount: number | null };
+/** ແຖວລາຍການ — ຍອດ = ຈຳນວນ × ລາຄາຫົວໜ່ວຍ (ໃບເກັບເງິນອາກອນມີຖັນ ຫົວໜ່ວຍ / ຈຳນວນ / ລາຄາຫົວໜ່ວຍ) */
+type Line = { key: number; account_id: number | null; description: string; qty: number | null; unit: string; price: number | null };
 let seq = 0;
-const blankLine = (): Line => ({ key: ++seq, account_id: null, description: '', amount: null });
+const blankLine = (): Line => ({ key: ++seq, account_id: null, description: '', qty: 1, unit: '', price: null });
+const amountOf = (l: Line) => round2((Number(l.qty) || 0) * (Number(l.price) || 0));
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
-const isBlank = (l: Line) => !l.account_id && !(Number(l.amount) > 0) && !l.description.trim();
+const isBlank = (l: Line) => !l.account_id && !(Number(l.price) > 0) && !l.description.trim();
 
 /** ຄິດອາກອນແບບດຽວກັບ backend (computeTax): 1 ລວມໃນລາຄາ, 2 ບວກເພີ່ມ — ປັດເປັນຈຳນວນເຕັມ */
 const taxOf = (tax: Tax | undefined, subtotal: number) => {
@@ -91,9 +94,9 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const code = isBase ? 'LAK' : currency?.label ?? '';
 
   const filled = lines.filter((l) => !isBlank(l));
-  const lineErrors = (l: Line) => ({ account: !l.account_id, amount: !(Number(l.amount) > 0) });
-  const linesValid = filled.length > 0 && filled.every((l) => { const e = lineErrors(l); return !e.account && !e.amount; });
-  const subtotal = round2(filled.reduce((n, l) => n + (Number(l.amount) || 0), 0));
+  const lineErrors = (l: Line) => ({ account: !l.account_id, qty: !(Number(l.qty) > 0), price: !(Number(l.price) > 0) });
+  const linesValid = filled.length > 0 && filled.every((l) => { const e = lineErrors(l); return !e.account && !e.qty && !e.price; });
+  const subtotal = round2(filled.reduce((n, l) => n + amountOf(l), 0));
   const taxed = taxOf(taxes.find((x) => x._uuid === taxId), subtotal);
   const net = round2(taxed.total - taxed.tax);
   const ownBalance = selected ? (kind === AR ? selected.ar_open : selected.ap_open) : 0;
@@ -119,7 +122,10 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
         currency_id: currencyId,
         exchange_rate: isBase ? 1 : effectiveRate,
         tax_id: taxId,
-        lines: filled.map((l) => ({ account_id: l.account_id, description: l.description.trim() || null, amount: Number(l.amount) })),
+        lines: filled.map((l) => ({
+          account_id: l.account_id, description: l.description.trim() || null,
+          quantity: Number(l.qty), unit: l.unit.trim() || null, unit_price: Number(l.price), amount: amountOf(l),
+        })),
       });
       Notific.success('saveSuccessDone');
       onSaved();
@@ -206,6 +212,9 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
                   <span>#</span>
                   <span>{t(kind === AR ? 'arapRevenueAccount' : 'arapExpenseAccount')}</span>
                   <span>{t('detail')}</span>
+                  <span>{t('expenseQty')}</span>
+                  <span>{t('expenseUnit')}</span>
+                  <span>{t('expenseUnitPrice')}</span>
                   <span>{t('fsAmount')} ({code})</span>
                   <span />
                 </div>
@@ -226,13 +235,29 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
                         <small>{t('detail')}</small>
                         <Input value={l.description} onChange={(v) => update(l.key, { description: v })} placeholder={t('arapLinePlaceholder')} />
                       </label>
-                      <label className={`acc-ex-cell is-money${err?.amount || emptyError ? ' has-error' : ''}`}>
-                        <small>{t('fsAmount')}</small>
-                        <NumberInput value={l.amount ?? ''} min={0} controls={false} formatter={amountFormatter} placeholder="0"
-                          onChange={(v) => update(l.key, { amount: v === '' || v === null ? null : Number(v) })}
+                      <label className={`acc-ex-cell is-qty${err?.qty ? ' has-error' : ''}`}>
+                        <small>{t('expenseQty')}</small>
+                        <NumberInput value={l.qty ?? ''} min={0} controls={false}
+                          onChange={(v) => update(l.key, { qty: v === '' || v === null ? null : Number(v) })}
+                        />
+                      </label>
+                      <div className="acc-ex-cell is-unit">
+                        <small>{t('expenseUnit')}</small>
+                        <AutoComplete data={UNITS} value={l.unit} placeholder="—" filterBy={(value, item) => String(item.label).includes(value)}
+                          onChange={(value) => update(l.key, { unit: String(value ?? '') })}
+                        />
+                      </div>
+                      <label className={`acc-ex-cell is-money${err?.price || emptyError ? ' has-error' : ''}`}>
+                        <small>{t('expenseUnitPrice')}</small>
+                        <NumberInput value={l.price ?? ''} min={0} controls={false} formatter={amountFormatter} placeholder="0"
+                          onChange={(v) => update(l.key, { price: v === '' || v === null ? null : Number(v) })}
                           onKeyDown={(e) => { if (e.key === 'Enter' && i === lines.length - 1) { e.preventDefault(); addLine(); } }}
                         />
                       </label>
+                      <span className="acc-ex-cell is-total">
+                        <small>{t('fsAmount')}</small>
+                        <b>{money(amountOf(l))}</b>
+                      </span>
                       <button type="button" className="acc-ex-remove" disabled={lines.length === 1} title={t('delete')}
                         onClick={() => setLines((prev) => prev.filter((x) => x.key !== l.key))}
                       >

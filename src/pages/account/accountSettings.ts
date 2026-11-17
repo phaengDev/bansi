@@ -22,6 +22,10 @@ export type AccountSetting = {
   lock_date: string | null;
   profit_tax_rate: number | string;
   policies: string | null;
+  /** ໃບເກັບເງິນອາກອນ: ເລກທີໃບອະນຸຍາດນຳໃຊ້ໃບເກັບເງິນ, ບັນຊີທະນາຄານທີ່ພິມໃສ່ໃບ, ພິມ 1 ຫຼື 2 ໃບ (ຜູ້ຊື້ / + ຜູ້ຂາຍ) */
+  invoice_license: string | null;
+  invoice_account_id: number | null;
+  invoice_copies: 1 | 2;
 };
 
 /** ຟັງຊັນທີ່ບໍລິສັດເປີດ/ປິດໄດ້ — ປິດ = ເມນູ ແລະ ໜ້າທີ່ກ່ຽວຂ້ອງບໍ່ຂຶ້ນ */
@@ -48,6 +52,9 @@ export const DEFAULT_ACCOUNT_SETTING: AccountSetting = {
   lock_date: null,
   profit_tax_rate: 20,
   policies: null,
+  invoice_license: null,
+  invoice_account_id: null,
+  invoice_copies: 2,
 };
 
 let setting: AccountSetting | null = null;

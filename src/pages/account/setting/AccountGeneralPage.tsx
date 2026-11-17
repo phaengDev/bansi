@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, Loader, NumberInput, Textarea, Toggle } from 'rsuite';
+import { Button, Form, Input, Loader, NumberInput, SelectPicker, Textarea, Toggle } from 'rsuite';
 import moment from 'moment';
 import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { ChoiceTiles, FormStep } from './settingKit';
 import { runSave } from './settingApi';
+import { postApi } from '../../../utils/configApi';
+import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
+import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import {
   COMPLIANCE_FEATURES, FULL_MODE, SIMPLE_MODE, refreshAccountSetting, saveAccountSetting, useAccountSetting, useAccountSettingLoaded,
   type AccountSetting, type AccountingMode, type FeatureKey,
@@ -53,9 +56,14 @@ const AccountGeneralPage = () => {
   const current = useAccountSetting();
   const [values, setValues] = useState<AccountSetting | null>(null);
   const [saving, setSaving] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState<TreasuryAccount[]>([]);
 
   useEffect(() => {
     refreshAccountSetting();
+    // ບັນຊີທະນາຄານທີ່ພິມໃສ່ໃບເກັບເງິນ (ສະເພາະທີ່ໃຊ້ງານ)
+    postApi('/treasury-account/fetch', {})
+      .then((res) => setBankAccounts((res.data?.data ?? []).filter((a: TreasuryAccount) => Number(a.status) === 1)))
+      .catch(() => setBankAccounts([]));
   }, []);
   useEffect(() => {
     if (loaded && !values) setValues(current);
@@ -63,6 +71,7 @@ const AccountGeneralPage = () => {
 
   if (!values) return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
 
+  const renderAccount = renderAccountOption(t('treasuryNoBank'));
   const set = <K extends keyof AccountSetting>(key: K, value: AccountSetting[K]) => setValues({ ...values, [key]: value });
   const on = (key: FeatureKey) => Number(values[key]) === 1;
   const full = Number(values.accounting_mode) !== SIMPLE_MODE;
@@ -136,6 +145,32 @@ const AccountGeneralPage = () => {
                 ]}
               />
             </FormStep>
+
+            {full && (
+            <FormStep no={nextNo()} done={!!values.invoice_license} title={t('acgInvoice')} hint={t('acgInvoiceHint')}>
+              <Field label={t('ivpLicense')} hint={t('acgInvoiceLicenseHint')} wide>
+                <Input value={values.invoice_license ?? ''} onChange={(v) => set('invoice_license', v)} disabled={!canEdit} placeholder="2026/XXXX" />
+              </Field>
+              <Field label={t('acgInvoiceBank')} hint={t('acgInvoiceBankHint')} wide>
+                <SelectPicker block data={bankAccounts.map((a) => accountOption(a))} value={values.invoice_account_id}
+                  onChange={(v) => set('invoice_account_id', (v as number | null) ?? null)} disabled={!canEdit}
+                  renderOption={renderAccount} renderValue={renderAccount} popupStyle={ACCOUNT_POPUP_STYLE}
+                  placeholder={t('acgInvoiceBankNone')} popupClassName="acc-book-menu"
+                />
+              </Field>
+              <ChoiceTiles<1 | 2>
+                className="is-wide"
+                label={t('acgInvoiceCopies')}
+                value={Number(values.invoice_copies) === 1 ? 1 : 2}
+                disabled={!canEdit}
+                onChange={(v) => set('invoice_copies', v)}
+                options={[
+                  { value: 1, label: t('acgInvoiceCopy1'), hint: t('ivpCopyBuyer'), icon: 'fa-file' },
+                  { value: 2, label: t('acgInvoiceCopy2'), hint: `${t('ivpCopyBuyer')} + ${t('ivpCopySeller')}`, icon: 'fa-copy' },
+                ]}
+              />
+            </FormStep>
+            )}
 
             {full && (
             <FormStep no={nextNo()} done title={t('acgProfitTax')} hint={t('acgProfitTaxHint')}>

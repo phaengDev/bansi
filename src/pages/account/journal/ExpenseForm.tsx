@@ -15,8 +15,7 @@ import { currencySymbol } from '../ledger/currency';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../ledger/accountOption';
 import {
   CASH, CASH_CLASS_CODE, MAX_FILE, TRANSFER, classIdOf, computeTax, defaultClassId, formatQty, isAllowedFile, isFutureDay,
-  subOptionsOf, withCategory, type SubRef, type TaxMode,
-} from './journalKit';
+  subOptionsOf, withCategory, type SubRef, type TaxMode, UNITS } from './journalKit';
 import { useAccountClasses, useFinanceCategories, useTaxes, type FinanceSubCategory } from '../../../utils/selectOption';
 import SubCategoryField from './SubCategoryField';
 import CustomerField, { type CustomerValue, type PartnerRef } from './CustomerField';
@@ -91,7 +90,6 @@ type Line = {
 };
 
 /** ຫົວໜ່ວຍທີ່ໃຊ້ເລື້ອຍ — ພິມເອງໄດ້ຖ້າບໍ່ມີໃນລາຍການ */
-const UNITS = ['ອັນ', 'ແພັກ', 'ກ່ອງ', 'ແກັດ', 'ຕຸກ', 'ກິໂລ', 'ລິດ', 'ຊຸດ', 'ໂຕ', 'ໃບ', 'ຫໍ່', 'ມັດ', 'ຄັ້ງ', 'ເດືອນ'];
 
 let lineSeq = 0;
 const newLine = (): Line => ({ key: ++lineSeq, name: '', qty: 1, unit: '', price: null, discount: null });

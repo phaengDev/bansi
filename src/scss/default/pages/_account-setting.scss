@@ -8269,101 +8269,268 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   > .acc-rp-btn { align-self: flex-start; margin-top: 8px; }
 }
 
-// ໃບເກັບເງິນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe)
+// ໃບເກັບເງິນອາກອນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe).
+// 1 ສະບັບ = 1 ໜ້າ A4; ສີຂອງສະບັບ (--iv) ໃຊ້ທັງລາຍພື້ນຫຼັງ ແລະ ຫົວຂໍ້: ຜູ້ຊື້ = ຂຽວ, ຜູ້ຂາຍ = ມ່ວງ
 .acc-ivp {
   position: fixed;
   left: -10000px;
   top: 0;
-  width: 186mm;
-  color: #14314d;
-  font-family: 'NotoSerifLao', 'Open Sans', sans-serif;
-  font-size: 12px;
-  line-height: 1.5;
+}
+
+.acc-ivp-page {
+  --iv: #0b7a62;
+  --iv-soft: #e7f4ef;
+  --iv-ink: #1d2b36;
+  --iv-muted: #5b6f80;
+
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  color: var(--iv-ink);
   background: #fff;
+  font-family: 'NotoSerifLao', 'Open Sans', sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.45;
+  break-after: page;
+  page-break-after: always;
+
+  &.is-seller { --iv: #5a3ea8; --iv-soft: #efeafb; }
+  &:last-child { break-after: auto; page-break-after: auto; }
 }
 
-.acc-ivp-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #14314d;
-
-  img { width: 64px; height: 64px; object-fit: contain; }
-  > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  h2 { margin: 0; font-size: 18px; font-weight: 800; }
-  p { margin: 0; color: #3d5266; font-size: 12px; }
-  small { color: #3d5266; font-size: 11px; }
+.acc-ivp-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--iv);
 }
 
-.acc-ivp-title {
+.acc-ivp-body {
+  position: relative;
   display: flex;
+  height: 100%;
+  box-sizing: border-box;
   flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
+  gap: 3mm;
+  padding: 15mm 15.5mm 12.5mm;
 
-  b { font-size: 18px; font-weight: 800; }
-  em { color: #6b7c8b; font-size: 11px; font-style: normal; letter-spacing: 0.12em; }
-}
-
-.acc-ivp-info {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 16px;
-  margin: 14px 0;
-
-  > div {
-    display: flex;
-    flex-direction: column;
-    padding: 10px 12px;
-    border: 1px solid #d5dee6;
-    border-radius: 8px;
-
-    small { color: #6b7c8b; font-size: 11px; font-weight: 700; }
-    b { font-size: 14px; }
-  }
+  // ປ້າຍສອງພາສາ: ລາວ / English (ພາສາອັງກິດນ້ອຍກວ່າ)
+  em { color: var(--iv-muted); font-style: normal; font-size: 0.82em; }
 
   dl {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 3px 12px;
+    grid-template-columns: max-content 1fr;
+    gap: 0.9mm 3mm;
     margin: 0;
-    align-content: start;
-
-    dt { color: #6b7c8b; font-weight: 600; }
-    dd { margin: 0; font-weight: 700; text-align: right; }
   }
+
+  // ປ້າຍສອງພາສາຂອງແຖວຂໍ້ມູນ: ລາວ ແຖວເທິງ, English ແຖວລຸ່ມ (ຖັນປ້າຍແຄບລົງ)
+  dt { color: var(--iv-muted); font-weight: 600; line-height: 1.2; white-space: nowrap; }
+  dt em { display: block; font-size: 0.78em; font-weight: 400; }
+  dd { margin: 0; min-width: 0; align-self: center; }
 }
 
+// ---- ຫົວ ----
+.acc-ivp-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 6mm;
+  align-items: stretch;
+}
+
+.acc-ivp-brand {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin-bottom: 1.8mm;
+
+  img { width: 16mm; height: 16mm; object-fit: contain; }
+  > span { display: flex; min-width: 0; flex-direction: column; }
+  small { color: var(--iv); font-size: 8pt; font-weight: 700; }
+  b { font-size: 13.5pt; font-weight: 800; line-height: 1.25; }
+}
+
+.acc-ivp-titlecard {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 3.2mm 4mm 3.5mm;
+  border: 0.4mm solid var(--iv);
+  border-radius: 3mm;
+  background: rgba(255, 255, 255, 0.82);
+  text-align: center;
+
+  h1 { margin: 1.5mm 0 0; color: var(--iv); font-size: 20pt; font-weight: 800; line-height: 1.15; }
+  h2 { margin: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; letter-spacing: 0.32em; }
+  p { margin: 0.6mm 0 2mm; color: var(--iv-muted); font-size: 8.5pt; }
+  dl { padding-top: 2mm; border-top: 0.25mm dashed var(--iv); text-align: left; }
+  dd { text-align: right; }
+}
+
+.acc-ivp-copy {
+  align-self: center;
+  padding: 0.6mm 3mm;
+  border-radius: 99mm;
+  color: #fff;
+  background: var(--iv);
+  font-size: 7.5pt;
+  font-weight: 700;
+}
+
+// ---- ເລກປະຈຳຕົວຜູ້ເສຍອາກອນ: ກ່ອງລະຕົວ ----
+.acc-ivp-tin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45mm;
+
+  i {
+    display: inline-grid;
+    width: 3.7mm;
+    height: 4.6mm;
+    place-items: center;
+    border: 0.25mm solid var(--iv);
+    background: #fff;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 9pt;
+  }
+
+  b { color: var(--iv); }
+}
+
+// ---- ຜູ້ຊື້ ----
+.acc-ivp-buyer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38mm;
+  gap: 5mm;
+  padding: 2.4mm 4mm;
+  border: 0.25mm solid #cfd9e2;
+  border-left: 1.2mm solid var(--iv);
+  border-radius: 2mm;
+  background: rgba(255, 255, 255, 0.85);
+
+  > div > small { color: var(--iv); font-size: 8pt; font-weight: 700; }
+  > div > b { display: block; margin-bottom: 1.5mm; font-size: 11.5pt; font-weight: 800; }
+}
+
+.acc-ivp-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4mm;
+  padding-left: 4mm;
+  border-left: 0.25mm dashed #cfd9e2;
+
+  > small { margin-bottom: 0.5mm; color: var(--iv); font-size: 8pt; font-weight: 700; }
+  span { display: flex; align-items: center; gap: 2mm; }
+  span i { width: 3.6mm; height: 3.6mm; border: 0.3mm solid var(--iv); border-radius: 0.6mm; background: #fff; }
+}
+
+// ---- ລາຍການ ----
 .acc-ivp-lines {
   width: 100%;
   border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.8);
+  font-variant-numeric: tabular-nums;
 
   th,
-  td { padding: 6px 8px; border-bottom: 1px solid #e3eaf0; text-align: left; }
-  th { color: #fff; background: #14314d; font-size: 11.5px; }
-  th:first-child,
-  td:first-child { width: 32px; text-align: center; }
-  th:last-child,
-  td:last-child { width: 34%; text-align: right; font-variant-numeric: tabular-nums; }
-  tfoot td { border-bottom: 0; font-weight: 700; }
-  tfoot td:first-child { width: auto; text-align: right; }
-  tfoot tr.is-total td { border-top: 2px solid #14314d; font-size: 14px; font-weight: 800; }
+  td { padding: 1.3mm 2mm; border: 0.25mm solid #b9c7d3; }
+
+  th {
+    color: #fff;
+    background: var(--iv);
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.25;
+
+    span { display: block; }
+    em { color: rgba(255, 255, 255, 0.8); font-size: 7pt; }
+  }
+
+  tr.is-index td { padding: 0.4mm; color: var(--iv-muted); background: var(--iv-soft); font-size: 7pt; text-align: center; }
+
+  th:nth-child(1) { width: 9mm; }
+  th:nth-child(3) { width: 16mm; }
+  th:nth-child(4) { width: 14mm; }
+  th:nth-child(5) { width: 27mm; }
+  th:nth-child(6) { width: 31mm; }
+
+  tbody td { height: 5.6mm; padding-top: 0.8mm; padding-bottom: 0.8mm; }
+  tbody td:nth-child(1),
+  tbody td:nth-child(3),
+  tbody td:nth-child(4) { text-align: center; }
+  tbody td:nth-child(5),
+  tbody td:nth-child(6) { text-align: right; }
+  tbody tr.is-blank td { height: 5.6mm; }
 }
 
-.acc-ivp-note { margin: 10px 0 0; color: #3d5266; font-size: 11.5px; }
+// ---- ລວມ ----
+.acc-ivp-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76mm;
+  gap: 5mm;
+  margin-top: -1.2mm;
 
+  dl {
+    gap: 0;
+    align-self: start;
+    border: 0.25mm solid #b9c7d3;
+    background: rgba(255, 255, 255, 0.9);
+
+    dt,
+    dd { padding: 1.4mm 2.5mm; border-bottom: 0.25mm solid #e0e7ee; }
+    dd { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    dt.is-total,
+    dd.is-total { border-bottom: 0; color: #fff; background: var(--iv); font-size: 10.5pt; font-weight: 800; }
+    dt.is-total em { color: rgba(255, 255, 255, 0.85); }
+  }
+}
+
+.acc-ivp-words {
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+  padding: 2.5mm 3.5mm;
+  border: 0.25mm dashed var(--iv);
+  border-radius: 2mm;
+  background: rgba(255, 255, 255, 0.85);
+
+  small { color: var(--iv); font-size: 8pt; font-weight: 700; }
+  b { font-size: 10.5pt; font-weight: 800; line-height: 1.4; }
+}
+
+.acc-ivp-note { margin: 0; color: var(--iv-muted); font-size: 8.5pt; }
+
+// ---- ບ່ອນເຊັນ ----
 .acc-ivp-signs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 40px;
-  margin-top: 36px;
+  gap: 22mm;
   text-align: center;
   break-inside: avoid;
 
   span { display: flex; flex-direction: column; align-items: center; }
-  i { display: block; width: 70%; height: 56px; border-bottom: 1px dotted #9aa9b6; }
-  em { margin-top: 4px; color: #3b5166; font-style: normal; font-weight: 600; }
+  small { margin-bottom: 1mm; color: var(--iv-muted); font-size: 8pt; }
+  b { font-size: 9.5pt; font-weight: 800; }
+  i { display: block; width: 72%; height: 14mm; border-bottom: 0.3mm dotted #8a9aa8; }
+  em { margin-top: 1mm; }
+}
+
+.acc-ivp-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  margin-top: auto;
+  // ຫ່າງຈາກລາຍກະໜົກມຸມລຸ່ມ
+  margin-inline: 12mm;
+  padding-top: 2mm;
+  border-top: 0.25mm solid var(--iv);
+  color: var(--iv-muted);
+  font-size: 7.5pt;
+
+  b { color: var(--iv-ink); }
 }
 
 // ລາຍງານອາກອນເງິນເດືອນ — ແຖບເລືອກເດືອນ, ຖັນຕົວເລກຊິດຂວາ (ຍົກເວັ້ນຖັນພະນັກງານ)

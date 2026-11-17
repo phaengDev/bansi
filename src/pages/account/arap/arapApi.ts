@@ -102,6 +102,10 @@ export type PartnerDoc = {
     line_no: number;
     account_id: number;
     description?: string | null;
+    /** ຈຳນວນ × ລາຄາຫົວໜ່ວຍ = amount (ແຖວເກົ່າ = 1 × amount) */
+    quantity?: string | number;
+    unit?: string | null;
+    unit_price?: string | number | null;
     amount: string | number;
     account?: { account_code: string; name_la: string; name_en?: string | null; name_cn?: string | null; account_group: number } | null;
   }[];

@@ -21,6 +21,12 @@ import { SearchBox } from '../setting/settingKit';
 type Period = 'month' | 'year' | 'all';
 type StatusFilter = 'all' | 'unpaid' | 'overdue' | 'paid' | 'cancelled';
 
+/** 1 → "1", 2.5 → "2.5" (ແຖວເກົ່າບໍ່ມີຈຳນວນ = 1) */
+const formatQty = (value: unknown) => {
+  const n = Number(value ?? 1) || 1;
+  return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
+};
+
 const startOf = (period: Period) =>
   period === 'all' ? undefined : moment().startOf(period === 'month' ? 'month' : 'year').format('YYYY-MM-DD');
 
@@ -63,21 +69,26 @@ const DocDetail = ({ kind, doc, onClose, onPay, onCancel }: {
         )}
         <table className="acc-gl-table">
           <thead>
-            <tr><th>{t('glAccount')}</th><th>{t('detail')}</th><th className="is-num">{t('fsAmount')}</th></tr>
+            <tr>
+              <th>{t('glAccount')}</th><th>{t('detail')}</th>
+              <th className="is-num">{t('expenseQty')}</th><th className="is-num">{t('expenseUnitPrice')}</th><th className="is-num">{t('fsAmount')}</th>
+            </tr>
           </thead>
           <tbody>
             {doc.lines.map((l) => (
               <tr key={l._uuid}>
                 <td>{l.account && <AccountCode code={l.account.account_code} group={l.account.account_group} />}{l.account ? lf(l.account, 'name') : ''}</td>
                 <td>{l.description}</td>
+                <td className="is-num">{formatQty(l.quantity)}{l.unit ? ` ${l.unit}` : ''}</td>
+                <td className="is-num">{amountText(l.unit_price ?? l.amount, doc.currency)}</td>
                 <td className="is-num">{amountText(l.amount, doc.currency)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr><td colSpan={2}>{t('arapSubtotal')}</td><td className="is-num">{amountText(doc.subtotal, doc.currency)}</td></tr>
-            {Number(doc.tax) > 0 && <tr><td colSpan={2}>{t('incomeTaxField')}</td><td className="is-num">{amountText(doc.tax, doc.currency)}</td></tr>}
-            <tr><td colSpan={2}>{t('total')}</td><td className="is-num">{amountText(doc.total, doc.currency)}</td></tr>
+            <tr><td colSpan={4}>{t('arapSubtotal')}</td><td className="is-num">{amountText(doc.subtotal, doc.currency)}</td></tr>
+            {Number(doc.tax) > 0 && <tr><td colSpan={4}>{t('incomeTaxField')}</td><td className="is-num">{amountText(doc.tax, doc.currency)}</td></tr>}
+            <tr><td colSpan={4}>{t('total')}</td><td className="is-num">{amountText(doc.total, doc.currency)}</td></tr>
           </tfoot>
         </table>
 
