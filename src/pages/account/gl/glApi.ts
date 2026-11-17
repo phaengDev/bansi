@@ -154,6 +154,7 @@ export const SOURCES: Record<string, { label: string; icon: string; tone: string
   FX_REVAL: { label: 'glSourceFxReval', icon: 'fa-arrow-right-arrow-left', tone: 'is-sky' },
   PROFIT_TAX: { label: 'glSourceProfitTax', icon: 'fa-percent', tone: 'is-slate' },
   WHT: { label: 'glSourceWht', icon: 'fa-hand-holding-dollar', tone: 'is-slate' },
+  TAX_PAYMENT: { label: 'closeTaxPayment', icon: 'fa-building-columns', tone: 'is-slate' },
 };
 export const sourceOf = (type: string) => SOURCES[type] ?? { label: type, icon: 'fa-file', tone: 'is-slate' };
 

@@ -8,6 +8,7 @@ import PeriodClosePage from './PeriodClosePage';
 import BankRecPage from './BankRecPage';
 import FxRevalPage from './FxRevalPage';
 import ProfitTaxPage from './ProfitTaxPage';
+import TaxPaymentPage from './TaxPaymentPage';
 import WithholdingPage from './WithholdingPage';
 
 /**
@@ -29,6 +30,7 @@ const ClosingWindow = () => {
     fxReval: <FxRevalPage />,
     profitTax: <ProfitTaxPage />,
     withholding: <WithholdingPage />,
+    taxPayment: <TaxPaymentPage />,
   };
 
   return (

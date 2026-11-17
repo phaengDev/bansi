@@ -60,6 +60,8 @@ const SOURCES: Record<string, { icon: string; tone: string }> = {
   ADVANCE_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
   ADVANCE_REPAY: { icon: 'fa-money-bill-wave', tone: 'is-in' },
   ADVANCE_REPAY_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
+  TAX_PAYMENT: { icon: 'fa-building-columns', tone: 'is-out' },
+  TAX_PAYMENT_CANCEL: { icon: 'fa-ban', tone: 'is-cancel' },
 };
 
 const rangeOf = (period: Period): Range | null => {

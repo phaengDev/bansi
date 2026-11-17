@@ -230,6 +230,7 @@ export const CLOSING_MENU: SidebarPopupGroup[] = [
   {
     group: 'closeGroupTax',
     items: [
+      { key: 'taxPayment', icon: 'fa-solid fa-building-columns', label: 'closeTaxPayment', feature: 'full_mode' },
       { key: 'profitTax', icon: 'fa-solid fa-percent', label: 'closeProfitTax', feature: 'full_mode' },
       { key: 'withholding', icon: 'fa-solid fa-hand-holding-dollar', label: 'closeWithholding', feature: 'use_withholding' },
     ],

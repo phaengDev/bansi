@@ -7537,6 +7537,10 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 .acc-bankrec,
 .acc-fa {
   --rp-accent: #0e9f86;
+  --rp-accent-2: #3fd0a4;
+  // ບັດຍອດລວມ (.acc-rp-kpi.is-main) ໃຊ້ສີເຂັ້ມສອງອັນນີ້ — ຂາດ = ບັດຂາວ ຕົວໜັງສືຂາວ (ເບິ່ງບໍ່ເຫັນ)
+  --rp-ink: #08735f;
+  --rp-deep: #064e3b;
   --rp-soft: #e3f5f1;
   --rp-line: #e3eaf0;
   --rp-muted: #7b8a97;
@@ -7783,7 +7787,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 .acc-fa-schedule {
   min-width: 720px;
 
-  td small { margin-top: 2px; color: var(--rp-muted); font-size: 11px; }
+  td small { display: block; margin-top: 2px; color: var(--rp-muted); font-size: 11px; }
   tr.is-disposed td { color: #9aa7b3; }
   td.is-gain { color: #0b8a6a; font-weight: 700; }
   td.is-loss { color: #c4343a; font-weight: 700; }
@@ -8197,4 +8201,48 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 
 @media (max-width: 575.98px) {
   .acg-mode-detail ul { grid-template-columns: 1fr; }
+}
+
+// ນຳສົ່ງອາກອນ — ຍອດຄ້າງຈ່າຍຂອງປະເພດທີ່ເລືອກໃນຟອມ, ວັນທີ "ຮອດວັນທີ" ໃນຫົວບັດ, ປຸ່ມນຳສົ່ງໃນບັດແຕ່ລະປະເພດ
+.acc-tp-due {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 14px;
+  padding: 12px 14px;
+  border: 1px dashed #f0b4a6;
+  border-radius: 12px;
+  background: #fff6f3;
+
+  > span { display: flex; flex-direction: column; }
+  small { color: #8a5a4c; font-size: 12px; font-weight: 600; }
+  b { color: #8e2440; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  em { color: #6b7c8b; font-size: 12.5px; font-style: normal; }
+  em.is-bad { color: #c4343a; font-weight: 600; }
+
+  &.is-empty {
+    border-color: #d5dee6;
+    background: #f6f8fa;
+
+    b { color: #8a9aa8; }
+  }
+}
+
+.acc-tp-asof {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+
+  small { color: #6b7c8b; font-size: 12px; font-weight: 600; white-space: nowrap; }
+}
+
+.acc-tp-kpi {
+  display: flex;
+  flex-direction: column;
+
+  small i { margin-right: 4px; opacity: 0.75; }
+  em.is-bad { color: #c4343a; }
+  > .acc-rp-btn { align-self: flex-start; margin-top: 8px; }
 }
