@@ -8270,7 +8270,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 // ໃບເກັບເງິນອາກອນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe).
-// 1 ສະບັບ = 1 ໜ້າ A4; ລາຍພື້ນຫຼັງສີສົ້ມ #e74e3d (ART_COLOR); ຕົວໜັງສືທັງໝົດສີດຳ (--iv-ink), ສີສົ້ມແດງ (--iv) ໃຊ້ສະເພາະເສັ້ນ/ກອບ
+// 1 ສະບັບ = 1 ໜ້າ A4; ລາຍພື້ນຫຼັງສີສົ້ມ #e74e3d (ART_COLOR); ຕົວໜັງສື ແລະ ເສັ້ນ/ກອບ ທັງໝົດສີດຳ (--iv-ink)
 .acc-ivp {
   position: fixed;
   left: -10000px;
@@ -8278,7 +8278,6 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 .acc-ivp-page {
-  --iv: #c0392b;
   --iv-ink: #000;
 
   position: relative;
@@ -8398,7 +8397,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     width: 3.7mm;
     height: 4.6mm;
     place-items: center;
-    border: 0.25mm solid var(--iv);
+    border: 0.25mm solid var(--iv-ink);
     background: #fff;
     font-style: normal;
     font-weight: 700;
@@ -8430,7 +8429,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 
   > small { margin-bottom: 0.5mm; color: var(--iv-ink); font-size: 8pt; font-weight: 700; }
   span { display: flex; align-items: center; gap: 2mm; }
-  span i { width: 3.6mm; height: 3.6mm; border: 0.3mm solid var(--iv); border-radius: 0.6mm; background: #fff; }
+  span i { width: 3.6mm; height: 3.6mm; border: 0.3mm solid var(--iv-ink); border-radius: 0.6mm; background: #fff; }
 }
 
 // ---- ລາຍການ ----
@@ -8444,8 +8443,8 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   td { padding: 1.3mm 2mm; border: 0.25mm solid #b9c7d3; }
 
   th {
-    border-top: 0.45mm solid var(--iv);
-    border-bottom: 0.45mm solid var(--iv);
+    border-top: 0.45mm solid var(--iv-ink);
+    border-bottom: 0.45mm solid var(--iv-ink);
     color: var(--iv-ink);
     font-size: 8.5pt;
     font-weight: 700;
@@ -8490,7 +8489,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     // ເຕັມສູງແຖວ (ເສັ້ນຂອງ dt ແລະ dd ຕົງກັນ), ຕົວເລກຢູ່ກາງ-ຂວາ
     dd { display: flex; align-self: stretch; align-items: center; justify-content: flex-end; font-weight: 700; font-variant-numeric: tabular-nums; }
     dt.is-total,
-    dd.is-total { border-top: 0.45mm solid var(--iv); border-bottom: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; }
+    dd.is-total { border-top: 0.45mm solid var(--iv-ink); border-bottom: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; }
   }
 }
 
@@ -8529,7 +8528,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   // ຫ່າງຈາກລາຍກະໜົກມຸມລຸ່ມ
   margin-inline: 12mm;
   padding-top: 2mm;
-  border-top: 0.25mm solid var(--iv);
+  border-top: 0.25mm solid var(--iv-ink);
   color: var(--iv-ink);
   font-size: 7.5pt;
 
