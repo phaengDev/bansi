@@ -20,17 +20,17 @@ const PRINT_CSS = `
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 `;
 
-/** ສີລາຍພື້ນຫຼັງ = ສີສົ້ມຂອງແບບຟອມທາງການ (ຂອບ #e74e3d; ໂລ່/ກະໜົກ/ລັດສະໝີ ເປັນສີດຽວກັນແຕ່ຈາງ) */
-const ART_COLOR = '#e74e3d';
-
-/** ສະບັບ: 1 ສຳລັບຜູ້ຊື້, 2 ສຳລັບຜູ້ຂາຍ ເກັບໄວ້ — ສີ ແລະ ລາຍດຽວກັນ (ຄືແບບຟອມທາງການ), ແຍກດ້ວຍປ້າຍສະບັບ */
+/**
+ * ສະບັບ: 1 ສຳລັບຜູ້ຊື້ (ລາຍພື້ນຫຼັງສີສົ້ມ ຄືແບບຟອມທາງການ), 2 ສຳລັບຜູ້ຂາຍເກັບໄວ້ (ສີຟ້າ) — ລາຍດຽວກັນ ຕ່າງແຕ່ສີ.
+ * art = ສີເຂັ້ມສຸດຂອງລາຍ (ຂອບ); ໂລ່/ກະໜົກ/ລັດສະໝີ ເປັນສີດຽວກັນແຕ່ຈາງ. ຕົວໜັງສື ແລະ ເສັ້ນ ສີດຳທຸກສະບັບ
+ */
 const COPIES = [
-  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer' },
-  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller' },
+  { no: 1, label: 'ivpCopyBuyer', en: 'Original — for buyer', art: '#e74e3d' },
+  { no: 2, label: 'ivpCopySeller', en: 'Copy — for seller', art: '#2f72c4' },
 ];
 
 /** ແຖວຕ່ຳສຸດຂອງຕາຕະລາງ (ເຕີມແຖວວ່າງ ໃຫ້ໃບເບິ່ງຄົບຄືແບບຟອມ) */
-const MIN_ROWS = 5;
+const MIN_ROWS = 4;
 
 /** ກ່ອງເລກປະຈຳຕົວຜູ້ເສຍອາກອນ ແບບຟອມທາງການ: 9 - 1 - 2 ຕົວ (ເຊັ່ນ 574155778-0-00); ຫວ່າງ = ກ່ອງເປົ່າໃຫ້ຂຽນເອງ */
 const TIN_GROUPS = [9, 1, 2];
@@ -101,13 +101,20 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
 
   const page = (copy: (typeof COPIES)[number]) => (
     <section key={copy.no} className="acc-ivp-page">
-      <InvoiceBackground color={ART_COLOR} />
+      <InvoiceBackground color={copy.art} />
       <div className="acc-ivp-body">
         <p className="acc-ivp-nation">
           <span>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</span>
           <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</span>
         </p>
-        {/* ---- ຫົວ: ຜູ້ຂາຍ (ຊ້າຍ) + ບັດຫົວໃບ (ຂວາ) ---- */}
+        {/* ---- ຊື່ໃບ ຢູ່ເຄິ່ງກາງໜ້າ (ຄືແບບຟອມທາງການ) ---- */}
+        <div className="acc-ivp-masthead">
+          <h1>{t('ivpTitle')}</h1>
+          <h2>({taxed ? 'TAX INVOICE' : 'INVOICE'})</h2>
+          {taxed && <p>{t('ivpVatLine')}</p>}
+          <span className="acc-ivp-copy">{t(copy.label)} <em>({copy.en})</em></span>
+        </div>
+        {/* ---- ຜູ້ຂາຍ (ຊ້າຍ) + ເລກທີ/ວັນທີ (ຂວາ) ---- */}
         <header className="acc-ivp-top">
           <div className="acc-ivp-seller">
             <div className="acc-ivp-brand">
@@ -127,11 +134,7 @@ export const useInvoicePrint = (doc: PartnerDoc) => {
               <dt><Bi la={t('acgTaxId')} en="TIN" /></dt><dd><TinBoxes value={setting.tax_id} /></dd>
             </dl>
           </div>
-          <div className="acc-ivp-titlecard">
-            <span className="acc-ivp-copy">{t(copy.label)} <em>({copy.en})</em></span>
-            <h1>{t('ivpTitle')}</h1>
-            <h2>({taxed ? 'TAX INVOICE' : 'INVOICE'})</h2>
-            {taxed && <p>{t('ivpVatLine')}</p>}
+          <div className="acc-ivp-meta">
             <dl>
               <dt><Bi la={t('ivpNumber')} en="No." /></dt><dd><b>{doc.doc_number}</b></dd>
               <dt><Bi la={t('ivpDate')} en="Date" /></dt><dd>{moment(doc.doc_date).format('DD/MM/YYYY')}</dd>

@@ -8270,7 +8270,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 // ໃບເກັບເງິນອາກອນ (ພິມ) — ຢູ່ນອກຈໍຈົນກວ່າຈະພິມ (printElementByFrame ເອົາສະເພາະອົງປະກອບນີ້ໄປ iframe).
-// 1 ສະບັບ = 1 ໜ້າ A4; ລາຍພື້ນຫຼັງສີສົ້ມ #e74e3d (ART_COLOR); ຕົວໜັງສື ແລະ ເສັ້ນ/ກອບ ທັງໝົດສີດຳ (--iv-ink)
+// 1 ສະບັບ = 1 ໜ້າ A4; ລາຍພື້ນຫຼັງຕາມສະບັບ (COPIES.art: ສົ້ມ / ຟ້າ); ຕົວໜັງສື ແລະ ເສັ້ນ/ກອບ ທັງໝົດສີດຳ (--iv-ink)
 .acc-ivp {
   position: fixed;
   left: -10000px;
@@ -8327,7 +8327,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   height: 100%;
   box-sizing: border-box;
   flex-direction: column;
-  gap: 2.4mm;
+  gap: 2.1mm;
   padding: 13.5mm 15.5mm 12mm;
 
   // ປ້າຍສອງພາສາ: ລາວ / English (ພາສາອັງກິດນ້ອຍກວ່າ)
@@ -8366,18 +8366,24 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   b { font-size: 13.5pt; font-weight: 800; line-height: 1.25; }
 }
 
-.acc-ivp-titlecard {
+// ຊື່ໃບ (ໃບເກັບເງິນ / TAX INVOICE / ອາກອນມູນຄ່າເພີ່ມ / ສະບັບ) — ເຄິ່ງກາງໜ້າ ຄືແບບຟອມທາງການ, ບໍ່ມີກອບ
+.acc-ivp-masthead {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  // ບໍ່ມີກອບ (ແບບຟອມທາງການບໍ່ມີກອບປະດັບ)
-  padding: 0 0 0 2mm;
+  align-items: center;
   text-align: center;
 
-  h1 { margin: 1.5mm 0 0; color: var(--iv-ink); font-size: 20pt; font-weight: 800; line-height: 1.15; }
+  h1 { margin: 0; color: var(--iv-ink); font-size: 20pt; font-weight: 800; line-height: 1.15; }
   h2 { margin: 0; color: var(--iv-ink); font-size: 9.5pt; font-weight: 800; letter-spacing: 0.24em; }
-  p { margin: 0.6mm 0 2mm; color: var(--iv-ink); font-size: 8.5pt; }
-  dl { padding-top: 1.5mm; text-align: left; }
+  p { margin: 0.4mm 0 0; color: var(--iv-ink); font-size: 8.5pt; }
+  .acc-ivp-copy { margin-top: 0.4mm; }
+}
+
+// ເລກທີ / ວັນທີ / ກຳນົດຈ່າຍ / ອ້າງອີງ — ຂວາຂອງຜູ້ຂາຍ, ຢູ່ເທິງ
+.acc-ivp-meta {
+  align-self: start;
+  padding: 1mm 0 0 2mm;
+
   dd { text-align: right; }
 }
 
@@ -8519,7 +8525,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   span { display: flex; flex-direction: column; align-items: center; }
   small { margin-bottom: 1mm; color: var(--iv-ink); font-size: 8pt; }
   b { font-size: 9.5pt; font-weight: 800; }
-  i { display: block; width: 72%; height: 11mm; border-bottom: 0.2mm dotted #000; }
+  i { display: block; width: 72%; height: 8.5mm; border-bottom: 0.2mm dotted #000; }
   em { margin-top: 1mm; }
 }
 
