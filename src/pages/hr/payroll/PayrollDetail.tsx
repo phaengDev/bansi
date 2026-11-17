@@ -5,7 +5,7 @@ import { deleteApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { canDelete, canEdit } from '../../../utils/localStorage';
-import { exportExcel } from '../../../utils/exportHelpers';
+import { exportExcel, exportFromTemplate } from '../../../utils/exportHelpers';
 import { printElementByFrame } from '../../../utils/Print';
 import { useT } from '../../../context/LanguageContext';
 import { minutesText, periodLabel } from '../attendance/attendanceApi';
@@ -15,6 +15,10 @@ import {
 import { PAYSLIP_PRINT_CSS, Payslip } from './Payslip';
 import PayrollLineForm from './PayrollLineForm';
 import PayrollPayModal from './PayrollPayModal';
+
+/** ແບບຟອມນຳເຂົ້າ BCEL i-Bank (ໂອນເງິນເດືອນເປັນຊຸດ) ແລະ ທະນາຄານທີ່ຮັບໄດ້ໃນໄຟລ໌ (ຕົວຫຍໍ້ຂອງທະນາຄານໃນຂໍ້ມູນພະນັກງານ) */
+const IBANK_TEMPLATE = '/assets/PayrollTemplate.xlsx';
+const IBANK_BANK = 'BCEL';
 
 export const PayrollStatusPill = ({ status }: { status: number }) => {
   const t = useT();
@@ -122,6 +126,31 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
 
   const noBank = lines.filter((l) => !l.bank_account_no).length;
 
+  /**
+   * ໄຟລ໌ນຳເຂົ້າ BCEL i-Bank (ໂອນເງິນເດືອນເປັນຊຸດ) — ແບບຟອມ public/assets/PayrollTemplate.xlsx: ບໍ່ມີຫົວຕາຕະລາງ,
+   * ແຖວລະຄົນ A ເລກບັນຊີ (ຂໍ້ຄວາມ, ຕົວເລກລ້ວນ) · B ຈຳນວນເງິນ (ກີບເຕັມ) · C ຊື່ບັນຊີ · D ລາຍລະອຽດ.
+   * ສະເພາະຄົນທີ່ມີບັນຊີ BCEL ແລະ ສຸດທິ > 0 — ຄົນອື່ນ (ບໍ່ມີບັນຊີ / ທະນາຄານອື່ນ) ແຈ້ງໃຫ້ໂອນແຍກ
+   */
+  const exportIBank = async () => {
+    const isBcel = (l: PayrollLine) => String(l.bank_name ?? '').trim().toUpperCase() === IBANK_BANK;
+    const ready = lines.filter((l) => isBcel(l) && String(l.bank_account_no ?? '').replace(/\D/g, '') && Number(l.net) > 0);
+    const skipped = lines.length - ready.length;
+    if (!ready.length) return Notific.warning('payIBankNone');
+    const description = `Salary ${moment(`${data.period}-01`).format('MM/YYYY')}`;
+    try {
+      await exportFromTemplate(IBANK_TEMPLATE, ready.map((l) => [
+        String(l.bank_account_no).replace(/\D/g, ''),
+        Math.round(Number(l.net) || 0),
+        String(l.bank_account_name || l.employee_name).trim(),
+        description,
+      ]), `BCEL-iBank_payroll_${data.period}`, { textCols: [0] });
+      if (skipped) Notific.warning(`${skipped} ${t('payIBankSkipped')}`);
+    } catch (error) {
+      console.error(error);
+      Notific.error(getErrorMessage(error));
+    }
+  };
+
   const printAll = () => {
     if (printRef.current) printElementByFrame(printRef.current, PAYSLIP_PRINT_CSS);
   };
@@ -154,6 +183,9 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
           <button type="button" className="acc-rp-btn" onClick={exportDetail} disabled={!lines.length}><i className="fa-solid fa-file-excel" /> Excel</button>
           <button type="button" className="acc-rp-btn" onClick={exportBank} disabled={!lines.length} title={t('payBankListHint')}>
             <i className="fa-solid fa-building-columns" /> {t('payBankList')}
+          </button>
+          <button type="button" className="acc-rp-btn" onClick={exportIBank} disabled={!lines.length} title={t('payIBankHint')}>
+            <i className="fa-solid fa-file-arrow-down" /> {t('payIBank')}
           </button>
           <button type="button" className="acc-rp-btn" onClick={printAll} disabled={!lines.length}><i className="fa-solid fa-print" /> {t('paySlips')}</button>
           {draft ? (

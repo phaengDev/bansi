@@ -61,3 +61,34 @@ export const exportExcel = (rows: any[], fileName: string, title?: string) => {
     const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([buf]), `${fileName}.xlsx`);
 };
+
+/**
+ * ຕື່ມຂໍ້ມູນໃສ່ແບບຟອມ Excel ທີ່ມີຢູ່ (ເຊັ່ນ public/assets/PayrollTemplate.xlsx ຂອງ BCEL i-Bank) ແລ້ວດາວໂຫຼດ —
+ * ຮັກສາຊື່ sheet, ຄວາມກວ້າງຖັນ ແລະ ຮູບແບບຂອງແບບຟອມ ໃຫ້ລະບົບທະນາຄານອ່ານໄດ້ຄືເດີມ.
+ * rows ຂຽນໃສ່ sheet ທຳອິດ ເລີ່ມແຖວ startRow (ຂໍ້ມູນຕົວຢ່າງໃນແບບຟອມຕັ້ງແຕ່ແຖວນັ້ນຖືກລຶບອອກ);
+ * textCols = ດັດຊະນີຖັນທີ່ຕ້ອງເປັນຂໍ້ຄວາມ (ເລກບັນຊີ — Excel ຈະບໍ່ຕັດ 0 ທາງໜ້າ ຫຼື ປ່ຽນເປັນ 1.01E+17)
+ */
+export const exportFromTemplate = async (
+    templateUrl: string,
+    rows: (string | number)[][],
+    fileName: string,
+    { startRow = 1, textCols = [] }: { startRow?: number; textCols?: number[] } = {},
+) => {
+    const res = await fetch(templateUrl);
+    if (!res.ok) throw new Error(`Template not found: ${templateUrl}`);
+    const wb = XLSX.read(await res.arrayBuffer(), { type: "array", cellStyles: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    Object.keys(ws)
+        .filter((addr) => !addr.startsWith("!") && XLSX.utils.decode_cell(addr).r >= startRow - 1)
+        .forEach((addr) => delete ws[addr]);
+    rows.forEach((row, i) => row.forEach((value, c) => {
+        const addr = XLSX.utils.encode_cell({ r: startRow - 1 + i, c });
+        ws[addr] = textCols.includes(c)
+            ? { t: "s", v: String(value ?? ""), z: "@" }
+            : typeof value === "number" ? { t: "n", v: value } : { t: "s", v: String(value ?? "") };
+    }));
+    const lastCol = Math.max(1, ...rows.map((r) => r.length)) - 1;
+    ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(0, startRow - 2 + rows.length), c: lastCol } });
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `${fileName}.xlsx`);
+};
