@@ -15,6 +15,7 @@ import {
 import { PAYSLIP_PRINT_CSS, Payslip } from './Payslip';
 import PayrollLineForm from './PayrollLineForm';
 import PayrollPayModal from './PayrollPayModal';
+import { SettingModal } from '../../account/setting/settingKit';
 
 /** ແບບຟອມນຳເຂົ້າ BCEL i-Bank (ໂອນເງິນເດືອນເປັນຊຸດ) ແລະ ທະນາຄານທີ່ຮັບໄດ້ໃນໄຟລ໌ (ຕົວຫຍໍ້ຂອງທະນາຄານໃນຂໍ້ມູນພະນັກງານ) */
 const IBANK_TEMPLATE = '/assets/PayrollTemplate.xlsx';
@@ -27,6 +28,49 @@ export const PayrollStatusPill = ({ status }: { status: number }) => {
     <span className={`acs-pill ${paid ? 'is-green' : 'is-gold'}`}>
       <i className={`fa-solid ${paid ? 'fa-circle-check' : 'fa-pen-ruler'}`} /> {t(paid ? 'payStatusPaid' : 'payStatusDraft')}
     </span>
+  );
+};
+
+/**
+ * ໃບຮ່າງ → ໄຟລ໌ i-Bank: ເລືອກ ຄິດໄລ່ໃໝ່ກ່ອນ (ການເຂົ້າວຽກ, ໂອທີ, ເງິນເບີກ ລ່າສຸດ — ແນະນຳ) ຫຼື ໃຊ້ຍອດທີ່ຄິດໄລ່ໄວ້.
+ * ບໍ່ມີສິດແກ້ໄຂ = ຄິດໄລ່ໃໝ່ບໍ່ໄດ້ (ໃຊ້ຍອດທີ່ມີ)
+ */
+const IBankChoice = ({ payroll, busy, onClose, onPick }: {
+  payroll: Payroll;
+  busy: boolean;
+  onClose: () => void;
+  onPick: (recalcFirst: boolean) => void;
+}) => {
+  const t = useT();
+  const [choice, setChoice] = useState<'recalc' | 'current'>(canEdit ? 'recalc' : 'current');
+  const options: { value: 'recalc' | 'current'; label: string; hint: string; icon: string; disabled?: boolean }[] = [
+    { value: 'recalc', label: t('payIBankRecalc'), hint: canEdit ? t('payIBankRecalcHint') : t('payIBankNoEdit'), icon: 'fa-rotate', disabled: !canEdit },
+    {
+      value: 'current', label: t('payIBankCurrent'), icon: 'fa-calculator',
+      hint: `${t('payIBankCurrentHint')} ${moment(payroll.updatedAt).format('DD/MM/YYYY HH:mm')} · ${t('payNet')} ₭ ${kip(payroll.total_net)}`,
+    },
+  ];
+  return (
+    <SettingModal title={t('payIBankDraftTitle')} hint={`${t('accountAppPayroll')} ${periodLabel(payroll.period)} · ${t('payIBankNotPaid')}`}
+      icon="fa-file-arrow-down" saving={busy} onClose={onClose} onSubmit={() => onPick(choice === 'recalc')}
+      submit={{ label: t('payIBankMake'), icon: 'fa-file-arrow-down' }}
+    >
+      {/* 2 ທາງເລືອກ ລຽງລົງ ເຕັມຄວາມກວ້າງ (ຂໍ້ຄວາມຍາວ — ບໍ່ຕັດ) */}
+      <div className="is-wide pay-ibank-opts" role="radiogroup" aria-label={t('payIBankAmounts')}>
+        {options.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={choice === o.value}
+            className={`pay-ibank-opt${choice === o.value ? ' is-on' : ''}`} disabled={o.disabled} onClick={() => setChoice(o.value)}
+          >
+            <i className={`fa-solid ${o.icon}`} />
+            <span><b>{o.label}</b><small>{o.hint}</small></span>
+            <em className={`fa-solid ${choice === o.value ? 'fa-circle-dot' : 'fa-circle'}`} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      {!payroll.complete && (
+        <p className="is-wide acc-bg-note is-warn"><i className="fa-solid fa-hourglass-half" /> {t('payIncompleteMonth')}</p>
+      )}
+    </SettingModal>
   );
 };
 
@@ -44,6 +88,8 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
   const [slip, setSlip] = useState<PayrollLine | null>(null);
   const [paying, setPaying] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** ໃບຮ່າງ: ເລືອກວິທີສ້າງໄຟລ໌ i-Bank */
+  const [iBankOpen, setIBankOpen] = useState(false);
 
   if (!data) return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
 
@@ -129,12 +175,13 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
   /**
    * ໄຟລ໌ນຳເຂົ້າ BCEL i-Bank (ໂອນເງິນເດືອນເປັນຊຸດ) — ແບບຟອມ public/assets/PayrollTemplate.xlsx: ບໍ່ມີຫົວຕາຕະລາງ,
    * ແຖວລະຄົນ A ເລກບັນຊີ (ຂໍ້ຄວາມ, ຕົວເລກລ້ວນ) · B ຈຳນວນເງິນ (ກີບເຕັມ) · C ຊື່ບັນຊີ · D ລາຍລະອຽດ.
-   * ສະເພາະຄົນທີ່ມີບັນຊີ BCEL ແລະ ສຸດທິ > 0 — ຄົນອື່ນ (ບໍ່ມີບັນຊີ / ທະນາຄານອື່ນ) ແຈ້ງໃຫ້ໂອນແຍກ
+   * ສະເພາະຄົນທີ່ມີບັນຊີ BCEL ແລະ ສຸດທິ > 0 — ຄົນອື່ນ (ບໍ່ມີບັນຊີ / ທະນາຄານອື່ນ) ແຈ້ງໃຫ້ໂອນແຍກ.
+   * source = ແຖວທີ່ໃຊ້: ຈ່າຍແລ້ວ = ຍອດທີ່ຈ່າຍແທ້, ຮ່າງ = ຍອດທີ່ຄິດໄລ່ໄວ້ ຫຼື ຫາກໍ່ຄິດໄລ່ໃໝ່ (IBankChoice)
    */
-  const exportIBank = async () => {
+  const exportIBank = async (source: PayrollLine[], basis: string) => {
     const isBcel = (l: PayrollLine) => String(l.bank_name ?? '').trim().toUpperCase() === IBANK_BANK;
-    const ready = lines.filter((l) => isBcel(l) && String(l.bank_account_no ?? '').replace(/\D/g, '') && Number(l.net) > 0);
-    const skipped = lines.length - ready.length;
+    const ready = source.filter((l) => isBcel(l) && String(l.bank_account_no ?? '').replace(/\D/g, '') && Number(l.net) > 0);
+    const skipped = source.length - ready.length;
     if (!ready.length) return Notific.warning('payIBankNone');
     const description = `Salary ${moment(`${data.period}-01`).format('MM/YYYY')}`;
     // ທະນາຄານໂອນຕາມໄຟລ໌ນີ້ເລີຍ: ຍອດ = ເງິນເດືອນສຸດທິ, ເລກບັນຊີ ແລະ ຊື່ບັນຊີ ຕາມຂໍ້ມູນພະນັກງານ
@@ -149,12 +196,37 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
     try {
       await exportFromTemplate(IBANK_TEMPLATE, rows, `BCEL-iBank_payroll_${data.period}`, { textCols: [0] });
       // ສະຫຼຸບໃຫ້ທຽບກັບຍອດທີ່ i-Bank ສະແດງຫຼັງອັບໂຫຼດ
-      Notific.success(`${t('payIBankDone')} ${rows.length} ${t('hrPeople')} · ₭ ${kip(total)}`);
+      Notific.success(`${t('payIBankDone')} ${rows.length} ${t('hrPeople')} · ₭ ${kip(total)} (${basis})`);
       if (noName) Notific.warning(`${noName} ${t('payIBankNoName')}`);
       if (skipped) Notific.warning(`${skipped} ${t('payIBankSkipped')}`);
     } catch (error) {
       console.error(error);
       Notific.error(getErrorMessage(error));
+    }
+  };
+
+  /** ກົດປຸ່ມ i-Bank: ຈ່າຍແລ້ວ = ຍອດທີ່ຈ່າຍໄປແທ້ (ສ້າງເລີຍ), ຍັງບໍ່ຈ່າຍ = ໃຫ້ເລືອກ ຄິດໄລ່ໃໝ່ກ່ອນ ຫຼື ໃຊ້ຍອດທີ່ຄິດໄລ່ໄວ້ */
+  const startIBank = () => {
+    if (!draft) return exportIBank(lines, `${t('payIBankBasisPaid')} ${data.pay_date ? moment(data.pay_date).format('DD/MM/YYYY') : ''}`.trim());
+    setIBankOpen(true);
+  };
+
+  /** ຮ່າງ: recalc = ຄິດໄລ່ໃໝ່ (ການເຂົ້າວຽກ, ໂອທີ, ເງິນເບີກ ລ່າສຸດ) ແລ້ວສ້າງໄຟລ໌ຈາກຍອດໃໝ່; ບໍ່ = ຍອດທີ່ຄິດໄລ່ໄວ້ */
+  const draftIBank = async (recalcFirst: boolean) => {
+    if (!recalcFirst) {
+      setIBankOpen(false);
+      return exportIBank(lines, t('payIBankBasisDraft'));
+    }
+    try {
+      setBusy(true);
+      const next: Payroll = (await putApi(`/payroll/recalc/${btoa(String(id))}`)).data.data;
+      updated(next);
+      setIBankOpen(false);
+      await exportIBank(next.lines ?? [], t('payIBankBasisRecalc'));
+    } catch (error) {
+      Notific.error(getErrorMessage(error));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -191,7 +263,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
           <button type="button" className="acc-rp-btn" onClick={exportBank} disabled={!lines.length} title={t('payBankListHint')}>
             <i className="fa-solid fa-building-columns" /> {t('payBankList')}
           </button>
-          <button type="button" className="acc-rp-btn" onClick={exportIBank} disabled={!lines.length} title={t('payIBankHint')}>
+          <button type="button" className="acc-rp-btn" onClick={startIBank} disabled={!lines.length || busy} title={t('payIBankHint')}>
             <i className="fa-solid fa-file-arrow-down" /> {t('payIBank')}
           </button>
           <button type="button" className="acc-rp-btn" onClick={printAll} disabled={!lines.length}><i className="fa-solid fa-print" /> {t('paySlips')}</button>
@@ -347,6 +419,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
 
       {editing && <PayrollLineForm line={editing} period={data.period} settings={settings} onClose={() => setEditing(null)} onSaved={updated} />}
       {paying && <PayrollPayModal payroll={data} onClose={() => setPaying(false)} onPaid={updated} />}
+      {iBankOpen && <IBankChoice payroll={data} busy={busy} onClose={() => setIBankOpen(false)} onPick={draftIBank} />}
       {slip && (
         <Modal open onClose={() => setSlip(null)} size="sm" className="pay-slip-modal">
           <Modal.Body>

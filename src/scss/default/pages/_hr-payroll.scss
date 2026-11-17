@@ -2317,3 +2317,49 @@
 }
 
 .pay-yr-muted { color: var(--yr-muted); font-size: 12px; }
+
+// ---- ໄຟລ໌ i-Bank (ໃບຮ່າງ): ເລືອກ ຄິດໄລ່ໃໝ່ກ່ອນ / ໃຊ້ຍອດທີ່ຄິດໄລ່ໄວ້ — ບັດລຽງລົງ ເຕັມຄວາມກວ້າງ ----
+.pay-ibank-opts { display: flex; flex-direction: column; gap: 10px; }
+
+.pay-ibank-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e3eaf0;
+  border-radius: 12px;
+  color: #14314d;
+  background: #fff;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  > i {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    place-items: center;
+    border-radius: 10px;
+    color: #5b6f80;
+    background: #eef3f7;
+    font-size: 15px;
+  }
+
+  > span { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+  b { font-size: 13.5px; font-weight: 800; }
+  small { color: #6b7c8b; font-size: 12px; line-height: 1.45; }
+  > em { flex: none; color: #c5d0d9; font-size: 16px; }
+
+  &:hover:not(:disabled) { border-color: #9fd9c9; }
+
+  &.is-on {
+    border-color: #0e9f86;
+    background: #f3fbf8;
+
+    > i { color: #fff; background: #0e9f86; }
+    > em { color: #0e9f86; }
+  }
+
+  &:disabled { cursor: not-allowed; opacity: 0.6; }
+}
