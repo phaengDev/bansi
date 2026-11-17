@@ -2851,6 +2851,8 @@ export const laoDict = {
   payIBank: { la: 'ໄຟລ໌ i-Bank', en: 'i-Bank file', cn: 'i-Bank 文件' },
   payIBankHint: { la: 'ດາວໂຫຼດໄຟລ໌ນຳເຂົ້າ BCEL i-Bank (ໂອນເງິນເດືອນເປັນຊຸດ) — ສະເພາະຄົນທີ່ມີບັນຊີ BCEL', en: 'Download the BCEL i-Bank bulk transfer file — employees with a BCEL account only', cn: '下载 BCEL i-Bank 批量转账文件 — 仅含 BCEL 账户员工' },
   payIBankNone: { la: 'ບໍ່ມີພະນັກງານທີ່ມີບັນຊີ BCEL ແລະ ເງິນເດືອນສຸດທິ — ເພີ່ມບັນຊີທະນາຄານໃນຂໍ້ມູນພະນັກງານ', en: 'No employee has a BCEL account and net pay — add bank accounts in employee profiles', cn: '没有拥有 BCEL 账户且有实发工资的员工 — 请在员工资料中添加银行账户' },
+  payIBankDone: { la: 'ໄຟລ໌ i-Bank (ເງິນເດືອນສຸດທິ):', en: 'i-Bank file (net pay):', cn: 'i-Bank 文件（实发工资）：' },
+  payIBankNoName: { la: 'ຄົນບໍ່ມີຊື່ບັນຊີທະນາຄານ — ໃຊ້ຊື່ພະນັກງານແທນ, ກວດໃຫ້ກົງກັບຊື່ໃນບັນຊີກ່ອນອັບໂຫຼດ', en: 'people have no bank account name — the employee name was used; check it matches the account before uploading', cn: '人没有银行账户名 — 已用员工姓名代替，上传前请核对' },
   payIBankSkipped: { la: 'ຄົນບໍ່ຢູ່ໃນໄຟລ໌ (ບໍ່ມີບັນຊີ BCEL ຫຼື ສຸດທິ 0) — ໃຫ້ໂອນແຍກ', en: 'people are not in the file (no BCEL account or zero net) — pay them separately', cn: '人未包含在文件中（无 BCEL 账户或实发为0）— 请单独转账' },
   payBankList: { la: 'ລາຍຊື່ໂອນເງິນ', en: 'Bank transfer list', cn: '转账名单' },
   payBankListHint: { la: 'Excel ລາຍຊື່ ເລກບັນຊີ ແລະ ຍອດສຸດທິ ສຳລັບໂອນເຂົ້າທະນາຄານ', en: 'Excel of account numbers and net pay for the bank', cn: '含账号与实发金额的银行转账 Excel' },

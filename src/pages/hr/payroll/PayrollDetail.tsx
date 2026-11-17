@@ -137,13 +137,20 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
     const skipped = lines.length - ready.length;
     if (!ready.length) return Notific.warning('payIBankNone');
     const description = `Salary ${moment(`${data.period}-01`).format('MM/YYYY')}`;
+    // ທະນາຄານໂອນຕາມໄຟລ໌ນີ້ເລີຍ: ຍອດ = ເງິນເດືອນສຸດທິ, ເລກບັນຊີ ແລະ ຊື່ບັນຊີ ຕາມຂໍ້ມູນພະນັກງານ
+    const rows = ready.map((l) => [
+      String(l.bank_account_no).replace(/\D/g, ''),
+      Math.round(Number(l.net) || 0),
+      String(l.bank_account_name || l.employee_name).trim(),
+      description,
+    ]);
+    const total = rows.reduce((n, r) => n + Number(r[1]), 0);
+    const noName = ready.filter((l) => !String(l.bank_account_name ?? '').trim()).length;
     try {
-      await exportFromTemplate(IBANK_TEMPLATE, ready.map((l) => [
-        String(l.bank_account_no).replace(/\D/g, ''),
-        Math.round(Number(l.net) || 0),
-        String(l.bank_account_name || l.employee_name).trim(),
-        description,
-      ]), `BCEL-iBank_payroll_${data.period}`, { textCols: [0] });
+      await exportFromTemplate(IBANK_TEMPLATE, rows, `BCEL-iBank_payroll_${data.period}`, { textCols: [0] });
+      // ສະຫຼຸບໃຫ້ທຽບກັບຍອດທີ່ i-Bank ສະແດງຫຼັງອັບໂຫຼດ
+      Notific.success(`${t('payIBankDone')} ${rows.length} ${t('hrPeople')} · ₭ ${kip(total)}`);
+      if (noName) Notific.warning(`${noName} ${t('payIBankNoName')}`);
       if (skipped) Notific.warning(`${skipped} ${t('payIBankSkipped')}`);
     } catch (error) {
       console.error(error);
