@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Input, Loader, NumberInput, SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { formatNumber, postApi } from '../../../utils/configApi';
@@ -9,6 +9,8 @@ import { useT } from '../../../context/LanguageContext';
 import { useFiscalYears } from '../../../utils/selectOption';
 import { isNotReady } from '../gl/glApi';
 import { GlNotReady, amountFormatter } from '../gl/glKit';
+import { exportExcel } from '../../../utils/exportHelpers';
+import StatementDoc from '../statements/StatementDoc';
 
 type Data = {
   fiscal: { _uuid: number; fiscal_code: string; fiscal_name?: string; start_date: string; end_date: string };
@@ -23,7 +25,8 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 /**
  * ອາກອນກຳໄລ — ກຳໄລກ່ອນອາກອນຂອງປີ (ຈາກສະໝຸດບັນຊີ) + ລາຍຈ່າຍທີ່ບໍ່ຫັກໄດ້ − ລາຍຮັບທີ່ບໍ່ຕ້ອງເສຍ = ກຳໄລເສຍອາກອນ × ອັດຕາ.
  * ລົງບັນຊີ ໜີ້ ລາຍຈ່າຍອາກອນກຳໄລ / ມີ ອາກອນກຳໄລຄ້າງຈ່າຍ (ລົງຊ້ຳ = ກັບໃບເກົ່າ ແລ້ວລົງໃໝ່).
- * ຈ່າຍອາກອນ: ບັນທຶກລາຍຈ່າຍ ປະເພດທີ່ຜູກກັບບັນຊີ ອາກອນກຳໄລຄ້າງຈ່າຍ
+ * ຕາຕະລາງເປັນເອກະສານ "ລາຍງານປຽບທຽບຜົນບັນຊີ ກັບ ຜົນອາກອນ" (ແຈ້ງການກົມສ່ວຍສາອາກອນ ເລກທີ 0253 ໃຫ້ຍື່ນພ້ອມງົບການເງິນ)
+ * — ພິມ/Excel ໄດ້, ມີບ່ອນເຊັນ. ຈ່າຍອາກອນ: ປິດງວດບັນຊີ → ນຳສົ່ງອາກອນ (ຈ່າຍແລ້ວ ສະແດງໃນລາຍງານ)
  */
 const ProfitTaxPage = () => {
   const t = useT();
@@ -36,6 +39,8 @@ const ProfitTaxPage = () => {
   const [rate, setRate] = useState(20);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  /** ອາກອນກຳໄລທີ່ນຳສົ່ງແລ້ວ ສຳລັບງວດໃນປີນີ້ (ລວມຈ່າຍລ່ວງໜ້າ) — ຈາກ ນຳສົ່ງອາກອນ */
+  const [paid, setPaid] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -56,6 +61,17 @@ const ProfitTaxPage = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  const fiscalStart = data?.fiscal.start_date;
+  const fiscalEnd = data?.fiscal.end_date;
+  useEffect(() => {
+    if (!fiscalStart || !fiscalEnd) return;
+    postApi('/tax-payment/fetch', { start_date: fiscalStart })
+      .then((res) => setPaid((res.data?.data ?? [])
+        .filter((p: any) => Number(p.tax_kind) === 5 && Number(p.status) === 1 && p.period_end >= fiscalStart && p.period_end <= fiscalEnd)
+        .reduce((n: number, p: any) => n + (Number(p.amount) || 0), 0)))
+      .catch(() => setPaid(0));
+  }, [fiscalStart, fiscalEnd]);
 
   if (notReady) return <GlNotReady />;
   if (!data) return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
@@ -79,6 +95,25 @@ const ProfitTaxPage = () => {
       }
     });
 
+  /** ແຖວຂອງລາຍງານ — ໃຊ້ທັງຕາຕະລາງ ແລະ Excel */
+  const lines: { label: string; value: number; className?: string; hint?: string }[] = [
+    { label: t('fsTotalRevenue'), value: data.pnl.revenue },
+    { label: t('ptExpenses'), value: -data.pnl.expense },
+    { label: t('ptProfitBeforeTax'), value: data.pnl.profit, className: 'is-subtotal' },
+    { label: t('ptAddBack'), value: addBack, hint: t('ptAddBackHint') },
+    { label: t('ptDeduction'), value: -deduction, hint: t('ptDeductionHint') },
+    { label: t('ptTaxable'), value: taxable, className: 'is-subtotal' },
+    { label: `${t('closeProfitTax')} ${rate}%`, value: tax, className: 'is-total' },
+    { label: t('ptBooked'), value: data.pnl.booked, hint: t('ptBookedHint') },
+    { label: t('ptPaid'), value: -paid, hint: t('ptPaidHint') },
+    { label: t('ptStillDue'), value: round2(tax - paid), className: 'is-total' },
+  ];
+  const period = `${moment(data.fiscal.start_date).format('DD/MM/YYYY')} – ${moment(yearEnded ? data.fiscal.end_date : data.date).format('DD/MM/YYYY')}`;
+  const exportRows = () => exportExcel(
+    lines.map((l) => ({ [t('ptReconItem')]: l.label, LAK: l.value })),
+    `profit_tax_${data.fiscal.fiscal_code}`, t('ptReconTitle'),
+  );
+
   const row = (label: string, value: number, className = 'is-line', hint?: string) => (
     <tr className={className}>
       <td>{label}{hint && <small>{hint}</small>}</td>
@@ -99,18 +134,16 @@ const ProfitTaxPage = () => {
         </p>
 
         <div className="acc-pt-grid">
-          <table className="acc-fs-table">
-            <tbody>
-              {row(t('fsTotalRevenue'), data.pnl.revenue)}
-              {row(t('ptExpenses'), -data.pnl.expense)}
-              {row(t('ptProfitBeforeTax'), data.pnl.profit, 'is-subtotal')}
-              {row(t('ptAddBack'), addBack, 'is-line', t('ptAddBackHint'))}
-              {row(t('ptDeduction'), -deduction, 'is-line', t('ptDeductionHint'))}
-              {row(t('ptTaxable'), taxable, 'is-subtotal')}
-              {row(`${t('closeProfitTax')} ${rate}%`, tax, 'is-total')}
-              {row(t('ptBooked'), data.pnl.booked, 'is-line', t('ptBookedHint'))}
-            </tbody>
-          </table>
+          {/* ລາຍງານປຽບທຽບຜົນບັນຊີ ກັບ ຜົນອາກອນ — ຍື່ນພ້ອມງົບການເງິນປະຈຳປີ */}
+          <StatementDoc title={t('ptReconTitle')} period={`${data.fiscal.fiscal_name || data.fiscal.fiscal_code} · ${period}`} unit="LAK"
+            onExcel={exportRows} note={note ? <p>{t('note')}: {note}</p> : undefined}
+          >
+            <table className="acc-fs-table">
+              <tbody>
+                {lines.map((l) => <Fragment key={l.label}>{row(l.label, l.value, l.className, l.hint)}</Fragment>)}
+              </tbody>
+            </table>
+          </StatementDoc>
 
           <div className="acc-pt-inputs">
             <label><span>{t('ptAddBack')}</span>

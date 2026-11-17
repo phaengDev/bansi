@@ -965,6 +965,11 @@ export const laoDict = {
   tpHistory: { la: 'ປະຫວັດການນຳສົ່ງ', en: 'Payment history', cn: '缴纳记录' },
   tpCancelConfirm: { la: 'ຍົກເລີກການນຳສົ່ງ', en: 'Cancel tax payment', cn: '撤销缴税' },
   tpNote: { la: 'ແຈ້ງ ແລະ ຈ່າຍອາກອນຜ່ານ TaxRIS ຫຼື ທະນາຄານແລ້ວ ໃຫ້ບັນທຶກຢູ່ນີ້ — ຍອດຄ້າງຈ່າຍ ແລະ ເງິນໃນບັນຊີຈະຖືກຕ້ອງ (ບໍ່ຕ້ອງບັນທຶກເປັນລາຍຈ່າຍອີກ)', en: 'After filing and paying via TaxRIS or the bank, record it here — the payable and the bank balance stay correct (do not also record it as an expense)', cn: '通过 TaxRIS 或银行申报缴纳后在此登记 — 应交税款与账户余额保持正确（勿再记为支出）' },
+  ptReconTitle: { la: 'ລາຍງານປຽບທຽບຜົນບັນຊີ ກັບ ຜົນອາກອນ', en: 'Accounting vs tax reconciliation', cn: '会计利润与应税所得调节表' },
+  ptReconItem: { la: 'ລາຍການ', en: 'Item', cn: '项目' },
+  ptPaid: { la: 'ຫັກ: ອາກອນກຳໄລທີ່ນຳສົ່ງແລ້ວ', en: 'Less: profit tax already paid', cn: '减：已缴利润税' },
+  ptPaidHint: { la: 'ລວມຈ່າຍລ່ວງໜ້າ — ຈາກ ນຳສົ່ງອາກອນ', en: 'Including advance payments — from Tax payments', cn: '含预缴 — 来自缴纳税款' },
+  ptStillDue: { la: 'ອາກອນກຳໄລທີ່ຍັງຕ້ອງຈ່າຍ', en: 'Profit tax still to pay', cn: '尚需缴纳利润税' },
   ptPayHint: { la: 'ຈ່າຍອາກອນກຳໄລໃຫ້ລັດ: ປິດງວດບັນຊີ → ນຳສົ່ງອາກອນ', en: 'Paying the profit tax: Period closing → Tax payments', cn: '缴纳利润税：期末结账 → 缴纳税款' },
   // ---- ອາກອນຫັກ ນ ທີ່ຈ່າຍ ----
   whtAdd: { la: 'ບັນທຶກອາກອນທີ່ຫັກ', en: 'Record withholding', cn: '登记代扣税' },
