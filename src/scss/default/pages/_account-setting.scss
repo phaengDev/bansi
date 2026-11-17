@@ -8371,26 +8371,22 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 3.2mm 4mm 3.5mm;
-  border: 0.4mm solid var(--iv);
-  border-radius: 3mm;
-  background: rgba(255, 255, 255, 0.82);
+  // ບໍ່ມີກອບ (ແບບຟອມທາງການບໍ່ມີກອບປະດັບ)
+  padding: 0 0 0 2mm;
   text-align: center;
 
   h1 { margin: 1.5mm 0 0; color: var(--iv); font-size: 20pt; font-weight: 800; line-height: 1.15; }
   h2 { margin: 0; color: var(--iv-ink); font-size: 10.5pt; font-weight: 800; letter-spacing: 0.32em; }
   p { margin: 0.6mm 0 2mm; color: var(--iv-muted); font-size: 8.5pt; }
-  dl { padding-top: 2mm; border-top: 0.25mm dashed var(--iv); text-align: left; }
+  dl { padding-top: 1.5mm; text-align: left; }
   dd { text-align: right; }
 }
 
+// ສະບັບ (ໃບທີ 1: ສຳລັບຜູ້ຊື້ …) — ຕົວໜັງສືທຳມະດາ ຄືແບບຟອມທາງການ
 .acc-ivp-copy {
   align-self: center;
-  padding: 0.6mm 3mm;
-  border-radius: 99mm;
-  color: #fff;
-  background: var(--iv);
-  font-size: 7.5pt;
+  color: var(--iv);
+  font-size: 8.5pt;
   font-weight: 700;
 }
 
@@ -8421,11 +8417,9 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38mm;
   gap: 5mm;
-  padding: 2.4mm 4mm;
-  border: 0.25mm solid #cfd9e2;
-  border-left: 1.2mm solid var(--iv);
-  border-radius: 2mm;
-  background: rgba(255, 255, 255, 0.85);
+  // ເສັ້ນຂວາງທຳມະດາຂັ້ນຜູ້ຂາຍ-ຜູ້ຊື້ ຄືແບບຟອມທາງການ (ບໍ່ມີແຖບສີ / ກອບມົນ)
+  padding: 2.4mm 0 0;
+  border-top: 0.3mm solid #9fb0bf;
 
   > div > small { color: var(--iv); font-size: 8pt; font-weight: 700; }
   > div > b { display: block; margin-bottom: 1.5mm; font-size: 11.5pt; font-weight: 800; }
@@ -8435,8 +8429,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   display: flex;
   flex-direction: column;
   gap: 1.4mm;
-  padding-left: 4mm;
-  border-left: 0.25mm dashed #cfd9e2;
+  padding-left: 2mm;
 
   > small { margin-bottom: 0.5mm; color: var(--iv); font-size: 8pt; font-weight: 700; }
   span { display: flex; align-items: center; gap: 2mm; }
@@ -8508,10 +8501,7 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   display: flex;
   flex-direction: column;
   gap: 1mm;
-  padding: 2.5mm 3.5mm;
-  border: 0.25mm dashed var(--iv);
-  border-radius: 2mm;
-  background: rgba(255, 255, 255, 0.85);
+  padding: 1.5mm 0 0;
 
   small { color: var(--iv); font-size: 8pt; font-weight: 700; }
   b { font-size: 10.5pt; font-weight: 800; line-height: 1.4; }
