@@ -5,8 +5,9 @@ import AccountShell from '../pages/account/Shell';
 import AccountDesktopMenu from '../pages/account/DesktopMenu';
 
 /**
- * ທຸກໂມດູນບັນຊີເປີດເປັນໜ້າຕ່າງ (popup) ຢູ່ເທິງ desktop ຂອງ `/account` — path ຂອງເມນູ (/account/journal, …)
+ * desktop ຢູ່ທີ່ `/` — ທຸກໂມດູນເປີດເປັນໜ້າຕ່າງ (popup) ຢູ່ເທິງ desktop. path ຂອງເມນູ (/account/journal, …)
  * ໃຊ້ຈັບຄູ່ກັບແຖວ tbl_main_menu ຂອງ api-bansi ເທົ່ານັ້ນ ບໍ່ແມ່ນ route ແຍກ.
+ * ລິ້ງເກົ່າ /account (bookmark) ແລະ path ອື່ນໆ → ກັບໄປ `/`
  */
 const AppRoute: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
@@ -14,13 +15,11 @@ const AppRoute: RouteObject[] = [
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <Navigate to="/account" replace /> },
       {
-        path: 'account/*',
         element: <AccountShell />,
         children: [{ index: true, element: <AccountDesktopMenu /> }],
       },
-      { path: '*', element: <Navigate to="/account" replace /> },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ];
