@@ -8436,28 +8436,29 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 }
 
 // ---- ລາຍການ ----
+// ໂປ່ງໃສທັງໝົດ (ບໍ່ມີພື້ນສີ/ຂາວ) — ໂລ່ ແລະ ລາຍພື້ນຫຼັງຕ້ອງເຫັນຜ່ານຕາຕະລາງ; ຫົວຕາຕະລາງແຍກດ້ວຍສີຕົວໜັງສື + ເສັ້ນລຸ່ມໜາ
 .acc-ivp-lines {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.8);
   font-variant-numeric: tabular-nums;
 
   th,
   td { padding: 1.3mm 2mm; border: 0.25mm solid #b9c7d3; }
 
   th {
-    color: #fff;
-    background: var(--iv);
+    border-top: 0.45mm solid var(--iv);
+    border-bottom: 0.45mm solid var(--iv);
+    color: var(--iv);
     font-size: 8.5pt;
     font-weight: 700;
     text-align: center;
     line-height: 1.25;
 
     span { display: block; }
-    em { color: rgba(255, 255, 255, 0.8); font-size: 7pt; }
+    em { color: var(--iv-muted); font-size: 7pt; }
   }
 
-  tr.is-index td { padding: 0.4mm; color: var(--iv-muted); background: var(--iv-soft); font-size: 7pt; text-align: center; }
+  tr.is-index td { padding: 0.4mm; color: var(--iv-muted); font-size: 7pt; text-align: center; }
 
   th:nth-child(1) { width: 9mm; }
   th:nth-child(3) { width: 16mm; }
@@ -8485,7 +8486,6 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     gap: 0;
     align-self: start;
     border: 0.25mm solid #b9c7d3;
-    background: rgba(255, 255, 255, 0.9);
 
     dt,
     dd { padding: 1.4mm 2.5mm; border-bottom: 0.25mm solid #e0e7ee; }
