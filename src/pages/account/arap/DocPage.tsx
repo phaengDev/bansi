@@ -5,7 +5,7 @@ import { putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { exportExcel } from '../../../utils/exportHelpers';
-import { canCreate, canDelete } from '../../../utils/localStorage';
+import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useLangField, useT } from '../../../context/LanguageContext';
 import { money } from '../gl/glApi';
 import { AccountCode, GlNotReady } from '../gl/glKit';
@@ -38,11 +38,12 @@ export const DocStatusPill = ({ doc }: { doc: PartnerDoc }) => {
 };
 
 /** ລາຍລະອຽດຂອງໃບ — ລາຍການ, ອາກອນ, ຍອດ ແລະ ການຊຳລະທີ່ຕັດແລ້ວ */
-const DocDetail = ({ kind, doc, onClose, onPay, onCancel }: {
+const DocDetail = ({ kind, doc, onClose, onPay, onEdit, onCancel }: {
   kind: Kind;
   doc: PartnerDoc;
   onClose: () => void;
   onPay: () => void;
+  onEdit: () => void;
   onCancel: () => void;
 }) => {
   const t = useT();
@@ -110,10 +111,16 @@ const DocDetail = ({ kind, doc, onClose, onPay, onCancel }: {
             <i className="fa-solid fa-print" /> {t('ivpPrint')}
           </button>
         )}
+        {/* ແກ້ໄຂ / ຍົກເລີກ: ສະເພາະໃບທີ່ຍັງບໍ່ໄດ້ຕັດໜີ້ ແລະ ຜູ້ໃຊ້ມີສິດ (backend ກວດສິດຊ້ຳ) */}
         {status !== 'cancelled' && Number(doc.paid) <= 0 && (
-          <button type="button" className="acc-rp-btn is-danger" disabled={!canDelete} onClick={onCancel}>
-            <i className="fa-solid fa-ban" /> {t('cancelDoc')}
-          </button>
+          <>
+            <button type="button" className="acc-rp-btn is-danger" disabled={!canDelete} onClick={onCancel}>
+              <i className="fa-solid fa-ban" /> {t('cancelDoc')}
+            </button>
+            <button type="button" className="acc-rp-btn" disabled={!canEdit} onClick={onEdit}>
+              <i className="fa-solid fa-pen" /> {t('edit')}
+            </button>
+          </>
         )}
         {status !== 'cancelled' && doc.open > 0 && (
           <button type="button" className="acc-class-add" disabled={!canCreate} onClick={onPay}>
@@ -137,6 +144,7 @@ const DocPage = ({ kind }: { kind: Kind }) => {
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<PartnerDoc | null>(null);
   const [paying, setPaying] = useState<PartnerDoc | null>(null);
+  const [editing, setEditing] = useState<PartnerDoc | null>(null);
 
   if (notReady) return <GlNotReady />;
 
@@ -275,9 +283,14 @@ const DocPage = ({ kind }: { kind: Kind }) => {
                           </button>
                         )}
                         {s !== 'cancelled' && Number(d.paid) <= 0 && (
-                          <button type="button" className="acc-gl-act is-danger" disabled={!canDelete} title={t('cancelDoc')} onClick={() => cancel(d)}>
-                            <i className="fa-solid fa-ban" />
-                          </button>
+                          <>
+                            <button type="button" className="acc-gl-act" disabled={!canEdit} title={t('edit')} onClick={() => setEditing(d)}>
+                              <i className="fa-solid fa-pen" />
+                            </button>
+                            <button type="button" className="acc-gl-act is-danger" disabled={!canDelete} title={t('cancelDoc')} onClick={() => cancel(d)}>
+                              <i className="fa-solid fa-ban" />
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
@@ -290,8 +303,13 @@ const DocPage = ({ kind }: { kind: Kind }) => {
       )}
 
       {adding && <DocForm kind={kind} onClose={() => setAdding(false)} onSaved={refresh} />}
+      {editing && <DocForm kind={kind} doc={editing} onClose={() => setEditing(null)} onSaved={refresh} />}
       {viewing && (
         <DocDetail kind={kind} doc={viewing} onClose={() => setViewing(null)} onCancel={() => cancel(viewing)}
+          onEdit={() => {
+            setEditing(viewing);
+            setViewing(null);
+          }}
           onPay={() => {
             setPaying(viewing);
             setViewing(null);

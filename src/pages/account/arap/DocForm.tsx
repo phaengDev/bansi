@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CurrencyPicker } from '../../../components/Elements/CurrencyPicker';
 import { Button, DatePicker, Input, Modal, NumberInput, SelectPicker, Textarea, AutoComplete } from 'rsuite';
 import moment from 'moment';
-import { postApi } from '../../../utils/configApi';
+import { postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { useCurrency, useTaxes } from '../../../utils/selectOption';
@@ -13,7 +13,7 @@ import { FormStep } from '../setting/settingKit';
 import { money } from '../gl/glApi';
 import { accountOptionLabel, useAccountOptions, useChartAccounts, amountFormatter } from '../gl/glKit';
 import { UNITS } from '../journal/journalKit';
-import { AP, AR, KINDS, isPartnerOf, usePartners, type Kind, type Partner } from './arapApi';
+import { AP, AR, KINDS, isPartnerOf, usePartners, type Kind, type Partner, type PartnerDoc } from './arapApi';
 import { PartnerForm } from './PartnerPage';
 import { useVatOn } from '../accountSettings';
 
@@ -21,6 +21,15 @@ import { useVatOn } from '../accountSettings';
 type Line = { key: number; account_id: number | null; description: string; qty: number | null; unit: string; price: number | null };
 let seq = 0;
 const blankLine = (): Line => ({ key: ++seq, account_id: null, description: '', qty: 1, unit: '', price: null });
+/** ແຖວຂອງໃບທີ່ບັນທຶກແລ້ວ → ແຖວໃນຟອມ (ແຖວເກົ່າບໍ່ມີຈຳນວນ/ລາຄາ = 1 × ຍອດ) */
+const lineOf = (l: PartnerDoc['lines'][number]): Line => ({
+  key: ++seq,
+  account_id: Number(l.account_id) || null,
+  description: l.description ?? '',
+  qty: Number(l.quantity) > 0 ? Number(l.quantity) : 1,
+  unit: l.unit ?? '',
+  price: Number(l.unit_price ?? l.amount) || null,
+});
 const amountOf = (l: Line) => round2((Number(l.qty) || 0) * (Number(l.price) || 0));
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const isBlank = (l: Line) => !l.account_id && !(Number(l.price) > 0) && !l.description.trim();
@@ -48,11 +57,13 @@ const partnerLabel = (_: unknown, item: any) => item && (
 /**
  * ໃບແຈ້ງໜີ້ (AR) / ໃບບິນຜູ້ສະໜອງ (AP) ແບບ 3 ຂັ້ນ — ຄືຟອມລາຍຈ່າຍ:
  * 1) ຄູ່ຄ້າ + ວັນທີ/ຄົບກຳນົດ (ເພີ່ມຄູ່ຄ້າໃໝ່ໄດ້ທັນທີ), 2) ລາຍການ (ບັນຊີ + ລາຍລະອຽດ + ຈຳນວນ), 3) ສະກຸນ, ອາກອນ, ສະຫຼຸບ.
- * ບັນທຶກແລ້ວລົງບັນຊີທັນທີ; ແກ້ບໍ່ໄດ້ — ຍົກເລີກແລ້ວອອກໃໝ່ (ຖ້າຍັງບໍ່ໄດ້ຕັດໜີ້)
+ * ບັນທຶກແລ້ວລົງບັນຊີທັນທີ. doc = ແກ້ໄຂໃບເດີມ (ສະເພາະໃບທີ່ຍັງບໍ່ໄດ້ຕັດໜີ້, ສິດ "ແກ້ໄຂ") — ເລກທີຄືເດີມ,
+ * backend ກັບລາຍການໃບບັນທຶກເດີມ ແລ້ວລົງໃໝ່
  */
-const DocForm = ({ kind, partnerId, onClose, onSaved }: {
+const DocForm = ({ kind, partnerId, doc, onClose, onSaved }: {
   kind: Kind;
   partnerId?: number | null;
+  doc?: PartnerDoc | null;
   onClose: () => void;
   onSaved: () => void;
 }) => {
@@ -63,20 +74,21 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
   const lineOptions = useAccountOptions(accounts, (a) => (cfg.lineGroups as readonly number[]).includes(Number(a.account_group)));
   const currencies = useCurrency();
   const taxes = useTaxes();
-  const [partner, setPartner] = useState<number | null>(partnerId ?? null);
+  const editing = !!doc;
+  const [partner, setPartner] = useState<number | null>(doc?.partner_id ?? partnerId ?? null);
   const [addingPartner, setAddingPartner] = useState(false);
-  const [docDate, setDocDate] = useState<Date>(new Date());
+  const [docDate, setDocDate] = useState<Date>(() => (doc ? moment(doc.doc_date).toDate() : new Date()));
   const [dueDays, setDueDays] = useState<number | null>(null);
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [reference, setReference] = useState('');
-  const [description, setDescription] = useState('');
-  const [currencyId, setCurrencyId] = useState<number | null>(null);
-  const [rate, setRate] = useState<number | null>(null);
-  const [taxId, setTaxId] = useState<number | null>(null);
+  const [dueDate, setDueDate] = useState<Date | null>(() => (doc ? moment(doc.due_date).toDate() : null));
+  const [reference, setReference] = useState(doc?.reference ?? '');
+  const [description, setDescription] = useState(doc?.description ?? '');
+  const [currencyId, setCurrencyId] = useState<number | null>(doc?.currency_id ?? null);
+  const [rate, setRate] = useState<number | null>(() => (doc && Number(doc.exchange_rate) !== 1 ? Number(doc.exchange_rate) : null));
+  const [taxId, setTaxId] = useState<number | null>(doc?.tax_id ?? null);
   const vatOn = useVatOn();
   /** ຊ່ອງອາກອນ — ເປີດອາກອນມູນຄ່າເພີ່ມ ຫຼື ໃບນີ້ມີອາກອນຢູ່ແລ້ວ */
   const taxOn = vatOn || !!taxId;
-  const [lines, setLines] = useState<Line[]>(() => [blankLine()]);
+  const [lines, setLines] = useState<Line[]>(() => (doc?.lines.length ? doc.lines.map(lineOf) : [blankLine()]));
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -112,8 +124,7 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
     }
     try {
       setSaving(true);
-      await postApi('/partner-doc/create', {
-        kind,
+      const payload = {
         partner_id: partner,
         doc_date: moment(docDate).format('YYYY-MM-DD'),
         due_date: moment(due).format('YYYY-MM-DD'),
@@ -126,7 +137,9 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
           account_id: l.account_id, description: l.description.trim() || null,
           quantity: Number(l.qty), unit: l.unit.trim() || null, unit_price: Number(l.price), amount: amountOf(l),
         })),
-      });
+      };
+      if (doc) await putApi(`/partner-doc/update/${btoa(String(doc._uuid))}`, payload);
+      else await postApi('/partner-doc/create', { kind, ...payload });
       Notific.success('saveSuccessDone');
       onSaved();
       onClose();
@@ -144,8 +157,8 @@ const DocForm = ({ kind, partnerId, onClose, onSaved }: {
           <div className="acc-book-modal-head">
             <span className="acc-book-modal-icon"><i className={`fa-solid ${cfg.docIcon}`} /></span>
             <span>
-              <Modal.Title>{t(cfg.docAdd)}</Modal.Title>
-              <small>{t(kind === AR ? 'arInvoiceHint' : 'apBillHint')}</small>
+              <Modal.Title>{doc ? `${t(cfg.docEdit)} ${doc.doc_number}` : t(cfg.docAdd)}</Modal.Title>
+              <small>{t(editing ? 'arapEditHint' : kind === AR ? 'arInvoiceHint' : 'apBillHint')}</small>
             </span>
           </div>
         </Modal.Header>
