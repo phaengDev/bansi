@@ -650,6 +650,30 @@
 
     &:hover { color: #fff; background: #e5484d; border-color: #e5484d; }
   }
+
+  // ລູກທີມທີ່ຍັງລໍຫົວໜ້າທີມ — HR ກົດບໍ່ໄດ້
+  &.is-locked {
+    color: #8a6d1d;
+    cursor: help;
+    background: #fdf6e3;
+    border: 1px dashed #ecd9a0;
+  }
+}
+
+// ຂັ້ນຫົວໜ້າທີມ (ລູກທີມ) ໃຕ້ສະຖານະ
+.lv-lead {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 600;
+
+  i { margin-right: 2px; }
+  em { margin-left: 6px; font-style: normal; font-weight: 500; opacity: 0.7; }
+  small { display: block; font-weight: 500; opacity: 0.8; }
+
+  &.is-wait { color: #a1740f; }
+  &.is-ok { color: #0e7a52; }
+  &.is-no { color: #c4343a; }
 }
 
 .rs-modal.acc-book-modal.acs-modal.lv-review-modal {

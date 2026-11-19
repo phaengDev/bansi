@@ -16,6 +16,10 @@ import { SearchBox, SettingModal, YearStepper } from '../../account/setting/sett
 /** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ຍົກເລີກ (ພະນັກງານ / HR ຖອນ) (ສີຢືມ .att-state) */
 const PENDING = 1;
 const APPROVED = 2;
+/** lead_status — ຂັ້ນຫົວໜ້າທີມ (ລູກທີມ): 1 ລໍຫົວໜ້າ, 2 ຫົວໜ້າອະນຸມັດແລ້ວ (ລໍ HR), 3 ຫົວໜ້າປະຕິເສດ; null = HR ເລີຍ */
+const LEAD_WAITING = 1;
+const LEAD_APPROVED = 2;
+const LEAD_REJECTED = 3;
 const LEAVE_STATUSES: Record<number, { label: string; tone: string; icon: string }> = {
   1: { label: 'leaveStatusPending', tone: 'is-late', icon: 'fa-hourglass-half' },
   2: { label: 'leaveStatusApproved', tone: 'is-present', icon: 'fa-circle-check' },
@@ -43,6 +47,30 @@ type LeaveRequest = {
   employee: (EmployeeRef & { position?: { _uuid: number; position_name: string } | null }) | null;
   /** ໃບລາທີ່ພະນັກງານແນບ (api ລຸ້ນເກົ່າ = ບໍ່ມີ) */
   files?: LeaveFile[];
+  /** ຂັ້ນຫົວໜ້າທີມ (api ລຸ້ນເກົ່າ = ບໍ່ມີ) */
+  lead_status?: number | null;
+  lead_name?: string | null;
+  lead_note?: string | null;
+  lead_at?: string | null;
+};
+
+/** ປ້າຍຂັ້ນຫົວໜ້າທີມ — ລໍ / ອະນຸມັດ / ປະຕິເສດ ໂດຍໃຜ ເມື່ອໃດ */
+const LeadStep = ({ row }: { row: LeaveRequest }) => {
+  const t = useT();
+  if (!row.lead_status) return null;
+  const meta = {
+    [LEAD_WAITING]: { label: 'leaveLeadWaiting', icon: 'fa-user-clock', tone: 'is-wait' },
+    [LEAD_APPROVED]: { label: 'leaveLeadApproved', icon: 'fa-user-check', tone: 'is-ok' },
+    [LEAD_REJECTED]: { label: 'leaveLeadRejected', icon: 'fa-user-xmark', tone: 'is-no' },
+  }[row.lead_status];
+  if (!meta) return null;
+  return (
+    <span className={`lv-lead ${meta.tone}`}>
+      <i className={`fa-solid ${meta.icon}`} /> {t(meta.label)}{row.lead_name ? ` · ${row.lead_name}` : ''}
+      {row.lead_at && row.lead_status !== LEAD_WAITING && <em>{moment(row.lead_at).format('DD/MM HH:mm')}</em>}
+      {row.lead_note && row.lead_status !== LEAD_REJECTED && <small>{row.lead_note}</small>}
+    </span>
+  );
 };
 
 type LeaveData = {
@@ -316,8 +344,11 @@ const LeavePage = () => {
   const rows = data?.data ?? [];
   const summary = data?.summary ?? { pending: 0, approved: 0, rejected: 0, cancelled: 0 };
   const q = keyword.trim().toLowerCase();
-  const shown = rows.filter((r) =>
-    !q || `${r.employee?.emp_code ?? ''} ${fullName(r.employee)} ${r.reason}`.toLowerCase().includes(q));
+  // ອັນທີ່ HR ເຮັດໄດ້ດຽວນີ້ຂຶ້ນກ່ອນ — ອັນທີ່ລໍຫົວໜ້າທີມຢູ່ ລົງລຸ່ມ
+  const lockedLast = (r: LeaveRequest) => (r.status === PENDING && r.lead_status === LEAD_WAITING ? 1 : 0);
+  const shown = rows
+    .filter((r) => !q || `${r.employee?.emp_code ?? ''} ${fullName(r.employee)} ${r.reason}`.toLowerCase().includes(q))
+    .sort((a, b) => lockedLast(a) - lockedLast(b));
   const tabs = [
     { key: PENDING, label: 'leaveStatusPending', value: summary.pending },
     { key: 2, label: 'leaveStatusApproved', value: summary.approved },
@@ -380,6 +411,8 @@ const LeavePage = () => {
                       const type = typeLabel(r, t);
                       const state = LEAVE_STATUSES[r.status] ?? LEAVE_STATUSES[PENDING];
                       const pending = r.status === PENDING;
+                      // ລູກທີມ: HR ອະນຸມັດ / ປະຕິເສດ ໄດ້ ຫຼັງຫົວໜ້າທີມອະນຸມັດແລ້ວເທົ່ານັ້ນ (backend ກວດຊ້ຳ)
+                      const waitingLead = pending && r.lead_status === LEAD_WAITING;
                       return (
                         <tr key={r._uuid}>
                           <td>
@@ -403,11 +436,19 @@ const LeavePage = () => {
                             <LeaveFileChips files={r.files} />
                           </td>
                           <td>
-                            <span className={`att-state ${state.tone}`}><i className={`fa-solid ${state.icon}`} /> {t(state.label)}</span>
+                            {waitingLead
+                              ? <span className="att-state is-late"><i className="fa-solid fa-user-clock" /> {t('leaveLeadWaiting')}</span>
+                              : <span className={`att-state ${state.tone}`}><i className={`fa-solid ${state.icon}`} /> {t(state.label)}</span>}
+                            <LeadStep row={r} />
                             {r.review_note && <small className="acc-gl-ref d-block">{r.review_note}</small>}
                           </td>
                           <td className="lv-actions">
-                            {pending && canEdit && (
+                            {waitingLead && canEdit && (
+                              <span className="lv-act is-locked" title={t('leaveLeadLockedHint')}>
+                                <i className="fa-solid fa-lock" /> {t('leaveLeadLocked')}
+                              </span>
+                            )}
+                            {pending && !waitingLead && canEdit && (
                               <>
                                 <button type="button" className="lv-act is-approve" onClick={() => setReviewing({ row: r, mode: 'approve' })}>
                                   <i className="fa-solid fa-check" /> {t('leaveApprove')}
