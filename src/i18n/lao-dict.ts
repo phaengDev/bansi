@@ -2993,6 +2993,25 @@ export const laoDict = {
   mvSrcPAYROLL: { la: 'ຈ່າຍເງິນເດືອນ', en: 'Payroll', cn: '发放工资' },
   mvSrcPAYROLL_CANCEL: { la: 'ຍົກເລີກຈ່າຍເງິນເດືອນ', en: 'Payroll cancelled', cn: '工资发放作废' },
 
+  // ---- ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ — ຄື app ພະນັກງານ) ----
+  accountAppMySpace: { la: 'ພື້ນທີ່ຂອງຂ້ອຍ', en: 'My space', cn: '我的空间' },
+  accountAppMySpaceDesc: { la: 'ການເຂົ້າວຽກ, ລາພັກ, ຄຳຮ້ອງ, ເງິນເດືອນ ແລະ ວຽກຂອງຂ້ອຍ — ຄືໃນ app ພະນັກງານ', en: 'My attendance, leave, requests, pay and tasks — same as the staff app', cn: '我的考勤、请假、申请、工资和任务——与员工应用相同' },
+  myMenuGroup: { la: 'ຂອງຂ້ອຍ', en: 'Mine', cn: '我的' },
+  myGroupWork: { la: 'ການເຮັດວຽກ', en: 'Work', cn: '工作' },
+  myToday: { la: 'ມື້ນີ້', en: 'Today', cn: '今天' },
+  myAttendance: { la: 'ເຂົ້າ-ອອກວຽກ', en: 'Attendance', cn: '考勤' },
+  myHello: { la: 'ສະບາຍດີ', en: 'Hello', cn: '你好' },
+  myNotWorkday: { la: 'ມື້ນີ້ບໍ່ແມ່ນມື້ເຮັດວຽກ', en: 'Not a workday', cn: '今天不是工作日' },
+  myWorkHours: { la: 'ເວລາເຮັດວຽກ', en: 'Work hours', cn: '工作时间' },
+  myNotScanned: { la: 'ຍັງບໍ່ໄດ້ສະແກນ', en: 'Not scanned yet', cn: '尚未打卡' },
+  myScanOnPhone: { la: 'ສະແກນເຂົ້າ-ອອກວຽກຜ່ານ app ພະນັກງານໃນມືຖື — ໃນຄອມເບິ່ງໄດ້ຢ່າງດຽວ', en: 'Check in and out with the staff app on your phone — view only here', cn: '请在手机员工应用上打卡——此处仅可查看' },
+  myUpcomingHolidays: { la: 'ວັນພັກທີ່ຈະມາເຖິງ', en: 'Upcoming holidays', cn: '即将到来的假日' },
+  myNoUpcomingHolidays: { la: 'ບໍ່ມີວັນພັກອີກໃນປີນີ້', en: 'No more holidays this year', cn: '今年没有更多假日' },
+  myInDays: { la: 'ອີກ {n} ມື້', en: 'in {n} days', cn: '{n} 天后' },
+  myTomorrow: { la: 'ມື້ອື່ນ', en: 'Tomorrow', cn: '明天' },
+  myNotLinked: { la: 'ບັນຊີນີ້ບໍ່ໄດ້ຜູກກັບພະນັກງານ — ຕິດຕໍ່ HR ເພື່ອຜູກບັນຊີ', en: 'This account is not linked to an employee — ask HR to link it', cn: '此账号未关联员工——请联系人事' },
+  myMonthSummary: { la: 'ສະຫຼຸບເດືອນນີ້', en: 'This month', cn: '本月汇总' },
+  myOpenAttendance: { la: 'ເບິ່ງທຸກມື້', en: 'See every day', cn: '查看每天' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { getApi, postApi } from '../../utils/configApi';
 import { useLangField, useT } from '../../context/LanguageContext';
 import { shortcutNameKeys, shortcuts, type Shortcut, type ShortcutId } from './DesktopShared';
+import type { Employee } from '../hr/hrApi';
 
 /** ແຖວຈາກ GET /menu/main ແລະ /menu/all (tbl_main_menu types 2) — backend ບໍ່ສົ່ງ hash ລະຫັດຜ່ານ ສົ່ງແຕ່ locked */
 type MainMenuRow = {
@@ -25,13 +26,21 @@ export type AccountMenu = Shortcut & {
 };
 
 /** ລັອກບໍ່ໄດ້ — ກົງກັບ UNLOCKABLE_PATHS ຂອງ backend (bansi/menuLockController) */
-const UNLOCKABLE: ShortcutId[] = ['settings', 'calendar'];
+const UNLOCKABLE: ShortcutId[] = ['settings', 'calendar', 'mySpace'];
+
+/** ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ) — ບໍ່ມາຈາກ tbl_main_menu, ຂຶ້ນສະເພາະບັນຊີທີ່ຜູກກັບພະນັກງານ */
+const SELF_SERVICE: ShortcutId = 'mySpace';
 
 /**
  * ເມນູທີ່ຜູ້ໃຊ້ຄົນນີ້ເຂົ້າໄດ້ (backend ກັ່ນຕາມ tbl_users.menu_access ແລ້ວ). all = ໄດ້ທຸກເມນູ.
  * ໃຊ້ຮ່ວມກັນທັງ Shell, desktop ແລະ ໜ້າຕັ້ງລະຫັດ — ໂຫຼດຄືນແລ້ວທຸກບ່ອນເຫັນທັນທີ
  */
 let menuState: { rows: MainMenuRow[]; all: boolean } | null = null;
+/**
+ * ພະນັກງານທີ່ບັນຊີນີ້ຜູກໄວ້ (GET /employee/me): undefined = ຍັງບໍ່ຮູ້, null = ບໍ່ໄດ້ຜູກ (ຫຼື ລາອອກແລ້ວ).
+ * ຜູກແລ້ວ = ເຫັນ "ພື້ນທີ່ຂອງຂ້ອຍ" ແລະ ໃຊ້ຂໍ້ມູນຂອງຕົນເອງຄືໃນ app ພະນັກງານ (backend: selfEmployee)
+ */
+let selfState: Employee | null | undefined;
 /** ໂຫຼດ /menu/main ສຳເລັດ ຫຼື ລົ້ມເຫຼວແລ້ວ (ກ່ອນນັ້ນສະຖານະລັອກ ແລະ ສິດຍັງບໍ່ຮູ້) */
 let loaded = false;
 const listeners = new Set<() => void>();
@@ -41,12 +50,15 @@ const listeners = new Set<() => void>();
  * ເທື່ອຕໍ່ມາ = ໃຊ້ລາຍການເກົ່າ (ເນັດສະດຸດ ບໍ່ໃຫ້ປິດໜ້າຕ່າງທີ່ເປີດຢູ່)
  */
 export const refreshAccountMenus = async () => {
-  try {
-    const res = await getApi('/menu/main');
-    menuState = { rows: res.data?.data ?? [], all: res.data?.all !== false };
-  } catch (error) {
-    console.error(error);
+  const [menus, self] = await Promise.allSettled([getApi('/menu/main'), getApi('/employee/me')]);
+  if (menus.status === 'fulfilled') {
+    menuState = { rows: menus.value.data?.data ?? [], all: menus.value.data?.all !== false };
+  } else {
+    console.error(menus.reason);
   }
+  // 400 = ບໍ່ໄດ້ຜູກ / ລາອອກ → ບໍ່ມີພື້ນທີ່ຂອງຂ້ອຍ; ເນັດສະດຸດ (ບໍ່ມີ response) = ໃຊ້ຄ່າເກົ່າ
+  if (self.status === 'fulfilled') selfState = self.value.data?.data ?? null;
+  else if ((self.reason as { response?: unknown })?.response) selfState = null;
   loaded = true;
   listeners.forEach((notify) => notify());
 };
@@ -84,11 +96,18 @@ const useToMenus = () => {
  */
 export const useAccountMenus = (): AccountMenu[] => {
   const state = useSyncExternalStore(subscribe, () => menuState);
+  const self = useSyncExternalStore(subscribe, () => selfState);
   const { toMenu, fromRows } = useToMenus();
   if (!state) return [];
-  if (!state.rows.length) return state.all ? shortcuts.map((shortcut) => toMenu(shortcut)) : [];
-  return fromRows(state.rows);
+  const menus = !state.rows.length
+    ? (state.all ? shortcuts.filter((shortcut) => shortcut.id !== SELF_SERVICE).map((shortcut) => toMenu(shortcut)) : [])
+    : fromRows(state.rows);
+  const selfService = shortcuts.find((shortcut) => shortcut.id === SELF_SERVICE);
+  return self && selfService ? [...menus, toMenu(selfService)] : menus;
 };
+
+/** ພະນັກງານທີ່ບັນຊີນີ້ຜູກໄວ້ — null = ບໍ່ໄດ້ຜູກ, undefined = ກຳລັງກວດ (ໜ້າພື້ນທີ່ຂອງຂ້ອຍໃຊ້ຫົວ/ຮູບ) */
+export const useMyEmployee = () => useSyncExternalStore(subscribe, () => selfState);
 
 /** ທຸກເມນູ (GET /menu/all) — ຟອມຜູ້ໃຊ້ໃຊ້ຕິກວ່າບັນຊີໃດເຂົ້າເມນູໃດໄດ້; null = ກຳລັງໂຫຼດ */
 export const useAllAccountMenus = (): AccountMenu[] | null => {

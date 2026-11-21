@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Drawer, Loader } from 'rsuite';
-import moment from 'moment';
 import { deleteApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
@@ -8,11 +7,8 @@ import { canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
-import {
-  dayLabel, editableState, minutesText, periodLabel, usePostData, weekdayKey,
-  type AttendanceEmployee, type EmployeeMonthData,
-} from './attendanceApi';
-import { ClockCell, LateCell, StatePill } from './attendanceKit';
+import { dayLabel, editableState, periodLabel, usePostData, type AttendanceEmployee, type EmployeeMonthData } from './attendanceApi';
+import { AttendanceDayTable, AttendanceSummary } from './attendanceKit';
 import AttendanceForm from './AttendanceForm';
 
 type Day = EmployeeMonthData['days'][number];
@@ -73,57 +69,20 @@ const AttendanceEmployeeDrawer = ({ employee, period, focusDate, onClose, onChan
         ) : (
           <div className={`att-drawer-body${loading ? ' is-refreshing' : ''}`}>
             {data.locked && <p className="acc-bg-note is-warn"><i className="fa-solid fa-lock" /> {t('attLocked')}</p>}
-            <div className="att-summary">
-              <span><b>{s.present_days}</b><small>{t('attPresentDays')}</small></span>
-              <span className="is-late"><b>{s.late_days}</b><small>{t('attLateDays')} · {minutesText(s.late_minutes + s.early_minutes, t)}</small></span>
-              <span className="is-absent"><b>{s.absent_days}</b><small>{t('attAbsentDays')}</small></span>
-              <span className="is-leave"><b>{s.leave_days + s.unpaid_days}</b><small>{t('attLeaveDays')}{s.unpaid_days ? ` · ${s.unpaid_days} ${t('attStateUnpaid')}` : ''}</small></span>
-              <span><b>{s.employed_days}/{s.workdays}</b><small>{t('attWorkdays')}</small></span>
-            </div>
-            <table className="acc-gl-table att-days">
-              <thead>
-                <tr>
-                  <th>{t('date')}</th>
-                  <th>{t('status')}</th>
-                  <th>{t('attCheckIn')}</th>
-                  <th>{t('attCheckOut')}</th>
-                  <th>{t('attLateEarly')}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {data.days.map((day) => {
-                  const editable = canChange && editableState(day.state);
-                  const focused = day.date === focusDate;
-                  return (
-                    <tr key={day.date} ref={focused ? focusRef : undefined}
-                      className={`${day.workday ? '' : 'is-off'}${focused ? ' is-focus' : ''}${editable ? ' is-click' : ''}`}
-                      onClick={() => editable && setEditing(day)}
-                    >
-                      <td>
-                        <b>{moment(day.date).format('DD/MM')}</b>
-                        <small className="acc-gl-ref">{day.holiday ?? t(weekdayKey(day.date))}</small>
-                      </td>
-                      <td>
-                        <StatePill state={day.state} />
-                        {day.record?.note && <small className="acc-gl-ref att-note-line"><i className="fa-regular fa-note-sticky" /> {day.record.note}</small>}
-                      </td>
-                      <td><ClockCell record={day.record} side="in" /></td>
-                      <td><ClockCell record={day.record} side="out" /></td>
-                      <td><LateCell record={day.record} grace={data.grace} /></td>
-                      <td className="acc-gl-tree-actions" onClick={(e) => e.stopPropagation()}>
-                        <button type="button" className="acc-gl-act" disabled={!editable} title={t(day.record ? 'edit' : 'attAdd')} onClick={() => setEditing(day)}>
-                          <i className={`fa-solid ${day.record ? 'fa-pen' : 'fa-plus'}`} />
-                        </button>
-                        <button type="button" className="acc-gl-act is-danger" disabled={!day.record || !canDelete || data.locked} title={t('delete')} onClick={() => remove(day)}>
-                          <i className="fa-solid fa-trash" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <AttendanceSummary summary={s} />
+            <AttendanceDayTable days={data.days} grace={data.grace} focusDate={focusDate} focusRef={focusRef}
+              onRowClick={(day) => (canChange && editableState(day.state) ? () => setEditing(day) : null)}
+              actions={(day) => (
+                <>
+                  <button type="button" className="acc-gl-act" disabled={!(canChange && editableState(day.state))} title={t(day.record ? 'edit' : 'attAdd')} onClick={() => setEditing(day)}>
+                    <i className={`fa-solid ${day.record ? 'fa-pen' : 'fa-plus'}`} />
+                  </button>
+                  <button type="button" className="acc-gl-act is-danger" disabled={!day.record || !canDelete || data.locked} title={t('delete')} onClick={() => remove(day)}>
+                    <i className="fa-solid fa-trash" />
+                  </button>
+                </>
+              )}
+            />
           </div>
         )}
       </Drawer.Body>

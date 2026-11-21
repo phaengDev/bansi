@@ -21,6 +21,7 @@ import BudgetWindow from './budget/BudgetWindow';
 import HrWindow from '../hr/HrWindow';
 import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
+import MyWindow from '../me/MyWindow';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
@@ -65,6 +66,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   hr: <HrWindow />,
   attendance: <AttendanceWindow />,
   payroll: <PayrollWindow />,
+  mySpace: <MyWindow />,
 };
 
 /**
@@ -136,6 +138,7 @@ const AccountShell: React.FC = () => {
   const attendanceWindow = usePopupWindow();
   const payrollWindow = usePopupWindow();
   const calendarWindow = usePopupWindow();
+  const mySpaceWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
     journal: journalWindow,
@@ -155,6 +158,7 @@ const AccountShell: React.FC = () => {
     attendance: attendanceWindow,
     payroll: payrollWindow,
     calendar: calendarWindow,
+    mySpace: mySpaceWindow,
     settings: settingsWindow,
   };
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop

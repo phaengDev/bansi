@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
-import { postApi } from '../../../utils/configApi';
+import { getApi, postApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import type { EmployeeRef } from '../hrApi';
@@ -249,6 +249,36 @@ export const usePostData = <T,>(path: string, body: Record<string, unknown> | nu
     try {
       setLoading(true);
       const res = await postApi(path, JSON.parse(key));
+      setData(res.data);
+    } catch (error) {
+      console.error(error);
+      Notific.error(getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [path, key]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  return { data, loading, reload };
+};
+
+/**
+ * GET ທີ່ຂຶ້ນກັບ query (ປີ / ເດືອນ) — ຄືກັບ usePostData: ປ່ຽນ params = ໂຫຼດໃໝ່, ຂໍ້ມູນເກົ່າຍັງສະແດງລະຫວ່າງໂຫຼດ.
+ * params null = ຍັງບໍ່ໂຫຼດ. ໃຊ້ກັບ route ຂໍ້ມູນຂອງຕົນເອງ (/…/me)
+ */
+export const useGetData = <T,>(path: string, params: Record<string, unknown> | null = {}) => {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const key = params ? JSON.stringify(params) : null;
+
+  const reload = useCallback(async () => {
+    if (!key) return;
+    try {
+      setLoading(true);
+      const res = await getApi(path, { params: JSON.parse(key) });
       setData(res.data);
     } catch (error) {
       console.error(error);

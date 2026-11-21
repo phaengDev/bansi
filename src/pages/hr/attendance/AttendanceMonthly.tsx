@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DatePicker, Loader, SelectPicker } from 'rsuite';
+import { Loader, SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useT } from '../../../context/LanguageContext';
@@ -9,7 +9,7 @@ import {
   DAY_STATES, minutesText, periodLabel, toPeriod, usePostData,
   type AttendanceEmployee, type DayState, type MonthlyData,
 } from './attendanceApi';
-import { StateLegend } from './attendanceKit';
+import { MonthStepper, StateLegend } from './attendanceKit';
 import AttendanceEmployeeDrawer from './AttendanceEmployeeDrawer';
 import { SearchBox } from '../../account/setting/settingKit';
 
@@ -34,7 +34,6 @@ const AttendanceMonthly = () => {
   const shown = rows.filter((r) =>
     (!department || r.employee.department_id === department)
     && (!q || `${r.employee.emp_code} ${fullName(r.employee)}`.toLowerCase().includes(q)));
-  const shift = (months: number) => setPeriod(moment(`${period}-01`).add(months, 'month').format('YYYY-MM'));
   const sum = (pick: (s: MonthlyData['data'][number]['stats']) => number) => shown.reduce((n, r) => n + pick(r.stats), 0);
 
   const workdays = data?.days.filter((d) => d.workday).length ?? 0;
@@ -63,14 +62,7 @@ const AttendanceMonthly = () => {
     <div className="acc-rp att-page">
       <div className="acc-rp-filters">
         <div className="acc-rp-filter-row">
-          <div className="att-nav">
-            <button type="button" className="acc-rp-btn" aria-label={t('previous')} onClick={() => shift(-1)}><i className="fa-solid fa-chevron-left" /></button>
-            <DatePicker value={moment(`${period}-01`).toDate()} format="MM/yyyy" cleanable={false} oneTap className="att-nav-picker"
-              shouldDisableDate={(d) => moment(d).isAfter(moment(), 'month')} onChange={(d) => d && setPeriod(toPeriod(d))}
-            />
-            <button type="button" className="acc-rp-btn" aria-label={t('next')} disabled={period >= current} onClick={() => shift(1)}><i className="fa-solid fa-chevron-right" /></button>
-            {period !== current && <button type="button" className="acc-rp-btn" onClick={() => setPeriod(current)}>{t('attThisMonth')}</button>}
-          </div>
+          <MonthStepper period={period} onChange={setPeriod} />
           <SelectPicker block className="att-dept" data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))}
             value={department} onChange={setDepartment} placeholder={t('hrAllDepartments')} searchable={false}
           />

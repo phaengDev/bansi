@@ -123,6 +123,7 @@ export type ShortcutId =
   | 'attendance'
   | 'payroll'
   | 'calendar'
+  | 'mySpace'
   | 'settings';
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
@@ -144,6 +145,7 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   attendance: 'accountAppAttendance',
   payroll: 'accountAppPayroll',
   calendar: 'calendar',
+  mySpace: 'accountAppMySpace',
   settings: 'accountAppSettings',
 };
 
@@ -165,6 +167,7 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   hr: 'accountAppHrDesc',
   attendance: 'accountAppAttendanceDesc',
   payroll: 'accountAppPayrollDesc',
+  mySpace: 'accountAppMySpaceDesc',
   settings: 'accountAppSettingsDesc',
 };
 
@@ -193,6 +196,8 @@ export const shortcuts: ReadonlyArray<{
   { id: 'attendance', icon: 'fa-user-clock', tone: 'sky', path: '/hr/attendance', popup: true },
   { id: 'payroll', icon: 'fa-money-check-dollar', tone: 'emerald', path: '/hr/payroll', popup: true },
   { id: 'calendar', icon: 'fa-calendar-days', tone: 'coral', path: '/calendar', popup: true },
+  // ພື້ນທີ່ຂອງຂ້ອຍ — ບໍ່ຢູ່ໃນ tbl_main_menu: ຂຶ້ນເອງສະເພາະຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ (useAccountMenus)
+  { id: 'mySpace', icon: 'fa-house-user', tone: 'emerald', path: '/me', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
 ];
 
@@ -207,6 +212,7 @@ export type ShortcutPosition = { x: number; y: number };
 export const MENU_GROUPS = [
   { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') },
   { key: 'hr', label: 'hrMenuGroupHr', icon: 'fa-people-group', match: (path: string) => path === '/hr' || path.startsWith('/hr/') },
+  { key: 'me', label: 'myMenuGroup', icon: 'fa-house-user', match: (path: string) => path === '/me' || path.startsWith('/me/') },
   { key: 'other', label: 'hrMenuGroupOther', icon: 'fa-shapes', match: () => true },
 ] as const;
 export type MenuGroupKey = (typeof MENU_GROUPS)[number]['key'];

@@ -266,6 +266,17 @@ export const CHART_MENU: SidebarPopupGroup[] = [
  * ແປງເປັນ `railNav` ຂອງ <AppPage> — ຄາຍກຸ່ມອອກເປັນລາຍການຮຽນ ພ້ອມແປພາສາໃຫ້ແລ້ວ.
  * <AppPage> ຂຶ້ນຫົວຂໍ້ກຸ່ມໃຫ້ເທື່ອດຽວຢູ່ລາຍການທຳອິດຂອງແຕ່ລະກຸ່ມເອງ.
  */
+/** ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ — ຄື app ພະນັກງານ) */
+export const MY_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'myGroupWork',
+    items: [
+      { key: 'today', icon: 'fa-solid fa-sun', label: 'myToday' },
+      { key: 'attendance', icon: 'fa-solid fa-calendar-check', label: 'myAttendance' },
+    ],
+  },
+];
+
 export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => string) =>
   groups.flatMap(({ group, items }) =>
     items.map((item) => ({ ...item, label: t(item.label), group: t(group) }))
