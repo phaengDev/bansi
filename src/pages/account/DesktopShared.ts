@@ -260,6 +260,8 @@ export type DesktopSection = {
   y: number;
   width: number;
   height: number;
+  /** ໄລຍະຈາກຂອບຊ້າຍຫາຖັນທຳອິດ — ກອບທີ່ກວ້າງກວ່າໄອຄອນ (ຊື່ກອບຍາວ) ວາງໄອຄອນໄວ້ກາງ */
+  inset: number;
 };
 
 /** ຊ່ອງຂອງໄອຄອນພາຍໃນກອບຂອງມັນເອງ (ຖັນ/ແຖວ) — ກອບຍ້າຍບ່ອນ ໄອຄອນກໍ່ຍ້າຍຕາມ */
@@ -420,7 +422,7 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
     const stored = members.flatMap((item) => (cells[item.id] && cells[item.id].row < maxRows ? [cells[item.id]] : []));
     // ຢ່າງໜ້ອຍ 2 ຖັນ (ມີ 2 ອັນຂຶ້ນໄປ) — ກອບບໍ່ເປັນເສົາສູງແຄບ ແລະ ຊື່ກອບບໍ່ຖືກຕັດ
     let cols = Math.max(Math.ceil(members.length / maxRows), Math.min(members.length, 2), ...stored.map((cell) => cell.col + 1));
-    const rows = Math.min(maxRows, Math.max(Math.ceil(members.length / cols), ...stored.map((cell) => cell.row + 1)));
+    let rows = Math.min(maxRows, Math.max(Math.ceil(members.length / cols), ...stored.map((cell) => cell.row + 1)));
     const taken: Cell[] = [];
     const isFree = (cell: Cell) => !taken.some((other) => sameCell(other, cell));
 
@@ -442,7 +444,10 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
       taken.push(cell);
       cellOf[item.id] = cell;
     });
-    cols = Math.max(cols, ...taken.map((cell) => cell.col + 1));
+    // ກອບພໍດີກັບໄອຄອນທີ່ວາງຢູ່ແທ້ — ລາກມາລຽງຖັນດຽວ ກອບກໍ່ແຄບລົງຕາມ (ຖັນ/ແຖວຫວ່າງທາງຂວາ ແລະ ລຸ່ມບໍ່ນັບ)
+    cols = Math.max(1, ...taken.map((cell) => cell.col + 1));
+    rows = Math.max(1, ...taken.map((cell) => cell.row + 1));
+    const width = Math.max(frameWidth(cols, grid), titleWidth(labelOf(group.label)));
 
     sections.push({
       key: group.key,
@@ -453,8 +458,9 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
       rows,
       x: 0,
       y: 0,
-      width: Math.max(frameWidth(cols, grid), titleWidth(labelOf(group.label))),
+      width,
       height: frameHeight(rows, grid),
+      inset: FRAME.pad + Math.floor((width - frameWidth(cols, grid)) / 2),
     });
   });
 
@@ -479,7 +485,7 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
     return {
       ...item,
       position: {
-        x: section.x + FRAME.pad + cell.col * grid.columnPitch,
+        x: section.x + section.inset + cell.col * grid.columnPitch,
         y: section.y + FRAME.head + FRAME.pad + cell.row * grid.rowPitch,
       },
     };
@@ -529,7 +535,7 @@ export const useDesktopLayout = (menuIds: ShortcutId[]) => {
     const frame = placement.sections.find((item) => item.key === section);
     if (!frame) return { col: 0, row: 0 };
     const wanted = {
-      col: Math.round((position.x - frame.x - FRAME.pad) / grid.columnPitch),
+      col: Math.round((position.x - frame.x - frame.inset) / grid.columnPitch),
       row: Math.round((position.y - frame.y - FRAME.head - FRAME.pad) / grid.rowPitch),
     };
     const taken = placement.items
