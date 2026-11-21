@@ -17,7 +17,6 @@ import MyNotes from './MyNotes';
 import MyApprovals from './MyApprovals';
 import MyTeam from './MyTeam';
 import MyNotifications from './MyNotifications';
-import OrgChartPage from '../hr/org/OrgChartPage';
 import { canApprove, pendingApprovals, unreadNotifications, useMyInbox } from './meInbox';
 import { clearMyPageRequest, hasPage, openMyPage, useMyPageRequest } from './meNav';
 import type { MyIntent, MyOpen } from './meApi';
@@ -83,8 +82,7 @@ const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) =
     workplans: () => <MyWorkPlans />,
     notes: () => <MyNotes />,
     approvals: () => <MyApprovals intent={intentOf('approvals')} onIntentDone={done} />,
-    team: () => <MyTeam onOpen={open} />,
-    org: () => <OrgChartPage self />,
+    team: () => <MyTeam />,
     notifications: () => <MyNotifications onOpen={open} />,
   };
 

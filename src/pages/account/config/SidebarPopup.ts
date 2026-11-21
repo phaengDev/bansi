@@ -315,7 +315,7 @@ export const MY_TASKS_MENU: SidebarPopupGroup[] = [
 
 /**
  * ທີມ ແລະ ອະນຸມັດ — ອະນຸມັດຄຳຂໍ (ສະເພາະຄົນທີ່ມີສິດ / ເປັນຫົວໜ້າທີມ — MyWindow ເອົາອອກເມື່ອບໍ່ມີສິດ),
- * ທີມງານ (ສາຍງານ + ລາຍຊື່ເພື່ອນຮ່ວມງານ) ແລະ ໂຄງຮ່າງອົງກອນ
+ * ແລະ ທີມງານ (ສາຍງານ + ລາຍຊື່ເພື່ອນຮ່ວມງານ)
  */
 export const MY_TEAM_MENU: SidebarPopupGroup[] = [
   {
@@ -324,10 +324,7 @@ export const MY_TEAM_MENU: SidebarPopupGroup[] = [
   },
   {
     group: 'myGroupTeam',
-    items: [
-      { key: 'team', icon: 'fa-solid fa-people-group', label: 'myTeamPage' },
-      { key: 'org', icon: 'fa-solid fa-sitemap', label: 'myOrg' },
-    ],
+    items: [{ key: 'team', icon: 'fa-solid fa-people-group', label: 'myTeamPage' }],
   },
 ];
 

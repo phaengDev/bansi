@@ -3141,7 +3141,7 @@ export const laoDict = {
   myNoteEmpty: { la: 'ໂນດຫວ່າງ — ຂຽນຫົວຂໍ້ ຫຼື ຂໍ້ຄວາມກ່ອນ', en: 'The note is empty — write a title or text', cn: '笔记为空——请先填写标题或内容' },
   // ພື້ນທີ່ຂອງຂ້ອຍ (5/5): ທີມ ແລະ ອະນຸມັດ, ແຈ້ງເຕືອນ
   accountAppMyTeam: { la: 'ທີມ ແລະ ອະນຸມັດ', en: 'Team and approvals', cn: '团队与审批' },
-  accountAppMyTeamDesc: { la: 'ອະນຸມັດຄຳຂໍຕາມສິດ, ສາຍງານ, ເພື່ອນຮ່ວມງານ ແລະ ໂຄງຮ່າງອົງກອນ — ຄືໃນ app ພະນັກງານ', en: 'Approve requests you have rights to, your report line, colleagues and the org chart — same as the staff app', cn: '按权限审批申请、汇报线、同事和组织架构——与员工应用相同' },
+  accountAppMyTeamDesc: { la: 'ອະນຸມັດຄຳຂໍຕາມສິດ, ສາຍງານ ແລະ ເພື່ອນຮ່ວມງານ — ຄືໃນ app ພະນັກງານ', en: 'Approve requests you have rights to, your report line and colleagues — same as the staff app', cn: '按权限审批申请、汇报线和同事——与员工应用相同' },
   accountAppMyInbox: { la: 'ແຈ້ງເຕືອນຂອງຂ້ອຍ', en: 'My notifications', cn: '我的通知' },
   accountAppMyInboxDesc: { la: 'ແຈ້ງເຕືອນດຽວກັບກະດິ່ງໃນ app ພະນັກງານ — ກົດເພື່ອເປີດເລື່ອງນັ້ນ', en: 'The same notifications as the staff app bell — click one to open it', cn: '与员工应用铃铛相同的通知——点击打开相关内容' },
   myGroupApprove: { la: 'ອະນຸມັດ', en: 'Approvals', cn: '审批' },
@@ -3149,7 +3149,6 @@ export const laoDict = {
   myGroupInbox: { la: 'ແຈ້ງເຕືອນ', en: 'Notifications', cn: '通知' },
   myApprovals: { la: 'ອະນຸມັດຄຳຂໍ', en: 'Approve requests', cn: '审批申请' },
   myTeamPage: { la: 'ທີມງານ', en: 'Team', cn: '团队' },
-  myOrg: { la: 'ໂຄງຮ່າງອົງກອນ', en: 'Org chart', cn: '组织架构' },
   myNotifications: { la: 'ແຈ້ງເຕືອນ', en: 'Notifications', cn: '通知' },
   myApvTeam: { la: 'ລາພັກລູກທີມ', en: 'Team leave', cn: '下属请假' },
   myApvLeave: { la: 'ລາພັກ', en: 'Leave', cn: '请假' },

@@ -6,7 +6,7 @@ import { useGetData } from '../hr/attendance/attendanceApi';
 import { HrAvatar } from '../hr/hrKit';
 import { buildOrgTree, personName, reportLineOf, useOrgData, type OrgNode } from '../hr/org/orgModel';
 import { SearchBox } from '../account/setting/settingKit';
-import type { Colleague, ColleagueData, MyOpen } from './meApi';
+import type { Colleague, ColleagueData } from './meApi';
 
 const nameOf = (c: Pick<Colleague, 'first_name' | 'last_name'>) => [c.first_name, c.last_name].filter(Boolean).join(' ');
 
@@ -60,7 +60,7 @@ const LinePerson = ({ node, info }: { node: OrgNode; info?: Colleague }) => (
  * ທີມງານ — ສາຍງານຂອງຂ້ອຍ (ຫົວໜ້າ ແລະ ລູກທີມ ຈາກໂຄງຮ່າງ), ມື້ນີ້ໃຜລາພັກ / ວັນເກີດ ແລະ ລາຍຊື່ເພື່ອນຮ່ວມງານທຸກພະແນກ
  * (ສະເພາະຂໍ້ມູນຕິດຕໍ່ວຽກ: ຊື່, ຮູບ, ເບີໂທ, ພະແນກ, ຕຳແໜ່ງ — ຄືແຖບ "ທີມງານ" ໃນ app)
  */
-const MyTeam = ({ onOpen }: { onOpen: MyOpen }) => {
+const MyTeam = () => {
   const t = useT();
   const { data, loading, reload } = useGetData<ColleagueData>('/employee/me/colleagues');
   const org = useOrgData('/org/me');
@@ -117,10 +117,7 @@ const MyTeam = ({ onOpen }: { onOpen: MyOpen }) => {
         <div className={`acc-rp-body${loading ? ' is-refreshing' : ''}`}>
           <div className="my-grid">
             <section className="my-card">
-              <header>
-                <h3><i className="fa-solid fa-sitemap" /> {t('myReportLine')}</h3>
-                <button type="button" className="my-link" onClick={() => onOpen('org')}>{t('myOrg')} <i className="fa-solid fa-arrow-right" /></button>
-              </header>
+              <header><h3><i className="fa-solid fa-sitemap" /> {t('myReportLine')}</h3></header>
               {org.loading && !line ? <Loader size="sm" /> : !line ? (
                 <p className="my-empty">{t('myNotInOrg')}</p>
               ) : (
