@@ -8,7 +8,7 @@ import { AttendanceSummary, LateCell, StatePill } from '../hr/attendance/attenda
 import { useMyEmployee } from '../account/accountMenus';
 import { kip } from '../hr/payroll/payrollApi';
 import { ADV_PENDING } from '../hr/payroll/advanceApi';
-import type { MyAdvanceData, MyAttendanceData, MyCorrectionData, MyHolidays, MyLeaveData, MyOpen } from './meApi';
+import type { MyAdvanceData, MyAttendanceData, MyCorrectionData, MyHolidays, MyLeaveData, MyOpen, MyPayPreview } from './meApi';
 
 /** ເວລາເຂົ້າ ຫຼື ອອກຂອງມື້ນີ້ — ໃຫຍ່ໆ ຄືບັດໃນ app ພະນັກງານ */
 const TodayClock = ({ side, time, distance }: { side: 'in' | 'out'; time: string | null | undefined; distance: number | null | undefined }) => {
@@ -40,6 +40,7 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
   const { data: leaves } = useGetData<MyLeaveData>('/leave/me', { year: moment().year() });
   const { data: corrections } = useGetData<MyCorrectionData>('/correction/me', { year: moment().year() });
   const { data: advances } = useGetData<MyAdvanceData>('/advance/me');
+  const { data: pay } = useGetData<MyPayPreview>('/payroll/me/preview', { month: toPeriod(new Date()) });
 
   if (!data || !me) {
     return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
@@ -133,6 +134,19 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
             ))}
           </ul>
         </section>
+
+        {pay && (
+          <section className="my-card">
+            <header>
+              <h3><i className="fa-solid fa-wallet" /> {t('myPayMonth')} {moment().format('MM/YYYY')}</h3>
+              <button type="button" className="my-link" onClick={() => onOpen('pay')}>{t('myPaySeeSlip')} <i className="fa-solid fa-arrow-right" /></button>
+            </header>
+            <div className="my-pay-mini">
+              <b>₭ {kip(pay.line.net)}</b>
+              <small>{t(pay.status === 'paid' ? 'myPayPaid' : pay.status === 'draft' ? 'myPayDraft' : 'myPayEstimate')} · {t('payGross')} {kip(pay.line.gross)}</small>
+            </div>
+          </section>
+        )}
 
         <section className="my-card">
           <header><h3><i className="fa-solid fa-umbrella-beach" /> {t('myUpcomingHolidays')}</h3></header>

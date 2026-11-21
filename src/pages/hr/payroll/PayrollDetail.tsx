@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Button, Loader, Modal } from 'rsuite';
+import { Loader } from 'rsuite';
 import moment from 'moment';
 import { deleteApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -12,7 +12,7 @@ import { minutesText, periodLabel } from '../attendance/attendanceApi';
 import {
   DRAFT, MODE_POLICY, PAID, accountText, employeeDeductions, kip, useCompany, usePayroll, type Payroll, type PayrollLine,
 } from './payrollApi';
-import { PAYSLIP_PRINT_CSS, Payslip } from './Payslip';
+import { PAYSLIP_PRINT_CSS, Payslip, PayslipModal } from './Payslip';
 import PayrollLineForm from './PayrollLineForm';
 import PayrollPayModal from './PayrollPayModal';
 import { SettingModal } from '../../account/setting/settingKit';
@@ -83,7 +83,6 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
   const { data, settings, loading, setData } = usePayroll(id);
   const company = useCompany();
   const printRef = useRef<HTMLDivElement>(null);
-  const slipRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<PayrollLine | null>(null);
   const [slip, setSlip] = useState<PayrollLine | null>(null);
   const [paying, setPaying] = useState(false);
@@ -420,19 +419,7 @@ const PayrollDetail = ({ id, onBack, onChanged }: { id: number; onBack: () => vo
       {editing && <PayrollLineForm line={editing} period={data.period} settings={settings} onClose={() => setEditing(null)} onSaved={updated} />}
       {paying && <PayrollPayModal payroll={data} onClose={() => setPaying(false)} onPaid={updated} />}
       {iBankOpen && <IBankChoice payroll={data} busy={busy} onClose={() => setIBankOpen(false)} onPick={draftIBank} />}
-      {slip && (
-        <Modal open onClose={() => setSlip(null)} size="sm" className="pay-slip-modal">
-          <Modal.Body>
-            <Payslip ref={slipRef} payroll={data} line={slip} company={company} />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button appearance="default" onClick={() => setSlip(null)}>{t('close')}</Button>
-            <Button appearance="primary" onClick={() => slipRef.current && printElementByFrame(slipRef.current, PAYSLIP_PRINT_CSS)}>
-              <i className="fa-solid fa-print" /> {t('print')}
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
+      {slip && <PayslipModal payroll={data} line={slip} company={company} onClose={() => setSlip(null)} />}
     </div>
   );
 };

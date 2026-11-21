@@ -9,6 +9,7 @@ import MyAttendance from './MyAttendance';
 import MyLeaves from './MyLeaves';
 import MyCorrections from './MyCorrections';
 import MyAdvances from './MyAdvances';
+import MyPay from './MyPay';
 import type { MyIntent, MyOpen } from './meApi';
 
 /**
@@ -44,6 +45,7 @@ const MyWindow = () => {
     leaves: <MyLeaves intent={intentOf('leaves')} onIntentDone={done} />,
     corrections: <MyCorrections intent={intentOf('corrections')} onIntentDone={done} />,
     advances: <MyAdvances intent={intentOf('advances')} onIntentDone={done} />,
+    pay: <MyPay />,
   };
 
   return (

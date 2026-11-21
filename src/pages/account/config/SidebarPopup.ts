@@ -283,6 +283,12 @@ export const MY_MENU: SidebarPopupGroup[] = [
       { key: 'advances', icon: 'fa-solid fa-hand-holding-dollar', label: 'myAdvances' },
     ],
   },
+  {
+    group: 'myGroupPay',
+    items: [
+      { key: 'pay', icon: 'fa-solid fa-wallet', label: 'myPay' },
+    ],
+  },
 ];
 
 export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => string) =>

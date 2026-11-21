@@ -3062,6 +3062,19 @@ export const laoDict = {
   myAdvPendingExists: { la: 'ມີຄຳຂໍທີ່ລໍຖ້າຢູ່ — ລໍໃຫ້ HR ພິຈາລະນາກ່ອນ', en: 'You have a request waiting — HR must decide on it first', cn: '已有待审申请——请等待人事处理' },
   myAdvNoLimitLeft: { la: 'ເບີກເຕັມຂີດຈຳກັດແລ້ວ', en: 'You have reached the limit', cn: '已达预支上限' },
   myNoAdvances: { la: 'ຍັງບໍ່ເຄີຍເບີກເງິນລ່ວງໜ້າ', en: 'No salary advances yet', cn: '暂无预支记录' },
+  myGroupPay: { la: 'ເງິນເດືອນ', en: 'Pay', cn: '工资' },
+  myPay: { la: 'ເງິນເດືອນຂອງຂ້ອຍ', en: 'My pay', cn: '我的工资' },
+  myPayMonth: { la: 'ເງິນເດືອນ', en: 'Pay for', cn: '工资' },
+  myPayEstimate: { la: 'ຄາດຄະເນ', en: 'Estimate', cn: '预估' },
+  myPayEstimateHint: { la: 'ຄິດຈາກການເຂົ້າວຽກເຖິງມື້ນີ້ — ມື້ທີ່ຍັງບໍ່ຮອດນັບວ່າມາວຽກ', en: 'From attendance so far — days still to come count as present', cn: '按截至今天的考勤计算——未到的日子按出勤计' },
+  myPayDraft: { la: 'HR ກຳລັງກວດ', en: 'HR is checking', cn: '人事审核中' },
+  myPayDraftHint: { la: 'ໃບເງິນເດືອນຂອງເດືອນນີ້ຍັງບໍ່ໄດ້ຈ່າຍ — ຍອດອາດປ່ຽນ', en: 'This month’s payroll is not paid yet — amounts may change', cn: '本月工资尚未发放——金额可能变动' },
+  myPayPaid: { la: 'ຈ່າຍແລ້ວ', en: 'Paid', cn: '已发放' },
+  myPayPaidHint: { la: 'ຍອດທີ່ໂອນເຂົ້າບັນຊີແລ້ວ', en: 'Amount paid to your account', cn: '已转入账户的金额' },
+  myPaySeeSlip: { la: 'ເບິ່ງລາຍລະອຽດ', en: 'See details', cn: '查看明细' },
+  myPayslips: { la: 'ສະລິບເງິນເດືອນ', en: 'Payslips', cn: '工资单' },
+  myNoPayslips: { la: 'ຍັງບໍ່ມີສະລິບທີ່ຈ່າຍແລ້ວໃນປີນີ້', en: 'No paid payslips this year', cn: '今年暂无已发工资单' },
+  myPaySlipEstimate: { la: 'ຍອດນີ້ຍັງບໍ່ແມ່ນຍອດຈ່າຍແທ້ — ຈະປ່ຽນຕາມການເຂົ້າວຽກ ແລະ ການກວດຂອງ HR', en: 'Not the final amount — it changes with attendance and HR’s review', cn: '非最终金额——将随考勤和人事审核变动' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

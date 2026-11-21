@@ -1,6 +1,7 @@
 import type { AttendanceRecord, LeaveBalance, MonthStats } from '../hr/attendance/attendanceApi';
 import type { Correction, LeaveRequest } from '../hr/attendance/requestKit';
 import type { SalaryAdvance } from '../hr/payroll/advanceApi';
+import type { PayrollLine } from '../hr/payroll/payrollApi';
 import type { AttendanceDay } from '../hr/attendance/attendanceKit';
 import type { EmployeeRef } from '../hr/hrApi';
 
@@ -65,3 +66,23 @@ export type MyOpen = (key: string, intent?: MyIntent) => void;
 
 /** ໄອດີໃນ URL ຂອງ backend (decodeId = atob) */
 export const idOf = (row: { _uuid: number }) => btoa(String(row._uuid));
+
+/** GET /payroll/me?year=YYYY — ສະລິບທີ່ຈ່າຍແລ້ວ (ເດືອນໃໝ່ສຸດກ່ອນ) + ບໍລິສັດ (ຫົວສະລິບ) */
+export type MyPayslip = PayrollLine & { payroll: { _uuid: number; period: string; workdays: number; number: string | null; pay_date: string | null } };
+export type MyPayslipData = {
+  data: MyPayslip[];
+  company: { name_la: string; name_en: string | null; logo_url: string | null } | null;
+};
+
+/**
+ * GET /payroll/me/preview?month=YYYY-MM — ເງິນເດືອນຫຼວງໜ້າ: estimate = ຍັງບໍ່ມີໃບເງິນເດືອນ (ຄິດຈາກການເຂົ້າວຽກເຖິງມື້ນີ້,
+ * ມື້ທີ່ຍັງບໍ່ຮອດນັບວ່າມາວຽກ), draft = HR ກຳລັງກວດ, paid = ຈ່າຍແລ້ວ (ແຖວຈິງ)
+ */
+export type MyPayPreview = {
+  period: string;
+  status: 'estimate' | 'draft' | 'paid';
+  pay_date: string | null;
+  today: string;
+  complete: boolean;
+  line: PayrollLine;
+};

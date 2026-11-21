@@ -161,6 +161,10 @@ export const accountText = (a?: PayrollAccount | null) =>
 export const employeeDeductions = (p: Pick<Payroll, 'total_sso_employee' | 'total_tax' | 'total_other_deduction' | 'total_advance_deduction'>) =>
   p.total_sso_employee + p.total_tax + p.total_other_deduction + p.total_advance_deduction;
 
+/** ຫັກຂອງພະນັກງານ 1 ຄົນ (ປກສ + ອາກອນ + ຫັກອື່ນ + ເງິນເບີກ) — ສະລິບ ແລະ ເງິນເດືອນຂອງຂ້ອຍ */
+export const lineDeductions = (l: Pick<PayrollLine, 'sso_employee' | 'tax' | 'other_deduction' | 'advance_deduction'>) =>
+  l.sso_employee + l.tax + l.other_deduction + l.advance_deduction;
+
 export const usePayrolls = (year: number | null) => {
   const [rows, setRows] = useState<Payroll[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<string | null>(null);

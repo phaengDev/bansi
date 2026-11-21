@@ -1,9 +1,16 @@
-import { forwardRef } from 'react';
+import { forwardRef, useRef, type ReactNode } from 'react';
+import { Button, Modal } from 'rsuite';
 import moment from 'moment';
 import { useT } from '../../../context/LanguageContext';
 import { hoursText, minutesText, periodLabel } from '../attendance/attendanceApi';
 import type { Company } from '../hrApi';
-import { kip, type Payroll, type PayrollLine } from './payrollApi';
+import { printElementByFrame } from '../../../utils/Print';
+import { kip, lineDeductions, type Payroll, type PayrollLine } from './payrollApi';
+
+/** ສິ່ງທີ່ສະລິບໃຊ້ຈາກໃບເງິນເດືອນ — ເດືອນ ແລະ ວັນຈ່າຍ (ສະລິບຂອງຕົນເອງ / ຄາດຄະເນ ບໍ່ມີໃບເຕັມ) */
+type SlipPayroll = Pick<Payroll, 'period' | 'pay_date'>;
+/** ບໍລິສັດຫົວສະລິບ — ຊື່ + ໂລໂກ້ */
+type SlipCompany = Pick<Company, 'name_la' | 'name_en' | 'logo_url'>;
 
 /** ພິມສະລິບເງິນເດືອນ — A5 ໜຶ່ງຄົນຕໍ່ໜ້າ */
 export const PAYSLIP_PRINT_CSS = `
@@ -16,7 +23,7 @@ export const PAYSLIP_PRINT_CSS = `
 `;
 
 /** ສະລິບເງິນເດືອນຂອງ 1 ຄົນ */
-export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: PayrollLine; company: Company | null }>(
+export const Payslip = forwardRef<HTMLDivElement, { payroll: SlipPayroll; line: PayrollLine; company: SlipCompany | null }>(
   ({ payroll, line, company }, ref) => {
     const t = useT();
     const item = (label: string, amount: number, sub?: string) => (amount ? (
@@ -25,7 +32,7 @@ export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: Payr
         <b>{kip(amount)}</b>
       </div>
     ) : null);
-    const deductions = line.sso_employee + line.tax + line.other_deduction + line.advance_deduction;
+    const deductions = lineDeductions(line);
     return (
       <div ref={ref} className="pay-slip">
         <header className="pay-slip-head">
@@ -82,3 +89,32 @@ export const Payslip = forwardRef<HTMLDivElement, { payroll: Payroll; line: Payr
   }
 );
 Payslip.displayName = 'Payslip';
+
+/**
+ * ເບິ່ງສະລິບໃນກ່ອງ + ພິມ (A5) — ໃຊ້ຮ່ວມກັນລະຫວ່າງໜ້າໃບເງິນເດືອນຂອງ HR ແລະ ເງິນເດືອນຂອງຂ້ອຍ.
+ * notice = ແຖບແຈ້ງເທິງສະລິບ (ເຊັ່ນ ຍອດຄາດຄະເນ ຍັງບໍ່ແມ່ນຍອດຈ່າຍແທ້)
+ */
+export const PayslipModal = ({ payroll, line, company, notice, onClose }: {
+  payroll: SlipPayroll;
+  line: PayrollLine;
+  company: SlipCompany | null;
+  notice?: ReactNode;
+  onClose: () => void;
+}) => {
+  const t = useT();
+  const slipRef = useRef<HTMLDivElement>(null);
+  return (
+    <Modal open onClose={onClose} size="sm" className="pay-slip-modal">
+      <Modal.Body>
+        {notice}
+        <Payslip ref={slipRef} payroll={payroll} line={line} company={company} />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button appearance="default" onClick={onClose}>{t('close')}</Button>
+        <Button appearance="primary" onClick={() => slipRef.current && printElementByFrame(slipRef.current, PAYSLIP_PRINT_CSS)}>
+          <i className="fa-solid fa-print" /> {t('print')}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
