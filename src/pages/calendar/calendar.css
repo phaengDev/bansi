@@ -8,7 +8,7 @@
   --calendar-cream: #f5f1e8;
   --calendar-line: #e4e8e5;
   min-height: 100%;
-  padding: 12px 6px 36px;
+  padding: 12px 6px 24px;
   color: var(--calendar-ink);
   font-family: 'NotoSerifLao', 'Open Sans', sans-serif;
   background:
@@ -16,11 +16,6 @@
     linear-gradient(180deg, #fbfcfa 0%, #f5f7f4 100%);
 }
 
-.calendar-breadcrumb { margin-top: 4px; }
-.calendar-breadcrumb a { color: var(--calendar-green); }
-
-.calendar-page-heading { margin: 0 0 14px; }
-.calendar-heading-kicker,
 .section-kicker {
   display: block;
   margin-bottom: 3px;
@@ -28,23 +23,7 @@
   font: 700 10px/1.2 'Open Sans', sans-serif;
   letter-spacing: .18em;
 }
-.calendar-page-heading .page-header {
-  margin: 0;
-  color: var(--calendar-ink);
-  font-size: clamp(25px, 3vw, 35px);
-  font-weight: 800;
-  letter-spacing: -.025em;
-}
-.calendar-page-heading p { margin: 5px 0 0; color: var(--calendar-ink-soft); font-size: 14px; }
-
-.calendar-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(330px, .75fr);
-  align-items: start;
-  gap: 18px;
-}
-.calendar-main-card,
-.calendar-agenda-card {
+.calendar-main-card {
   border: 1px solid var(--calendar-line);
   border-radius: 18px;
   background: rgba(255, 255, 255, .96);
@@ -56,7 +35,6 @@
   min-width: 0;
   overflow: hidden;
 }
-.calendar-agenda-card { position: sticky; top: 78px; padding: 18px; }
 
 .calendar-toolbar {
   display: flex;
@@ -248,28 +226,6 @@
 .month-marker-list svg { color: #a4aeab; }
 .empty-month-marker { margin: 0; padding: 14px; color: #82908c; border: 1px dashed #d7dfdc; border-radius: 10px; font-size: 11px; text-align: center; }
 
-.agenda-date-header { position: relative; display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--calendar-line); }
-.agenda-day-number { display: grid; flex: 0 0 55px; width: 55px; height: 55px; color: #fff; border-radius: 15px 15px 15px 4px; background: var(--calendar-green); box-shadow: 0 8px 20px rgba(22, 79, 67, .18); font: 800 23px/1 'Open Sans', sans-serif; place-items: center; }
-.agenda-date-header > div span { color: var(--calendar-red); font-size: 11px; font-weight: 800; letter-spacing: .06em; }
-.agenda-date-header h2 { margin: 3px 0 0; font-size: 15px; font-weight: 800; line-height: 1.45; }
-.agenda-lunar-date { margin: 4px 0 0; color: #687b75; font-size: 11px; line-height: 1.45; }
-.agenda-lunar-date strong { color: #926518; font-weight: 800; }
-.agenda-wan-phra { display: inline-flex; align-items: center; gap: 2px; margin-left: 5px; }
-.agenda-wan-phra img { width: 14px; height: 14px; object-fit: contain; }
-.selected-markers { display: flex; flex-direction: column; gap: 7px; margin: 12px 0; }
-.selected-marker { display: flex; gap: 9px; padding: 9px 10px; border-radius: 9px; }
-.selected-marker.official { color: #88292c; background: #fceced; }
-.selected-marker.important { color: #785611; background: #fff5dc; }
-.selected-marker.festival { color: #28634f; background: #e5f3ed; }
-.selected-marker > i { flex: 0 0 7px; width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: currentColor; }
-.selected-marker span,
-.selected-marker strong,
-.selected-marker small { display: block; }
-.selected-marker span { font-size: 10px; opacity: .75; }
-.selected-marker strong { font-size: 12px; }
-.selected-marker small { margin-top: 2px; font-size: 10px; opacity: .8; }
-
-.calendar-source-note { margin: 13px 2px 0; padding-top: 11px; color: #798681; border-top: 1px solid var(--calendar-line); font-size: 10px; line-height: 1.6; }
 
 .calendar-input-picker-menu { font-family: 'NotoSerifLao', 'Open Sans', sans-serif; }
 .calendar-input-picker-menu .rs-picker-select-menu-item { padding-top: 8px; padding-bottom: 8px; font-size: 13px; }
@@ -290,11 +246,6 @@
   .wan-phra-mark img { width: 17px; height: 17px; }
   .day-marker,
   .more-count { padding: 2px 3px; font-size: 8px; }
-}
-
-@media (max-width: 1399px) {
-  .calendar-layout { grid-template-columns: 1fr; }
-  .calendar-agenda-card { position: static; }
 }
 
 @media (min-width: 641px) and (max-width: 1200px) {
@@ -318,12 +269,7 @@
 
 @media (max-width: 640px) {
   .work-calendar-page { width: 100%; max-width: 100%; padding: 10px 0 26px; overflow-x: hidden; }
-  .work-calendar-page .calendar-breadcrumb { display: none !important; }
-  .calendar-page-heading { margin: 0 12px 14px; }
-  .calendar-page-heading .page-header { font-size: 25px; }
-  .calendar-page-heading p { max-width: 310px; font-size: 11px; line-height: 1.5; }
-  .calendar-main-card,
-  .calendar-agenda-card { min-width: 0; border-radius: 14px; }
+  .calendar-main-card { min-width: 0; border-radius: 14px; }
   .calendar-toolbar { flex-direction: column; align-items: stretch; gap: 8px; min-height: 0; padding: 10px; }
   .month-navigation { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 6px; width: 100%; }
   .icon-button { width: 34px; height: 34px; }
@@ -386,11 +332,9 @@
   .month-important-section { padding: 14px 11px; }
   .section-title-row h3 { font-size: 14px; }
   .month-marker-list { grid-template-columns: 1fr; }
-  .calendar-agenda-card { padding: 14px; }
 }
 
 @media (max-width: 380px) {
-  .calendar-page-heading .page-header { font-size: 22px; }
   .calendar-period-selectors { grid-template-columns: minmax(0, 1fr) 68px; }
   .calendar-period-picker .rs-picker-toggle { font-size: 10px; }
   .work-rsuite-calendar .rs-calendar-table-header-cell-content { font-size: 7px; }

@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Calendar, InputPicker } from 'rsuite'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import { useT } from '../../context/LanguageContext'
 import './calendar.css'
 import { getMarkersForYear, markerLabel } from './calendarMarkers'
 import { getLaoLunarDate } from './laoLunarCalendar'
@@ -19,7 +17,6 @@ const YEAR_PICKER_DATA = Array.from({ length: 131 }, (_, index) => {
 })
 
 const WEEKDAYS = ['ຈັນ', 'ອັງຄານ', 'ພຸດ', 'ພະຫັດ', 'ສຸກ', 'ເສົາ', 'ອາທິດ']
-const FULL_WEEKDAYS = ['ວັນອາທິດ', 'ວັນຈັນ', 'ວັນອັງຄານ', 'ວັນພຸດ', 'ວັນພະຫັດ', 'ວັນສຸກ', 'ວັນເສົາ']
 
 const LAO_CALENDAR_LOCALE = {
   sunday: WEEKDAYS[6],
@@ -45,7 +42,6 @@ const dateFromKey = (key: string) => {
 }
 
 const CalendarPage: React.FC = () => {
-  const t = useT()
   const today = useMemo(() => new Date(), [])
   const [visibleMonth, setVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(() => toDateKey(today))
@@ -56,8 +52,6 @@ const CalendarPage: React.FC = () => {
   const todayKey = toDateKey(today)
 
   const selectedDateValue = dateFromKey(selectedDate)
-  const selectedMarkers = getMarkersForYear(selectedDateValue.getFullYear())
-    .filter((marker) => marker.date === selectedDate)
   const monthMarkers = markers.filter((marker) => Number(marker.date.slice(5, 7)) === currentMonth + 1)
 
   const handleDateSelect = (date: Date) => {
@@ -90,9 +84,6 @@ const CalendarPage: React.FC = () => {
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1))
     setSelectedDate(todayKey)
   }
-
-  const selectedDateLabel = `${FULL_WEEKDAYS[selectedDateValue.getDay()]}, ວັນທີ ${selectedDateValue.getDate()} ${MONTHS[selectedDateValue.getMonth()]} ${selectedDateValue.getFullYear()}`
-  const selectedLunarDate = getLaoLunarDate(selectedDateValue)
 
   const renderCalendarCell = (date: Date) => {
     const key = toDateKey(date)
@@ -133,146 +124,98 @@ const CalendarPage: React.FC = () => {
   }
 
   return (
-    <div className="work-calendar-page ">
-      <ol className="breadcrumb float-end calendar-breadcrumb">
-        <li className="breadcrumb-item"><Link to="/">{t('home')}</Link></li>
-        <li className="breadcrumb-item active">ປະຕິທິນ</li>
-      </ol>
-
-      <div className="calendar-page-heading">
-        <span className="calendar-heading-kicker">LAO CALENDAR</span>
-        <h1 className="page-header">ປະຕິທິນ</h1>
-        <p>ຂຶ້ນ-ແຮມ, ວັນພຣະ, ວັນພັກທາງການ ແລະ ວັນບຸນປະເພນີ — ບໍ່ພາດວັນສຳຄັນ</p>
-      </div>
-
-      <div className="calendar-layout">
-        <section className="calendar-main-card">
-          <header className="calendar-toolbar">
-            <div className="month-navigation">
-              <button type="button" className="icon-button" onClick={() => moveMonth(-1)} aria-label="ເດືອນກ່ອນ">
-                <FiChevronLeft />
-              </button>
-              <div className="calendar-period-selectors" aria-live="polite">
-                <div>
-                  <span>ເດືອນ</span>
-                  <InputPicker
-                    block
-                    cleanable={false}
-                    searchable={false}
-                    data={MONTH_PICKER_DATA}
-                    value={currentMonth}
-                    className="calendar-period-picker"
-                    popupClassName="calendar-input-picker-menu"
-                    aria-label="ເລືອກເດືອນ"
-                    onChange={(value) => {
-                      if (typeof value === 'number') selectMonth(value)
-                    }}
-                  />
-                </div>
-                <div>
-                  <span>ປີ</span>
-                  <InputPicker
-                    block
-                    cleanable={false}
-                    data={YEAR_PICKER_DATA}
-                    value={currentYear}
-                    className="calendar-period-picker"
-                    popupClassName="calendar-input-picker-menu"
-                    aria-label="ເລືອກປີ"
-                    onChange={(value) => {
-                      if (typeof value === 'number') selectYear(value)
-                    }}
-                  />
-                </div>
-                <small>ພ.ສ. {currentYear + 543}</small>
-              </div>
-              <button type="button" className="icon-button" onClick={() => moveMonth(1)} aria-label="ເດືອນຖັດໄປ">
-                <FiChevronRight />
-              </button>
-            </div>
-            <button type="button" className="today-button" onClick={goToToday}>
-              <span /> ກັບໄປມື້ນີ້
+    <div className="work-calendar-page">
+      <section className="calendar-main-card">
+        <header className="calendar-toolbar">
+          <div className="month-navigation">
+            <button type="button" className="icon-button" onClick={() => moveMonth(-1)} aria-label="ເດືອນກ່ອນ">
+              <FiChevronLeft />
             </button>
-          </header>
-
-          <div className="calendar-grid-wrap">
-            <Calendar
-              bordered
-              isoWeek
-              className="work-rsuite-calendar"
-              value={selectedDateValue}
-              locale={LAO_CALENDAR_LOCALE}
-              renderCell={renderCalendarCell}
-              cellClassName={getCalendarCellClass}
-              onSelect={handleDateSelect}
-            />
-          </div>
-
-          <footer className="calendar-legend">
-            <span><i className="lunar" /> ຂຶ້ນ/ແຮມ · ເດືອນລາວ</span>
-            <span><img className="wan-phra-legend-icon" src="/assets/img/calendar/wan-phra-buddha.png" alt="" aria-hidden="true" /> ວັນພຣະ/ວັນສິນ</span>
-            <span><i className="official" /> ວັນພັກທາງການ</span>
-            <span><i className="important" /> ວັນສຳຄັນ</span>
-            <span><i className="festival" /> ວັນບຸນປະເພນີ</span>
-          </footer>
-
-          <div className="month-important-section">
-            <div className="section-title-row">
+            <div className="calendar-period-selectors" aria-live="polite">
               <div>
-                <span className="section-kicker">LAO DATES</span>
-                <h3>ວັນສຳຄັນໃນເດືອນ{MONTHS[currentMonth]}</h3>
+                <span>ເດືອນ</span>
+                <InputPicker
+                  block
+                  cleanable={false}
+                  searchable={false}
+                  data={MONTH_PICKER_DATA}
+                  value={currentMonth}
+                  className="calendar-period-picker"
+                  popupClassName="calendar-input-picker-menu"
+                  aria-label="ເລືອກເດືອນ"
+                  onChange={(value) => {
+                    if (typeof value === 'number') selectMonth(value)
+                  }}
+                />
               </div>
-              <span className="month-marker-count">{monthMarkers.length} ລາຍການ</span>
+              <div>
+                <span>ປີ</span>
+                <InputPicker
+                  block
+                  cleanable={false}
+                  data={YEAR_PICKER_DATA}
+                  value={currentYear}
+                  className="calendar-period-picker"
+                  popupClassName="calendar-input-picker-menu"
+                  aria-label="ເລືອກປີ"
+                  onChange={(value) => {
+                    if (typeof value === 'number') selectYear(value)
+                  }}
+                />
+              </div>
+              <small>ພ.ສ. {currentYear + 543}</small>
             </div>
-            {monthMarkers.length ? (
-              <div className="month-marker-list">
-                {monthMarkers.map((marker) => (
-                  <button type="button" key={`${marker.date}-${marker.title}`} onClick={() => handleDateSelect(dateFromKey(marker.date))}>
-                    <span className={`marker-date ${marker.type}`}>{marker.date.slice(8, 10)}</span>
-                    <span><strong>{marker.title}</strong><small>{marker.detail || markerLabel[marker.type]}</small></span>
-                    <FiChevronRight />
-                  </button>
-                ))}
-              </div>
-            ) : <p className="empty-month-marker">ເດືອນນີ້ບໍ່ມີວັນພັກທາງການທີ່ກຳນົດໄວ້</p>}
+            <button type="button" className="icon-button" onClick={() => moveMonth(1)} aria-label="ເດືອນຖັດໄປ">
+              <FiChevronRight />
+            </button>
           </div>
-        </section>
+          <button type="button" className="today-button" onClick={goToToday}>
+            <span /> ກັບໄປມື້ນີ້
+          </button>
+        </header>
 
-        <aside className="calendar-agenda-card">
-          <header className="agenda-date-header">
-            <span className="agenda-day-number">{selectedDateValue.getDate()}</span>
+        <div className="calendar-grid-wrap">
+          <Calendar
+            bordered
+            isoWeek
+            className="work-rsuite-calendar"
+            value={selectedDateValue}
+            locale={LAO_CALENDAR_LOCALE}
+            renderCell={renderCalendarCell}
+            cellClassName={getCalendarCellClass}
+            onSelect={handleDateSelect}
+          />
+        </div>
+
+        <footer className="calendar-legend">
+          <span><i className="lunar" /> ຂຶ້ນ/ແຮມ · ເດືອນລາວ</span>
+          <span><img className="wan-phra-legend-icon" src="/assets/img/calendar/wan-phra-buddha.png" alt="" aria-hidden="true" /> ວັນພຣະ/ວັນສິນ</span>
+          <span><i className="official" /> ວັນພັກທາງການ</span>
+          <span><i className="important" /> ວັນສຳຄັນ</span>
+          <span><i className="festival" /> ວັນບຸນປະເພນີ</span>
+        </footer>
+
+        <div className="month-important-section">
+          <div className="section-title-row">
             <div>
-              <span>ວັນທີທີ່ເລືອກ</span>
-              <h2>{selectedDateLabel}</h2>
-              <p className="agenda-lunar-date">
-                {selectedLunarDate.phase === 'waxing' ? 'ຂຶ້ນ' : 'ແຮມ'} {selectedLunarDate.phaseDay} ຄ່ຳ · ເດືອນ {selectedLunarDate.monthLabel}
-                {selectedLunarDate.isWanPhra && (
-                  <strong className="agenda-wan-phra">
-                    <img src="/assets/img/calendar/wan-phra-buddha.png" alt="" aria-hidden="true" /> ວັນພຣະ/ວັນສິນ
-                  </strong>
-                )}
-              </p>
+              <span className="section-kicker">LAO DATES</span>
+              <h3>ວັນສຳຄັນໃນເດືອນ{MONTHS[currentMonth]}</h3>
             </div>
-          </header>
-
-          {selectedMarkers.length > 0 ? (
-            <div className="selected-markers">
-              {selectedMarkers.map((marker) => (
-                <div key={`${marker.date}-${marker.title}`} className={`selected-marker ${marker.type}`}>
-                  <i />
-                  <div><span>{markerLabel[marker.type]}</span><strong>{marker.title}</strong>{marker.detail && <small>{marker.detail}</small>}</div>
-                </div>
+            <span className="month-marker-count">{monthMarkers.length} ລາຍການ</span>
+          </div>
+          {monthMarkers.length ? (
+            <div className="month-marker-list">
+              {monthMarkers.map((marker) => (
+                <button type="button" key={`${marker.date}-${marker.title}`} onClick={() => handleDateSelect(dateFromKey(marker.date))}>
+                  <span className={`marker-date ${marker.type}`}>{marker.date.slice(8, 10)}</span>
+                  <span><strong>{marker.title}</strong><small>{marker.detail || markerLabel[marker.type]}</small></span>
+                  <FiChevronRight />
+                </button>
               ))}
             </div>
-          ) : (
-            <p className="empty-month-marker calendar-day-quiet">ວັນທີນີ້ບໍ່ມີວັນພັກ ຫຼື ວັນສຳຄັນ</p>
-          )}
-
-          <p className="calendar-source-note">
-            ວັນບຸນຈັນທະຄະຕິຄຳນວນອັດຕະໂນມັດຕາມລະບົບສຸລິຍະຍາຕ ລາວ–ໄທ ສຳລັບປີທີ່ເລືອກ. ວັນພັກຊົດເຊີຍ ແລະກຳນົດງານທ້ອງຖິ່ນອາດປ່ຽນຕາມປະກາດຂອງທາງການ.
-          </p>
-        </aside>
-      </div>
+          ) : <p className="empty-month-marker">ເດືອນນີ້ບໍ່ມີວັນພັກທາງການທີ່ກຳນົດໄວ້</p>}
+        </div>
+      </section>
     </div>
   )
 }
