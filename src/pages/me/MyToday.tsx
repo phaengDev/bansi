@@ -6,7 +6,9 @@ import { HrAvatar } from '../hr/hrKit';
 import { dayLabel, toPeriod, useGetData, weekdayKey } from '../hr/attendance/attendanceApi';
 import { AttendanceSummary, LateCell, StatePill } from '../hr/attendance/attendanceKit';
 import { useMyEmployee } from '../account/accountMenus';
-import type { MyAttendanceData, MyHolidays } from './meApi';
+import { kip } from '../hr/payroll/payrollApi';
+import { ADV_PENDING } from '../hr/payroll/advanceApi';
+import type { MyAdvanceData, MyAttendanceData, MyCorrectionData, MyHolidays, MyLeaveData, MyOpen } from './meApi';
 
 /** ເວລາເຂົ້າ ຫຼື ອອກຂອງມື້ນີ້ — ໃຫຍ່ໆ ຄືບັດໃນ app ພະນັກງານ */
 const TodayClock = ({ side, time, distance }: { side: 'in' | 'out'; time: string | null | undefined; distance: number | null | undefined }) => {
@@ -30,11 +32,14 @@ const TodayClock = ({ side, time, distance }: { side: 'in' | 'out'; time: string
 /**
  * ມື້ນີ້ — ສະບາຍດີ + ຂໍ້ມູນຕົນເອງ, ເວລາເຂົ້າ-ອອກວຽກມື້ນີ້ (ເບິ່ງຢ່າງດຽວ — ສະແກນໃນມືຖື), ສະຫຼຸບເດືອນນີ້ ແລະ ວັນພັກທີ່ຈະມາເຖິງ
  */
-const MyToday = ({ onOpen }: { onOpen: (key: string) => void }) => {
+const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
   const t = useT();
   const me = useMyEmployee();
   const { data } = useGetData<MyAttendanceData>('/attendance/me', { month: toPeriod(new Date()) });
   const { data: holidays } = useGetData<MyHolidays>('/holiday/me', { year: moment().year() });
+  const { data: leaves } = useGetData<MyLeaveData>('/leave/me', { year: moment().year() });
+  const { data: corrections } = useGetData<MyCorrectionData>('/correction/me', { year: moment().year() });
+  const { data: advances } = useGetData<MyAdvanceData>('/advance/me');
 
   if (!data || !me) {
     return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
@@ -98,6 +103,35 @@ const MyToday = ({ onOpen }: { onOpen: (key: string) => void }) => {
             </button>
           </header>
           <AttendanceSummary summary={data.summary} />
+        </section>
+
+        <section className="my-card">
+          <header><h3><i className="fa-solid fa-paper-plane" /> {t('myRequestsCard')}</h3></header>
+          <ul className="my-requests">
+            {[
+              { key: 'leaves', icon: 'fa-plane-departure', label: 'myLeaves', action: 'myLeaveNew', pending: leaves?.summary.pending },
+              { key: 'corrections', icon: 'fa-fingerprint', label: 'myCorrections', action: 'myReport', pending: corrections?.summary.pending },
+              {
+                key: 'advances', icon: 'fa-hand-holding-dollar', label: 'myAdvances', action: 'myAdvNew',
+                pending: advances?.data.filter((a) => a.status === ADV_PENDING).length,
+                extra: advances && advances.balance > 0 ? `${t('advBalance')} ₭ ${kip(advances.balance)}` : undefined,
+              },
+            ].map((item) => (
+              <li key={item.key}>
+                <button type="button" className="my-request-open" onClick={() => onOpen(item.key)}>
+                  <span className="my-request-icon"><i className={`fa-solid ${item.icon}`} /></span>
+                  <span>
+                    <b>{t(item.label)}</b>
+                    <small>{item.pending ? `${item.pending} ${t('leaveStatusPending')}` : t('myNothingPending')}{item.extra ? ` · ${item.extra}` : ''}</small>
+                  </span>
+                  {!!item.pending && <em>{item.pending}</em>}
+                </button>
+                <button type="button" className="acc-rp-btn" onClick={() => onOpen(item.key, { action: 'new' })}>
+                  <i className="fa-solid fa-plus" /> {t(item.action)}
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="my-card">

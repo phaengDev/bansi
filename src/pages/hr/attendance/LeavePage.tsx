@@ -7,71 +7,17 @@ import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { refreshHrPending } from '../hrPending';
 import { useT } from '../../../context/LanguageContext';
-import { fullName, type EmployeeRef } from '../hrApi';
+import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
-import { PAID_LEAVE, dayLabel, leaveTone, usePostData, type LeaveBalance, type LeaveType } from './attendanceApi';
-import { LeaveFileChips, LeaveFileGallery, type LeaveFile } from './LeaveFiles';
+import { PAID_LEAVE, leaveTone, usePostData, type LeaveBalance } from './attendanceApi';
+import {
+  LEAD_WAITING, LeaveStatusCell, LeaveTypeTiles, REQUEST_STATUSES, REQ_APPROVED, REQ_PENDING, isOver, rangeLabel, typeLabel, type LeaveRequest,
+} from './requestKit';
+import { LeaveFileChips, LeaveFileGallery } from './LeaveFiles';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 
-/** status ຂອງ tbl_leave_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ຍົກເລີກ (ພະນັກງານ / HR ຖອນ) (ສີຢືມ .att-state) */
-const PENDING = 1;
-const APPROVED = 2;
-/** lead_status — ຂັ້ນຫົວໜ້າທີມ (ລູກທີມ): 1 ລໍຫົວໜ້າ, 2 ຫົວໜ້າອະນຸມັດແລ້ວ (ລໍ HR), 3 ຫົວໜ້າປະຕິເສດ; null = HR ເລີຍ */
-const LEAD_WAITING = 1;
-const LEAD_APPROVED = 2;
-const LEAD_REJECTED = 3;
-const LEAVE_STATUSES: Record<number, { label: string; tone: string; icon: string }> = {
-  1: { label: 'leaveStatusPending', tone: 'is-late', icon: 'fa-hourglass-half' },
-  2: { label: 'leaveStatusApproved', tone: 'is-present', icon: 'fa-circle-check' },
-  3: { label: 'leaveStatusRejected', tone: 'is-absent', icon: 'fa-circle-xmark' },
-  4: { label: 'leaveStatusCancelled', tone: 'is-off', icon: 'fa-ban' },
-};
-
-type LeaveRequest = {
-  _uuid: number;
-  employee_id: number;
-  /** null = ຄຳຂໍເກົ່າກ່ອນມີປະເພດ — ສະແດງຕາມ leave_type (ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ) */
-  leave_type_id: number | null;
-  /** status ຂອງ tbl_attendance ທີ່ບັນທຶກຕອນອະນຸມັດ: 2 ໄດ້ເງິນເດືອນ, 3 ບໍ່ໄດ້ */
-  leave_type: number;
-  type: Pick<LeaveType, '_uuid' | 'name' | 'paid' | 'max_per_year' | 'max_per_request'> | null;
-  start_date: string;
-  end_date: string;
-  /** ມື້ເຮັດວຽກໃນຊ່ວງ (ຕອນຂໍ) / ມື້ທີ່ບັນທຶກແທ້ (ຕອນອະນຸມັດ) */
-  days: number;
-  reason: string;
-  status: number;
-  review_note: string | null;
-  reviewedAt: string | null;
-  createdAt: string;
-  employee: (EmployeeRef & { position?: { _uuid: number; position_name: string } | null }) | null;
-  /** ໃບລາທີ່ພະນັກງານແນບ (api ລຸ້ນເກົ່າ = ບໍ່ມີ) */
-  files?: LeaveFile[];
-  /** ຂັ້ນຫົວໜ້າທີມ (api ລຸ້ນເກົ່າ = ບໍ່ມີ) */
-  lead_status?: number | null;
-  lead_name?: string | null;
-  lead_note?: string | null;
-  lead_at?: string | null;
-};
-
-/** ປ້າຍຂັ້ນຫົວໜ້າທີມ — ລໍ / ອະນຸມັດ / ປະຕິເສດ ໂດຍໃຜ ເມື່ອໃດ */
-const LeadStep = ({ row }: { row: LeaveRequest }) => {
-  const t = useT();
-  if (!row.lead_status) return null;
-  const meta = {
-    [LEAD_WAITING]: { label: 'leaveLeadWaiting', icon: 'fa-user-clock', tone: 'is-wait' },
-    [LEAD_APPROVED]: { label: 'leaveLeadApproved', icon: 'fa-user-check', tone: 'is-ok' },
-    [LEAD_REJECTED]: { label: 'leaveLeadRejected', icon: 'fa-user-xmark', tone: 'is-no' },
-  }[row.lead_status];
-  if (!meta) return null;
-  return (
-    <span className={`lv-lead ${meta.tone}`}>
-      <i className={`fa-solid ${meta.icon}`} /> {t(meta.label)}{row.lead_name ? ` · ${row.lead_name}` : ''}
-      {row.lead_at && row.lead_status !== LEAD_WAITING && <em>{moment(row.lead_at).format('DD/MM HH:mm')}</em>}
-      {row.lead_note && row.lead_status !== LEAD_REJECTED && <small>{row.lead_note}</small>}
-    </span>
-  );
-};
+const PENDING = REQ_PENDING;
+const APPROVED = REQ_APPROVED;
 
 type LeaveData = {
   year: string;
@@ -79,69 +25,10 @@ type LeaveData = {
   summary: { pending: number; approved: number; rejected: number; cancelled: number };
 };
 
-const rangeLabel = (row: LeaveRequest) =>
-  row.start_date === row.end_date ? dayLabel(row.start_date) : `${dayLabel(row.start_date)} – ${dayLabel(row.end_date)}`;
-
-/** ຊື່ປະເພດຂອງຄຳຂໍ + ສີຕາມ ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ (ຄຳຂໍເກົ່າບໍ່ມີປະເພດ = ປ້າຍ ໄດ້/ບໍ່ໄດ້ເງິນເດືອນ) */
-const typeLabel = (row: LeaveRequest, t: (key: string) => string) => {
-  const meta = leaveTone(row.type ? row.type.paid : row.leave_type === PAID_LEAVE);
-  return { tone: meta.tone, label: row.type?.name ?? t(meta.label) };
-};
-
-/**
- * ປະເພດການລາ (ບັດ) + ມື້ທີ່ເຫຼືອຂອງພະນັກງານໃນປີ (ບໍ່ນັບຄຳຂໍນີ້) — ຄຳຂໍນີ້ເກີນຂີດຈຳກັດ = ບັດສີແດງ
- * (ຍັງອະນຸມັດໄດ້ — HR ເລືອກ ໄດ້ເງິນເດືອນ / ຕັດເງິນເດືອນ ຂ້າງລຸ່ມ)
- */
-const LeaveTypeTiles = ({ balances, days, value, onChange }: {
-  balances: LeaveBalance[];
-  days: number;
-  value: number | null;
-  onChange: (value: number) => void;
-}) => {
-  const t = useT();
-  return (
-    <div className="lv-review-types" role="radiogroup">
-      {balances.map((b) => {
-        const meta = leaveTone(b.paid);
-        const on = value === b._uuid;
-        const overRequest = !!b.max_per_request && days > b.max_per_request;
-        const overYear = b.remaining !== null && days > b.remaining;
-        return (
-          <button
-            key={b._uuid} type="button" role="radio" aria-checked={on}
-            className={`lv-type ${meta.tone}${on ? ' is-on' : ''}${overRequest || overYear ? ' is-over' : ''}`} onClick={() => onChange(b._uuid)}
-          >
-            <span className="lv-type-icon"><i className={`fa-solid ${meta.icon}`} /></span>
-            <span>
-              <b>{b.name}</b>
-              <small>
-                {t(meta.label)} · {b.max_per_year
-                  ? `${t('lvBalanceLeft')} ${b.remaining} / ${b.max_per_year} ${t('leaveDayUnit')}`
-                  : t('lvTypeUnlimited')}
-              </small>
-              {(overRequest || overYear) && (
-                <small className="lv-type-over">
-                  <i className="fa-solid fa-triangle-exclamation" />{' '}
-                  {overRequest ? `${t('lvOverRequest')} ${b.max_per_request} ${t('leaveDayUnit')}` : t('lvOverYear')}
-                </small>
-              )}
-            </span>
-            <i className={`lv-type-check fa-${on ? 'solid fa-circle-check' : 'regular fa-circle'}`} />
-          </button>
-        );
-      })}
-    </div>
-  );
-};
-
 /**
  * ອະນຸມັດ (ເລືອກປະເພດຄືນໄດ້) / ປະຕິເສດ + ໝາຍເຫດຂອງ HR — ສະແດງຄຳຂໍເປັນບັດ: ພະນັກງານ, ຊ່ວງວັນທີ / ຈຳນວນມື້ / ວັນສົ່ງ,
  * ເຫດຜົນ; ປຸ່ມຢືນຢັນເປັນ "ອະນຸມັດ" (ຂຽວ) ຫຼື "ປະຕິເສດ" (ແດງ)
  */
-/** ຄຳຂໍນີ້ເກີນຂີດຈຳກັດຂອງປະເພດ (ຕໍ່ຄັ້ງ / ມື້ທີ່ເຫຼືອຂອງປີ) */
-const isOver = (b: LeaveBalance | undefined, days: number) =>
-  !!b && ((!!b.max_per_request && days > b.max_per_request) || (b.remaining !== null && days > b.remaining));
-
 /** HR ເລືອກ ໄດ້ເງິນເດືອນ / ຕັດເງິນເດືອນ ຂອງມື້ລາ */
 const PayTiles = ({ value, onChange }: { value: boolean; onChange: (paid: boolean) => void }) => {
   const t = useT();
@@ -191,7 +78,7 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
   /** null = ຕາມຄ່າເລີ່ມຕົ້ນ (ປະເພດໄດ້ເງິນເດືອນ ແລະ ບໍ່ເກີນສິດ = ໄດ້, ອື່ນໆ = ຕັດ); ປ່ຽນປະເພດ = ກັບຄ່າເລີ່ມຕົ້ນ */
   const [paidPick, setPaidPick] = useState<boolean | null>(null);
   const employee = row.employee;
-  const state = LEAVE_STATUSES[row.status] ?? LEAVE_STATUSES[PENDING];
+  const state = REQUEST_STATUSES[row.status] ?? REQUEST_STATUSES[PENDING];
   const selected = balances?.find((b) => b._uuid === leaveTypeId);
   const over = isOver(selected, row.days);
   const defaultPaid = selected ? Number(selected.paid) === 1 && !over : row.leave_type === PAID_LEAVE;
@@ -409,7 +296,6 @@ const LeavePage = () => {
                   <tbody>
                     {shown.map((r) => {
                       const type = typeLabel(r, t);
-                      const state = LEAVE_STATUSES[r.status] ?? LEAVE_STATUSES[PENDING];
                       const pending = r.status === PENDING;
                       // ລູກທີມ: HR ອະນຸມັດ / ປະຕິເສດ ໄດ້ ຫຼັງຫົວໜ້າທີມອະນຸມັດແລ້ວເທົ່ານັ້ນ (backend ກວດຊ້ຳ)
                       const waitingLead = pending && r.lead_status === LEAD_WAITING;
@@ -435,13 +321,7 @@ const LeavePage = () => {
                             {r.reason}
                             <LeaveFileChips files={r.files} />
                           </td>
-                          <td>
-                            {waitingLead
-                              ? <span className="att-state is-late"><i className="fa-solid fa-user-clock" /> {t('leaveLeadWaiting')}</span>
-                              : <span className={`att-state ${state.tone}`}><i className={`fa-solid ${state.icon}`} /> {t(state.label)}</span>}
-                            <LeadStep row={r} />
-                            {r.review_note && <small className="acc-gl-ref d-block">{r.review_note}</small>}
-                          </td>
+                          <td><LeaveStatusCell row={r} /></td>
                           <td className="lv-actions">
                             {waitingLead && canEdit && (
                               <span className="lv-act is-locked" title={t('leaveLeadLockedHint')}>

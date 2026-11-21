@@ -4,22 +4,25 @@ import { Notific } from '../../../utils/Notification';
 import { useT } from '../../../context/LanguageContext';
 import { fileSizeText } from '../hrApi';
 
-/** ໃບລາທີ່ພະນັກງານແນບໃນ app (ສະແກນ / ຖ່າຍຮູບ / PDF) — GET /leave/file/download/:id (ສິດດຽວກັບໜ້າຄຳຂໍລາພັກ) */
+/**
+ * ໃບລາທີ່ພະນັກງານແນບ (ສະແກນ / ຖ່າຍຮູບ / PDF) — HR: GET /leave/file/download/:id (ສິດດຽວກັບໜ້າຄຳຂໍລາພັກ);
+ * self = ເຈົ້າຂອງເປີດເອງ (ພື້ນທີ່ຂອງຂ້ອຍ): GET /leave/me/file/:id
+ */
 export type LeaveFile = { _uuid: number; original_name: string; mime_type: string | null; file_size: number };
 
 const isPdf = (file: LeaveFile) => /pdf/i.test(file.mime_type || file.original_name);
 
-const blobOf = async (file: LeaveFile) =>
-  (await getApi(`/leave/file/download/${btoa(String(file._uuid))}`, { responseType: 'blob' })).data as Blob;
+const blobOf = async (file: LeaveFile, self?: boolean) =>
+  (await getApi(`${self ? '/leave/me/file' : '/leave/file/download'}/${btoa(String(file._uuid))}`, { responseType: 'blob' })).data as Blob;
 
 /**
  * ເປີດໃບລາໃນແຖບໃໝ່ (ຮູບ / PDF ເບິ່ງໃນ browser ເລີຍ) — ເປີດແຖບຕອນກົດກ່ອນ ບໍ່ໃຫ້ browser ບັອກ popup,
  * ໂຫຼດແລ້ວຈຶ່ງໃສ່ໄຟລ໌; ບັອກແທ້ = ດາວໂຫຼດແທນ
  */
-const openLeaveFile = async (file: LeaveFile) => {
+const openLeaveFile = async (file: LeaveFile, self?: boolean) => {
   const tab = window.open('', '_blank');
   try {
-    const href = URL.createObjectURL(await blobOf(file));
+    const href = URL.createObjectURL(await blobOf(file, self));
     if (tab) {
       tab.location.href = href;
     } else {
@@ -40,7 +43,7 @@ const openLeaveFile = async (file: LeaveFile) => {
 };
 
 /** ໃນຕາຕະລາງ: ປຸ່ມນ້ອຍຕໍ່ໄຟລ໌ (ໄອຄອນຮູບ / PDF) — ກົດ = ເປີດ */
-export const LeaveFileChips = ({ files }: { files?: LeaveFile[] }) => {
+export const LeaveFileChips = ({ files, self }: { files?: LeaveFile[]; self?: boolean }) => {
   const t = useT();
   if (!files?.length) return null;
   return (
@@ -52,7 +55,7 @@ export const LeaveFileChips = ({ files }: { files?: LeaveFile[] }) => {
           className="lv-file-chip"
           title={`${t('lvFiles')}: ${file.original_name}`}
           aria-label={`${t('lvFiles')} ${i + 1}: ${file.original_name}`}
-          onClick={() => openLeaveFile(file)}
+          onClick={() => openLeaveFile(file, self)}
         >
           <i className={`fa-solid ${isPdf(file) ? 'fa-file-pdf' : 'fa-file-image'}`} />
           {files.length > 1 && <span>{i + 1}</span>}
@@ -63,13 +66,13 @@ export const LeaveFileChips = ({ files }: { files?: LeaveFile[] }) => {
 };
 
 /** ຮູບຫຍໍ້ຂອງໃບລາ (ຮູບ) — ໂຫຼດຜ່ານ token ເປັນ blob, ອອກຈາກໜ້າ = ຄືນໜ່ວຍຄວາມຈຳ */
-const Thumb = ({ file }: { file: LeaveFile }) => {
+const Thumb = ({ file, self }: { file: LeaveFile; self?: boolean }) => {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let href: string | null = null;
     let alive = true;
-    blobOf(file)
+    blobOf(file, self)
       .then((blob) => {
         href = URL.createObjectURL(blob);
         if (alive) setSrc(href);
@@ -80,13 +83,13 @@ const Thumb = ({ file }: { file: LeaveFile }) => {
       alive = false;
       if (href) URL.revokeObjectURL(href);
     };
-  }, [file]);
+  }, [file, self]);
   if (src) return <img src={src} alt={file.original_name} />;
   return <i className={`fa-solid ${failed ? 'fa-image' : 'fa-spinner fa-spin'}`} />;
 };
 
 /** ໃນ modal ອະນຸມັດ: ຮູບຫຍໍ້ / ໄອຄອນ PDF ພ້ອມຊື່ ແລະ ຂະໜາດ — ກົດ = ເປີດເບິ່ງໃນແຖບໃໝ່ */
-export const LeaveFileGallery = ({ files }: { files?: LeaveFile[] }) => {
+export const LeaveFileGallery = ({ files, self }: { files?: LeaveFile[]; self?: boolean }) => {
   const t = useT();
   if (!files?.length) return null;
   return (
@@ -94,9 +97,9 @@ export const LeaveFileGallery = ({ files }: { files?: LeaveFile[] }) => {
       <small><i className="fa-solid fa-paperclip" /> {t('lvFiles')} ({files.length})</small>
       <div className="lv-file-grid">
         {files.map((file) => (
-          <button key={file._uuid} type="button" className="lv-file-card" title={t('lvFileOpen')} onClick={() => openLeaveFile(file)}>
+          <button key={file._uuid} type="button" className="lv-file-card" title={t('lvFileOpen')} onClick={() => openLeaveFile(file, self)}>
             <span className={`lv-file-face${isPdf(file) ? ' is-pdf' : ''}`}>
-              {isPdf(file) ? <i className="fa-solid fa-file-pdf" /> : <Thumb file={file} />}
+              {isPdf(file) ? <i className="fa-solid fa-file-pdf" /> : <Thumb file={file} self={self} />}
             </span>
             <b>{file.original_name}</b>
             <small>{fileSizeText(file.file_size)}</small>

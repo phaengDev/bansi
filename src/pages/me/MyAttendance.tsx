@@ -11,7 +11,7 @@ const LEGEND: DayState[] = ['present', 'late', 'absent', 'leave', 'unpaid', 'off
  * ການເຂົ້າ-ອອກວຽກຂອງຕົນເອງເປັນເດືອນ — ສະຫຼຸບ + ທຸກມື້ (ເວລາເຂົ້າ/ອອກ, ໄລຍະຈາກບໍລິສັດ, ມາຊ້າ/ອອກກ່ອນ, ໝາຍເຫດ).
  * ເບິ່ງຢ່າງດຽວ — ສະແກນໃນ app ມືຖື (GPS/QR); ເວລາຜິດ = ແຈ້ງລືມສະແກນໃນ "ຄຳຮ້ອງ"
  */
-const MyAttendance = () => {
+const MyAttendance = ({ onReport }: { onReport: (date: string) => void }) => {
   const t = useT();
   const [period, setPeriod] = useState(toPeriod(new Date()));
   const { data, loading, reload } = useGetData<MyAttendanceData>('/attendance/me', { month: period });
@@ -35,7 +35,19 @@ const MyAttendance = () => {
           <StateLegend states={LEGEND} />
           <div className="acc-gl-group">
             <div className="acc-rp-scroll">
-              <AttendanceDayTable days={data.days} grace={data.grace ?? 0} focusDate={data.today.date} />
+              <AttendanceDayTable days={data.days} grace={data.grace ?? 0} focusDate={data.today.date}
+                actions={(day) => {
+                  // ມື້ທີ່ຜ່ານມາແລ້ວ (ມື້ເຮັດວຽກ ຫຼື ມີການສະແກນ) — ຂາດ / ສະແກນບໍ່ຄົບ = ປຸ່ມເດັ່ນ
+                  const past = day.date <= data.today.date && day.state !== 'future' && day.state !== 'none';
+                  if (!past || (!day.workday && !day.record)) return null;
+                  const missing = day.state === 'absent' || (day.record && (!day.record.check_in_time || (!day.record.check_out_time && day.date < data.today.date)));
+                  return (
+                    <button type="button" className={`my-report${missing ? ' is-missing' : ''}`} title={t('myCorrections')} onClick={() => onReport(day.date)}>
+                      <i className="fa-solid fa-fingerprint" />{missing && <span> {t('myCorrections')}</span>}
+                    </button>
+                  );
+                }}
+              />
             </div>
           </div>
         </div>

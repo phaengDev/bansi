@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { DatePicker } from 'rsuite';
+import { DatePicker, TimePicker } from 'rsuite';
 import moment from 'moment';
 import { useT } from '../../../context/LanguageContext';
 import {
@@ -151,5 +151,21 @@ export const AttendanceDayTable = ({ days, grace, focusDate, focusRef, onRowClic
         })}
       </tbody>
     </table>
+  );
+};
+
+/** ເວລາ "HH:mm" (ເລືອກທຸກ 5 ນາທີ) — ຄ່າເປັນຂໍ້ຄວາມ, null = ບໍ່ໄດ້ເລືອກ */
+export const TimeField = ({ value, onChange, cleanable = true, placeholder }: {
+  value: string | null;
+  onChange: (value: string | null) => void;
+  cleanable?: boolean;
+  placeholder?: string;
+}) => {
+  const date = value ? moment(value, 'HH:mm').toDate() : null;
+  return (
+    <TimePicker value={date} onChange={(v) => onChange(v ? moment(v).format('HH:mm') : null)} format="HH:mm" block cleanable={cleanable}
+      placement="autoVerticalStart" placeholder={placeholder}
+      hideMinutes={(minute: number) => minute % 5 !== 0 && minute !== date?.getMinutes()}
+    />
   );
 };

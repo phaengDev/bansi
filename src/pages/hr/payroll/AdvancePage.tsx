@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, DatePicker, Form, Input, Loader, Modal, NumberInput, SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { getApi } from '../../../utils/configApi';
@@ -13,10 +13,11 @@ import { HrAvatar } from '../hrKit';
 import { periodLabel, usePostData } from '../attendance/attendanceApi';
 import { FormSection, SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 import { runSave } from '../../account/setting/settingApi';
-import { kip, kipFormatter } from './payrollApi';
+import { kip } from './payrollApi';
 import { LakAccountSelect, useLakAccounts } from './LakAccountSelect';
+import { AdvanceField, AdvanceProgress, AdvanceStatusPill, MoneyField } from './advanceKit';
 import {
-  ADVANCE_STATUSES, ADV_ACTIVE, ADV_APPROVED, ADV_PENDING, ADV_REJECTED, ADV_SETTLED, advanceApi,
+  ADV_ACTIVE, ADV_APPROVED, ADV_PENDING, ADV_REJECTED, ADV_SETTLED, advanceApi,
   type AdvanceData, type AdvanceRepayment, type SalaryAdvance,
 } from './advanceApi';
 
@@ -26,23 +27,8 @@ const BY_CASH = 2;
 const toPeriod = (date: Date) => moment(date).format('YYYY-MM');
 const toMonthDate = (period: string) => moment(`${period}-01`).toDate();
 
-const StatusPill = ({ status }: { status: number }) => {
-  const t = useT();
-  const state = ADVANCE_STATUSES[status] ?? ADVANCE_STATUSES[ADV_PENDING];
-  return <span className={`att-state ${state.tone}`}><i className={`fa-solid ${state.icon}`} /> {t(state.label)}</span>;
-};
-
-const Field = ({ label, required, hint, wide, children }: { label: string; required?: boolean; hint?: ReactNode; wide?: boolean; children: ReactNode }) => (
-  <div className={`rs-form-group${wide ? ' is-wide' : ''}`}>
-    <label className="form-label">{label}{required && <span className="text-danger">*</span>}</label>
-    {children}
-    {hint && <small className="pay-field-hint">{hint}</small>}
-  </div>
-);
-
-const MoneyField = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
-  <NumberInput value={value} onChange={(v) => onChange(Math.max(0, Number(v) || 0))} formatter={kipFormatter} controls={false} prefix="₭" min={0} />
-);
+const StatusPill = AdvanceStatusPill;
+const Field = AdvanceField;
 
 /** ຈຳນວນງວດ + ເດືອນເລີ່ມຫັກ + ຜົນຫັກຕໍ່ເດືອນ — ໃຊ້ໃນຟອມບັນທຶກແທນ, ອະນຸມັດ ແລະ ປ່ຽນແຜນ */
 const ScheduleFields = ({ amount, installments, period, onInstallments, onPeriod }: {
@@ -334,7 +320,6 @@ const DetailModal = ({ row: initial, onClose, onChanged }: { row: SalaryAdvance;
   });
 
   const repayments = row.repayments ?? [];
-  const percent = row.amount > 0 ? Math.min(100, Math.round((row.repaid / row.amount) * 100)) : 0;
 
   return (
     <Modal open onClose={onClose} size="sm" className="acc-gl-ledger-modal adv-detail">
@@ -348,12 +333,7 @@ const DetailModal = ({ row: initial, onClose, onChanged }: { row: SalaryAdvance;
         </div>
       </Modal.Header>
       <Modal.Body>
-        <div className="adv-sum">
-          <span><small>{t('advAmount')}</small><b>₭ {kip(row.amount)}</b></span>
-          <span><small>{t('advRepaid')}</small><b>₭ {kip(row.repaid)}</b></span>
-          <span className={row.balance > 0 ? 'is-due' : ''}><small>{t('advBalance')}</small><b>₭ {kip(row.balance)}</b></span>
-        </div>
-        <div className="adv-progress" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${percent}%` }} /></div>
+        <AdvanceProgress row={row} />
         <dl className="adv-facts">
           <div><dt>{t('advMonthly')}</dt><dd>₭ {kip(row.monthly_deduction)} · {row.installments} {t('advMonths')}</dd></div>
           <div><dt>{t('advStartPeriod')}</dt><dd>{periodLabel(row.start_period)}</dd></div>

@@ -7,53 +7,20 @@ import { Notific } from '../../../utils/Notification';
 import { canEdit } from '../../../utils/localStorage';
 import { refreshHrPending } from '../hrPending';
 import { useT } from '../../../context/LanguageContext';
-import { fullName, type EmployeeRef } from '../hrApi';
+import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
 import { dayLabel, usePostData } from './attendanceApi';
+import { REQUEST_STATUSES, REQ_PENDING, TimePair, type Correction } from './requestKit';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
 
-/** status ຂອງ tbl_attendance_request — 1 ລໍຖ້າ, 2 ອະນຸມັດ, 3 ປະຕິເສດ, 4 ພະນັກງານຍົກເລີກ (ຄືກັບຄຳຂໍລາພັກ) */
-const PENDING = 1;
-const STATUSES: Record<number, { label: string; tone: string; icon: string }> = {
-  1: { label: 'leaveStatusPending', tone: 'is-late', icon: 'fa-hourglass-half' },
-  2: { label: 'leaveStatusApproved', tone: 'is-present', icon: 'fa-circle-check' },
-  3: { label: 'leaveStatusRejected', tone: 'is-absent', icon: 'fa-circle-xmark' },
-  4: { label: 'leaveStatusCancelled', tone: 'is-off', icon: 'fa-ban' },
-};
-
-type Correction = {
-  _uuid: number;
-  employee_id: number;
-  work_date: string;
-  /** ເວລາທີ່ຂໍ "HH:mm" — null = ໃຊ້ເວລາທີ່ສະແກນໄວ້ */
-  check_in: string | null;
-  check_out: string | null;
-  reason: string;
-  status: number;
-  review_note: string | null;
-  createdAt: string;
-  /** ເວລາທີ່ບັນທຶກໄວ້ໃນມື້ນັ້ນ (ທຽບກັບເວລາທີ່ຂໍ) */
-  recorded_in: string | null;
-  recorded_out: string | null;
-  employee: (EmployeeRef & { position?: { _uuid: number; position_name: string } | null }) | null;
-};
+const PENDING = REQ_PENDING;
+const STATUSES = REQUEST_STATUSES;
 
 type CorrectionData = {
   year: string;
   data: Correction[];
   summary: { pending: number; approved: number; rejected: number; cancelled: number };
 };
-
-/** ເວລາທີ່ຂໍ (ຕົວເຂັ້ມ) ທຽບກັບທີ່ສະແກນໄວ້ — ບໍ່ໄດ້ຂໍ = ໃຊ້ທີ່ສະແກນໄວ້ (ຈາງ) */
-const TimePair = ({ requested, recorded }: { requested: string | null; recorded: string | null }) =>
-  requested ? (
-    <span>
-      <b>{requested}</b>
-      {recorded && recorded !== requested && <small className="acc-gl-ref"> ({recorded})</small>}
-    </span>
-  ) : (
-    <span className="acc-gl-ref">{recorded ?? '—'}</span>
-  );
 
 /** ອະນຸມັດ / ປະຕິເສດ + ໝາຍເຫດຂອງ HR */
 const ReviewModal = ({ row, mode, onClose, onSaved }: {

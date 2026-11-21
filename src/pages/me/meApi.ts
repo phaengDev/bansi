@@ -1,4 +1,6 @@
-import type { AttendanceRecord, MonthStats } from '../hr/attendance/attendanceApi';
+import type { AttendanceRecord, LeaveBalance, MonthStats } from '../hr/attendance/attendanceApi';
+import type { Correction, LeaveRequest } from '../hr/attendance/requestKit';
+import type { SalaryAdvance } from '../hr/payroll/advanceApi';
 import type { AttendanceDay } from '../hr/attendance/attendanceKit';
 import type { EmployeeRef } from '../hr/hrApi';
 
@@ -34,3 +36,32 @@ export type MyHolidays = {
   today: string;
   data: { holiday_date: string; name: string; workday: boolean; kind: number }[];
 };
+
+/** GET /leave/me?year=YYYY — ຄຳຂໍຂອງຕົນເອງ + ປະເພດທີ່ຂໍໄດ້ພ້ອມມື້ທີ່ເຫຼືອ */
+export type MyLeaveData = {
+  year: string;
+  data: LeaveRequest[];
+  types: LeaveBalance[];
+  summary: { pending: number; paid_days: number; unpaid_days: number };
+};
+
+/** GET /correction/me?year=YYYY */
+export type MyCorrectionData = {
+  year: string;
+  data: Correction[];
+  summary: { pending: number };
+};
+
+/** GET /advance/me — ລາຍການ + ຍອດຄ້າງ + ເງື່ອນໄຂຂອງຟອມ (max_amount null = ບໍ່ຈຳກັດ) */
+export type MyAdvanceData = {
+  data: SalaryAdvance[];
+  balance: number;
+  rules: { enabled: boolean; max_percent: number; max_amount: number | null; max_installments: number; start_period: string; pending: boolean };
+};
+
+/** ເປີດໜ້າໃນພື້ນທີ່ຂອງຂ້ອຍ ພ້ອມສິ່ງທີ່ຈະເຮັດ — ເຊັ່ນ ເປີດຟອມຂໍໃໝ່ (ຈາກປຸ່ມລັດໃນ "ມື້ນີ້") ຫຼື ແຈ້ງລືມສະແກນຂອງມື້ໜຶ່ງ */
+export type MyIntent = { action: 'new'; date?: string };
+export type MyOpen = (key: string, intent?: MyIntent) => void;
+
+/** ໄອດີໃນ URL ຂອງ backend (decodeId = atob) */
+export const idOf = (row: { _uuid: number }) => btoa(String(row._uuid));
