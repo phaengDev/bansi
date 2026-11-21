@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Form, Input, Loader } from 'rsuite';
 import moment from 'moment';
 import { postApi } from '../../utils/configApi';
@@ -15,7 +15,7 @@ import { TASK_DONE, partOf, type TaskPerson } from '../hr/task/taskApi';
 import { FormStep, SettingModal } from '../account/setting/settingKit';
 import { useMyEmployee } from '../account/accountMenus';
 import MyTaskDetail from './MyTaskDetail';
-import type { MyTask, MyTasksData, MyTeamMember } from './meApi';
+import type { MyIntent, MyOpen, MyTask, MyTasksData, MyTeamMember } from './meApi';
 
 type Filter = 'open' | 'done' | 'all';
 const toDay = (value: Date | null) => (value ? moment(value).format('YYYY-MM-DD') : null);
@@ -135,13 +135,28 @@ const AssignForm = ({ team, onClose, onSaved }: { team: MyTeamMember[]; onClose:
  * ວຽກຂອງຂ້ອຍ — received: ວຽກທີ່ໄດ້ຮັບມອບໝາຍ (ສ່ວນຂອງຕົນ + ຄວາມຄືບໜ້າ); assigned: ວຽກທີ່ຂ້ອຍມອບໝາຍໃຫ້ລູກທີມ (ຄວາມຄືບໜ້າຂອງທີມ,
  * ມອບໝາຍໃໝ່ໄດ້ ຖ້າມີລູກທີມ). ກົດບັດ = ລາຍລະອຽດ (ອັບເດດ, ລາຍການຍ່ອຍ, ເອກະສານ, ຄອມເມັນ)
  */
-const MyTasks = ({ mode }: { mode: 'received' | 'assigned' }) => {
+const MyTasks = ({ mode, intent, onIntentDone, onOpen }: {
+  mode: 'received' | 'assigned';
+  /** open = ເປີດວຽກ id (ຈາກແຈ້ງເຕືອນ) — ບໍ່ຢູ່ໃນວຽກທີ່ໄດ້ຮັບ = ລອງວຽກທີ່ຂ້ອຍມອບໝາຍ */
+  intent?: MyIntent | null;
+  onIntentDone?: () => void;
+  onOpen?: MyOpen;
+}) => {
   const t = useT();
   const me = useMyEmployee();
   const [filter, setFilter] = useState<Filter>('open');
   const [viewing, setViewing] = useState<MyTask | null>(null);
   const [assigning, setAssigning] = useState(false);
   const { data, loading, reload } = useGetData<MyTasksData>(mode === 'received' ? '/task/me' : '/task/me/assigned');
+
+  useEffect(() => {
+    if (intent?.action !== 'open' || !data) return;
+    const task = data.data.find((row) => row._uuid === intent.id);
+    onIntentDone?.();
+    if (task) setViewing(task);
+    else if (mode === 'received' && onOpen) onOpen('assigned', intent);
+    else Notific.warning('myTaskNotFound');
+  }, [intent, data, mode, onIntentDone, onOpen]);
   const meId = Number(me?._uuid) || 0;
   const team = data?.team ?? [];
 

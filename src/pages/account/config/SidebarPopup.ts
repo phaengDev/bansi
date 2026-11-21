@@ -313,6 +313,32 @@ export const MY_TASKS_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/**
+ * ທີມ ແລະ ອະນຸມັດ — ອະນຸມັດຄຳຂໍ (ສະເພາະຄົນທີ່ມີສິດ / ເປັນຫົວໜ້າທີມ — MyWindow ເອົາອອກເມື່ອບໍ່ມີສິດ),
+ * ທີມງານ (ສາຍງານ + ລາຍຊື່ເພື່ອນຮ່ວມງານ) ແລະ ໂຄງຮ່າງອົງກອນ
+ */
+export const MY_TEAM_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'myGroupApprove',
+    items: [{ key: 'approvals', icon: 'fa-solid fa-clipboard-check', label: 'myApprovals' }],
+  },
+  {
+    group: 'myGroupTeam',
+    items: [
+      { key: 'team', icon: 'fa-solid fa-people-group', label: 'myTeamPage' },
+      { key: 'org', icon: 'fa-solid fa-sitemap', label: 'myOrg' },
+    ],
+  },
+];
+
+/** ແຈ້ງເຕືອນຂອງຂ້ອຍ — ໜ້າດຽວ (ບໍ່ມີແຖບຊ້າຍ) */
+export const MY_INBOX_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'myGroupInbox',
+    items: [{ key: 'notifications', icon: 'fa-solid fa-bell', label: 'myNotifications' }],
+  },
+];
+
 export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => string) =>
   groups.flatMap(({ group, items }) =>
     items.map((item) => ({ ...item, label: t(item.label), group: t(group) }))

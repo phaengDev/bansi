@@ -8,6 +8,7 @@ import { AttendanceSummary, LateCell, StatePill } from '../hr/attendance/attenda
 import { useMyEmployee } from '../account/accountMenus';
 import { kip } from '../hr/payroll/payrollApi';
 import { ADV_PENDING } from '../hr/payroll/advanceApi';
+import { pendingApprovals, unreadNotifications, useMyInbox } from './meInbox';
 import type { MyAdvanceData, MyAttendanceData, MyCorrectionData, MyHolidays, MyLeaveData, MyOpen, MyPayPreview } from './meApi';
 
 /** ເວລາເຂົ້າ ຫຼື ອອກຂອງມື້ນີ້ — ໃຫຍ່ໆ ຄືບັດໃນ app ພະນັກງານ */
@@ -41,6 +42,9 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
   const { data: corrections } = useGetData<MyCorrectionData>('/correction/me', { year: moment().year() });
   const { data: advances } = useGetData<MyAdvanceData>('/advance/me');
   const { data: pay } = useGetData<MyPayPreview>('/payroll/me/preview', { month: toPeriod(new Date()) });
+  const inbox = useMyInbox();
+  const waiting = pendingApprovals(inbox);
+  const unread = unreadNotifications(inbox);
 
   if (!data || !me) {
     return <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>;
@@ -70,6 +74,26 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
           <span>{dayLabel(today.date)}</span>
         </div>
       </section>
+
+      {/* ລໍຂ້ອຍອະນຸມັດ / ແຈ້ງເຕືອນໃໝ່ — ກົດ = ເປີດ (ໜ້າຕ່າງ "ທີມ ແລະ ອະນຸມັດ" / "ແຈ້ງເຕືອນຂອງຂ້ອຍ") */}
+      {(waiting > 0 || unread > 0) && (
+        <div className="my-alerts">
+          {waiting > 0 && (
+            <button type="button" className="my-alert is-approve" onClick={() => onOpen('approvals')}>
+              <i className="fa-solid fa-clipboard-check" />
+              <span>{t('myTodayApprovals').replace('{n}', String(waiting))}</span>
+              <i className="fa-solid fa-arrow-right" />
+            </button>
+          )}
+          {unread > 0 && (
+            <button type="button" className="my-alert is-inbox" onClick={() => onOpen('notifications')}>
+              <i className="fa-solid fa-bell" />
+              <span>{t('myTodayUnread').replace('{n}', String(unread))}</span>
+              <i className="fa-solid fa-arrow-right" />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="my-grid">
         <section className="my-card my-today">

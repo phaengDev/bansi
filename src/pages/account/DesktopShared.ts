@@ -126,6 +126,8 @@ export type ShortcutId =
   | 'myWork'
   | 'myPay'
   | 'myTasks'
+  | 'myTeam'
+  | 'myInbox'
   | 'settings';
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
@@ -150,6 +152,8 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   myWork: 'accountAppMyWork',
   myPay: 'accountAppMyPay',
   myTasks: 'accountAppMyTasks',
+  myTeam: 'accountAppMyTeam',
+  myInbox: 'accountAppMyInbox',
   settings: 'accountAppSettings',
 };
 
@@ -174,6 +178,8 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   myWork: 'accountAppMyWorkDesc',
   myPay: 'accountAppMyPayDesc',
   myTasks: 'accountAppMyTasksDesc',
+  myTeam: 'accountAppMyTeamDesc',
+  myInbox: 'accountAppMyInboxDesc',
   settings: 'accountAppSettingsDesc',
 };
 
@@ -206,6 +212,8 @@ export const shortcuts: ReadonlyArray<{
   { id: 'myWork', icon: 'fa-house-user', tone: 'emerald', path: '/me/work', popup: true },
   { id: 'myPay', icon: 'fa-wallet', tone: 'gold', path: '/me/pay', popup: true },
   { id: 'myTasks', icon: 'fa-list-check', tone: 'sky', path: '/me/tasks', popup: true },
+  { id: 'myTeam', icon: 'fa-people-group', tone: 'violet', path: '/me/team', popup: true },
+  { id: 'myInbox', icon: 'fa-bell', tone: 'coral', path: '/me/inbox', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
 ];
 

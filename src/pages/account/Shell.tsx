@@ -23,7 +23,7 @@ import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
 import MyWindow from '../me/MyWindow';
 import { useMyPageRequest } from '../me/meNav';
-import { MY_PAY_MENU, MY_TASKS_MENU, MY_WORK_MENU } from './config/SidebarPopup';
+import { MY_INBOX_MENU, MY_PAY_MENU, MY_TASKS_MENU, MY_TEAM_MENU, MY_WORK_MENU } from './config/SidebarPopup';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
@@ -71,6 +71,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   myWork: <MyWindow id="myWork" menu={MY_WORK_MENU} />,
   myPay: <MyWindow id="myPay" menu={MY_PAY_MENU} />,
   myTasks: <MyWindow id="myTasks" menu={MY_TASKS_MENU} />,
+  myTeam: <MyWindow id="myTeam" menu={MY_TEAM_MENU} />,
+  myInbox: <MyWindow id="myInbox" menu={MY_INBOX_MENU} />,
 };
 
 /**
@@ -145,6 +147,8 @@ const AccountShell: React.FC = () => {
   const myWorkWindow = usePopupWindow();
   const myPayWindow = usePopupWindow();
   const myTasksWindow = usePopupWindow();
+  const myTeamWindow = usePopupWindow();
+  const myInboxWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
     journal: journalWindow,
@@ -167,6 +171,8 @@ const AccountShell: React.FC = () => {
     myWork: myWorkWindow,
     myPay: myPayWindow,
     myTasks: myTasksWindow,
+    myTeam: myTeamWindow,
+    myInbox: myInboxWindow,
     settings: settingsWindow,
   };
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop

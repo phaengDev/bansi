@@ -14,6 +14,11 @@ import MyPay from './MyPay';
 import MyTasks from './MyTasks';
 import MyWorkPlans from './MyWorkPlans';
 import MyNotes from './MyNotes';
+import MyApprovals from './MyApprovals';
+import MyTeam from './MyTeam';
+import MyNotifications from './MyNotifications';
+import OrgChartPage from '../hr/org/OrgChartPage';
+import { canApprove, pendingApprovals, unreadNotifications, useMyInbox } from './meInbox';
 import { clearMyPageRequest, hasPage, openMyPage, useMyPageRequest } from './meNav';
 import type { MyIntent, MyOpen } from './meApi';
 
@@ -24,9 +29,17 @@ import type { MyIntent, MyOpen } from './meApi';
 const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) => {
   const t = useT();
   const me = useMyEmployee();
-  const [activeKey, setActiveKey] = useRailKey(id, menu);
-  const railNav = useMemo(() => toRailNav(menu, t), [menu, t]);
-  const active = railNav.find((item) => item.key === activeKey);
+  const inbox = useMyInbox(!!me);
+  const [savedKey, setActiveKey] = useRailKey(id, menu);
+  // ອະນຸມັດຄຳຂໍ: ສະເພາະຄົນທີ່ມີສິດ (ຍັງບໍ່ຮູ້ = ສະແດງໄວ້ກ່ອນ); ຕົວເລກ = ລໍຂ້ອຍອະນຸມັດ / ແຈ້ງເຕືອນທີ່ຍັງບໍ່ອ່ານ
+  const approver = canApprove(inbox);
+  const approvals = pendingApprovals(inbox);
+  const unread = unreadNotifications(inbox);
+  const railNav = useMemo(() => toRailNav(menu, t)
+    .filter((item) => item.key !== 'approvals' || approver !== false)
+    .map((item) => ({ ...item, badge: item.key === 'approvals' ? approvals : item.key === 'notifications' ? unread : undefined })), [menu, t, approver, approvals, unread]);
+  const active = railNav.find((item) => item.key === savedKey) ?? railNav[0];
+  const activeKey = active?.key ?? savedKey;
   /** ສິ່ງທີ່ໜ້າປາຍທາງຕ້ອງເຮັດເມື່ອເປີດ (ເຊັ່ນ ເປີດຟອມຂໍໃໝ່) — ໜ້າເຮັດແລ້ວລ້າງ */
   const [intent, setIntent] = useState<(MyIntent & { key: string }) | null>(null);
   const request = useMyPageRequest();
@@ -65,14 +78,20 @@ const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) =
     corrections: () => <MyCorrections intent={intentOf('corrections')} onIntentDone={done} />,
     pay: () => <MyPay />,
     advances: () => <MyAdvances intent={intentOf('advances')} onIntentDone={done} />,
-    tasks: () => <MyTasks key="received" mode="received" />,
-    assigned: () => <MyTasks key="assigned" mode="assigned" />,
+    tasks: () => <MyTasks key="received" mode="received" intent={intentOf('tasks')} onIntentDone={done} onOpen={open} />,
+    assigned: () => <MyTasks key="assigned" mode="assigned" intent={intentOf('assigned')} onIntentDone={done} />,
     workplans: () => <MyWorkPlans />,
     notes: () => <MyNotes />,
+    approvals: () => <MyApprovals intent={intentOf('approvals')} onIntentDone={done} />,
+    team: () => <MyTeam onOpen={open} />,
+    org: () => <OrgChartPage self />,
+    notifications: () => <MyNotifications onOpen={open} />,
   };
 
+  // ໜ້າຕ່າງທີ່ມີໜ້າດຽວ (ແຈ້ງເຕືອນ) — ບໍ່ຕ້ອງມີແຖບຊ້າຍ
+  const rail = railNav.length > 1 ? railNav : undefined;
   return (
-    <AppPage title={active?.label ?? t(shortcutNameKeys[id])} subtitle={t(shortcutNameKeys[id])} railNav={railNav} railActiveKey={activeKey} onRailSelect={(key) => open(key)}>
+    <AppPage title={active?.label ?? t(shortcutNameKeys[id])} subtitle={t(shortcutNameKeys[id])} railNav={rail} railActiveKey={activeKey} onRailSelect={(key) => open(key)}>
       {pages[activeKey]?.()}
     </AppPage>
   );

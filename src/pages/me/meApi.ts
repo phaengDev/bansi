@@ -5,6 +5,7 @@ import type { PayrollLine } from '../hr/payroll/payrollApi';
 import type { Task, TaskFile, TaskItem } from '../hr/task/taskApi';
 import type { AttendanceDay } from '../hr/attendance/attendanceKit';
 import type { EmployeeRef } from '../hr/hrApi';
+import type { LeaveFile } from '../hr/attendance/LeaveFiles';
 
 /**
  * ພື້ນທີ່ຂອງຂ້ອຍ — ຂໍ້ມູນຂອງພະນັກງານເອງຜ່ານ route /…/me (ຄືກັນກັບ app ພະນັກງານ). backend ຮັບ token ຂອງຜູ້ໃຊ້ລະບົບ
@@ -62,7 +63,8 @@ export type MyAdvanceData = {
 };
 
 /** ເປີດໜ້າໃນພື້ນທີ່ຂອງຂ້ອຍ ພ້ອມສິ່ງທີ່ຈະເຮັດ — ເຊັ່ນ ເປີດຟອມຂໍໃໝ່ (ຈາກປຸ່ມລັດໃນ "ມື້ນີ້") ຫຼື ແຈ້ງລືມສະແກນຂອງມື້ໜຶ່ງ */
-export type MyIntent = { action: 'new'; date?: string };
+/** ສິ່ງທີ່ໜ້າປາຍທາງເຮັດເມື່ອເປີດ: new = ເປີດຟອມຂໍໃໝ່, open = ເປີດລາຍການ id (ເຊັ່ນ ວຽກຈາກແຈ້ງເຕືອນ), tab = ໄປແຖບນັ້ນ */
+export type MyIntent = { action: 'new'; date?: string } | { action: 'open'; id: number } | { action: 'tab'; tab: string };
 export type MyOpen = (key: string, intent?: MyIntent) => void;
 
 /** ໄອດີໃນ URL ຂອງ backend (decodeId = atob) */
@@ -135,3 +137,49 @@ export type MyNote = {
 };
 export type MyNoteFolder = { _uuid: number; name: string; count: number };
 export type MyNoteBook = { data: MyNote[]; folders: MyNoteFolder[] };
+
+/**
+ * ອະນຸມັດຄຳຂໍ (GET /approve/me) — ສິດທີ່ HR ຕິກໃຫ້ໃນຟອມຜູ້ໃຊ້ (leave / correction / advance) + team = ເປັນຫົວໜ້າທີມ
+ * (ອະນຸມັດລາພັກຂອງລູກທີມຂັ້ນທຳອິດ). ບໍ່ເຫັນ ແລະ ອະນຸມັດຄຳຂໍຂອງຕົນເອງບໍ່ໄດ້
+ */
+export type ApprovalKind = 'team' | 'leave' | 'correction' | 'advance';
+export type MyApprovals = { rights: Record<ApprovalKind, boolean>; pending: Record<ApprovalKind, number> };
+export type ApprovalState = 'pending' | 'approved' | 'rejected' | 'cancelled';
+/** ຄຳຂໍໃນຮູບແບບດຽວກັນທຸກປະເພດ (backend ຂຽນຫົວຂໍ້ / ລາຍລະອຽດ / ຄຳເຕືອນໃຫ້ແລ້ວ) */
+export type ApprovalItem = {
+  _uuid: number;
+  kind: ApprovalKind;
+  state: ApprovalState;
+  title: string;
+  lines: string[];
+  warn: string[];
+  reason: string | null;
+  files: LeaveFile[];
+  created_at: string;
+  reviewed_at: string | null;
+  review_note: string | null;
+  reviewer: string | null;
+  person: { _uuid: number; emp_code: string; name: string; profile_url: string | null; department: string | null; position: string | null };
+};
+/** GET /approve/me/:kind — ລໍຖ້າ (ເກົ່າສຸດກ່ອນ) + ທີ່ຕັດສິນແລ້ວໃນ 30 ມື້ */
+export type ApprovalList = { pending: ApprovalItem[]; recent: ApprovalItem[] };
+
+/** GET /employee/me/colleagues — ສະເພາະຂໍ້ມູນຕິດຕໍ່ວຽກ (ບໍ່ມີເງິນເດືອນ / ຂໍ້ມູນສ່ວນຕົວ) */
+export type Colleague = {
+  _uuid: number;
+  emp_code: string;
+  first_name: string;
+  last_name: string | null;
+  phone: string | null;
+  profile_url: string | null;
+  department: { _uuid: number; depart_name: string } | null;
+  position: { _uuid: number; position_name: string } | null;
+  birthday_today: boolean;
+  on_leave_today: boolean;
+  is_me: boolean;
+};
+export type ColleagueData = { today: string; data: Colleague[]; summary: { total: number; on_leave: number; birthdays: number } };
+
+/** GET /notification/me — ໃໝ່ສຸດກ່ອນ (ບໍ່ເກີນ 100); ref = "<ປະເພດ>:<id>" ຂອງສິ່ງທີ່ແຈ້ງ (ເປີດໜ້ານັ້ນ) */
+export type MyNotification = { _uuid: number; type: string; title: string; body: string | null; ref: string | null; is_new: boolean; createdAt: string };
+export type MyNotificationData = { data: MyNotification[]; unread: number };

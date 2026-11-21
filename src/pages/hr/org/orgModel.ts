@@ -25,7 +25,8 @@ export type OrgPerson = {
   /** ຫົວໜ້າທີ່ຍັງເຮັດວຽກຢູ່ (ເຊີບເວີຂ້າມຄົນລາອອກໃຫ້ແລ້ວ) */
   reports_to_id: number | null;
 };
-export type OrgData = { departments: OrgDepartment[]; positions: OrgPosition[]; people: OrgPerson[] };
+/** me_id = ພະນັກງານຂອງຜູ້ເອີ້ນ (ສະເພາະ GET /org/me — ພື້ນທີ່ຂອງຂ້ອຍ) */
+export type OrgData = { departments: OrgDepartment[]; positions: OrgPosition[]; people: OrgPerson[]; me_id?: number };
 
 export type OrgNode = {
   person: OrgPerson;
@@ -147,21 +148,21 @@ export const descendantsOf = (tree: OrgTree, personId: number | null | undefined
   return out;
 };
 
-/** GET /org/chart — reload ຫຼັງແກ້ຫົວໜ້າ / ຕຳແໜ່ງ */
-export const useOrgData = () => {
+/** GET /org/chart (HR) ຫຼື /org/me (ພື້ນທີ່ຂອງຂ້ອຍ: ເບິ່ງຢ່າງດຽວ + me_id) — reload ຫຼັງແກ້ຫົວໜ້າ / ຕຳແໜ່ງ */
+export const useOrgData = (path: '/org/chart' | '/org/me' = '/org/chart') => {
   const [data, setData] = useState<OrgData>(EMPTY_ORG);
   const [loading, setLoading] = useState(true);
   const reload = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getApi('/org/chart');
+      const res = await getApi(path);
       setData({ ...EMPTY_ORG, ...(res.data ?? {}) });
     } catch (error) {
       Notific.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [path]);
   useEffect(() => {
     reload();
   }, [reload]);

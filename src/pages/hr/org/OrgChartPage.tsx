@@ -25,8 +25,8 @@ const VIEWS: ViewOption<View>[] = [
   { key: 'dept', icon: 'fa-table-columns', label: 'hrOrgByDept' },
 ];
 
-/** ຂໍ້ມູນຮ່ວມຂອງການແຕ້ມ — ຄຳຄົ້ນຫາ ແລະ ປຸ່ມປ່ຽນຫົວໜ້າສາຍງານ */
-type Ctx = { query: string; onEdit?: (node: OrgNode) => void };
+/** ຂໍ້ມູນຮ່ວມຂອງການແຕ້ມ — ຄຳຄົ້ນຫາ, ປຸ່ມປ່ຽນຫົວໜ້າສາຍງານ ແລະ "ຂ້ອຍ" (ພື້ນທີ່ຂອງຂ້ອຍ) */
+type Ctx = { query: string; onEdit?: (node: OrgNode) => void; meId?: number; self?: boolean };
 
 const hit = (n: OrgNode, q: string) =>
   !!q && `${personName(n.person)} ${n.person.emp_code} ${n.position?.position_name ?? ''}`.toLowerCase().includes(q);
@@ -49,10 +49,12 @@ const NodeCard = ({ node, ctx, compact, loose }: { node: OrgNode; ctx: Ctx; comp
   const t = useT();
   const newDept = !node.parent || node.parent.person.department_id !== node.person.department_id;
   const dept = newDept && !isExecutive(node.department) ? node.department?.depart_name : undefined;
+  const isMe = !!ctx.meId && node.person._uuid === ctx.meId;
   return (
-    <div className={`org-card is-single${compact ? ' is-compact' : ''}${loose ? ' is-loose' : ''} ${toneClass(node.tone)}${hit(node, ctx.query) ? ' is-hit' : ''}`}>
+    <div className={`org-card is-single${compact ? ' is-compact' : ''}${loose && !ctx.self ? ' is-loose' : ''} ${toneClass(node.tone)}${hit(node, ctx.query) ? ' is-hit' : ''}${isMe ? ' is-me' : ''}`}>
       <EditButton node={node} ctx={ctx} />
-      {loose && <span className="org-card-loose"><i className="fa-solid fa-triangle-exclamation" /> {t('hrNoBoss')}</span>}
+      {isMe && <span className="org-card-me">{t('myMe')}</span>}
+      {loose && !ctx.self && <span className="org-card-loose"><i className="fa-solid fa-triangle-exclamation" /> {t('hrNoBoss')}</span>}
       <span className="org-card-face"><HrAvatar url={node.person.profile_url} name={node.person.first_name} size="lg" /></span>
       <span className="org-card-info">
         <b className="org-card-name">{personName(node.person)}</b>
@@ -403,11 +405,13 @@ const BossModal = ({ node, data, tree, onClose, onSaved }: {
 /**
  * ໂຄງຮ່າງການຈັດຕັ້ງ — ສອງມຸມມອງ: ສາຍບັງຄັບບັນຊາ (ຕົ້ນໄມ້ຂອງຄົນ) / ຕາມຝ່າຍ (ບໍລິຫານຢູ່ເທິງ, ພະແນກເປັນຖັນ).
  * ຂໍ້ມູນ = ຫົວໜ້າສາຍງານຂອງແຕ່ລະຄົນ (ຟອມພະນັກງານ) + Level ຂອງຕຳແໜ່ງ.
- * ✎ = ປ່ຽນຫົວໜ້າສາຍງານ; "ຈັດອັດຕະໂນມັດ" = ໃສ່ຫົວໜ້າທີ່ແນະນຳໃຫ້ຄົນທີ່ຍັງບໍ່ມີ. ຄົ້ນຫາ, ຊູມ, ລາກ, ພິມ
+ * ✎ = ປ່ຽນຫົວໜ້າສາຍງານ; "ຈັດອັດຕະໂນມັດ" = ໃສ່ຫົວໜ້າທີ່ແນະນຳໃຫ້ຄົນທີ່ຍັງບໍ່ມີ. ຄົ້ນຫາ, ຊູມ, ລາກ, ພິມ.
+ * self = ພື້ນທີ່ຂອງຂ້ອຍ: GET /org/me, ເບິ່ງຢ່າງດຽວ (ບໍ່ມີ ✎ / ຈັດອັດຕະໂນມັດ / ຄຳເຕືອນຂອງ HR), ໝາຍ "ຂ້ອຍ" ແລະ ເລື່ອນໄປຫາ
  */
-const OrgChartPage = () => {
+const OrgChartPage = ({ self = false }: { self?: boolean }) => {
   const t = useT();
-  const org = useOrgData();
+  const org = useOrgData(self ? '/org/me' : '/org/chart');
+  const editable = canEdit && !self;
   const [view, saveView] = useSavedView(VIEW_KEY, VIEWS, 'tree');
   const [keyword, setKeyword] = useState('');
   const [zoom, setZoom] = useState(1);
@@ -421,7 +425,7 @@ const OrgChartPage = () => {
 
   const tree = useMemo(() => buildOrgTree(org.data), [org.data]);
   const query = keyword.trim().toLowerCase();
-  const ctx: Ctx = { query, onEdit: canEdit ? setEditing : undefined };
+  const ctx: Ctx = { query, onEdit: editable ? setEditing : undefined, meId: self ? org.data.me_id : undefined, self };
   const noBoss = tree.roots.filter((r) => r !== tree.main).length;
   const unleveled = org.data.positions.filter((p) => !p.level).length;
 
@@ -457,6 +461,8 @@ const OrgChartPage = () => {
     if (fitted.current || !size.w || org.loading) return;
     fitted.current = true;
     fit();
+    // ພື້ນທີ່ຂອງຂ້ອຍ: ໃຫ້ເຫັນບັດຂອງຕົນເອງ (ຫຼັງຫຍໍ້ແລ້ວ)
+    if (self) requestAnimationFrame(() => canvasRef.current?.querySelector('.is-me')?.scrollIntoView({ block: 'center', inline: 'center' }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size.w, org.loading, view]);
 
@@ -527,7 +533,7 @@ const OrgChartPage = () => {
         stats={[
           { label: t('hrDepartments'), value: realDepartments(tree.departments).length },
           { label: t('hrEmployees'), value: org.data.people.length, tone: 'green' },
-          ...(noBoss ? [{ label: t('hrNoBoss'), value: noBoss, tone: 'gold' as const }] : []),
+          ...(noBoss && !self ? [{ label: t('hrNoBoss'), value: noBoss, tone: 'gold' as const }] : []),
         ]}
         keyword={keyword}
         onKeyword={setKeyword}
@@ -549,14 +555,14 @@ const OrgChartPage = () => {
         <button type="button" className="acc-rp-btn" onClick={print} disabled={!tree.byPerson.size}>
           <i className="fa-solid fa-print" /> {t('print')}
         </button>
-        {canEdit && noBoss > 0 && (
+        {editable && noBoss > 0 && (
           <button type="button" className="acc-rp-btn is-primary" onClick={autoAssign} disabled={assigning}>
             <i className="fa-solid fa-wand-magic-sparkles" /> {t('hrAutoBoss')}
           </button>
         )}
       </SettingToolbar>
 
-      {(noBoss > 0 || unleveled > 0) && (
+      {!self && (noBoss > 0 || unleveled > 0) && (
         <div className="hr-note is-warn org-hint">
           <i className="fa-solid fa-circle-info" />
           {[noBoss > 0 && t('hrNoBossHint').replace('{n}', String(noBoss)), unleveled > 0 && t('hrUnleveledHint').replace('{n}', String(unleveled))]
