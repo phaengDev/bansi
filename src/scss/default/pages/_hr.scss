@@ -802,6 +802,14 @@
 }
 
 // ເບີໂທໃນຫົວໜ້າຂໍ້ມູນບໍລິສັດ — ກົດໂທໄດ້ (tel:)
+.hr-company-title .hr-company-tin {
+  font-variant-numeric: tabular-nums;
+
+  i { margin-right: 2px; color: var(--book-accent); }
+
+  &.is-empty { color: #a7b4bf; font-style: italic; }
+}
+
 .hr-company-title .hr-company-phones {
   display: flex;
   flex-wrap: wrap;

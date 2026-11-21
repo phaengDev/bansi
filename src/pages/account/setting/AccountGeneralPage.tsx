@@ -84,7 +84,8 @@ const AccountGeneralPage = () => {
 
   const submit = () =>
     runSave(async () => {
-      const { lock_date: _lock, ...patch } = values;
+      // ເລກອາກອນແກ້ຢູ່ ຂໍ້ມູນບໍລິສັດ — ບໍ່ສົ່ງຄືນ (ຄ່າເກົ່າໃນໜ້ານີ້ຈະທັບເລກໃໝ່)
+      const { lock_date: _lock, tax_id: _tin, ...patch } = values;
       await saveAccountSetting(patch);
       if (values.number_format !== current.number_format) Notific.warning('acgNumberReopen');
     }, setSaving);
@@ -120,9 +121,6 @@ const AccountGeneralPage = () => {
           <div className="pay-settings-col">
             {full && (
             <FormStep no={nextNo()} done={!!(values.chief_accountant && values.director)} title={t('acgSigners')} hint={t('acgSignersHint')}>
-              <Field label={t('acgTaxId')} wide>
-                <Input value={values.tax_id ?? ''} onChange={(v) => set('tax_id', v)} disabled={!canEdit} placeholder="xxx-xxx-xxx" />
-              </Field>
               <Field label={t('acgChiefAccountant')}>
                 <Input value={values.chief_accountant ?? ''} onChange={(v) => set('chief_accountant', v)} disabled={!canEdit} />
               </Field>

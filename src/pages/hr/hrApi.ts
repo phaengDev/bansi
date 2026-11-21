@@ -337,6 +337,8 @@ export type Company = {
   logo_url: string | null;
   phone1: string | null;
   phone2: string | null;
+  /** ເລກປະຈຳຕົວຜູ້ເສຍອາກອນ — ເກັບຢູ່ຕັ້ງຄ່າບັນຊີ (ພິມໃສ່ໃບເກັບເງິນອາກອນ ແລະ ງົບການເງິນ) */
+  tax_id?: string | null;
   district_id: number | null;
   village: string | null;
   latitude: number | null;

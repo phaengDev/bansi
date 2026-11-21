@@ -11,6 +11,7 @@ import { useT } from '../../context/LanguageContext';
 import { useDistricts, useProvinces } from '../../utils/selectOption';
 import { ChoiceTiles, FormStep, PickerField } from '../account/setting/settingKit';
 import { MAX_FILE, workHours, type Company } from './hrApi';
+import { refreshAccountSetting } from '../account/accountSettings';
 import { LocationModal, LocationPreview, type CompanyLocationValue } from './CompanyLocation';
 import CompanyScanQr from './CompanyScanQr';
 
@@ -74,7 +75,7 @@ const UniformImage = ({ id, photos }: { id: number; photos?: (string | null)[] }
 const toTime = (value: string | undefined, fallback: string) => moment(value || fallback, 'HH:mm').toDate();
 const toHHmm = (value: Date | null | undefined) => (value ? moment(value).format('HH:mm') : '');
 
-type CompanyValues = Pick<Company, 'name_la' | 'name_en' | 'phone1' | 'phone2' | 'district_id' | 'village' | 'latitude'
+type CompanyValues = Pick<Company, 'name_la' | 'name_en' | 'phone1' | 'phone2' | 'tax_id' | 'district_id' | 'village' | 'latitude'
   | 'longitude' | 'scan_radius' | 'work_start' | 'work_end' | 'break_start' | 'break_end' | 'days_off' | 'uniform_days'>;
 
 /** body ຂອງ PUT /company (multipart) — ໂລໂກ້ຕື່ມເອງ (ບໍ່ສົ່ງ = backend ບໍ່ແຕະໂລໂກ້) */
@@ -85,6 +86,7 @@ const companyBody = (v: CompanyValues) => {
   body.append('name_en', text(v.name_en));
   body.append('phone1', text(v.phone1));
   body.append('phone2', text(v.phone2));
+  body.append('tax_id', text(v.tax_id));
   body.append('district_id', v.district_id ? String(v.district_id) : '');
   body.append('village', text(v.village));
   body.append('latitude', v.latitude === null ? '' : String(v.latitude));
@@ -338,6 +340,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
     name_en: data?.name_en ?? '',
     phone1: data?.phone1 ?? '',
     phone2: data?.phone2 ?? '',
+    tax_id: data?.tax_id ?? '',
     // ແຂວງບໍ່ໄດ້ບັນທຶກ — ໃຊ້ກັ່ນລາຍການເມືອງເທົ່ານັ້ນ (ເອົາມາຈາກເມືອງທີ່ບັນທຶກໄວ້)
     province_id: data?.district?.province_id ?? null,
     district_id: data?.district_id ?? null,
@@ -406,6 +409,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
       name_en: inputs.name_en,
       phone1: inputs.phone1,
       phone2: inputs.phone2,
+      tax_id: inputs.tax_id,
       district_id: inputs.district_id,
       village: inputs.village,
       latitude: location.lat,
@@ -424,6 +428,8 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
       setSaving(true);
       const res = await putApi('/company', body);
       Notific.success('saveSuccessDone');
+      // ເລກອາກອນຢູ່ໃນຕັ້ງຄ່າບັນຊີ — ໃຫ້ໃບເກັບເງິນ / ງົບການເງິນເຫັນເລກໃໝ່ທັນທີ
+      refreshAccountSetting();
       if (res.data?.data) onSaved(res.data.data);
     } catch (error) {
       console.error(error);
@@ -441,7 +447,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
         {/* ຈໍກວ້າງ 2 ຖັນ: ຊ້າຍ ຂໍ້ມູນ + ທີ່ຢູ່, ຂວາ ທີ່ຕັ້ງ + ເວລາເຮັດວຽກ */}
         <div className="hr-company-grid">
           <div className="hr-company-col">
-            {/* ---- 1: ໂລໂກ້ + ຊື່ + ເບີໂທ ---- */}
+            {/* ---- 1: ໂລໂກ້ + ຊື່ + ເບີໂທ + ເລກອາກອນ ---- */}
             <FormStep no={1} done={!!String(inputs.name_la).trim()} title={t('hrCompanyInfo')} hint={t('hrCompanyInfoHint')}>
               <div className="is-wide hr-profile">
                 <LogoPicker url={logoUrl} onPick={pickLogo} onClear={clearLogo} />
@@ -456,6 +462,11 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
                   </div>
                   <InputField name="phone1" label={t('hrCompanyPhone1')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="021 xxx xxx" />
                   <InputField name="phone2" label={t('hrCompanyPhone2')} required={false} icon={<i className="fa-solid fa-mobile-screen" />} placeholder="020 xxxx xxxx" />
+                  <div className="is-wide">
+                    <InputField name="tax_id" label={t('acgTaxId')} required={false} icon={<i className="fa-solid fa-receipt" />}
+                      placeholder="000000000-0-00"
+                    />
+                  </div>
                 </div>
               </div>
             </FormStep>
@@ -595,6 +606,9 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
               {phones.map((phone) => <a key={phone} href={`tel:${phone.replace(/[^\d+]/g, '')}`}>{phone}</a>)}
             </small>
           )}
+          <small className={`hr-company-tin${company.tax_id ? '' : ' is-empty'}`}>
+            <i className="fa-solid fa-receipt" /> {t('acgTaxIdShort')} {company.tax_id || t('hrCompanyNoTaxId')}
+          </small>
         </div>
         <Button appearance="primary" className="hr-company-save" disabled={!canEdit} onClick={onEdit}>
           <i className="fa-solid fa-pen" /> {t('edit')}
