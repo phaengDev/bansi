@@ -447,7 +447,7 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
         {/* ຈໍກວ້າງ 2 ຖັນ: ຊ້າຍ ຂໍ້ມູນ + ທີ່ຢູ່, ຂວາ ທີ່ຕັ້ງ + ເວລາເຮັດວຽກ */}
         <div className="hr-company-grid">
           <div className="hr-company-col">
-            {/* ---- 1: ໂລໂກ້ + ຊື່ + ເບີໂທ + ເລກອາກອນ ---- */}
+            {/* ---- 1: ໂລໂກ້ + ຊື່ (ເທິງ), ເບີໂທ 2 ຖັນ ແລະ ເລກອາກອນ ເຕັມຄວາມກວ້າງຂອງບັດ (ລຸ່ມ) ---- */}
             <FormStep no={1} done={!!String(inputs.name_la).trim()} title={t('hrCompanyInfo')} hint={t('hrCompanyInfoHint')}>
               <div className="is-wide hr-profile">
                 <LogoPicker url={logoUrl} onPick={pickLogo} onClear={clearLogo} />
@@ -460,14 +460,14 @@ const CompanyForm = ({ data, onSaved, onCancel }: {
                       placeholder="… Co., Ltd."
                     />
                   </div>
-                  <InputField name="phone1" label={t('hrCompanyPhone1')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="021 xxx xxx" />
-                  <InputField name="phone2" label={t('hrCompanyPhone2')} required={false} icon={<i className="fa-solid fa-mobile-screen" />} placeholder="020 xxxx xxxx" />
-                  <div className="is-wide">
-                    <InputField name="tax_id" label={t('acgTaxId')} required={false} icon={<i className="fa-solid fa-receipt" />}
-                      placeholder="000000000-0-00"
-                    />
-                  </div>
                 </div>
+              </div>
+              <InputField name="phone1" label={t('hrCompanyPhone1')} required={false} icon={<i className="fa-solid fa-phone" />} placeholder="021 xxx xxx" />
+              <InputField name="phone2" label={t('hrCompanyPhone2')} required={false} icon={<i className="fa-solid fa-mobile-screen" />} placeholder="020 xxxx xxxx" />
+              <div className="is-wide">
+                <InputField name="tax_id" label={t('acgTaxId')} required={false} icon={<i className="fa-solid fa-receipt" />}
+                  placeholder="000000000-0-00"
+                />
               </div>
             </FormStep>
 
