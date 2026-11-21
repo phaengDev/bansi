@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { DatePicker, Form, Input, Loader } from 'rsuite';
 import moment from 'moment';
 import { deleteApi, getApi, postApi, putApi } from '../../../utils/configApi';
@@ -11,70 +11,15 @@ import { FormSection, SettingModal } from '../../account/setting/settingKit';
 import { HrAvatar } from '../hrKit';
 import { MAX_FILE, docIcon, downloadWithAuth, fileSizeText } from '../hrApi';
 import {
-  MAX_TASK_FILES, QUADRANTS, TASK_FILE_ACCEPT, TASK_FILE_TYPES, TASK_STATUSES, assigneeName, idOf, quadrantOf, useQuadrantLabel, type Task, type TaskFile, type TaskItem, type TaskPerson, type TaskProject,
+  MAX_TASK_FILES, TASK_FILE_ACCEPT, TASK_FILE_TYPES, TASK_STATUSES, assigneeName, idOf, type Task, type TaskFile, type TaskPerson, type TaskProject,
 } from './taskApi';
 import TaskAssigneePicker from './TaskAssigneePicker';
+import { QuadrantPicker, TaskChecklistEditor, TaskChoice, newChecklistRow, type ChecklistRow } from './TaskBits';
 import TaskProjectField from './TaskProjectField';
 
-type Row = TaskItem & { key: number };
-
-let seq = 0;
+type Row = ChecklistRow;
 const toDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').toDate() : null);
 const toDay = (value: Date | null) => (value ? moment(value).format('YYYY-MM-DD') : null);
-
-/** ປຸ່ມເລືອກ 1 ຢ່າງ (ສຳຄັນ / ເລັ່ງດ່ວນ, ສະຖານະ) */
-const Choice = ({ options, value, onChange }: { options: { value: number; label: string; tone: string; icon?: string }[]; value: number; onChange: (v: number) => void }) => (
-  <span className="task-choice" role="radiogroup">
-    {options.map((o) => (
-      <button key={o.value} type="button" role="radio" aria-checked={value === o.value}
-        className={`${o.tone}${value === o.value ? ' is-active' : ''}`} onClick={() => onChange(o.value)}
-      >
-        {o.icon && <i className={o.icon} />} {o.label}
-      </button>
-    ))}
-  </span>
-);
-
-/**
- * ຄວາມສຳຄັນ (ຄືກັບ app): ສຳຄັນ / ບໍ່ສຳຄັນ ແລະ ເລັ່ງດ່ວນ / ບໍ່ເລັ່ງດ່ວນ + ບອກວ່າຢູ່ຊ່ອງໃດ ແລະ ຄວນເຮັດແນວໃດ.
- * ເລືອກຂັ້ນໃດຂັ້ນໜຶ່ງ ອີກຂັ້ນເປັນ "ບໍ່…" ໄວ້ກ່ອນ; ລ້າງ = ຍັງບໍ່ໄດ້ຈັດ (ທັງສອງ null)
- */
-const QuadrantPicker = ({ important, urgent, onChange }: {
-  important: boolean | null;
-  urgent: boolean | null;
-  onChange: (important: boolean | null, urgent: boolean | null) => void;
-}) => {
-  const t = useT();
-  const label = useQuadrantLabel();
-  const q = quadrantOf(important, urgent);
-  const flagValue = (v: boolean | null) => (v === null ? -1 : Number(v));
-  return (
-    <div className="task-quadrant-pick">
-      <div className="task-quadrant-rows">
-        <Choice value={flagValue(important)} onChange={(v) => onChange(v === 1, urgent ?? false)} options={[
-          { value: 1, label: t('taskImportant'), tone: 'is-imp', icon: 'fa-solid fa-star' },
-          { value: 0, label: t('taskNotImportant'), tone: 'is-off', icon: 'fa-regular fa-star' },
-        ]} />
-        <Choice value={flagValue(urgent)} onChange={(v) => onChange(important ?? false, v === 1)} options={[
-          { value: 1, label: t('taskUrgent'), tone: 'is-urg', icon: 'fa-solid fa-bolt' },
-          { value: 0, label: t('taskNotUrgent'), tone: 'is-off', icon: 'fa-regular fa-hourglass' },
-        ]} />
-      </div>
-      <div className={`task-quadrant${q ? ` ${QUADRANTS[q].tone}` : ''}`} aria-live="polite">
-        {q ? (
-          <>
-            <b className="task-quadrant-mark">{QUADRANTS[q].roman}</b>
-            <span className="task-quadrant-text">
-              <strong>{t(QUADRANTS[q].action)}</strong>
-              <small>{label(important, urgent)}</small>
-            </span>
-            <button type="button" onClick={() => onChange(null, null)}>{t('taskQClear')}</button>
-          </>
-        ) : <span className="task-quadrant-text"><small>{t('taskQNone')}</small></span>}
-      </div>
-    </div>
-  );
-};
 
 /**
  * ສ້າງ / ແກ້ວຽກ — ຂໍ້ມູນວຽກ, ຜູ້ຮັບຜິດຊອບ (ກົດມົງກຸດ = ຫົວໜ້າວຽກ), ລາຍການຍ່ອຍ, ເອກະສານຄັດຕິດ. ບັນທຶກແລ້ວ ຄົນທີ່ຫາກໍ່ໄດ້ຮັບມອບໝາຍ
@@ -114,7 +59,6 @@ const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSave
   const [dragging, setDragging] = useState(false);
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
-  const lastInput = useRef<HTMLInputElement | null>(null);
   const closeRef = useRef(onClose);
   useEffect(() => {
     closeRef.current = onClose;
@@ -131,7 +75,7 @@ const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSave
         if (!alive) return;
         const full: Task = res.data?.data;
         setLoaded(full);
-        setItems((full.items ?? []).map((i) => (isCopy ? { title: i.title, done: false, key: ++seq } : { ...i, key: ++seq })));
+        setItems((full.items ?? []).map((i) => (isCopy ? newChecklistRow(i.title) : { ...newChecklistRow(i.title), _uuid: i._uuid, done: i.done })));
         if (!isCopy) setFiles(full.files ?? []);
       })
       .catch((error) => {
@@ -151,18 +95,6 @@ const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSave
   }, [employees, task]);
   const personOf = (id: number) => people.find((p) => p.employee_id === id);
   const lead = leadId && assigneeIds.includes(leadId) ? leadId : assigneeIds[0] ?? null;
-
-  const addItem = () => {
-    setItems((list) => [...list, { key: ++seq, title: '', done: false }]);
-    window.setTimeout(() => lastInput.current?.focus(), 0);
-  };
-  const updateItem = (key: number, patch: Partial<Row>) => setItems((list) => list.map((i) => (i.key === key ? { ...i, ...patch } : i)));
-  const onItemKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addItem();
-    }
-  };
 
   const canAttach = task ? canEdit : canCreate;
   const addFiles = (picked: File[]) => {
@@ -294,7 +226,7 @@ const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSave
             {task && (
               <div className="is-wide rs-form-group">
                 <label className="form-label">{t('status')}</label>
-                <Choice value={status} onChange={setStatus} options={[1, 2, 3].map((s) => ({
+                <TaskChoice value={status} onChange={setStatus} options={[1, 2, 3].map((s) => ({
                   value: s, label: t(TASK_STATUSES[s].label), tone: TASK_STATUSES[s].tone, icon: TASK_STATUSES[s].icon,
                 }))} />
               </div>
@@ -327,22 +259,7 @@ const TaskForm = ({ task, template, projects, onProjectsChanged, onClose, onSave
           </FormSection>
 
           <FormSection title={`${t('taskChecklist')}${items.length ? ` ${items.filter((i) => i.done).length}/${items.length}` : ''}`}>
-            <div className="is-wide task-checklist">
-              {items.map((item, index) => (
-                <div key={item.key} className={`task-check-row${item.done ? ' is-done' : ''}`}>
-                  <button type="button" className="task-check" aria-pressed={item.done} aria-label={t('taskDone')} onClick={() => updateItem(item.key, { done: !item.done })}>
-                    <i className={`fa-${item.done ? 'solid fa-square-check' : 'regular fa-square'}`} />
-                  </button>
-                  <input ref={index === items.length - 1 ? lastInput : undefined} value={item.title} maxLength={255}
-                    placeholder={t('taskItemPlaceholder')} onChange={(e) => updateItem(item.key, { title: e.target.value })} onKeyDown={onItemKey}
-                  />
-                  <button type="button" className="acc-gl-act is-danger" aria-label={t('delete')} title={t('delete')} onClick={() => setItems((list) => list.filter((i) => i.key !== item.key))}>
-                    <i className="fa-solid fa-xmark" />
-                  </button>
-                </div>
-              ))}
-              <button type="button" className="acc-rp-btn task-check-add" onClick={addItem}><i className="fa-solid fa-plus" /> {t('taskItemAdd')}</button>
-            </div>
+            <TaskChecklistEditor items={items} onChange={setItems} />
           </FormSection>
 
           <FormSection title={`${t('hrDocuments')}${files.length + pending.length ? ` ${files.length + pending.length}` : ''}`}>

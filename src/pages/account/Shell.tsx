@@ -23,7 +23,7 @@ import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
 import MyWindow from '../me/MyWindow';
 import { useMyPageRequest } from '../me/meNav';
-import { MY_PAY_MENU, MY_WORK_MENU } from './config/SidebarPopup';
+import { MY_PAY_MENU, MY_TASKS_MENU, MY_WORK_MENU } from './config/SidebarPopup';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
@@ -70,6 +70,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   payroll: <PayrollWindow />,
   myWork: <MyWindow id="myWork" menu={MY_WORK_MENU} />,
   myPay: <MyWindow id="myPay" menu={MY_PAY_MENU} />,
+  myTasks: <MyWindow id="myTasks" menu={MY_TASKS_MENU} />,
 };
 
 /**
@@ -143,6 +144,7 @@ const AccountShell: React.FC = () => {
   const calendarWindow = usePopupWindow();
   const myWorkWindow = usePopupWindow();
   const myPayWindow = usePopupWindow();
+  const myTasksWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
     journal: journalWindow,
@@ -164,6 +166,7 @@ const AccountShell: React.FC = () => {
     calendar: calendarWindow,
     myWork: myWorkWindow,
     myPay: myPayWindow,
+    myTasks: myTasksWindow,
     settings: settingsWindow,
   };
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop

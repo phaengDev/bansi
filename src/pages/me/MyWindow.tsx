@@ -11,6 +11,9 @@ import MyLeaves from './MyLeaves';
 import MyCorrections from './MyCorrections';
 import MyAdvances from './MyAdvances';
 import MyPay from './MyPay';
+import MyTasks from './MyTasks';
+import MyWorkPlans from './MyWorkPlans';
+import MyNotes from './MyNotes';
 import { clearMyPageRequest, hasPage, openMyPage, useMyPageRequest } from './meNav';
 import type { MyIntent, MyOpen } from './meApi';
 
@@ -62,6 +65,10 @@ const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) =
     corrections: () => <MyCorrections intent={intentOf('corrections')} onIntentDone={done} />,
     pay: () => <MyPay />,
     advances: () => <MyAdvances intent={intentOf('advances')} onIntentDone={done} />,
+    tasks: () => <MyTasks key="received" mode="received" />,
+    assigned: () => <MyTasks key="assigned" mode="assigned" />,
+    workplans: () => <MyWorkPlans />,
+    notes: () => <MyNotes />,
   };
 
   return (

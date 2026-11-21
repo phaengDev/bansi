@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { Button, Input, Loader, Modal } from 'rsuite';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Button, Modal } from 'rsuite';
 import moment from 'moment';
 import { deleteApi, getApi, postApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -8,8 +8,9 @@ import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { HrAvatar } from '../hrKit';
 import { docIcon, downloadWithAuth, fileSizeText } from '../hrApi';
+import { TaskCommentThread } from './TaskComments';
 import { ActiveTime, DueCell, PersonStatusPill, ProgressBar, QuadrantChip, TaskStatusPill, TaskStatusSelect } from './TaskBits';
-import { PERSON_DONE, PERSON_STATUSES, TASK_STATUSES, assigneeName, idOf, partOf, teamOf, type Task, type TaskComment, type TaskLog } from './taskApi';
+import { PERSON_STATUSES, TASK_STATUSES, assigneeName, idOf, partOf, teamOf, type Task, type TaskComment, type TaskLog } from './taskApi';
 
 const stamp = (value: string) => moment(value).format('DD/MM/YYYY HH:mm');
 
@@ -152,12 +153,9 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
   const t = useT();
   const [task, setTask] = useState(initial);
   const [comments, setComments] = useState<TaskComment[] | null>(null);
-  const [draft, setDraft] = useState('');
-  /** ຄົນທີ່ເລືອກແຈ້ງເຖິງ (ເຊັ່ນ ເລັ່ງວຽກບາງຄົນ) — ຫວ່າງ = ແຈ້ງທຸກຄົນ */
-  const [to, setTo] = useState<Set<number>>(new Set());
-  const [sending, setSending] = useState(false);
+  /** ກຳລັງພິມຄອມເມັນຢູ່ — ກົດນອກກ່ອງ / Esc ບໍ່ປິດ */
+  const [hasDraft, setHasDraft] = useState(false);
   const [busy, setBusy] = useState(false);
-  const threadRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef(onClose);
   useEffect(() => {
     closeRef.current = onClose;
@@ -165,8 +163,6 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
   const archived = Number(task.archived) === 1;
   const editable = canEdit && !archived;
   const team = teamOf(task);
-  /** ຄົນທີ່ສ່ວນຂອງຕົນຍັງບໍ່ສຳເລັດ — ທາງລັດເລືອກແຈ້ງເຖິງ (ເລັ່ງວຽກ) */
-  const behind = task.assignees.filter((a) => partOf(task, a).status !== PERSON_DONE).map((a) => a.employee_id);
 
   useEffect(() => {
     let alive = true;
@@ -185,11 +181,6 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
       alive = false;
     };
   }, [initial]);
-
-  // ຄອມເມັນລ່າສຸດຢູ່ລຸ່ມສຸດ
-  useEffect(() => {
-    if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
-  }, [comments]);
 
   /** ອັບເດດສະຖານະ / ລາຍການຍ່ອຍ — backend ຄືນວຽກລ່າສຸດ (ບໍ່ມີຊື່ຜູ້ສ້າງ ຈຶ່ງຮວມກັບຂອງເດີມ) */
   const update = async (path: string, body: object) => {
@@ -221,26 +212,15 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
     }
   };
 
-  const send = async () => {
-    const body = draft.trim();
-    if (!body || sending) return;
+  const send = async (body: string, to: number[]) => {
     try {
-      setSending(true);
-      const res = await postApi(`/task/comment/${idOf(task)}`, { body, to: [...to] });
+      const res = await postApi(`/task/comment/${idOf(task)}`, { body, to });
       setComments(res.data.data);
-      setDraft('');
-      setTo(new Set());
       onChanged();
+      return true;
     } catch (error) {
       Notific.error(getErrorMessage(error));
-    } finally {
-      setSending(false);
-    }
-  };
-  const onDraftKey = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-      e.preventDefault();
-      send();
+      return false;
     }
   };
   const removeComment = (comment: TaskComment) => Notific.confirm(`${t('taskCommentDelete')} ${comment.body.slice(0, 60)}`, async () => {
@@ -262,7 +242,7 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
   ];
 
   return (
-    <Modal open onClose={onClose} size="lg" keyboard={!draft.trim()} backdrop={draft.trim() ? 'static' : true} className="acc-gl-ledger-modal task-detail-modal">
+    <Modal open onClose={onClose} size="lg" keyboard={!hasDraft} backdrop={hasDraft ? 'static' : true} className="acc-gl-ledger-modal task-detail-modal">
       <Modal.Header>
         <div className="acc-gl-ledger-head">
           <span className="acc-gl-group-icon acc-tone is-blue"><i className="fa-solid fa-list-check" /></span>
@@ -364,41 +344,9 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
             {!!task.timeline?.length && <TaskTimeline logs={task.timeline} leadId={task.assignees.find((a) => a.is_lead)?.employee_id} />}
           </div>
 
-          <aside className="task-comments">
-            <h6 className="task-detail-head"><i className="fa-regular fa-comments" /> {t('taskComments')} <em>{comments?.length ?? task.comments_total ?? 0}</em></h6>
-            <div className="task-comment-list" ref={threadRef}>
-              {!comments ? (
-                <div className="text-center py-4"><Loader size="sm" /></div>
-              ) : !comments.length ? (
-                <p className="task-comment-empty"><i className="fa-regular fa-comment-dots" /> {t('taskCommentEmpty')}</p>
-              ) : comments.map((c, index) => {
-                // ຄອມເມັນຕິດກັນຂອງຄົນດຽວກັນ (ເຖິງຕ່າງມື້) — ຮູບ ແລະ ຊື່ເທື່ອດຽວ; ຄອມເມັນຍັງລຽງຕາມເວລາ ໃຫ້ອ່ານເປັນການສົນທະນາ
-                const prev = comments[index - 1];
-                const cont = !!prev && prev.author_name === c.author_name && prev.from_app === c.from_app && prev.mine === c.mine;
-                return (
-                  <div key={c._uuid} className={`task-comment${c.mine ? ' is-mine' : ''}${cont ? ' is-cont' : ''}`}>
-                    {cont ? <span className="task-comment-gap" /> : <HrAvatar url={c.author_photo} name={c.author_name} size="sm" />}
-                    <div className="task-comment-bubble">
-                      <header>
-                        {!cont && <b>{c.author_name}</b>}
-                        {!cont && c.from_app && <span className="task-comment-app"><i className="fa-solid fa-mobile-screen" /> {t('taskCommentFromApp')}</span>}
-                        <small>{cont && sameDay(prev.createdAt, c.createdAt) ? moment(c.createdAt).format('HH:mm') : stamp(c.createdAt)}</small>
-                        {!!c.to?.length && (
-                          <span className="task-comment-to-tag" title={t('taskCommentTo')}><i className="fa-solid fa-at" /> {c.to.map((p) => p.name).join(', ')}</span>
-                        )}
-                        {(c.mine || canDelete) && (
-                          <button type="button" className="task-comment-x" title={t('delete')} aria-label={t('delete')} onClick={() => removeComment(c)}>
-                            <i className="fa-solid fa-trash" />
-                          </button>
-                        )}
-                      </header>
-                      <p>{c.body}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {archived ? (
+          <TaskCommentThread comments={comments} total={task.comments_total} pickTo={task} canDeleteAll={canDelete} onSend={send} onDelete={removeComment}
+            onDraftChange={setHasDraft}
+            closed={archived ? (
               <div className="task-comment-archived">
                 <p className="acc-bg-note"><i className="fa-solid fa-box-archive" /> {t('taskCommentArchived')}</p>
                 {canEdit && (
@@ -407,41 +355,8 @@ const TaskDetail = ({ task: initial, onClose, onEdit, onCopy, onDelete, onChange
                   </button>
                 )}
               </div>
-            ) : (
-              <>
-                {task.assignees.length > 1 && (
-                  // ແຈ້ງເຖິງ: ທຸກຄົນ (ຄ່າເລີ່ມຕົ້ນ) ຫຼື ເລືອກບາງຄົນ — ທາງລັດ "ຄົນທີ່ຍັງບໍ່ສຳເລັດ" ໄວ້ເລັ່ງວຽກ
-                  <div className="task-comment-to" role="group" aria-label={t('taskCommentTo')}>
-                    <span className="task-comment-to-label" title={t('taskCommentToHint')}><i className="fa-solid fa-bell" /> {t('taskCommentTo')}</span>
-                    <button type="button" className={to.size ? '' : 'is-on'} aria-pressed={!to.size} onClick={() => setTo(new Set())}>{t('taskCommentToAll')}</button>
-                    {task.assignees.map((a) => (
-                      <button key={a.employee_id} type="button" className={`has-avatar${to.has(a.employee_id) ? ' is-on' : ''}`} aria-pressed={to.has(a.employee_id)}
-                        onClick={() => setTo((s) => {
-                          const next = new Set(s);
-                          if (next.has(a.employee_id)) next.delete(a.employee_id);
-                          else next.add(a.employee_id);
-                          return next;
-                        })}
-                      >
-                        <HrAvatar url={a.profile_url} name={a.first_name} size="sm" /> {a.first_name}
-                      </button>
-                    ))}
-                    {behind.length > 0 && behind.length < task.assignees.length && (
-                      <button type="button" className="task-comment-to-quick" onClick={() => setTo(new Set(behind))}>
-                        <i className="fa-solid fa-bolt" /> {t('taskCommentToBehind')} ({behind.length})
-                      </button>
-                    )}
-                  </div>
-                )}
-                <div className="task-comment-box">
-                  <Input as="textarea" rows={2} value={draft} onChange={setDraft} onKeyDown={onDraftKey} maxLength={2000} placeholder={t('taskCommentPlaceholder')} aria-label={t('taskComments')} />
-                  <button type="button" className="task-comment-send" disabled={!draft.trim() || sending} title={t('taskCommentSend')} aria-label={t('taskCommentSend')} onClick={send}>
-                    {sending ? <Loader size="xs" /> : <i className="fa-solid fa-paper-plane" />}
-                  </button>
-                </div>
-              </>
-            )}
-          </aside>
+            ) : undefined}
+          />
         </div>
       </Modal.Body>
       <Modal.Footer>

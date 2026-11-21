@@ -125,6 +125,7 @@ export type ShortcutId =
   | 'calendar'
   | 'myWork'
   | 'myPay'
+  | 'myTasks'
   | 'settings';
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
@@ -148,6 +149,7 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   calendar: 'calendar',
   myWork: 'accountAppMyWork',
   myPay: 'accountAppMyPay',
+  myTasks: 'accountAppMyTasks',
   settings: 'accountAppSettings',
 };
 
@@ -171,6 +173,7 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   payroll: 'accountAppPayrollDesc',
   myWork: 'accountAppMyWorkDesc',
   myPay: 'accountAppMyPayDesc',
+  myTasks: 'accountAppMyTasksDesc',
   settings: 'accountAppSettingsDesc',
 };
 
@@ -202,6 +205,7 @@ export const shortcuts: ReadonlyArray<{
   // ຂອງຂ້ອຍ (/me/…) — ບໍ່ຢູ່ໃນ tbl_main_menu: ຂຶ້ນເອງສະເພາະຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ (useAccountMenus); ສ່ວນທີ່ຕໍ່ເນື່ອງກັນຢູ່ເມນູດຽວ
   { id: 'myWork', icon: 'fa-house-user', tone: 'emerald', path: '/me/work', popup: true },
   { id: 'myPay', icon: 'fa-wallet', tone: 'gold', path: '/me/pay', popup: true },
+  { id: 'myTasks', icon: 'fa-list-check', tone: 'sky', path: '/me/tasks', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
 ];
 

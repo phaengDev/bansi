@@ -2,6 +2,7 @@ import type { AttendanceRecord, LeaveBalance, MonthStats } from '../hr/attendanc
 import type { Correction, LeaveRequest } from '../hr/attendance/requestKit';
 import type { SalaryAdvance } from '../hr/payroll/advanceApi';
 import type { PayrollLine } from '../hr/payroll/payrollApi';
+import type { Task, TaskFile, TaskItem } from '../hr/task/taskApi';
 import type { AttendanceDay } from '../hr/attendance/attendanceKit';
 import type { EmployeeRef } from '../hr/hrApi';
 
@@ -86,3 +87,51 @@ export type MyPayPreview = {
   complete: boolean;
   line: PayrollLine;
 };
+
+/** ວຽກໃນພື້ນທີ່ຂອງຂ້ອຍ (GET /task/me, /task/me/assigned) — ໂຄງດຽວກັບວຽກໃນໜ້າ HR + ຜູ້ມອບໝາຍ */
+export type MyTask = Task & {
+  items?: TaskItem[];
+  files?: TaskFile[];
+  assigned_by_employee_id?: number | null;
+  assigned_by?: { employee_id: number | null; name: string; profile_url: string | null } | null;
+};
+/** ລູກທີມທີ່ມອບໝາຍວຽກໃຫ້ໄດ້ (ຕາມໂຄງຮ່າງ) */
+export type MyTeamMember = { _uuid: number; first_name: string; last_name: string | null; profile_url: string | null; position: string | null; department: string | null; depth: number };
+export type MyTasksData = { data: MyTask[]; open: number; today: string; team?: MyTeamMember[] };
+
+/** ແຜນວຽກຂອງຕົນເອງ (GET /employee/me/workplan) */
+export type WorkPlanUpdate = { at: string; progress: number; kind: string; note: string | null };
+export type WorkPlan = {
+  _uuid: number;
+  title: string;
+  note: string | null;
+  start_date: string;
+  end_date: string;
+  done: boolean | number;
+  progress: number;
+  done_at: string | null;
+  createdAt: string;
+  update_count: number;
+  last_update: WorkPlanUpdate | null;
+  updates?: WorkPlanUpdate[];
+  important: boolean | null;
+  urgent: boolean | null;
+};
+export type WorkPlanScope = 'active' | 'upcoming' | 'history';
+export type WorkPlanPage = { today: string; data: WorkPlan[]; has_more: boolean; counts: { active: number; upcoming: number; history: number; overdue: number } };
+
+/** ໂນດສ່ວນຕົວ (GET /note/me) — marks / ink ເປັນ JSON ຂອງ app (ສີ/ໂຕໜາ/ໄຮໄລ້ ຂອງບາງຄຳ, ຮູບຂີດແຕ້ມ) */
+export type MyNote = {
+  _uuid: number;
+  folder_id: number | null;
+  title: string | null;
+  body: string | null;
+  marks: string | null;
+  ink: string | null;
+  color: string | null;
+  pinned: boolean | number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type MyNoteFolder = { _uuid: number; name: string; count: number };
+export type MyNoteBook = { data: MyNote[]; folders: MyNoteFolder[] };

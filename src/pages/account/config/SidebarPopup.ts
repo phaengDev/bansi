@@ -295,6 +295,24 @@ export const MY_PAY_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ວຽກຂອງຂ້ອຍ — ວຽກທີ່ໄດ້ຮັບ / ທີ່ມອບໝາຍ, ແຜນວຽກ ແລະ ໂນດ */
+export const MY_TASKS_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'myGroupTasks',
+    items: [
+      { key: 'tasks', icon: 'fa-solid fa-inbox', label: 'myTasksReceived' },
+      { key: 'assigned', icon: 'fa-solid fa-share-from-square', label: 'myTasksAssigned' },
+    ],
+  },
+  {
+    group: 'myGroupPlan',
+    items: [
+      { key: 'workplans', icon: 'fa-solid fa-calendar-week', label: 'myPlans' },
+      { key: 'notes', icon: 'fa-solid fa-note-sticky', label: 'myNotes' },
+    ],
+  },
+];
+
 export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => string) =>
   groups.flatMap(({ group, items }) =>
     items.map((item) => ({ ...item, label: t(item.label), group: t(group) }))

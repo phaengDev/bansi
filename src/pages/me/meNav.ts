@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import type { ShortcutId } from '../account/DesktopShared';
-import { MY_PAY_MENU, MY_WORK_MENU, type SidebarPopupGroup } from '../account/config/SidebarPopup';
+import { MY_PAY_MENU, MY_TASKS_MENU, MY_WORK_MENU, type SidebarPopupGroup } from '../account/config/SidebarPopup';
 import type { MyIntent } from './meApi';
 
 /**
@@ -10,6 +10,7 @@ import type { MyIntent } from './meApi';
 export const MY_WINDOWS: { id: ShortcutId; menu: SidebarPopupGroup[] }[] = [
   { id: 'myWork', menu: MY_WORK_MENU },
   { id: 'myPay', menu: MY_PAY_MENU },
+  { id: 'myTasks', menu: MY_TASKS_MENU },
 ];
 
 export const hasPage = (menu: SidebarPopupGroup[], key: string) => menu.some((group) => group.items.some((item) => item.key === key));
