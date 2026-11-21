@@ -22,6 +22,8 @@ import HrWindow from '../hr/HrWindow';
 import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
 import MyWindow from '../me/MyWindow';
+import { useMyPageRequest } from '../me/meNav';
+import { MY_PAY_MENU, MY_WORK_MENU } from './config/SidebarPopup';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
@@ -66,7 +68,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   hr: <HrWindow />,
   attendance: <AttendanceWindow />,
   payroll: <PayrollWindow />,
-  mySpace: <MyWindow />,
+  myWork: <MyWindow id="myWork" menu={MY_WORK_MENU} />,
+  myPay: <MyWindow id="myPay" menu={MY_PAY_MENU} />,
 };
 
 /**
@@ -138,7 +141,8 @@ const AccountShell: React.FC = () => {
   const attendanceWindow = usePopupWindow();
   const payrollWindow = usePopupWindow();
   const calendarWindow = usePopupWindow();
-  const mySpaceWindow = usePopupWindow();
+  const myWorkWindow = usePopupWindow();
+  const myPayWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
     journal: journalWindow,
@@ -158,7 +162,8 @@ const AccountShell: React.FC = () => {
     attendance: attendanceWindow,
     payroll: payrollWindow,
     calendar: calendarWindow,
-    mySpace: mySpaceWindow,
+    myWork: myWorkWindow,
+    myPay: myPayWindow,
     settings: settingsWindow,
   };
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop
@@ -209,6 +214,13 @@ const AccountShell: React.FC = () => {
     }
     showShortcut(id);
   };
+
+  // ໜ້າຂອງເມນູຂອງຂ້ອຍຂໍເປີດໜ້າຂອງເມນູອື່ນ (ເຊັ່ນ ມື້ນີ້ → ເງິນເດືອນ) — ເປີດໜ້າຕ່າງນັ້ນ, ໜ້າຕ່າງໄປທີ່ໜ້າເອງ
+  const myPageRequest = useMyPageRequest();
+  useEffect(() => {
+    if (myPageRequest) openShortcut(myPageRequest.window);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myPageRequest]);
 
   // ສິດເຂົ້າເມນູອາດຖືກປ່ຽນຈາກເຄື່ອງອື່ນ — ກວດຄືນທຸກເທື່ອທີ່ກັບມາທີ່ແຖບນີ້
   useEffect(() => {

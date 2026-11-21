@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AccountMenu } from './accountMenus';
 import { useIsTablet } from '../../utils/hook/useMediaQuery';
-import type { LangCode } from '../../context/LanguageContext';
+import { useT, type LangCode } from '../../context/LanguageContext';
 import type { AppWindowHandle } from '../../components/Elements/AppWindow';
 
 /**
@@ -123,7 +123,8 @@ export type ShortcutId =
   | 'attendance'
   | 'payroll'
   | 'calendar'
-  | 'mySpace'
+  | 'myWork'
+  | 'myPay'
   | 'settings';
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
@@ -145,7 +146,8 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   attendance: 'accountAppAttendance',
   payroll: 'accountAppPayroll',
   calendar: 'calendar',
-  mySpace: 'accountAppMySpace',
+  myWork: 'accountAppMyWork',
+  myPay: 'accountAppMyPay',
   settings: 'accountAppSettings',
 };
 
@@ -167,7 +169,8 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   hr: 'accountAppHrDesc',
   attendance: 'accountAppAttendanceDesc',
   payroll: 'accountAppPayrollDesc',
-  mySpace: 'accountAppMySpaceDesc',
+  myWork: 'accountAppMyWorkDesc',
+  myPay: 'accountAppMyPayDesc',
   settings: 'accountAppSettingsDesc',
 };
 
@@ -196,8 +199,9 @@ export const shortcuts: ReadonlyArray<{
   { id: 'attendance', icon: 'fa-user-clock', tone: 'sky', path: '/hr/attendance', popup: true },
   { id: 'payroll', icon: 'fa-money-check-dollar', tone: 'emerald', path: '/hr/payroll', popup: true },
   { id: 'calendar', icon: 'fa-calendar-days', tone: 'coral', path: '/calendar', popup: true },
-  // ພື້ນທີ່ຂອງຂ້ອຍ — ບໍ່ຢູ່ໃນ tbl_main_menu: ຂຶ້ນເອງສະເພາະຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ (useAccountMenus)
-  { id: 'mySpace', icon: 'fa-house-user', tone: 'emerald', path: '/me', popup: true },
+  // ຂອງຂ້ອຍ (/me/…) — ບໍ່ຢູ່ໃນ tbl_main_menu: ຂຶ້ນເອງສະເພາະຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ (useAccountMenus); ສ່ວນທີ່ຕໍ່ເນື່ອງກັນຢູ່ເມນູດຽວ
+  { id: 'myWork', icon: 'fa-house-user', tone: 'emerald', path: '/me/work', popup: true },
+  { id: 'myPay', icon: 'fa-wallet', tone: 'gold', path: '/me/pay', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
 ];
 
@@ -285,6 +289,19 @@ const fitRows = (area: DesktopArea, grid: IconGrid) =>
 
 const frameWidth = (cols: number, grid: IconGrid) => FRAME.pad * 2 + (cols - 1) * grid.columnPitch + grid.width;
 const frameHeight = (rows: number, grid: IconGrid) => FRAME.head + FRAME.pad * 2 + (rows - 1) * grid.rowPitch + grid.height;
+
+/**
+ * ຄວາມກວ້າງທີ່ແຖບຊື່ຂອງກອບຕ້ອງການ (ຊື່ + ໄອຄອນ + ຕົວເລກ) — ກອບ 1 ຖັນກວ້າງຂຶ້ນໃຫ້ຊື່ບໍ່ຖືກຕັດ.
+ * ວັດດ້ວຍ canvas ຕາມຟອນຂອງ .life-desktop-section-title b; ສ່ວນອື່ນຂອງແຖບ ≈ TITLE_CHROME px
+ */
+const TITLE_CHROME = 96;
+let measureContext: CanvasRenderingContext2D | null | undefined;
+const titleWidth = (text: string) => {
+  if (measureContext === undefined) measureContext = document.createElement('canvas').getContext('2d');
+  if (!measureContext) return 0;
+  measureContext.font = "700 12.5px NotoSerifLao, 'Open Sans', sans-serif";
+  return Math.ceil(measureContext.measureText(text).width) + TITLE_CHROME;
+};
 
 /**
  * The free cell closest to `wanted`, searched in rings outwards so a dropped icon settles right next
@@ -377,7 +394,7 @@ type Placement = { items: DesktopItem[]; sections: DesktopSection[]; cellOf: Cel
  * ແລ້ວຂຶ້ນຖັນໃໝ່ (ຖັນ = ຈຳນວນ ÷ ແຖວທີ່ພໍດີຈໍ), ອັນທີ່ລາກແລ້ວຢູ່ຊ່ອງຂອງມັນ. ກອບວາງຈາກຊ້າຍໄປຂວາ,
  * ກອບທີ່ພໍລົງຢູ່ກ້ອງກອບກ່ອນໄດ້ (ສູງບໍ່ເກີນຈໍ) ກໍ່ລົງຢູ່ກ້ອງ ບໍ່ກິນພື້ນທີ່ທາງຂວາ
  */
-const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: DesktopArea, grid: IconGrid): Placement => {
+const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: DesktopArea, grid: IconGrid, labelOf: (key: string) => string): Placement => {
   const maxRows = fitRows(area, grid);
   const cellOf: Cells = {};
   const sections: DesktopSection[] = [];
@@ -421,7 +438,7 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
       rows,
       x: 0,
       y: 0,
-      width: frameWidth(cols, grid),
+      width: Math.max(frameWidth(cols, grid), titleWidth(labelOf(group.label))),
       height: frameHeight(rows, grid),
     });
   });
@@ -486,7 +503,8 @@ export const useDesktopLayout = (menuIds: ShortcutId[]) => {
     localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(layout.folders));
   }, [layout.folders]);
 
-  const place = (current: DesktopLayout) => placeLayout(listItems(menuIds, current.folders), current.cells, area, grid);
+  const t = useT();
+  const place = (current: DesktopLayout) => placeLayout(listItems(menuIds, current.folders), current.cells, area, grid, t);
 
   /**
    * ຊ່ອງໃນກອບ `section` ທີ່ໃກ້ກັບ px `position` ທີ່ສຸດ ແລະ ຍັງຫວ່າງ. ປ່ອຍຊິດຂອບກອບ (ເກີນໄປບໍ່ເກີນ 1 ຊ່ອງ)

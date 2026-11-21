@@ -266,8 +266,8 @@ export const CHART_MENU: SidebarPopupGroup[] = [
  * ແປງເປັນ `railNav` ຂອງ <AppPage> — ຄາຍກຸ່ມອອກເປັນລາຍການຮຽນ ພ້ອມແປພາສາໃຫ້ແລ້ວ.
  * <AppPage> ຂຶ້ນຫົວຂໍ້ກຸ່ມໃຫ້ເທື່ອດຽວຢູ່ລາຍການທຳອິດຂອງແຕ່ລະກຸ່ມເອງ.
  */
-/** ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ — ຄື app ພະນັກງານ) */
-export const MY_MENU: SidebarPopupGroup[] = [
+/** ການເຮັດວຽກຂອງຂ້ອຍ — ມື້ນີ້ + ການເຂົ້າ-ອອກວຽກ ແລະ ຄຳຮ້ອງທີ່ກ່ຽວກັບມັນ (ລາພັກ, ລືມສະແກນ) */
+export const MY_WORK_MENU: SidebarPopupGroup[] = [
   {
     group: 'myGroupWork',
     items: [
@@ -280,13 +280,17 @@ export const MY_MENU: SidebarPopupGroup[] = [
     items: [
       { key: 'leaves', icon: 'fa-solid fa-plane-departure', label: 'myLeaves' },
       { key: 'corrections', icon: 'fa-solid fa-fingerprint', label: 'myCorrections' },
-      { key: 'advances', icon: 'fa-solid fa-hand-holding-dollar', label: 'myAdvances' },
     ],
   },
+];
+
+/** ເງິນເດືອນຂອງຂ້ອຍ — ເງິນເດືອນ / ສະລິບ ແລະ ເງິນເບີກລ່ວງໜ້າ (ຫັກຄືນຈາກເງິນເດືອນ) */
+export const MY_PAY_MENU: SidebarPopupGroup[] = [
   {
     group: 'myGroupPay',
     items: [
-      { key: 'pay', icon: 'fa-solid fa-wallet', label: 'myPay' },
+      { key: 'pay', icon: 'fa-solid fa-wallet', label: 'myPayPage' },
+      { key: 'advances', icon: 'fa-solid fa-hand-holding-dollar', label: 'myAdvances' },
     ],
   },
 ];

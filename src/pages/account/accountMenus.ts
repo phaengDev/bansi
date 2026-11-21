@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { getApi, postApi } from '../../utils/configApi';
 import { useLangField, useT } from '../../context/LanguageContext';
-import { shortcutNameKeys, shortcuts, type Shortcut, type ShortcutId } from './DesktopShared';
+import { menuGroupOf, shortcutNameKeys, shortcuts, type Shortcut, type ShortcutId } from './DesktopShared';
 import type { Employee } from '../hr/hrApi';
 
 /** ແຖວຈາກ GET /menu/main ແລະ /menu/all (tbl_main_menu types 2) — backend ບໍ່ສົ່ງ hash ລະຫັດຜ່ານ ສົ່ງແຕ່ locked */
@@ -26,10 +26,11 @@ export type AccountMenu = Shortcut & {
 };
 
 /** ລັອກບໍ່ໄດ້ — ກົງກັບ UNLOCKABLE_PATHS ຂອງ backend (bansi/menuLockController) */
-const UNLOCKABLE: ShortcutId[] = ['settings', 'calendar', 'mySpace'];
+const UNLOCKABLE: ShortcutId[] = ['settings', 'calendar'];
 
-/** ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ) — ບໍ່ມາຈາກ tbl_main_menu, ຂຶ້ນສະເພາະບັນຊີທີ່ຜູກກັບພະນັກງານ */
-const SELF_SERVICE: ShortcutId = 'mySpace';
+/** ເມນູຂອງຂ້ອຍ (/me/… — ຂໍ້ມູນຂອງພະນັກງານເອງ) — ບໍ່ມາຈາກ tbl_main_menu, ຂຶ້ນສະເພາະບັນຊີທີ່ຜູກກັບພະນັກງານ */
+const SELF_SERVICE = shortcuts.filter((shortcut) => menuGroupOf(shortcut.path) === 'me');
+const isSelfService = (id: ShortcutId) => SELF_SERVICE.some((shortcut) => shortcut.id === id);
 
 /**
  * ເມນູທີ່ຜູ້ໃຊ້ຄົນນີ້ເຂົ້າໄດ້ (backend ກັ່ນຕາມ tbl_users.menu_access ແລ້ວ). all = ໄດ້ທຸກເມນູ.
@@ -57,7 +58,7 @@ export const refreshAccountMenus = async () => {
     console.error(menus.reason);
   }
   // 400 = ບໍ່ໄດ້ຜູກ / ລາອອກ → ບໍ່ມີພື້ນທີ່ຂອງຂ້ອຍ; ເນັດສະດຸດ (ບໍ່ມີ response) = ໃຊ້ຄ່າເກົ່າ
-  if (self.status === 'fulfilled') selfState = self.value.data?.data ?? null;
+  if (self.status === 'fulfilled') selfState = Number(self.value.data?.data?._uuid) > 0 ? self.value.data.data : null;
   else if ((self.reason as { response?: unknown })?.response) selfState = null;
   loaded = true;
   listeners.forEach((notify) => notify());
@@ -81,7 +82,7 @@ const useToMenus = () => {
     name: (row && lf(row, 'name')) || t(shortcutNameKeys[shortcut.id]),
     iconClass: row?.icons || `fa-solid ${shortcut.icon}`,
     locked: !!row?.locked,
-    lockable: !!row && !UNLOCKABLE.includes(shortcut.id),
+    lockable: !!row && !UNLOCKABLE.includes(shortcut.id) && !isSelfService(shortcut.id),
   });
 
   return { toMenu, fromRows: (rows: MainMenuRow[]) => rows.flatMap((row) => {
@@ -100,10 +101,9 @@ export const useAccountMenus = (): AccountMenu[] => {
   const { toMenu, fromRows } = useToMenus();
   if (!state) return [];
   const menus = !state.rows.length
-    ? (state.all ? shortcuts.filter((shortcut) => shortcut.id !== SELF_SERVICE).map((shortcut) => toMenu(shortcut)) : [])
+    ? (state.all ? shortcuts.filter((shortcut) => !isSelfService(shortcut.id)).map((shortcut) => toMenu(shortcut)) : [])
     : fromRows(state.rows);
-  const selfService = shortcuts.find((shortcut) => shortcut.id === SELF_SERVICE);
-  return self && selfService ? [...menus, toMenu(selfService)] : menus;
+  return self ? [...menus, ...SELF_SERVICE.map((shortcut) => toMenu(shortcut))] : menus;
 };
 
 /** ພະນັກງານທີ່ບັນຊີນີ້ຜູກໄວ້ — null = ບໍ່ໄດ້ຜູກ, undefined = ກຳລັງກວດ (ໜ້າພື້ນທີ່ຂອງຂ້ອຍໃຊ້ຫົວ/ຮູບ) */

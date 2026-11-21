@@ -1,33 +1,49 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import AppPage from '../../components/Elements/AppPage';
 import { useT } from '../../context/LanguageContext';
-import { MY_MENU, toRailNav } from '../account/config/SidebarPopup';
+import { toRailNav, type SidebarPopupGroup } from '../account/config/SidebarPopup';
 import { useRailKey } from '../account/windowMemory';
 import { useMyEmployee } from '../account/accountMenus';
+import { shortcutNameKeys, type ShortcutId } from '../account/DesktopShared';
 import MyToday from './MyToday';
 import MyAttendance from './MyAttendance';
 import MyLeaves from './MyLeaves';
 import MyCorrections from './MyCorrections';
 import MyAdvances from './MyAdvances';
 import MyPay from './MyPay';
+import { clearMyPageRequest, hasPage, openMyPage, useMyPageRequest } from './meNav';
 import type { MyIntent, MyOpen } from './meApi';
 
 /**
- * ໜ້າຕ່າງ ພື້ນທີ່ຂອງຂ້ອຍ — ສຳລັບຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ: ໃຊ້ຂໍ້ມູນ ແລະ ຄຳຮ້ອງຂອງຕົນເອງຜ່ານຄອມ ຄືກັນກັບ app ພະນັກງານ
- * (route /…/me ຂອງ backend). ແຖບຊ້າຍ: ມື້ນີ້, ເຂົ້າ-ອອກວຽກ …
+ * ໜ້າຕ່າງຂອງເມນູຂອງຂ້ອຍ (ການເຮັດວຽກ / ເງິນເດືອນ …) — ສຳລັບຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ: ໃຊ້ຂໍ້ມູນ ແລະ ຄຳຮ້ອງຂອງຕົນເອງຜ່ານຄອມ
+ * ຄືກັນກັບ app ພະນັກງານ (route /…/me ຂອງ backend). ແຖບຊ້າຍ = ໜ້າຂອງເມນູນີ້; ເປີດໜ້າຂອງເມນູອື່ນ = ໜ້າຕ່າງນັ້ນເປີດຂຶ້ນ
  */
-const MyWindow = () => {
+const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) => {
   const t = useT();
   const me = useMyEmployee();
-  const [activeKey, setActiveKey] = useRailKey('mySpace', MY_MENU);
-  const railNav = useMemo(() => toRailNav(MY_MENU, t), [t]);
+  const [activeKey, setActiveKey] = useRailKey(id, menu);
+  const railNav = useMemo(() => toRailNav(menu, t), [menu, t]);
   const active = railNav.find((item) => item.key === activeKey);
   /** ສິ່ງທີ່ໜ້າປາຍທາງຕ້ອງເຮັດເມື່ອເປີດ (ເຊັ່ນ ເປີດຟອມຂໍໃໝ່) — ໜ້າເຮັດແລ້ວລ້າງ */
   const [intent, setIntent] = useState<(MyIntent & { key: string }) | null>(null);
+  const request = useMyPageRequest();
+
+  // ຄຳຂໍຈາກໜ້າຂອງເມນູອື່ນ (ຫຼື ກ່ອນໜ້າຕ່າງນີ້ເປີດ) — ໄປທີ່ໜ້ານັ້ນ
+  useEffect(() => {
+    if (request?.window !== id) return;
+    setActiveKey(request.key);
+    setIntent(request.intent ? { ...request.intent, key: request.key } : null);
+    clearMyPageRequest(request);
+  }, [request, id, setActiveKey]);
+
   const open: MyOpen = useCallback((key, next) => {
+    if (!hasPage(menu, key)) {
+      openMyPage(key, next);
+      return;
+    }
     setActiveKey(key);
     setIntent(next ? { ...next, key } : null);
-  }, [setActiveKey]);
+  }, [menu, setActiveKey]);
   const done = useCallback(() => setIntent(null), []);
   const intentOf = (key: string) => (intent?.key === key ? intent : null);
 
@@ -39,18 +55,18 @@ const MyWindow = () => {
     );
   }
 
-  const pages: Record<string, ReactNode> = {
-    today: <MyToday onOpen={open} />,
-    attendance: <MyAttendance onReport={(date) => open('corrections', { action: 'new', date })} />,
-    leaves: <MyLeaves intent={intentOf('leaves')} onIntentDone={done} />,
-    corrections: <MyCorrections intent={intentOf('corrections')} onIntentDone={done} />,
-    advances: <MyAdvances intent={intentOf('advances')} onIntentDone={done} />,
-    pay: <MyPay />,
+  const pages: Record<string, () => ReactNode> = {
+    today: () => <MyToday onOpen={open} />,
+    attendance: () => <MyAttendance onReport={(date) => open('corrections', { action: 'new', date })} />,
+    leaves: () => <MyLeaves intent={intentOf('leaves')} onIntentDone={done} />,
+    corrections: () => <MyCorrections intent={intentOf('corrections')} onIntentDone={done} />,
+    pay: () => <MyPay />,
+    advances: () => <MyAdvances intent={intentOf('advances')} onIntentDone={done} />,
   };
 
   return (
-    <AppPage title={active?.label ?? t('accountAppMySpace')} subtitle={t('accountAppMySpace')} railNav={railNav} railActiveKey={activeKey} onRailSelect={(key) => open(key)}>
-      {pages[activeKey]}
+    <AppPage title={active?.label ?? t(shortcutNameKeys[id])} subtitle={t(shortcutNameKeys[id])} railNav={railNav} railActiveKey={activeKey} onRailSelect={(key) => open(key)}>
+      {pages[activeKey]?.()}
     </AppPage>
   );
 };

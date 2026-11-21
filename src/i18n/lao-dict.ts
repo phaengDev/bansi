@@ -2994,8 +2994,10 @@ export const laoDict = {
   mvSrcPAYROLL_CANCEL: { la: 'ຍົກເລີກຈ່າຍເງິນເດືອນ', en: 'Payroll cancelled', cn: '工资发放作废' },
 
   // ---- ພື້ນທີ່ຂອງຂ້ອຍ (ຂໍ້ມູນຂອງພະນັກງານເອງ — ຄື app ພະນັກງານ) ----
-  accountAppMySpace: { la: 'ພື້ນທີ່ຂອງຂ້ອຍ', en: 'My space', cn: '我的空间' },
-  accountAppMySpaceDesc: { la: 'ການເຂົ້າວຽກ, ລາພັກ, ຄຳຮ້ອງ, ເງິນເດືອນ ແລະ ວຽກຂອງຂ້ອຍ — ຄືໃນ app ພະນັກງານ', en: 'My attendance, leave, requests, pay and tasks — same as the staff app', cn: '我的考勤、请假、申请、工资和任务——与员工应用相同' },
+  accountAppMyWork: { la: 'ການເຮັດວຽກຂອງຂ້ອຍ', en: 'My work', cn: '我的工作' },
+  accountAppMyWorkDesc: { la: 'ມື້ນີ້, ເຂົ້າ-ອອກວຽກ, ລາພັກ ແລະ ແຈ້ງລືມສະແກນ — ຄືໃນ app ພະນັກງານ', en: 'Today, attendance, leave and missed scans — same as the staff app', cn: '今天、考勤、请假和漏打卡——与员工应用相同' },
+  accountAppMyPay: { la: 'ເງິນເດືອນຂອງຂ້ອຍ', en: 'My pay', cn: '我的工资' },
+  accountAppMyPayDesc: { la: 'ເງິນເດືອນ, ສະລິບ ແລະ ເບີກເງິນລ່ວງໜ້າ — ຄືໃນ app ພະນັກງານ', en: 'Pay, payslips and salary advances — same as the staff app', cn: '工资、工资单和预支——与员工应用相同' },
   myMenuGroup: { la: 'ຂອງຂ້ອຍ', en: 'Mine', cn: '我的' },
   myGroupWork: { la: 'ການເຮັດວຽກ', en: 'Work', cn: '工作' },
   myToday: { la: 'ມື້ນີ້', en: 'Today', cn: '今天' },
@@ -3063,7 +3065,7 @@ export const laoDict = {
   myAdvNoLimitLeft: { la: 'ເບີກເຕັມຂີດຈຳກັດແລ້ວ', en: 'You have reached the limit', cn: '已达预支上限' },
   myNoAdvances: { la: 'ຍັງບໍ່ເຄີຍເບີກເງິນລ່ວງໜ້າ', en: 'No salary advances yet', cn: '暂无预支记录' },
   myGroupPay: { la: 'ເງິນເດືອນ', en: 'Pay', cn: '工资' },
-  myPay: { la: 'ເງິນເດືອນຂອງຂ້ອຍ', en: 'My pay', cn: '我的工资' },
+  myPayPage: { la: 'ເງິນເດືອນ ແລະ ສະລິບ', en: 'Pay and payslips', cn: '工资和工资单' },
   myPayMonth: { la: 'ເງິນເດືອນ', en: 'Pay for', cn: '工资' },
   myPayEstimate: { la: 'ຄາດຄະເນ', en: 'Estimate', cn: '预估' },
   myPayEstimateHint: { la: 'ຄິດຈາກການເຂົ້າວຽກເຖິງມື້ນີ້ — ມື້ທີ່ຍັງບໍ່ຮອດນັບວ່າມາວຽກ', en: 'From attendance so far — days still to come count as present', cn: '按截至今天的考勤计算——未到的日子按出勤计' },

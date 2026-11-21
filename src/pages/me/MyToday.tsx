@@ -110,12 +110,12 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
           <header><h3><i className="fa-solid fa-paper-plane" /> {t('myRequestsCard')}</h3></header>
           <ul className="my-requests">
             {[
-              { key: 'leaves', icon: 'fa-plane-departure', label: 'myLeaves', action: 'myLeaveNew', pending: leaves?.summary.pending },
-              { key: 'corrections', icon: 'fa-fingerprint', label: 'myCorrections', action: 'myReport', pending: corrections?.summary.pending },
+              { key: 'leaves', icon: 'fa-plane-departure', label: 'myLeaves', action: 'myLeaveNew', pending: leaves?.summary?.pending },
+              { key: 'corrections', icon: 'fa-fingerprint', label: 'myCorrections', action: 'myReport', pending: corrections?.summary?.pending },
               {
                 key: 'advances', icon: 'fa-hand-holding-dollar', label: 'myAdvances', action: 'myAdvNew',
-                pending: advances?.data.filter((a) => a.status === ADV_PENDING).length,
-                extra: advances && advances.balance > 0 ? `${t('advBalance')} ₭ ${kip(advances.balance)}` : undefined,
+                pending: advances?.data?.filter((a) => a.status === ADV_PENDING).length,
+                extra: advances && Number(advances.balance) > 0 ? `${t('advBalance')} ₭ ${kip(advances.balance)}` : undefined,
               },
             ].map((item) => (
               <li key={item.key}>
@@ -135,7 +135,7 @@ const MyToday = ({ onOpen }: { onOpen: MyOpen }) => {
           </ul>
         </section>
 
-        {pay && (
+        {pay?.line && (
           <section className="my-card">
             <header>
               <h3><i className="fa-solid fa-wallet" /> {t('myPayMonth')} {moment().format('MM/YYYY')}</h3>
