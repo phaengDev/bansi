@@ -36,6 +36,7 @@ const dropTargetAt = (x: number, y: number, draggedId: string, attribute: 'dropI
  * index route of `life/*`; the taskbar, popups, brand/user menu, and Start menu all live in
  * <LifeShell> so they persist no matter which `life/*` page is active.
  *
+ * ໄອຄອນຢູ່ໃນກອບຕາມກຸ່ມເມນູ (ບັນຊີ / ບຸກຄະລາກອນ / ທົ່ວໄປ) — ລາກຍ້າຍໄດ້ພາຍໃນກອບຂອງມັນ ·
  * ລາກໄອຄອນໄປທັບອີກອັນ = ຈັດເປັນກຸ່ມ (ຄືໜ້າຫຼັກຂອງໂທລະສັບ) · ຄລິກກຸ່ມ = ເປີດເບິ່ງ ແລະ ປ່ຽນຊື່ ·
  * ລາກໄອຄອນອອກນອກກອບກຸ່ມ = ເອົາອອກຈາກກຸ່ມ.
  *
@@ -46,7 +47,7 @@ const dropTargetAt = (x: number, y: number, draggedId: string, attribute: 'dropI
 const AccountDesktopMenu: React.FC = () => {
   const { openShortcut, desktopLayout, menus, openWindows } = useOutletContext<LifeOutletContext>();
   const [glanceHidden, setGlanceHidden] = useGlanceHidden();
-  const { items, setPosition, dropItem, pullFromFolder, moveInFolder, renameFolder, setArea, grid } = desktopLayout;
+  const { items, sections, dragTo, dropItem, pullFromFolder, moveInFolder, renameFolder, setArea, grid } = desktopLayout;
   const t = useT();
   const containerRef = useRef<HTMLElement>(null);
   const folderPanelRef = useRef<HTMLElement>(null);
@@ -178,7 +179,7 @@ const AccountDesktopMenu: React.FC = () => {
       return;
     }
 
-    setPosition(state.id, next);
+    dragTo(state.id, next);
     // ກຸ່ມບໍ່ຊ້ອນເຂົ້າກຸ່ມອື່ນ — ລາກກຸ່ມບໍ່ມີເປົ້າໃຫ້ທັບ
     setDropTargetId(isFolderId(state.id) ? null : dropTargetAt(probeX, probeY, state.id, 'dropId'));
   });
@@ -266,6 +267,27 @@ const AccountDesktopMenu: React.FC = () => {
         className={`life-desktop-shortcuts${glanceHidden ? '' : ' has-glance'}${settled ? ' is-settled' : ''}`}
         aria-label={t('lifeShortcutsAriaLabel')}
       >
+        {/* ກອບຂອງແຕ່ລະກຸ່ມເມນູ — ຢູ່ຫຼັງໄອຄອນ, ບໍ່ຮັບການຄລິກ (ລາກ/ຄລິກໄອຄອນຄືເກົ່າ) */}
+        {sections.map((section, index) => (
+          <div
+            key={section.key}
+            className={`life-desktop-section is-${section.key}`}
+            style={{
+              left: section.x,
+              top: section.y,
+              width: section.width,
+              height: section.height,
+              '--section-order': index,
+            } as React.CSSProperties}
+            aria-hidden="true"
+          >
+            <span className="life-desktop-section-title">
+              <i className={`fa-solid ${section.icon}`} />
+              <b>{t(section.label)}</b>
+              <em>{section.count}</em>
+            </span>
+          </div>
+        ))}
         {items.map((item, index) => {
           const menu = item.folder ? undefined : menuById.get(item.id as ShortcutId);
           if (!item.folder && !menu) return null;

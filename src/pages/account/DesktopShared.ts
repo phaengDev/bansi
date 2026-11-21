@@ -201,15 +201,46 @@ export type Shortcut = (typeof shortcuts)[number];
 export type ShortcutPosition = { x: number; y: number };
 
 /**
- * ກຸ່ມໄອຄອນ (ຄື folder ໃນໜ້າຫຼັກຂອງໂທລະສັບ) — ລາກປຸ່ມລັດໜຶ່ງໄປທັບອີກອັນຈຶ່ງເກີດ ແລະ ຍຸບເອງເມື່ອເຫຼືອ
- * ອັນດຽວ. ຊື່ຫວ່າງ = ສະແດງ "ກຸ່ມບໍ່ມີຊື່" ຕາມພາສາທີ່ເລືອກຢູ່
+ * ກຸ່ມຂອງເມນູ (ຕາມ path) — ໃຊ້ຮ່ວມກັນທັງກອບເທິງ desktop ແລະ ຟອມສິດເຂົ້າເມນູ (ຕິກທັງກຸ່ມ, UserPage).
+ * ລຳດັບໃນນີ້ = ລຳດັບຂອງກອບຈາກຊ້າຍໄປຂວາ
  */
-export type DesktopFolder = { id: string; name: string; items: ShortcutId[] };
+export const MENU_GROUPS = [
+  { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') },
+  { key: 'hr', label: 'hrMenuGroupHr', icon: 'fa-people-group', match: (path: string) => path === '/hr' || path.startsWith('/hr/') },
+  { key: 'other', label: 'hrMenuGroupOther', icon: 'fa-shapes', match: () => true },
+] as const;
+export type MenuGroupKey = (typeof MENU_GROUPS)[number]['key'];
+export const menuGroupOf = (path: string): MenuGroupKey => MENU_GROUPS.find((group) => group.match(path))!.key;
+const groupOfShortcut = (id: ShortcutId) => menuGroupOf(shortcuts.find((shortcut) => shortcut.id === id)?.path ?? '');
+const isGroupKey = (value: unknown): value is MenuGroupKey => MENU_GROUPS.some((group) => group.key === value);
+
+/**
+ * ກຸ່ມໄອຄອນ (ຄື folder ໃນໜ້າຫຼັກຂອງໂທລະສັບ) — ລາກປຸ່ມລັດໜຶ່ງໄປທັບອີກອັນຈຶ່ງເກີດ ແລະ ຍຸບເອງເມື່ອເຫຼືອ
+ * ອັນດຽວ. ຊື່ຫວ່າງ = ສະແດງ "ກຸ່ມບໍ່ມີຊື່" ຕາມພາສາທີ່ເລືອກຢູ່. section = ກອບທີ່ກຸ່ມຢູ່ (ກອບຂອງອັນທີ່ຖືກທັບ)
+ */
+export type DesktopFolder = { id: string; name: string; items: ShortcutId[]; section?: MenuGroupKey };
 
 /** ສິ່ງໜຶ່ງເທິງ desktop: ປຸ່ມລັດ (id = ShortcutId) ຫຼື ກຸ່ມ (ມີ `folder` — items ສະເພາະເມນູທີ່ຜູ້ໃຊ້ເຫັນ) */
-export type DesktopItem = { id: string; folder?: DesktopFolder; position: ShortcutPosition };
+export type DesktopItem = { id: string; folder?: DesktopFolder; section: MenuGroupKey; position: ShortcutPosition };
 
-const ICON_POSITIONS_STORAGE_KEY = 'accountDesktopIconPositions';
+/** ກອບຂອງກຸ່ມເມນູເທິງ desktop (px ໃນພື້ນທີ່ວາງໄອຄອນ) — count = ຈຳນວນເມນູ (ລວມທີ່ຢູ່ໃນກຸ່ມໄອຄອນ) */
+export type DesktopSection = {
+  key: MenuGroupKey;
+  label: string;
+  icon: string;
+  count: number;
+  cols: number;
+  rows: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/** ຊ່ອງຂອງໄອຄອນພາຍໃນກອບຂອງມັນເອງ (ຖັນ/ແຖວ) — ກອບຍ້າຍບ່ອນ ໄອຄອນກໍ່ຍ້າຍຕາມ */
+const CELLS_STORAGE_KEY = 'accountDesktopSectionCells';
+/** ຕຳແໜ່ງ px ແບບເກົ່າ (ກ່ອນມີກອບ) — ບໍ່ໃຊ້ແລ້ວ, ລຶບອອກຕອນເປີດໜ້າ */
+const LEGACY_POSITIONS_STORAGE_KEY = 'accountDesktopIconPositions';
 const FOLDERS_STORAGE_KEY = 'accountDesktopFolders';
 const FOLDER_ID_PREFIX = 'folder-';
 
@@ -226,6 +257,9 @@ const WIDE_GRID: IconGrid = { width: 112, height: 112, columnPitch: 120, rowPitc
 /** ຈໍນ້ອຍ (≤ 767.98px) — ໄອຄອນຫົດລົງຕາມ @media ໃນ _life-desktop.scss ຕາໜ່າງຈຶ່ງຕ້ອງຫົດນຳ */
 const COMPACT_GRID: IconGrid = { width: 92, height: 98, columnPitch: 98, rowPitch: 104 };
 
+/** ກອບ: ແຖບຊື່ (head), ຂອບໃນ (pad), ໄລຍະລະຫວ່າງກອບ (gap) — px, ຕ້ອງກົງກັບ .life-desktop-section ໃນ _life-desktop.scss */
+const FRAME = { head: 32, pad: 6, gap: 16 };
+
 /** ຂະໜາດຂອງພື້ນທີ່ວາງໄອຄອນ (nav.life-desktop-shortcuts) */
 export type DesktopArea = { width: number; height: number };
 
@@ -235,52 +269,21 @@ const estimateArea = (): DesktopArea => ({
   height: Math.max(0, window.innerHeight - 128),
 });
 
-/** ຈຳນວນຖັນທີ່ຢາກໃຫ້ເປັນ — ລຽງໃຫ້ຄົບ 2 ຖັນນີ້ກ່ອນ ຖ້າຄວາມສູງບໍ່ພໍຈຶ່ງລົ້ນເປັນຖັນທີ 3, 4 … ເອງ */
-const DEFAULT_COLUMNS = 2;
-
-/** ຈຳນວນແຖວທີ່ວາງໄດ້ໃນໜຶ່ງຖັນ ຕາມຄວາມສູງທີ່ມີແທ້ — ຢ່າງໜ້ອຍ 1 ແຖວສະເໝີ */
-const rowsThatFit = (area: DesktopArea, grid: IconGrid) =>
-  Math.max(1, Math.floor((area.height - grid.height) / grid.rowPitch) + 1);
-
-/**
- * ແຖວຕໍ່ຖັນທີ່ຈະໃຊ້ແທ້: ແບ່ງໃຫ້ພໍດີ `DEFAULT_COLUMNS` ຖັນ ແຕ່ບໍ່ເກີນຄວາມສູງທີ່ມີ —
- * ປຸ່ມລັດໜ້ອຍ/ຈໍສູງ = ໄດ້ 2 ຖັນຕາມຕັ້ງໃຈ · ປຸ່ມລັດຫຼາຍ/ຈໍເຕັ້ຍ = ຕັດແຖວລົງ ແລ້ວຂຶ້ນຖັນໃໝ່ແທນ
- * ການລົ້ນອອກນອກຈໍ
- */
-const rowsPerColumn = (area: DesktopArea, grid: IconGrid, total: number) =>
-  Math.min(rowsThatFit(area, grid), Math.max(1, Math.ceil(total / DEFAULT_COLUMNS)));
-
 type Cell = { col: number; row: number };
-
-/**
- * ບ່ອນຢືນຕັ້ງຕົ້ນຂອງໄອຄອນທີ່ຍັງບໍ່ເຄີຍຖືກລາກ — ລຽງລົງທາງລຸ່ມກ່ອນ (ຄືເດັສທັອບທົ່ວໄປ):
- * ເພີ່ມປຸ່ມລັດໃໝ່ມັນຈະໄປຕໍ່ທ້າຍຖັນເກົ່າ ແລະ ຂຶ້ນຖັນໃໝ່ທາງຂວາເມື່ອສຸດແຖວຂອງຖັນນັ້ນ.
- * `total` = ຈຳນວນສິ່ງເທິງ desktop (ກຸ່ມນັບເປັນອັນດຽວ)
- */
-const getDefaultPosition = (index: number, total: number, area: DesktopArea, grid: IconGrid): ShortcutPosition => {
-  const rows = rowsPerColumn(area, grid, total);
-  return {
-    x: Math.floor(index / rows) * grid.columnPitch,
-    y: (index % rows) * grid.rowPitch,
-  };
-};
-
-const toCell = ({ x, y }: ShortcutPosition, grid: IconGrid): Cell => ({
-  col: Math.round(x / grid.columnPitch),
-  row: Math.round(y / grid.rowPitch),
-});
-
-const toPosition = ({ col, row }: Cell, grid: IconGrid): ShortcutPosition => ({
-  x: col * grid.columnPitch,
-  y: row * grid.rowPitch,
-});
 
 const sameCell = (a: Cell, b: Cell) => a.col === b.col && a.row === b.row;
 
+/** ຈຳນວນແຖວສູງສຸດຂອງກອບ ຕາມຄວາມສູງທີ່ມີແທ້ (ຫັກແຖບຊື່ ແລະ ຂອບໃນ) — ຢ່າງໜ້ອຍ 1 ແຖວ */
+const fitRows = (area: DesktopArea, grid: IconGrid) =>
+  Math.max(1, Math.floor((area.height - FRAME.head - FRAME.pad * 2 - grid.height) / grid.rowPitch) + 1);
+
+const frameWidth = (cols: number, grid: IconGrid) => FRAME.pad * 2 + (cols - 1) * grid.columnPitch + grid.width;
+const frameHeight = (rows: number, grid: IconGrid) => FRAME.head + FRAME.pad * 2 + (rows - 1) * grid.rowPitch + grid.height;
+
 /**
  * The free cell closest to `wanted`, searched in rings outwards so a dropped icon settles right next
- * to where it was let go rather than jumping across the desktop. Falls back to `wanted` only if the
- * whole desktop is full.
+ * to where it was let go rather than jumping across its frame. Falls back to `wanted` only if the
+ * whole frame is full.
  */
 const findFreeCell = (wanted: Cell, taken: Cell[], maxColumn: number, maxRow: number): Cell => {
   const clampCell = ({ col, row }: Cell): Cell => ({
@@ -305,20 +308,22 @@ const findFreeCell = (wanted: Cell, taken: Cell[], maxColumn: number, maxRow: nu
   return start;
 };
 
-/** ຕຳແໜ່ງທີ່ປັກໄວ້ແລ້ວ ຕາມ id (ປຸ່ມລັດ ຫຼື ກຸ່ມ) — ອັນທີ່ບໍ່ມີໃນນີ້ຢູ່ບ່ອນຕັ້ງຕົ້ນ */
-type Positions = Record<string, ShortcutPosition>;
+/** ຊ່ອງທີ່ປັກໄວ້ແລ້ວ ຕາມ id (ປຸ່ມລັດ ຫຼື ກຸ່ມ) — ອັນທີ່ບໍ່ມີໃນນີ້ ລຽງຕາມລຳດັບເມນູ */
+type Cells = Record<string, Cell>;
 
-/** ຕຳແໜ່ງ ແລະ ກຸ່ມຢູ່ state ດຽວກັນ — ສ້າງ/ຍຸບກຸ່ມຈຶ່ງປ່ຽນທັງສອງພ້ອມກັນໃນເທື່ອດຽວ */
-type DesktopLayout = { positions: Positions; folders: DesktopFolder[] };
+/** ຊ່ອງ ແລະ ກຸ່ມຢູ່ state ດຽວກັນ — ສ້າງ/ຍຸບກຸ່ມຈຶ່ງປ່ຽນທັງສອງພ້ອມກັນ. drag = ໄອຄອນທີ່ກຳລັງລາກ (ບໍ່ບັນທຶກ) */
+type DesktopLayout = { cells: Cells; folders: DesktopFolder[]; drag: { id: string; position: ShortcutPosition } | null };
 
-const readStoredPositions = (): Positions => {
+const readStoredCells = (): Cells => {
   try {
-    const stored = localStorage.getItem(ICON_POSITIONS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored) as Positions;
+    localStorage.removeItem(LEGACY_POSITIONS_STORAGE_KEY);
+    const stored = JSON.parse(localStorage.getItem(CELLS_STORAGE_KEY) ?? '{}') as Cells;
+    return Object.fromEntries(Object.entries(stored).filter(([, cell]) =>
+      Number.isInteger(cell?.col) && Number.isInteger(cell?.row) && cell.col >= 0 && cell.row >= 0));
   } catch {
     // malformed/blocked storage — fall through to defaults
+    return {};
   }
-  return {};
 };
 
 /** ກຸ່ມທີ່ບັນທຶກໄວ້ — ຂ້າມເມນູທີ່ບໍ່ມີແລ້ວ ຫຼື ຢູ່ຊ້ຳສອງກຸ່ມ, ກຸ່ມທີ່ເຫຼືອບໍ່ເຖິງ 2 ອັນຖືກຍຸບ */
@@ -330,168 +335,248 @@ const readStoredFolders = (): DesktopFolder[] => {
       const items = folder.items.filter((id) => shortcuts.some((shortcut) => shortcut.id === id) && !used.has(id));
       if (!isFolderId(String(folder.id)) || items.length < 2) return [];
       items.forEach((id) => used.add(id));
-      return [{ id: folder.id, name: String(folder.name ?? ''), items }];
+      return [{ id: folder.id, name: String(folder.name ?? ''), items, ...(isGroupKey(folder.section) ? { section: folder.section } : {}) }];
     });
   } catch {
     return [];
   }
 };
 
-const withoutPositions = (positions: Positions, ...ids: string[]): Positions =>
-  Object.fromEntries(Object.entries(positions).filter(([id]) => !ids.includes(id)));
+const withoutCells = (cells: Cells, ...ids: string[]): Cells =>
+  Object.fromEntries(Object.entries(cells).filter(([id]) => !ids.includes(id)));
 
 /**
- * ສິ່ງທີ່ຢູ່ເທິງ desktop ຕາມລຳດັບເມນູ — ກຸ່ມຢູ່ບ່ອນຂອງສະມາຊິກທຳອິດ. ເມນູທີ່ຜູ້ໃຊ້ບໍ່ເຫັນ (ບໍ່ມີໃນ
- * `menuIds`) ບໍ່ສະແດງ ແຕ່ຍັງຢູ່ໃນກຸ່ມທີ່ບັນທຶກໄວ້
+ * ສິ່ງທີ່ຢູ່ເທິງ desktop ຕາມລຳດັບເມນູ — ກຸ່ມຢູ່ບ່ອນຂອງສະມາຊິກທຳອິດ ແລະ ຢູ່ໃນກອບທີ່ສ້າງມັນ.
+ * ເມນູທີ່ຜູ້ໃຊ້ບໍ່ເຫັນ (ບໍ່ມີໃນ `menuIds`) ບໍ່ສະແດງ ແຕ່ຍັງຢູ່ໃນກຸ່ມທີ່ບັນທຶກໄວ້
  */
 const listItems = (menuIds: ShortcutId[], folders: DesktopFolder[]): Omit<DesktopItem, 'position'>[] => {
   const placed = new Set<string>();
   return menuIds.flatMap<Omit<DesktopItem, 'position'>>((id) => {
     const folder = folders.find((item) => item.items.includes(id));
-    if (!folder) return [{ id }];
+    if (!folder) return [{ id, section: groupOfShortcut(id) }];
     if (placed.has(folder.id)) return [];
     placed.add(folder.id);
-    return [{ id: folder.id, folder: { ...folder, items: folder.items.filter((member) => menuIds.includes(member)) } }];
+    return [{
+      id: folder.id,
+      section: folder.section ?? groupOfShortcut(id),
+      folder: { ...folder, items: folder.items.filter((member) => menuIds.includes(member)) },
+    }];
   });
 };
 
+type Placement = { items: DesktopItem[]; sections: DesktopSection[]; cellOf: Cells };
+
 /**
- * Drag-anywhere desktop icons and folders — an icon follows the pointer freely while dragging, then
- * snaps onto the grid when dropped, taking the nearest free cell if that spot is already used so two
- * icons can never end up stacked on top of each other. Dropping a shortcut right onto another icon
- * groups them into a folder instead (like a phone's home screen). Positions and folders are
- * per-browser (localStorage), so they stick across visits; anything never dragged sits at its default
- * grid spot.
+ * ຈັດກອບ ແລະ ໄອຄອນ: ແຕ່ລະກຸ່ມເມນູ (MENU_GROUPS) ມີກອບຂອງມັນ — ໄອຄອນທີ່ຍັງບໍ່ເຄີຍລາກ ລຽງລົງທາງລຸ່ມກ່ອນ
+ * ແລ້ວຂຶ້ນຖັນໃໝ່ (ຖັນ = ຈຳນວນ ÷ ແຖວທີ່ພໍດີຈໍ), ອັນທີ່ລາກແລ້ວຢູ່ຊ່ອງຂອງມັນ. ກອບວາງຈາກຊ້າຍໄປຂວາ,
+ * ກອບທີ່ພໍລົງຢູ່ກ້ອງກອບກ່ອນໄດ້ (ສູງບໍ່ເກີນຈໍ) ກໍ່ລົງຢູ່ກ້ອງ ບໍ່ກິນພື້ນທີ່ທາງຂວາ
+ */
+const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: DesktopArea, grid: IconGrid): Placement => {
+  const maxRows = fitRows(area, grid);
+  const cellOf: Cells = {};
+  const sections: DesktopSection[] = [];
+
+  MENU_GROUPS.forEach((group) => {
+    const members = list.filter((item) => item.section === group.key);
+    if (!members.length) return;
+    const stored = members.flatMap((item) => (cells[item.id] && cells[item.id].row < maxRows ? [cells[item.id]] : []));
+    // ຢ່າງໜ້ອຍ 2 ຖັນ (ມີ 2 ອັນຂຶ້ນໄປ) — ກອບບໍ່ເປັນເສົາສູງແຄບ ແລະ ຊື່ກອບບໍ່ຖືກຕັດ
+    let cols = Math.max(Math.ceil(members.length / maxRows), Math.min(members.length, 2), ...stored.map((cell) => cell.col + 1));
+    const rows = Math.min(maxRows, Math.max(Math.ceil(members.length / cols), ...stored.map((cell) => cell.row + 1)));
+    const taken: Cell[] = [];
+    const isFree = (cell: Cell) => !taken.some((other) => sameCell(other, cell));
+
+    const unplaced = members.filter((item) => {
+      const cell = cells[item.id];
+      if (!cell || cell.row >= rows || !isFree(cell)) return true;
+      taken.push(cell);
+      cellOf[item.id] = cell;
+      return false;
+    });
+    // ຊ່ອງຫວ່າງທຳອິດ ລຽງລົງທາງລຸ່ມກ່ອນ — ເຕັມແລ້ວກໍ່ເພີ່ມຖັນ
+    let index = 0;
+    unplaced.forEach((item) => {
+      let cell: Cell;
+      do {
+        cell = { col: Math.floor(index / rows), row: index % rows };
+        index += 1;
+      } while (!isFree(cell));
+      taken.push(cell);
+      cellOf[item.id] = cell;
+    });
+    cols = Math.max(cols, ...taken.map((cell) => cell.col + 1));
+
+    sections.push({
+      key: group.key,
+      label: group.label,
+      icon: group.icon,
+      count: members.reduce((sum, item) => sum + (item.folder ? item.folder.items.length : 1), 0),
+      cols,
+      rows,
+      x: 0,
+      y: 0,
+      width: frameWidth(cols, grid),
+      height: frameHeight(rows, grid),
+    });
+  });
+
+  let x = 0;
+  let y = 0;
+  let columnWidth = 0;
+  sections.forEach((section) => {
+    if (y > 0 && y + section.height > area.height) {
+      x += columnWidth + FRAME.gap;
+      y = 0;
+      columnWidth = 0;
+    }
+    section.x = x;
+    section.y = y;
+    y += section.height + FRAME.gap;
+    columnWidth = Math.max(columnWidth, section.width);
+  });
+
+  const items = list.map((item) => {
+    const section = sections.find((frame) => frame.key === item.section)!;
+    const cell = cellOf[item.id];
+    return {
+      ...item,
+      position: {
+        x: section.x + FRAME.pad + cell.col * grid.columnPitch,
+        y: section.y + FRAME.head + FRAME.pad + cell.row * grid.rowPitch,
+      },
+    };
+  });
+  return { items, sections, cellOf };
+};
+
+/**
+ * Desktop icons grouped into frames — ບັນຊີ / ບຸກຄະລາກອນ / ທົ່ວໄປ (MENU_GROUPS). An icon follows the
+ * pointer freely while dragging, then snaps onto the nearest free cell of its own frame when dropped
+ * (dropping it over another frame brings it back to its own; dropping just past the frame's edge adds
+ * a column/row). Dropping a shortcut right onto another icon groups them into a folder instead (like a
+ * phone's home screen); the folder stays in the frame of the icon it was dropped on. Cells and folders
+ * are per-browser (localStorage), so they stick across visits; anything never dragged sits in menu order.
  *
- * ຕາໜ່າງປັບຕາມໜ້າຈໍເອງ: <DesktopMenu> ວັດພື້ນທີ່ແທ້ສົ່ງເຂົ້າ `setArea()` (ResizeObserver) ແລ້ວ
- * ໄອຄອນທີ່ຍັງບໍ່ເຄີຍລາກຈະລຽງລົງທາງລຸ່ມ ແລະ ຂຶ້ນຖັນໃໝ່ເມື່ອສຸດຄວາມສູງ — ເພີ່ມປຸ່ມລັດຫຼາຍເທົ່າໃດ
- * ກໍ່ບໍ່ລົ້ນອອກນອກຈໍ ແລະ ຈໍນ້ອຍກໍ່ໃຊ້ຕາໜ່າງແຄບລົງໃຫ້ກົງກັບຂະໜາດໄອຄອນໃນ CSS.
+ * ຕາໜ່າງປັບຕາມໜ້າຈໍເອງ: <DesktopMenu> ວັດພື້ນທີ່ແທ້ສົ່ງເຂົ້າ `setArea()` (ResizeObserver) — ແຖວຂອງກອບ
+ * ບໍ່ເກີນຄວາມສູງ, ຈໍນ້ອຍກໍ່ໃຊ້ຕາໜ່າງແຄບລົງໃຫ້ກົງກັບຂະໜາດໄອຄອນໃນ CSS.
  *
  * `menuIds` = ເມນູທີ່ຜູ້ໃຊ້ເຫັນ ຕາມລຳດັບຂອງ backend (useAccountMenus)
  */
 export const useDesktopLayout = (menuIds: ShortcutId[]) => {
   const [layout, setLayout] = useState<DesktopLayout>(() => ({
-    positions: readStoredPositions(),
+    cells: readStoredCells(),
     folders: readStoredFolders(),
+    drag: null,
   }));
   /** ພື້ນທີ່ວາງໄອຄອນ — ຄາດຄະເນໄວ້ກ່ອນ ແລ້ວ <DesktopMenu> ວັດແທ້ສົ່ງມາທັບຕອນ mount/ປ່ຽນຂະໜາດ */
   const [area, setArea] = useState<DesktopArea>(estimateArea);
   const grid = useIsTablet() ? COMPACT_GRID : WIDE_GRID;
 
   useEffect(() => {
-    localStorage.setItem(ICON_POSITIONS_STORAGE_KEY, JSON.stringify(layout.positions));
-  }, [layout.positions]);
+    localStorage.setItem(CELLS_STORAGE_KEY, JSON.stringify(layout.cells));
+  }, [layout.cells]);
 
   useEffect(() => {
     localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(layout.folders));
   }, [layout.folders]);
 
+  const place = (current: DesktopLayout) => placeLayout(listItems(menuIds, current.folders), current.cells, area, grid);
+
   /**
-   * ຫຍໍ້ຈໍລົງ (ຫຼື ສະຫຼັບໄປຕາໜ່າງແຄບ) — ດຶງໄອຄອນທີ່ລາກໄວ້ກັບເຂົ້າມາໃນຂອບ ບໍ່ໃຫ້ຫາຍອອກນອກຈໍ.
-   * ຄືນ `current` ອັນເກົ່າເມື່ອບໍ່ມີອັນໃດຍ້າຍ — React ຈຶ່ງບໍ່ render ຊ້ຳຈົນວົນ
+   * ຊ່ອງໃນກອບ `section` ທີ່ໃກ້ກັບ px `position` ທີ່ສຸດ ແລະ ຍັງຫວ່າງ. ປ່ອຍຊິດຂອບກອບ (ເກີນໄປບໍ່ເກີນ 1 ຊ່ອງ)
+   * = ກອບຂະຫຍາຍໄດ້ 1 ຖັນ/ແຖວ; ປ່ອຍໄກ (ເຊັ່ນ ໃນກອບອື່ນ) = ກັບເຂົ້າຊ່ອງຫວ່າງໃນກອບເດີມ ບໍ່ຂະຫຍາຍ (ເຕັມແລ້ວຈຶ່ງຂະຫຍາຍ)
    */
-  useEffect(() => {
-    if (!area.width || !area.height) return;
-    const maxX = Math.max(0, area.width - grid.width);
-    const maxY = Math.max(0, area.height - grid.height);
-
-    setLayout((current) => {
-      let moved = false;
-      const next: Positions = {};
-      Object.entries(current.positions).forEach(([id, position]) => {
-        const clamped = { x: Math.min(maxX, position.x), y: Math.min(maxY, position.y) };
-        if (clamped.x !== position.x || clamped.y !== position.y) moved = true;
-        next[id] = clamped;
-      });
-      return moved ? { ...current, positions: next } : current;
-    });
-  }, [area, grid]);
-
-  const placeItems = ({ positions, folders }: DesktopLayout): DesktopItem[] => {
-    const list = listItems(menuIds, folders);
-    return list.map((item, index) => ({
-      ...item,
-      position: positions[item.id] ?? getDefaultPosition(index, list.length, area, grid),
-    }));
+  const cellNear = (placement: Placement, section: MenuGroupKey, position: ShortcutPosition, exceptId: string): Cell => {
+    const frame = placement.sections.find((item) => item.key === section);
+    if (!frame) return { col: 0, row: 0 };
+    const wanted = {
+      col: Math.round((position.x - frame.x - FRAME.pad) / grid.columnPitch),
+      row: Math.round((position.y - frame.y - FRAME.head - FRAME.pad) / grid.rowPitch),
+    };
+    const taken = placement.items
+      .filter((item) => item.section === section && item.id !== exceptId)
+      .map((item) => placement.cellOf[item.id]);
+    const growRow = Math.min(frame.rows, fitRows(area, grid) - 1);
+    const nearFrame = wanted.col >= -1 && wanted.col <= frame.cols && wanted.row >= -1 && wanted.row <= frame.rows;
+    if (!nearFrame) {
+      const inside = findFreeCell(wanted, taken, frame.cols - 1, frame.rows - 1);
+      if (!taken.some((cell) => sameCell(cell, inside))) return inside;
+    }
+    return findFreeCell(wanted, taken, frame.cols, growRow);
   };
 
-  /**
-   * ປັກຕຳແໜ່ງຂອງທຸກອັນທີ່ເຫັນຢູ່ໄວ້ກ່ອນສ້າງ/ຍຸບກຸ່ມ — ຈຳນວນສິ່ງເທິງ desktop ປ່ຽນ ບ່ອນຕັ້ງຕົ້ນກໍ່ປ່ຽນ,
-   * ຖ້າບໍ່ປັກໄວ້ ໄອຄອນທີ່ບໍ່ກ່ຽວຂ້ອງຈະເລື່ອນໜີຈາກບ່ອນເກົ່າ
-   */
-  const pinAll = (current: DesktopLayout): Positions => ({
-    ...current.positions,
-    ...Object.fromEntries(placeItems(current).map((item) => [item.id, item.position])),
-  });
-
-  const setPosition = (id: string, position: ShortcutPosition) => {
-    setLayout((current) => ({ ...current, positions: { ...current.positions, [id]: position } }));
+  /** ລາກຢູ່ — ໄອຄອນຕາມ pointer (ບໍ່ບັນທຶກ ຈົນກວ່າຈະປ່ອຍ) */
+  const dragTo = (id: string, position: ShortcutPosition) => {
+    setLayout((current) => ({ ...current, drag: { id, position } }));
   };
 
   /**
    * ປ່ອຍສິ່ງທີ່ລາກ: ປຸ່ມລັດທັບປຸ່ມລັດອື່ນ = ສ້າງກຸ່ມໃໝ່ຢູ່ບ່ອນຂອງອັນທີ່ຖືກທັບ, ທັບກຸ່ມ = ເຂົ້າກຸ່ມນັ້ນ,
-   * ບໍ່ທັບຫຍັງ = ເກາະຊ່ອງຕາໜ່າງທີ່ຫວ່າງໃກ້ທີ່ສຸດ. ກຸ່ມບໍ່ຊ້ອນເຂົ້າໃນກຸ່ມອື່ນ — ລາກກຸ່ມໄດ້ແຕ່ຍ້າຍບ່ອນ
-   * ໃຊ້ພື້ນທີ່ທີ່ວັດໄວ້ລ່າສຸດ ຊ່ອງທີ່ເກາະຈຶ່ງບໍ່ຕົກນອກຈໍ.
+   * ບໍ່ທັບຫຍັງ = ເກາະຊ່ອງຫວ່າງໃກ້ທີ່ສຸດໃນກອບຂອງມັນເອງ. ກຸ່ມບໍ່ຊ້ອນເຂົ້າໃນກຸ່ມອື່ນ — ລາກກຸ່ມໄດ້ແຕ່ຍ້າຍບ່ອນ.
+   * ປັກຊ່ອງຂອງທຸກອັນໄວ້ກ່ອນ — ຈຳນວນປ່ຽນ ອັນທີ່ບໍ່ກ່ຽວຂ້ອງຈະບໍ່ເລື່ອນໜີຈາກບ່ອນເກົ່າ
    */
   const dropItem = (id: string, targetId: string | null) => {
-    const maxColumn = Math.max(0, Math.floor((area.width - grid.width) / grid.columnPitch));
-    const maxRow = Math.max(0, Math.floor((area.height - grid.height) / grid.rowPitch));
     const newFolderId = `${FOLDER_ID_PREFIX}${Date.now()}`;
 
     setLayout((current) => {
-      const placed = placeItems(current);
-      const target = targetId && !isFolderId(id) ? placed.find((item) => item.id === targetId) : undefined;
+      const placement = place(current);
+      const released = { ...current, drag: null };
+      const target = targetId && !isFolderId(id) ? placement.items.find((item) => item.id === targetId) : undefined;
 
       if (!target) {
-        const dropped = placed.find((item) => item.id === id);
-        if (!dropped) return current;
-        const taken = placed.filter((item) => item.id !== id).map((item) => toCell(item.position, grid));
-        const cell = findFreeCell(toCell(dropped.position, grid), taken, maxColumn, maxRow);
-        return { ...current, positions: { ...current.positions, [id]: toPosition(cell, grid) } };
+        const dropped = placement.items.find((item) => item.id === id);
+        if (!dropped || current.drag?.id !== id) return released;
+        const cell = cellNear(placement, dropped.section, current.drag.position, id);
+        return { ...released, cells: { ...placement.cellOf, [id]: cell } };
       }
 
-      // ອັນທີ່ລາກລົງໄປຢູ່ໃນກຸ່ມແລ້ວ ບໍ່ມີບ່ອນເທິງ desktop ອີກ
-      const positions = withoutPositions(pinAll(current), id);
+      // ອັນທີ່ລາກລົງໄປຢູ່ໃນກຸ່ມແລ້ວ ບໍ່ມີຊ່ອງເທິງ desktop ອີກ
+      const cells = withoutCells(placement.cellOf, id);
       const dropped = id as ShortcutId;
 
       if (target.folder) {
         return {
-          positions,
+          ...released,
+          cells,
           folders: current.folders.map((folder) =>
             (folder.id === target.id ? { ...folder, items: [...folder.items, dropped] } : folder)),
         };
       }
 
       return {
-        positions: { ...withoutPositions(positions, target.id), [newFolderId]: positions[target.id] },
-        folders: [...current.folders, { id: newFolderId, name: '', items: [target.id as ShortcutId, dropped] }],
+        ...released,
+        cells: { ...withoutCells(cells, target.id), [newFolderId]: cells[target.id] },
+        folders: [...current.folders, { id: newFolderId, name: '', items: [target.id as ShortcutId, dropped], section: target.section }],
       };
     });
   };
 
   /**
-   * ລາກໄອຄອນອອກນອກກອບກຸ່ມ: ອອກມາຢູ່ເທິງ desktop ທີ່ `position`. ກຸ່ມທີ່ເຫຼືອອັນດຽວຖືກຍຸບ —
-   * ອັນທີ່ເຫຼືອຢູ່ບ່ອນຂອງກຸ່ມແທນ (ຄືໂທລະສັບ)
+   * ລາກໄອຄອນອອກນອກກອບກຸ່ມ: ອອກມາຢູ່ໃນກອບຂອງເມນູມັນເອງ ໃກ້ `position` (ແລ້ວລາກຕໍ່ໄດ້). ກຸ່ມທີ່ເຫຼືອ
+   * ອັນດຽວຖືກຍຸບ — ອັນທີ່ເຫຼືອຢູ່ບ່ອນຂອງກຸ່ມແທນ (ຄືໂທລະສັບ) ຖ້າເປັນເມນູຂອງກອບດຽວກັນ
    */
   const pullFromFolder = (folderId: string, id: ShortcutId, position: ShortcutPosition) => {
     setLayout((current) => {
       const folder = current.folders.find((item) => item.id === folderId);
       if (!folder) return current;
-      const positions = { ...pinAll(current), [id]: position };
+      const placement = place(current);
+      const cells: Cells = { ...placement.cellOf, [id]: cellNear(placement, groupOfShortcut(id), position, id) };
       const remaining = folder.items.filter((member) => member !== id);
+      const drag = { id, position };
 
       if (remaining.length > 1) {
         return {
-          positions,
+          cells,
+          drag,
           folders: current.folders.map((item) => (item.id === folderId ? { ...item, items: remaining } : item)),
         };
       }
 
+      const folderSection = placement.items.find((item) => item.id === folderId)?.section;
+      const keepsCell = remaining.length === 1 && groupOfShortcut(remaining[0]) === folderSection && cells[folderId];
       return {
-        positions: {
-          ...withoutPositions(positions, folderId),
-          ...(remaining.length ? { [remaining[0]]: positions[folderId] } : {}),
-        },
+        cells: { ...withoutCells(cells, folderId), ...(keepsCell ? { [remaining[0]]: cells[folderId] } : {}) },
+        drag,
         folders: current.folders.filter((item) => item.id !== folderId),
       };
     });
@@ -517,12 +602,15 @@ export const useDesktopLayout = (menuIds: ShortcutId[]) => {
     }));
   };
 
-  /** "Arrange icons" — snaps every icon and folder back to the default tidy grid (folders are kept). */
-  const resetPositions = () => setLayout((current) => ({ ...current, positions: {} }));
+  /** "Arrange icons" — every icon and folder back in menu order inside its frame (folders are kept). */
+  const resetPositions = () => setLayout((current) => ({ ...current, cells: {} }));
 
+  const placement = place(layout);
+  const { drag } = layout;
   return {
-    items: placeItems(layout),
-    setPosition,
+    items: drag ? placement.items.map((item) => (item.id === drag.id ? { ...item, position: drag.position } : item)) : placement.items,
+    sections: placement.sections,
+    dragTo,
     dropItem,
     pullFromFolder,
     moveInFolder,

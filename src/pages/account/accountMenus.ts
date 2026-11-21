@@ -109,13 +109,8 @@ export const useAllAccountMenus = (): AccountMenu[] | null => {
   return rows && fromRows(rows);
 };
 
-/** ກຸ່ມຂອງເມນູ (ຕາມ path) — ຟອມສິດເຂົ້າເມນູຕິກທັງກຸ່ມໄດ້ */
-export const MENU_GROUPS = [
-  { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') },
-  { key: 'hr', label: 'hrMenuGroupHr', icon: 'fa-people-group', match: (path: string) => path === '/hr' || path.startsWith('/hr/') },
-  { key: 'other', label: 'hrMenuGroupOther', icon: 'fa-shapes', match: () => true },
-] as const;
-export const menuGroupOf = (path: string) => MENU_GROUPS.find((group) => group.match(path))!.key;
+/** ກຸ່ມຂອງເມນູ — ຢູ່ DesktopShared (ກອບເທິງ desktop ໃຊ້ນຳ); ສົ່ງຕໍ່ໃຫ້ຟອມສິດເຂົ້າເມນູ */
+export { MENU_GROUPS, menuGroupOf } from './DesktopShared';
 
 /** ເມນູທີ່ມີໜ້າຜູ້ໃຊ້ລະບົບ — ກົງກັບ USER_ADMIN_MENU_PATH ຂອງ backend: ບັນຊີຂອງຕົນເອງເອົາອອກບໍ່ໄດ້ */
 export const USER_ADMIN_MENU_PATH = '/hr';

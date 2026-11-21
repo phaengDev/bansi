@@ -373,8 +373,9 @@ $account-themes: (
 .life-desktop-brand-menu-item.is-danger { color: #ff9a9a; }
 .life-desktop-brand-menu-item.is-danger:hover { color: #ffb3b3; }
 
-// Freeform canvas the icons are dragged around inside of — bounded so icons can't be dropped
-// under the brand widget or the taskbar. Each icon positions itself absolutely within this.
+// Canvas holding the section frames and their icons — bounded so icons can't be dropped under the
+// brand widget or the taskbar. Frames and icons position themselves absolutely within this; a small
+// screen that can't fit every frame scrolls instead of hiding them.
 .life-desktop-shortcuts {
   position: absolute;
   z-index: 2;
@@ -382,7 +383,74 @@ $account-themes: (
   right: clamp(16px, 2.8vw, 42px);
   bottom: 72px;
   left: clamp(16px, 2.8vw, 42px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
+
+// ກອບຂອງກຸ່ມເມນູ (ບັນຊີ / ບຸກຄະລາກອນ / ທົ່ວໄປ) — ແກ້ວຄືບັດຜູ້ໃຊ້ ເຂົ້າກັບທຸກພາບພື້ນຫຼັງ.
+// ບ່ອນ/ຂະໜາດມາຈາກ useDesktopLayout (DesktopShared: FRAME head 32 / pad 6) — ແຖບຊື່ສູງ 32px ພໍດີ head
+.life-desktop-section {
+  position: absolute;
+  z-index: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 18px;
+  background: rgba(4, 24, 61, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 18, 66, 0.12);
+  backdrop-filter: blur(10px) saturate(130%);
+  pointer-events: none;
+  animation: life-desktop-enter 520ms calc(30ms + var(--section-order) * 90ms) both;
+  transition: left 260ms ease, top 260ms ease, width 260ms ease, height 260ms ease;
+}
+
+.life-desktop-section-title {
+  display: flex;
+  box-sizing: border-box;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 4px rgba(0, 15, 52, 0.6);
+
+  i {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 10.5px;
+    text-shadow: none;
+    background: linear-gradient(145deg, #a9c7dc, #42647f);
+  }
+
+  b {
+    overflow: hidden;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  em {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    text-shadow: none;
+  }
+}
+
+.life-desktop-section.is-account .life-desktop-section-title i { background: linear-gradient(145deg, #4ed7a4, #078666); }
+.life-desktop-section.is-hr .life-desktop-section-title i { background: linear-gradient(145deg, #aa8cff, #604bd8); }
 
 .life-desktop-shortcut {
   position: absolute;
@@ -1776,6 +1844,7 @@ $account-themes: (
   .life-desktop-brand-menu,
   .settings-menu,
   .life-desktop-shortcuts,
+  .life-desktop-section,
   .life-desktop-shortcut,
   .life-desktop-folder-backdrop,
   .life-desktop-folder,
@@ -1783,6 +1852,7 @@ $account-themes: (
     animation: none;
   }
 
+  .life-desktop-section,
   .life-desktop-shortcut,
   .life-taskbar-apps > a,
   .life-taskbar-apps > button {
