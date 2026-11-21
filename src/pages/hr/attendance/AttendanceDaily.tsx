@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DatePicker, Loader, SelectPicker } from 'rsuite';
+import { DatePicker, Loader } from 'rsuite';
 import moment from 'moment';
 import { deleteApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
@@ -15,7 +15,7 @@ import {
 } from './attendanceApi';
 import { ClockCell, LateCell, StatePill } from './attendanceKit';
 import AttendanceForm from './AttendanceForm';
-import { SearchBox } from '../../account/setting/settingKit';
+import { DepartmentFilter, SearchBox } from '../../account/setting/settingKit';
 
 type Filter = 'all' | 'in' | 'late' | 'absent' | 'leave';
 const FILTERS: Record<Filter, DayState[]> = {
@@ -150,9 +150,7 @@ const AttendanceDaily = () => {
               ))}
             </div>
             <div className="att-toolbar-tools">
-              <SelectPicker block className="att-dept" data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))}
-                value={department} onChange={setDepartment} placeholder={t('hrAllDepartments')} searchable={false} placement="bottomEnd"
-              />
+              <DepartmentFilter departments={departments} value={department} onChange={setDepartment} width={260} />
               <SearchBox value={keyword} onChange={setKeyword} placeholder={t('search')} />
             </div>
           </div>

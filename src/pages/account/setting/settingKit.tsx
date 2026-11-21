@@ -34,6 +34,27 @@ export const SearchBox = ({ value, onChange, placeholder, grow, className = '' }
   );
 };
 
+/**
+ * ຕົວກັ່ນພະແນກທີ່ຢູ່ຄຽງ SearchBox — ສູງ 38px, ມົນ ແລະ ຂອບແບບດຽວກັບຊ່ອງຄົ້ນຫາ, ປຸ່ມເຕັມກ່ອງ (ລູກສອນຢູ່ຂອບຂວາ).
+ * ຄົ້ນຫາໃນລາຍການເມື່ອມີຫຼາຍກວ່າ 8 ພະແນກ; width = ຄວາມກວ້າງ (px) ໃນແຖວກວ້າງ — ພື້ນທີ່ແຄບເຕັມແຖວເອງ
+ */
+export const DepartmentFilter = ({ departments, value, onChange, width = 220, className = '' }: {
+  departments: { _uuid: number; depart_name: string }[];
+  value: number | null;
+  onChange: (value: number | null) => void;
+  width?: number;
+  className?: string;
+}) => {
+  const t = useT();
+  return (
+    <SelectPicker block className={`app-filter-picker${className ? ` ${className}` : ''}`} style={{ width }}
+      data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))} value={value} onChange={onChange}
+      placeholder={t('hrAllDepartments')} searchable={departments.length > 8} placement="bottomEnd"
+      locale={{ searchPlaceholder: t('search') }}
+    />
+  );
+};
+
 /** ເລືອກປີ ‹ 2026 › — ປ້າຍ "ປີນີ້" ເມື່ອເປັນປີປັດຈຸບັນ, ຖ້າບໍ່ແມ່ນ ກົດປ້າຍເພື່ອກັບມາປີນີ້; max = ປີສຸດທ້າຍທີ່ເລືອກໄດ້ */
 export const YearStepper = ({ year, onChange, max }: { year: number; onChange: (year: number) => void; max?: number }) => {
   const t = useT();

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button, Checkbox, Modal, SelectPicker } from 'rsuite';
+import { Button, Checkbox, Modal } from 'rsuite';
 import { Notific } from '../../../utils/Notification';
 import { useT } from '../../../context/LanguageContext';
-import { SearchBox } from '../../account/setting/settingKit';
+import { DepartmentFilter, SearchBox } from '../../account/setting/settingKit';
 import { HrAvatar } from '../hrKit';
 import { TaskPager, slicePage } from './TaskBits';
 import { MAX_TASK_ASSIGNEES, assigneeName, type TaskPerson } from './taskApi';
@@ -61,9 +61,7 @@ const TaskAssigneePicker = ({ people, value, lead, onChange, onLead, onClose }: 
       <Modal.Body>
         <div className="task-picker-tools">
           <SearchBox grow value={keyword} onChange={(v) => filterBy(() => setKeyword(v))} placeholder={t('taskPickerSearch')} />
-          <SelectPicker size="sm" className="task-picker-filter" data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))} value={department}
-            onChange={(v) => filterBy(() => setDepartment(v))} placeholder={t('hrAllDepartments')} searchable={departments.length > 8} popupClassName="acc-book-menu"
-          />
+          <DepartmentFilter departments={departments} value={department} onChange={(v) => filterBy(() => setDepartment(v))} width={200} />
         </div>
         <div className="task-picker-count">
           <span>{t('hrEmployee')} {shown.length} {t('taskPersons')}</span>

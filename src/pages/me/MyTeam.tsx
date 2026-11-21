@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Loader, SelectPicker } from 'rsuite';
+import { Loader } from 'rsuite';
 import { useT } from '../../context/LanguageContext';
 import { Notific } from '../../utils/Notification';
 import { useGetData } from '../hr/attendance/attendanceApi';
 import { HrAvatar } from '../hr/hrKit';
 import { buildOrgTree, personName, reportLineOf, useOrgData, type OrgNode } from '../hr/org/orgModel';
-import { SearchBox } from '../account/setting/settingKit';
+import { DepartmentFilter, SearchBox } from '../account/setting/settingKit';
 import type { Colleague, ColleagueData } from './meApi';
 
 const nameOf = (c: Pick<Colleague, 'first_name' | 'last_name'>) => [c.first_name, c.last_name].filter(Boolean).join(' ');
@@ -72,11 +72,7 @@ const MyTeam = () => {
   const byId = useMemo(() => new Map((data?.data ?? []).map((c) => [c._uuid, c])), [data]);
   const people = data?.data ?? [];
 
-  const departments = useMemo(() => {
-    const map = new Map<number, string>();
-    people.forEach((c) => c.department && map.set(c.department._uuid, c.department.depart_name));
-    return [...map].map(([value, label]) => ({ value, label }));
-  }, [people]);
+  const departments = useMemo(() => [...new Map(people.filter((c) => c.department).map((c) => [c.department!._uuid, c.department!])).values()], [people]);
 
   const query = keyword.trim().toLowerCase();
   const shown = people.filter((c) =>
@@ -104,7 +100,7 @@ const MyTeam = () => {
       <div className="acc-rp-filters">
         <div className="acc-rp-filter-row">
           <SearchBox value={keyword} onChange={setKeyword} placeholder={t('myTeamSearch')} grow />
-          <SelectPicker data={departments} value={dept} onChange={setDept} placeholder={t('myAllDepartments')} searchable={departments.length > 8} style={{ width: 220 }} />
+          <DepartmentFilter departments={departments} value={dept} onChange={setDept} />
           <div className="acc-rp-actions">
             <button type="button" className="acc-rp-btn" onClick={refresh} disabled={loading || org.loading} aria-label={t('reload')}><i className="fa-solid fa-rotate-right" /></button>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader, SelectPicker } from 'rsuite';
+import { Loader } from 'rsuite';
 import moment from 'moment';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { useT } from '../../../context/LanguageContext';
@@ -11,7 +11,7 @@ import {
 } from './attendanceApi';
 import { MonthStepper, StateLegend } from './attendanceKit';
 import AttendanceEmployeeDrawer from './AttendanceEmployeeDrawer';
-import { SearchBox } from '../../account/setting/settingKit';
+import { DepartmentFilter, SearchBox } from '../../account/setting/settingKit';
 
 const LEGEND: DayState[] = ['present', 'late', 'absent', 'leave', 'unpaid', 'offwork', 'off', 'pending'];
 
@@ -63,9 +63,7 @@ const AttendanceMonthly = () => {
       <div className="acc-rp-filters">
         <div className="acc-rp-filter-row">
           <MonthStepper period={period} onChange={setPeriod} />
-          <SelectPicker block className="att-dept" data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))}
-            value={department} onChange={setDepartment} placeholder={t('hrAllDepartments')} searchable={false}
-          />
+          <DepartmentFilter departments={departments} value={department} onChange={setDepartment} width={260} />
           <SearchBox value={keyword} onChange={setKeyword} placeholder={t('search')} />
           <div className="acc-rp-actions">
             <button type="button" className="acc-rp-btn" onClick={reload} disabled={loading}><i className="fa-solid fa-rotate-right" /></button>

@@ -3178,7 +3178,6 @@ export const laoDict = {
   myCopyPhone: { la: 'ສຳເນົາເບີໂທ', en: 'Copy phone number', cn: '复制电话' },
   myNoDepartment: { la: 'ບໍ່ມີພະແນກ', en: 'No department', cn: '无部门' },
   myTeamSearch: { la: 'ຄົ້ນຫາຊື່, ລະຫັດ, ເບີໂທ, ຕຳແໜ່ງ…', en: 'Search name, code, phone, position…', cn: '搜索姓名、编号、电话、职位…' },
-  myAllDepartments: { la: 'ທຸກພະແນກ', en: 'All departments', cn: '所有部门' },
   myReportLine: { la: 'ສາຍງານຂອງຂ້ອຍ', en: 'My report line', cn: '我的汇报线' },
   myNotInOrg: { la: 'ຍັງບໍ່ຢູ່ໃນໂຄງຮ່າງອົງກອນ', en: 'Not in the org chart yet', cn: '尚未在组织架构中' },
   myBoss: { la: 'ຫົວໜ້າ', en: 'Reports to', cn: '上级' },

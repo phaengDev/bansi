@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { SelectPicker } from 'rsuite';
 import moment from 'moment';
 import { deleteApi, formatNumber } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
@@ -7,7 +6,7 @@ import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
 import { exportExcel } from '../../utils/exportHelpers';
 import { useT } from '../../context/LanguageContext';
-import { ListState, SettingToolbar } from '../account/setting/settingKit';
+import { DepartmentFilter, ListState, SettingToolbar } from '../account/setting/settingKit';
 import { GENDERS, RESIGNED, WORKING, fullName, useHrList, type Employee } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
 import EmployeeForm from './EmployeeForm';
@@ -98,9 +97,7 @@ const EmployeePage = () => {
             </button>
           ))}
         </div>
-        <SelectPicker size="sm" className="hr-filter" data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))}
-          value={department} onChange={setDepartment} placeholder={t('hrAllDepartments')} searchable={false}
-        />
+        <DepartmentFilter departments={departments} value={department} onChange={setDepartment} />
         <button type="button" className="acc-rp-btn" onClick={exportRows} disabled={!shown.length}>
           <i className="fa-solid fa-file-excel" /> Excel
         </button>

@@ -20,15 +20,18 @@ import type { MyIntent, MyOpen, MyTask, MyTasksData, MyTeamMember } from './meAp
 type Filter = 'open' | 'done' | 'all';
 const toDay = (value: Date | null) => (value ? moment(value).format('YYYY-MM-DD') : null);
 
-/** ລູກທີມ → ຄົນໃນຕົວເລືອກຜູ້ຮັບຜິດຊອບ (ພະແນກເປັນຊື່ — ໃຊ້ຊື່ເປັນລະຫັດກັ່ນ) */
-const toPerson = (m: MyTeamMember): TaskPerson => ({
-  employee_id: m._uuid,
-  emp_code: m.position ?? '',
-  first_name: m.first_name,
-  last_name: m.last_name,
-  profile_url: m.profile_url,
-  department: m.department ? { _uuid: Array.from(m.department).reduce((n, c) => n + c.charCodeAt(0), 0), depart_name: m.department } : null,
-});
+/** ລູກທີມ → ຄົນໃນຕົວເລືອກຜູ້ຮັບຜິດຊອບ (API ສົ່ງພະແນກເປັນຊື່ → ໃຫ້ເລກລຳດັບຂອງຊື່ເປັນ id ສຳລັບຕົວກັ່ນ) */
+const toPeople = (team: MyTeamMember[]): TaskPerson[] => {
+  const deptIds = new Map([...new Set(team.map((m) => m.department).filter(Boolean) as string[])].map((name, i) => [name, i + 1]));
+  return team.map((m) => ({
+    employee_id: m._uuid,
+    emp_code: m.emp_code,
+    first_name: m.first_name,
+    last_name: m.last_name,
+    profile_url: m.profile_url,
+    department: m.department ? { _uuid: deptIds.get(m.department)!, depart_name: m.department } : null,
+  }));
+};
 
 /**
  * ມອບໝາຍວຽກໃຫ້ລູກທີມ 4 ຂັ້ນ — ວຽກ (ຊື່ + ລາຍລະອຽດ), ຄວາມສຳຄັນ + ກຳນົດ, ຜູ້ຮັບຜິດຊອບ (ສະເພາະລູກທີມຕາມໂຄງຮ່າງ, ມົງກຸດ = ຫົວໜ້າວຽກ),
@@ -36,7 +39,7 @@ const toPerson = (m: MyTeamMember): TaskPerson => ({
  */
 const AssignForm = ({ team, onClose, onSaved }: { team: MyTeamMember[]; onClose: () => void; onSaved: () => void }) => {
   const t = useT();
-  const people = useMemo(() => team.map(toPerson), [team]);
+  const people = useMemo(() => toPeople(team), [team]);
   const [title, setTitle] = useState('');
   const [detail, setDetail] = useState('');
   const [important, setImportant] = useState<boolean | null>(true);

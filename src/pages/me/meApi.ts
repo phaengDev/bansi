@@ -98,7 +98,7 @@ export type MyTask = Task & {
   assigned_by?: { employee_id: number | null; name: string; profile_url: string | null } | null;
 };
 /** ລູກທີມທີ່ມອບໝາຍວຽກໃຫ້ໄດ້ (ຕາມໂຄງຮ່າງ) */
-export type MyTeamMember = { _uuid: number; first_name: string; last_name: string | null; profile_url: string | null; position: string | null; department: string | null; depth: number };
+export type MyTeamMember = { _uuid: number; emp_code: string; first_name: string; last_name: string | null; profile_url: string | null; position: string | null; department: string | null; depth: number };
 export type MyTasksData = { data: MyTask[]; open: number; today: string; team?: MyTeamMember[] };
 
 /** ແຜນວຽກຂອງຕົນເອງ (GET /employee/me/workplan) */
