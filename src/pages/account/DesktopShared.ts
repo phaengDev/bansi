@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AccountMenu } from './accountMenus';
 import { useIsTablet } from '../../utils/hook/useMediaQuery';
-import { useT, type LangCode } from '../../context/LanguageContext';
+import { type LangCode } from '../../context/LanguageContext';
 import type { AppWindowHandle } from '../../components/Elements/AppWindow';
 
 /**
@@ -248,20 +248,15 @@ export type DesktopFolder = { id: string; name: string; items: ShortcutId[]; sec
 /** ສິ່ງໜຶ່ງເທິງ desktop: ປຸ່ມລັດ (id = ShortcutId) ຫຼື ກຸ່ມ (ມີ `folder` — items ສະເພາະເມນູທີ່ຜູ້ໃຊ້ເຫັນ) */
 export type DesktopItem = { id: string; folder?: DesktopFolder; section: MenuGroupKey; position: ShortcutPosition };
 
-/** ກອບຂອງກຸ່ມເມນູເທິງ desktop (px ໃນພື້ນທີ່ວາງໄອຄອນ) — count = ຈຳນວນເມນູ (ລວມທີ່ຢູ່ໃນກຸ່ມໄອຄອນ) */
+/** ກອບຂອງກຸ່ມເມນູເທິງ desktop (px ໃນພື້ນທີ່ວາງໄອຄອນ) — ກອບແກ້ວລ້ວນ ບໍ່ມີແຖບຊື່ */
 export type DesktopSection = {
   key: MenuGroupKey;
-  label: string;
-  icon: string;
-  count: number;
   cols: number;
   rows: number;
   x: number;
   y: number;
   width: number;
   height: number;
-  /** ໄລຍະຈາກຂອບຊ້າຍຫາຖັນທຳອິດ — ກອບທີ່ກວ້າງກວ່າໄອຄອນ (ຊື່ກອບຍາວ) ວາງໄອຄອນໄວ້ກາງ */
-  inset: number;
 };
 
 /** ຊ່ອງຂອງໄອຄອນພາຍໃນກອບຂອງມັນເອງ (ຖັນ/ແຖວ) — ກອບຍ້າຍບ່ອນ ໄອຄອນກໍ່ຍ້າຍຕາມ */
@@ -284,8 +279,8 @@ const WIDE_GRID: IconGrid = { width: 112, height: 112, columnPitch: 120, rowPitc
 /** ຈໍນ້ອຍ (≤ 767.98px) — ໄອຄອນຫົດລົງຕາມ @media ໃນ _life-desktop.scss ຕາໜ່າງຈຶ່ງຕ້ອງຫົດນຳ */
 const COMPACT_GRID: IconGrid = { width: 92, height: 98, columnPitch: 98, rowPitch: 104 };
 
-/** ກອບ: ແຖບຊື່ (head), ຂອບໃນ (pad), ໄລຍະລະຫວ່າງກອບ (gap) — px, ຕ້ອງກົງກັບ .life-desktop-section ໃນ _life-desktop.scss */
-const FRAME = { head: 32, pad: 6, gap: 16 };
+/** ກອບ: ຂອບໃນ (pad), ໄລຍະລະຫວ່າງກອບ (gap) — px, ຕ້ອງກົງກັບ .life-desktop-section ໃນ _life-desktop.scss (ບໍ່ມີແຖບຊື່) */
+const FRAME = { pad: 6, gap: 16 };
 
 /** ຂະໜາດຂອງພື້ນທີ່ວາງໄອຄອນ (nav.life-desktop-shortcuts) */
 export type DesktopArea = { width: number; height: number };
@@ -302,23 +297,10 @@ const sameCell = (a: Cell, b: Cell) => a.col === b.col && a.row === b.row;
 
 /** ຈຳນວນແຖວສູງສຸດຂອງກອບ ຕາມຄວາມສູງທີ່ມີແທ້ (ຫັກແຖບຊື່ ແລະ ຂອບໃນ) — ຢ່າງໜ້ອຍ 1 ແຖວ */
 const fitRows = (area: DesktopArea, grid: IconGrid) =>
-  Math.max(1, Math.floor((area.height - FRAME.head - FRAME.pad * 2 - grid.height) / grid.rowPitch) + 1);
+  Math.max(1, Math.floor((area.height - FRAME.pad * 2 - grid.height) / grid.rowPitch) + 1);
 
 const frameWidth = (cols: number, grid: IconGrid) => FRAME.pad * 2 + (cols - 1) * grid.columnPitch + grid.width;
-const frameHeight = (rows: number, grid: IconGrid) => FRAME.head + FRAME.pad * 2 + (rows - 1) * grid.rowPitch + grid.height;
-
-/**
- * ຄວາມກວ້າງທີ່ແຖບຊື່ຂອງກອບຕ້ອງການ (ຊື່ + ໄອຄອນ + ຕົວເລກ) — ກອບ 1 ຖັນກວ້າງຂຶ້ນໃຫ້ຊື່ບໍ່ຖືກຕັດ.
- * ວັດດ້ວຍ canvas ຕາມຟອນຂອງ .life-desktop-section-title b; ສ່ວນອື່ນຂອງແຖບ ≈ TITLE_CHROME px
- */
-const TITLE_CHROME = 96;
-let measureContext: CanvasRenderingContext2D | null | undefined;
-const titleWidth = (text: string) => {
-  if (measureContext === undefined) measureContext = document.createElement('canvas').getContext('2d');
-  if (!measureContext) return 0;
-  measureContext.font = "700 12.5px NotoSerifLao, 'Open Sans', sans-serif";
-  return Math.ceil(measureContext.measureText(text).width) + TITLE_CHROME;
-};
+const frameHeight = (rows: number, grid: IconGrid) => FRAME.pad * 2 + (rows - 1) * grid.rowPitch + grid.height;
 
 /**
  * The free cell closest to `wanted`, searched in rings outwards so a dropped icon settles right next
@@ -411,7 +393,7 @@ type Placement = { items: DesktopItem[]; sections: DesktopSection[]; cellOf: Cel
  * ແລ້ວຂຶ້ນຖັນໃໝ່ (ຖັນ = ຈຳນວນ ÷ ແຖວທີ່ພໍດີຈໍ), ອັນທີ່ລາກແລ້ວຢູ່ຊ່ອງຂອງມັນ. ກອບວາງຈາກຊ້າຍໄປຂວາ,
  * ກອບທີ່ພໍລົງຢູ່ກ້ອງກອບກ່ອນໄດ້ (ສູງບໍ່ເກີນຈໍ) ກໍ່ລົງຢູ່ກ້ອງ ບໍ່ກິນພື້ນທີ່ທາງຂວາ
  */
-const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: DesktopArea, grid: IconGrid, labelOf: (key: string) => string): Placement => {
+const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: DesktopArea, grid: IconGrid): Placement => {
   const maxRows = fitRows(area, grid);
   const cellOf: Cells = {};
   const sections: DesktopSection[] = [];
@@ -447,21 +429,8 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
     // ກອບພໍດີກັບໄອຄອນທີ່ວາງຢູ່ແທ້ — ລາກມາລຽງຖັນດຽວ ກອບກໍ່ແຄບລົງຕາມ (ຖັນ/ແຖວຫວ່າງທາງຂວາ ແລະ ລຸ່ມບໍ່ນັບ)
     cols = Math.max(1, ...taken.map((cell) => cell.col + 1));
     rows = Math.max(1, ...taken.map((cell) => cell.row + 1));
-    const width = Math.max(frameWidth(cols, grid), titleWidth(labelOf(group.label)));
 
-    sections.push({
-      key: group.key,
-      label: group.label,
-      icon: group.icon,
-      count: members.reduce((sum, item) => sum + (item.folder ? item.folder.items.length : 1), 0),
-      cols,
-      rows,
-      x: 0,
-      y: 0,
-      width,
-      height: frameHeight(rows, grid),
-      inset: FRAME.pad + Math.floor((width - frameWidth(cols, grid)) / 2),
-    });
+    sections.push({ key: group.key, cols, rows, x: 0, y: 0, width: frameWidth(cols, grid), height: frameHeight(rows, grid) });
   });
 
   let x = 0;
@@ -485,8 +454,8 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
     return {
       ...item,
       position: {
-        x: section.x + section.inset + cell.col * grid.columnPitch,
-        y: section.y + FRAME.head + FRAME.pad + cell.row * grid.rowPitch,
+        x: section.x + FRAME.pad + cell.col * grid.columnPitch,
+        y: section.y + FRAME.pad + cell.row * grid.rowPitch,
       },
     };
   });
@@ -524,8 +493,7 @@ export const useDesktopLayout = (menuIds: ShortcutId[]) => {
     localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(layout.folders));
   }, [layout.folders]);
 
-  const t = useT();
-  const place = (current: DesktopLayout) => placeLayout(listItems(menuIds, current.folders), current.cells, area, grid, t);
+  const place = (current: DesktopLayout) => placeLayout(listItems(menuIds, current.folders), current.cells, area, grid);
 
   /**
    * ຊ່ອງໃນກອບ `section` ທີ່ໃກ້ກັບ px `position` ທີ່ສຸດ ແລະ ຍັງຫວ່າງ. ປ່ອຍຊິດຂອບກອບ (ເກີນໄປບໍ່ເກີນ 1 ຊ່ອງ)
@@ -535,8 +503,8 @@ export const useDesktopLayout = (menuIds: ShortcutId[]) => {
     const frame = placement.sections.find((item) => item.key === section);
     if (!frame) return { col: 0, row: 0 };
     const wanted = {
-      col: Math.round((position.x - frame.x - frame.inset) / grid.columnPitch),
-      row: Math.round((position.y - frame.y - FRAME.head - FRAME.pad) / grid.rowPitch),
+      col: Math.round((position.x - frame.x - FRAME.pad) / grid.columnPitch),
+      row: Math.round((position.y - frame.y - FRAME.pad) / grid.rowPitch),
     };
     const taken = placement.items
       .filter((item) => item.section === section && item.id !== exceptId)

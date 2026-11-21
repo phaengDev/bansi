@@ -289,13 +289,7 @@ const AccountDesktopMenu: React.FC = () => {
               '--section-order': index,
             } as React.CSSProperties}
             aria-hidden="true"
-          >
-            <span className="life-desktop-section-title">
-              <i className={`fa-solid ${section.icon}`} />
-              <b>{t(section.label)}</b>
-              <em>{section.count}</em>
-            </span>
-          </div>
+          />
         ))}
         {items.map((item, index) => {
           const menu = item.folder ? undefined : menuById.get(item.id as ShortcutId);
