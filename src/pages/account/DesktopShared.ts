@@ -219,6 +219,9 @@ export const shortcuts: ReadonlyArray<{
 
 export type Shortcut = (typeof shortcuts)[number];
 
+/** ເມນູທີ່ບໍ່ຢູ່ເທິງ desktop — ເປີດຈາກປຸ່ມໃນ taskbar ທາງຂວາ (ຂ້າງ wifi) ແລະ Start menu */
+export const TRAY_APPS: ShortcutId[] = ['calendar'];
+
 export type ShortcutPosition = { x: number; y: number };
 
 /**

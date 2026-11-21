@@ -1472,6 +1472,41 @@ $account-themes: (
 }
 
 .life-taskbar-status { display: flex; gap: 9px; font-size: 12px; }
+
+// ປຸ່ມເປີດແອັບໃນ tray (ປະຕິທິນ) — ຂະໜາດ ແລະ hover ຄືປຸ່ມພາສາ; ເປີດຢູ່ = ຂີດລຸ່ມ
+.life-taskbar-tray-app {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 30px;
+  place-items: center;
+  padding: 0;
+  color: #eff8ff;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 14px;
+
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.18);
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &.is-open::after {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    width: 10px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    content: '';
+    transform: translateX(-50%);
+  }
+}
 // Tray clock — click it for the flyout below, Windows-style.
 .life-taskbar-clock { position: relative; }
 

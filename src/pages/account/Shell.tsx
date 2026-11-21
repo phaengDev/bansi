@@ -40,6 +40,7 @@ import {
   shortcutDescKeys,
   shortcutNameKeys,
   shortcuts,
+  TRAY_APPS,
   useDesktopLayout,
   usePopupWindow,
   useWallpaper,
@@ -118,8 +119,8 @@ const AccountShell: React.FC = () => {
   // ຊັບສົມບັດຄົງທີ່ ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ລໍຮູ້ຕັ້ງຄ່າກ່ອນ ບໍ່ໃຫ້ກະພິບຂຶ້ນ
   const menus = useAccountMenus().filter((menu) => menu.id !== 'fixedAssets' || (settingLoaded && featureOn(setting, 'use_fixed_assets')));
   const menusLoaded = useAccountMenusLoaded();
-  /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop */
-  const desktopLayout = useDesktopLayout(menus.map((menu) => menu.id));
+  /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop — ປະຕິທິນບໍ່ຢູ່ desktop (ເປີດຈາກປຸ່ມໃນ taskbar ທາງຂວາ / Start menu) */
+  const desktopLayout = useDesktopLayout(menus.filter((menu) => !TRAY_APPS.includes(menu.id)).map((menu) => menu.id));
   const menuOf = (id: ShortcutId) => menus.find((menu) => menu.id === id);
   const menuName = (id: ShortcutId) => menuOf(id)?.name ?? t(shortcutNameKeys[id]);
   /** ເມນູທີ່ກຳລັງຖາມລະຫັດຜ່ານ (null = ບໍ່ມີ) */
@@ -709,6 +710,18 @@ const AccountShell: React.FC = () => {
         </div>
 
         <div className="life-taskbar-tray" aria-label={`${time}, ${date}`}>
+          {TRAY_APPS.filter((id) => menuOf(id)).map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={`life-taskbar-tray-app${popupWindows[id]?.open ? ' is-open' : ''}`}
+              title={menuName(id)}
+              aria-label={menuName(id)}
+              onClick={() => openShortcut(id)}
+            >
+              <i className={`fa-solid ${shortcuts.find((shortcut) => shortcut.id === id)?.icon}`} aria-hidden="true" />
+            </button>
+          ))}
           <span className="life-taskbar-status" aria-hidden="true">
             <i className="fa-solid fa-wifi" />
             <i className="fa-solid fa-volume-high" />
