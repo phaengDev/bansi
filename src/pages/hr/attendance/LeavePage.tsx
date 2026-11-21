@@ -11,7 +11,7 @@ import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
 import { PAID_LEAVE, leaveTone, usePostData, type LeaveBalance } from './attendanceApi';
 import {
-  LEAD_WAITING, LeaveStatusCell, LeaveTypeTiles, REQUEST_STATUSES, REQ_APPROVED, REQ_PENDING, isOver, rangeLabel, typeLabel, type LeaveRequest,
+  LEAD_WAITING, LeaveStatusCell, LeaveTypePicker, REQUEST_STATUSES, REQ_APPROVED, REQ_PENDING, isOver, rangeLabel, typeLabel, type LeaveRequest,
 } from './requestKit';
 import { LeaveFileChips, LeaveFileGallery } from './LeaveFiles';
 import { SearchBox, SettingModal, YearStepper } from '../../account/setting/settingKit';
@@ -180,7 +180,7 @@ const ReviewModal = ({ row, mode, onClose, onSaved }: {
             {!balances ? (
               <Loader size="sm" content={t('loadingDots')} />
             ) : balances.length ? (
-              <LeaveTypeTiles
+              <LeaveTypePicker
                 balances={balances} days={row.days} value={leaveTypeId}
                 onChange={(id) => {
                   setLeaveTypeId(id);

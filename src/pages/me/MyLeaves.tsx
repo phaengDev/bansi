@@ -8,7 +8,7 @@ import { useT } from '../../context/LanguageContext';
 import { MAX_FILE, fileSizeText } from '../hr/hrApi';
 import { leaveTone, toPeriod, useGetData } from '../hr/attendance/attendanceApi';
 import { LeaveFileChips } from '../hr/attendance/LeaveFiles';
-import { LeaveStatusCell, LeaveTypeTiles, REQ_PENDING, isOver, rangeLabel, typeLabel } from '../hr/attendance/requestKit';
+import { LeaveStatusCell, LeaveTypePicker, REQ_PENDING, isOver, rangeLabel, typeLabel } from '../hr/attendance/requestKit';
 import { FormStep, SettingModal, YearStepper } from '../account/setting/settingKit';
 import { idOf, type MyAttendanceData, type MyHolidays, type MyIntent, type MyLeaveData } from './meApi';
 
@@ -92,9 +92,10 @@ const LeaveForm = ({ balances, onClose, onSaved }: { balances: MyLeaveData['type
     >
       <Form fluid>
         <FormStep no={1} done={!!typeId} title={t('myLeaveStepType')} hint={t('myLeaveStepTypeHint')}>
-          <div className="is-wide">
+          <div className="rs-form-group is-wide">
+            <label className="form-label">{t('leaveType')}<span className="text-danger">*</span></label>
             {balances.length
-              ? <LeaveTypeTiles balances={balances} days={days} value={typeId} onChange={setTypeId} />
+              ? <LeaveTypePicker balances={balances} days={days} value={typeId} onChange={setTypeId} />
               : <p className="acc-arap-empty">{t('lvNoTypes')}</p>}
           </div>
         </FormStep>

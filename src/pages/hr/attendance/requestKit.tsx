@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { SelectPicker } from 'rsuite';
 import { useT } from '../../../context/LanguageContext';
 import type { EmployeeRef } from '../hrApi';
 import { PAID_LEAVE, dayLabel, leaveTone, type LeaveBalance, type LeaveType } from './attendanceApi';
@@ -104,48 +105,65 @@ export const typeLabel = (row: LeaveRequest, t: (key: string) => string) => {
 export const isOver = (b: LeaveBalance | undefined, days: number) =>
   !!b && ((!!b.max_per_request && days > b.max_per_request) || (b.remaining !== null && days > b.remaining));
 
+/** ຄຳຂໍ `days` ມື້ ເກີນຂີດຈຳກັດຂອງປະເພດນີ້ບໍ — ຕໍ່ຄັ້ງ / ມື້ທີ່ເຫຼືອໃນປີ (backend ບໍ່ໃຫ້ອະນຸມັດ) */
+const overOf = (b: LeaveBalance, days: number) => ({
+  request: !!b.max_per_request && days > b.max_per_request,
+  year: b.remaining !== null && days > b.remaining,
+});
+
+/** ແຖວຂອງປະເພດການລາ — ໄອຄອນ (ສີຕາມໄດ້/ບໍ່ໄດ້ເງິນເດືອນ), ຊື່, ມື້ທີ່ເຫຼືອ; ເກີນສິດ = ສີແດງ. compact = ຄ່າທີ່ເລືອກໃນກ່ອງ (ແຖວດຽວ) */
+const LeaveTypeLine = ({ b, days, compact }: { b: LeaveBalance; days: number; compact?: boolean }) => {
+  const t = useT();
+  const meta = leaveTone(b.paid);
+  const over = overOf(b, days);
+  const left = b.max_per_year ? `${t('lvBalanceLeft')} ${b.remaining} / ${b.max_per_year} ${t('leaveDayUnit')}` : t('lvTypeUnlimited');
+  return (
+    <span className={`lv-type-line ${meta.tone}${over.request || over.year ? ' is-over' : ''}${compact ? ' is-compact' : ''}`}>
+      <span className="lv-type-icon"><i className={`fa-solid ${meta.icon}`} /></span>
+      <span>
+        <b>{b.name}</b>
+        <small>{compact ? left : `${t(meta.label)} · ${left}`}</small>
+        {!compact && (over.request || over.year) && (
+          <small className="lv-type-over">
+            <i className="fa-solid fa-triangle-exclamation" />{' '}
+            {over.request ? `${t('lvOverRequest')} ${b.max_per_request} ${t('leaveDayUnit')}` : t('lvOverYear')}
+          </small>
+        )}
+      </span>
+    </span>
+  );
+};
+
 /**
- * ປະເພດການລາ (ບັດ) + ມື້ທີ່ເຫຼືອໃນປີ — ຄຳຂໍນີ້ເກີນຂີດຈຳກັດ = ບັດສີແດງ.
+ * ປະເພດການລາ (ກ່ອງເລືອກ) + ມື້ທີ່ເຫຼືອໃນປີ — ປະເພດທີ່ຄຳຂໍນີ້ເກີນຂີດຈຳກັດ = ສີແດງ, ເລືອກແລ້ວມີຄຳເຕືອນໃຕ້ກ່ອງ.
  * HR ໃຊ້ຕອນອະນຸມັດ (ເລືອກປະເພດຄືນໄດ້), ພະນັກງານໃຊ້ຕອນຂໍລາພັກ
  */
-export const LeaveTypeTiles = ({ balances, days, value, onChange }: {
+export const LeaveTypePicker = ({ balances, days, value, onChange }: {
   balances: LeaveBalance[];
   days: number;
   value: number | null;
   onChange: (value: number) => void;
 }) => {
   const t = useT();
+  const byId = new Map(balances.map((b) => [b._uuid, b]));
+  const picked = value ? byId.get(value) : undefined;
+  const over = picked && overOf(picked, days);
   return (
-    <div className="lv-review-types" role="radiogroup">
-      {balances.map((b) => {
-        const meta = leaveTone(b.paid);
-        const on = value === b._uuid;
-        const overRequest = !!b.max_per_request && days > b.max_per_request;
-        const overYear = b.remaining !== null && days > b.remaining;
-        return (
-          <button
-            key={b._uuid} type="button" role="radio" aria-checked={on}
-            className={`lv-type ${meta.tone}${on ? ' is-on' : ''}${overRequest || overYear ? ' is-over' : ''}`} onClick={() => onChange(b._uuid)}
-          >
-            <span className="lv-type-icon"><i className={`fa-solid ${meta.icon}`} /></span>
-            <span>
-              <b>{b.name}</b>
-              <small>
-                {t(meta.label)} · {b.max_per_year
-                  ? `${t('lvBalanceLeft')} ${b.remaining} / ${b.max_per_year} ${t('leaveDayUnit')}`
-                  : t('lvTypeUnlimited')}
-              </small>
-              {(overRequest || overYear) && (
-                <small className="lv-type-over">
-                  <i className="fa-solid fa-triangle-exclamation" />{' '}
-                  {overRequest ? `${t('lvOverRequest')} ${b.max_per_request} ${t('leaveDayUnit')}` : t('lvOverYear')}
-                </small>
-              )}
-            </span>
-            <i className={`lv-type-check fa-${on ? 'solid fa-circle-check' : 'regular fa-circle'}`} />
-          </button>
-        );
-      })}
+    <div className="lv-type-pick">
+      <SelectPicker
+        block cleanable={false} searchable={balances.length > 8} placeholder={t('lvPickType')}
+        data={balances.map((b) => ({ value: b._uuid, label: b.name }))} value={value}
+        onChange={(v) => v !== null && onChange(v)}
+        popupClassName="acc-book-menu lv-type-menu" locale={{ searchPlaceholder: t('search') }}
+        renderOption={(_, item) => <LeaveTypeLine b={byId.get(item.value as number)!} days={days} />}
+        renderValue={(v) => <LeaveTypeLine b={byId.get(v)!} days={days} compact />}
+      />
+      {over && (over.request || over.year) && (
+        <p className="lv-type-over">
+          <i className="fa-solid fa-triangle-exclamation" />{' '}
+          {over.request ? `${t('lvOverRequest')} ${picked!.max_per_request} ${t('leaveDayUnit')}` : t('lvOverYear')}
+        </p>
+      )}
     </div>
   );
 };

@@ -872,13 +872,44 @@
 }
 
 // ຄຳຂໍເກີນຂີດຈຳກັດຂອງປະເພດ (ມື້ທີ່ເຫຼືອ / ຕໍ່ຄັ້ງ) — backend ບໍ່ໃຫ້ອະນຸມັດ
-.lv-type.is-over {
-  border-color: #f3b5b7;
+.lv-type-over { color: #d6363b !important; font-weight: 600; }
 
-  &.is-on { --lv-ink: #d6363b; --lv-soft: #fff1f1; }
+// ---- ປະເພດການລາ (LeaveTypePicker) — ກ່ອງເລືອກ: ແຖວ = ໄອຄອນ + ຊື່ + ມື້ທີ່ເຫຼືອ; ເກີນສິດ = ສີແດງ.
+// ຢູ່ຊັ້ນນອກ ເພາະເມນູ (popup) ຢູ່ນອກ modal ----
+.lv-type-line {
+  --lv-ink: #1d7fc4;
+  --lv-soft: #e6f2fb;
+
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+
+  &.is-unpaid { --lv-ink: #7c4dbe; --lv-soft: #f1eafd; }
+  &.is-over { --lv-ink: #d6363b; --lv-soft: #fff1f1; }
+
+  > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; line-height: 1.35; }
+  b { overflow: hidden; color: #14314d; font-size: 13.5px; font-weight: 700; text-overflow: ellipsis; }
+  small { color: #7b8a97; font-size: 11.5px; }
+  &.is-over b { color: #d6363b; }
+
+  // ຄ່າທີ່ເລືອກໃນກ່ອງ — ແຖວດຽວ: ໄອຄອນນ້ອຍ, ຊື່, ມື້ທີ່ເຫຼືອ
+  &.is-compact {
+    gap: 8px;
+
+    .lv-type-icon { width: 24px; height: 24px; border-radius: 7px; font-size: 11px; }
+    > span:nth-child(2) { flex-direction: row; align-items: baseline; gap: 8px; white-space: nowrap; }
+    small { flex: none; }
+  }
 }
 
-.lv-type-over { color: #d6363b !important; font-weight: 600; }
+.lv-type-menu [role='option'] { padding-top: 7px; padding-bottom: 7px; }
+
+.lv-type-pick {
+  min-width: 0;
+
+  > .lv-type-over { margin: 6px 2px 0; font-size: 12px; }
+}
 
 // ---- ປະເພດການລາພັກ (LeaveTypePage) ----
 // ແບບຕົວຢ່າງໃນຟອມເພີ່ມ — ກົດແລ້ວເຕີມຊື່ / ເງິນເດືອນ / ຂີດຈຳກັດ ໃຫ້
