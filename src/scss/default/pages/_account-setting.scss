@@ -8583,3 +8583,34 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   td.is-strong { font-weight: 800; }
   td small { display: block; margin-top: 2px; color: var(--rp-muted); font-size: 11px; }
 }
+
+.acc-ptr-missing { color: #c4343a; }
+
+// ຍອດທີ່ຕ້ອງນຳສົ່ງ (ປກສ / ອາກອນລາຍໄດ້) + ຄົນທີ່ຍັງບໍ່ມີເລກ ປກສ — ບັດນ້ອຍຢູ່ເທິງຕາຕະລາງ
+.acc-ptr-remit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 6px 0 12px;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    background: #f7fafc;
+    border: 1px solid var(--rp-line);
+    border-radius: 12px;
+  }
+
+  small { color: #5b6f80; font-size: 12px; font-weight: 700; i { color: var(--rp-accent); } }
+  b { color: var(--rp-text); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  em { color: var(--rp-muted); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
+
+  > span.is-warn {
+    background: #fff7f0;
+    border-color: #f3d2b5;
+
+    small, small i { color: #b3541e; }
+  }
+}

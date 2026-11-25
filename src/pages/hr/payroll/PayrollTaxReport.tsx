@@ -14,6 +14,9 @@ type Line = {
   emp_code: string;
   employee_name: string;
   department_name: string | null;
+  /** ເລກ ປກສ / ເລກບັດປະຈຳຕົວ — ຈາກຂໍ້ມູນພະນັກງານ (API ລຸ້ນເກົ່າ = ບໍ່ມີ) */
+  sso_no?: string | null;
+  id_card_no?: string | null;
   gross: number;
   sso_base: number;
   sso_employee: number;
@@ -85,6 +88,8 @@ const PayrollTaxReport = () => {
     [t('hrEmployeeCode')]: r.emp_code,
     [t('hrEmployee')]: r.employee_name,
     [t('hrDepartment')]: r.department_name ?? '',
+    [t('hrSsoNo')]: r.sso_no ?? '',
+    [t('hrIdCardNo')]: r.id_card_no ?? '',
     ...(view === 'year' ? { [t('ptrMonths')]: r.months ?? 0 } : {}),
     ...Object.fromEntries(cols.map((c) => [c.label, Number(r[c.key]) || 0])),
   })), `payroll_tax_${view}`, `${t('ptrTitle')} ${periodText}`);
@@ -118,6 +123,28 @@ const PayrollTaxReport = () => {
                 {t('ptrYearTotal')}
               </button>
             </div>
+            {/* ຍອດທີ່ຕ້ອງນຳສົ່ງ: ປກສ = ສ່ວນພະນັກງານ + ສ່ວນບໍລິສັດ, ອາກອນລາຍໄດ້ (ສະເພາະແບບຄົບຕາມມາດຕະຖານ) */}
+            <div className="acc-ptr-remit">
+              <span>
+                <small><i className="fa-solid fa-shield-heart" /> {t('ptrRemitSso')}</small>
+                <b>₭ {formatNumber(sumOf(rows, 'sso_employee') + sumOf(rows, 'sso_employer'))}</b>
+                <em>{formatNumber(sumOf(rows, 'sso_employee'))} + {formatNumber(sumOf(rows, 'sso_employer'))}</em>
+              </span>
+              {full && (
+                <span>
+                  <small><i className="fa-solid fa-landmark" /> {t('ptrRemitTax')}</small>
+                  <b>₭ {formatNumber(sumOf(rows, 'tax'))}</b>
+                  <em>{rows.filter((r) => Number(r.tax) > 0).length} {t('ptrPeople')}</em>
+                </span>
+              )}
+              {rows.some((r) => !r.sso_no) && (
+                <span className="is-warn">
+                  <small><i className="fa-solid fa-triangle-exclamation" /> {t('ptrNoSso')}</small>
+                  <b>{rows.filter((r) => !r.sso_no).length} {t('ptrPeople')}</b>
+                  <em>{t('ptrNoSsoHint')}</em>
+                </span>
+              )}
+            </div>
             <StatementDoc title={t('ptrTitle')} period={periodText} unit="LAK" onExcel={exportRows}
               note={<p>{t(full ? 'ptrNote' : 'ptrNoteSimple')}</p>}
             >
@@ -135,7 +162,10 @@ const PayrollTaxReport = () => {
                       <tr key={r.employee_id} className="is-line">
                         <td>
                           <b>{r.emp_code} · {r.employee_name}</b>
-                          {r.department_name && <small>{r.department_name}</small>}
+                          <small>
+                            {[r.department_name, r.sso_no && `${t('ptrSsoShort')} ${r.sso_no}`, r.id_card_no && `${t('ptrIdShort')} ${r.id_card_no}`].filter(Boolean).join(' · ')}
+                            {!r.sso_no && <span className="acc-ptr-missing"> · <i className="fa-solid fa-triangle-exclamation" /> {t('ptrNoSso')}</span>}
+                          </small>
                         </td>
                         {view === 'year' && <td>{r.months}</td>}
                         {cols.map((c) => <td key={c.key} className={c.key === 'tax' ? 'is-strong' : ''}>{formatNumber(Number(r[c.key]) || 0)}</td>)}

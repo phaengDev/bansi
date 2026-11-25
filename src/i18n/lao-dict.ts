@@ -3275,6 +3275,12 @@ export const laoDict = {
   auditDenied: { la: 'ບໍ່ອະນຸຍາດ', en: 'Not allowed', cn: '不允许' },
   auditOn: { la: 'ເປີດໃຊ້', en: 'On', cn: '开启' },
   auditOff: { la: 'ປິດ', en: 'Off', cn: '关闭' },
+  ptrSsoShort: { la: 'ປກສ', en: 'SSO', cn: '社保' },
+  ptrIdShort: { la: 'ບັດ', en: 'ID', cn: '证件' },
+  ptrNoSso: { la: 'ຍັງບໍ່ມີເລກ ປກສ', en: 'No SSO number', cn: '无社保号' },
+  ptrNoSsoHint: { la: 'ໃສ່ໃນຂໍ້ມູນພະນັກງານ (ບັດ ແລະ ຂໍ້ມູນສ່ວນຕົວ)', en: 'Add it in the employee profile (ID & personal)', cn: '请在员工资料（证件与个人信息）中填写' },
+  ptrRemitSso: { la: 'ປກສ ທີ່ຕ້ອງນຳສົ່ງ', en: 'SSO to remit', cn: '应缴社保' },
+  ptrRemitTax: { la: 'ອາກອນລາຍໄດ້ທີ່ຕ້ອງນຳສົ່ງ', en: 'Income tax to remit', cn: '应缴个税' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;
