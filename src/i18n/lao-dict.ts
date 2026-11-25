@@ -3383,6 +3383,7 @@ export const laoDict = {
   planModArap: { la: 'ລູກໜີ້ ແລະ ເຈົ້າໜີ້', en: 'Receivables & payables', cn: '应收应付' },
   planModBudget: { la: 'ງົບປະມານ', en: 'Budget', cn: '预算' },
   planModCompliance: { la: 'ຊັບສົມບັດຄົງທີ່ ແລະ ປິດງວດ', en: 'Fixed assets & closing', cn: '固定资产与结账' },
+  planModLoans: { la: 'ເງິນກູ້', en: 'Loans', cn: '借贷款' },
   planModHr: { la: 'ພະນັກງານ', en: 'Employees', cn: '员工' },
   planModAttendance: { la: 'ເຂົ້າ-ອອກວຽກ ແລະ ລາພັກ', en: 'Attendance & leave', cn: '考勤与请假' },
   planModPayroll: { la: 'ເງິນເດືອນ', en: 'Payroll', cn: '工资' },
