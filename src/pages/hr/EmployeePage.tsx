@@ -6,6 +6,7 @@ import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
 import { exportExcel } from '../../utils/exportHelpers';
 import { useT } from '../../context/LanguageContext';
+import { useCanSeeSalary } from '../account/accountMenus';
 import { DepartmentFilter, ListState, SettingToolbar } from '../account/setting/settingKit';
 import { GENDERS, RESIGNED, WORKING, fullName, useHrList, type Employee } from './hrApi';
 import { HrAvatar, WorkStatusPill } from './hrKit';
@@ -22,6 +23,7 @@ const showDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').
  */
 const EmployeePage = () => {
   const t = useT();
+  const canSeeSalary = useCanSeeSalary();
   const { rows, extra, loading, reload } = useHrList<Employee>('/employee/fetch');
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<StatusFilter>('working');
@@ -62,7 +64,7 @@ const EmployeePage = () => {
       [t('hrPosition')]: r.position?.position_name ?? '',
       [t('hrStartDate')]: showDate(r.start_date),
       [t('hrEndDate')]: showDate(r.end_date),
-      [t('hrBasicSalary')]: r.basic_salary,
+      ...(canSeeSalary ? { [t('hrBasicSalary')]: r.basic_salary } : {}),
       [t('hrBank')]: r.bank ? `${r.bank.abbr} ${r.bank.name_la}` : '',
       [t('hrBankAccountNo')]: r.bank_account_no ?? '',
       [t('hrBankAccountName')]: r.bank_account_name ?? '',
@@ -113,7 +115,7 @@ const EmployeePage = () => {
                   <th>{t('hrDepartment')} / {t('hrPosition')}</th>
                   <th>{t('hrPhone')}</th>
                   <th>{t('hrStartDate')}</th>
-                  <th className="is-num">{t('hrBasicSalary')}</th>
+                  {canSeeSalary && <th className="is-num">{t('hrBasicSalary')}</th>}
                   <th>{t('hrAccount')}</th>
                   <th>{t('status')}</th>
                   <th />
@@ -137,12 +139,14 @@ const EmployeePage = () => {
                     </td>
                     <td>{r.phone || '—'}</td>
                     <td>{showDate(r.start_date)}</td>
-                    <td className="is-num">
-                      {r.basic_salary ? formatNumber(r.basic_salary) : '—'}
-                      {r.bank && r.bank_account_no
-                        ? <small className="acc-gl-ref"><i className="fa-solid fa-building-columns" /> {r.bank.abbr} · {r.bank_account_no}</small>
-                        : <small className="acc-gl-ref is-bad">{t('hrNoSalaryAccount')}</small>}
-                    </td>
+                    {canSeeSalary && (
+                      <td className="is-num">
+                        {r.basic_salary ? formatNumber(r.basic_salary) : '—'}
+                        {r.bank && r.bank_account_no
+                          ? <small className="acc-gl-ref"><i className="fa-solid fa-building-columns" /> {r.bank.abbr} · {r.bank_account_no}</small>
+                          : <small className="acc-gl-ref is-bad">{t('hrNoSalaryAccount')}</small>}
+                      </td>
+                    )}
                     <td>
                       {r.user
                         ? <span className={`acs-chip${Number(r.user.status) === 1 ? ' is-green' : ''}`}><i className="fa-solid fa-user-shield" /> {r.user.user_name}</span>

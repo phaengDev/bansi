@@ -106,6 +106,12 @@ export const useAccountMenus = (): AccountMenu[] => {
   return self ? [...menus, ...SELF_SERVICE.map((shortcut) => toMenu(shortcut))] : menus;
 };
 
+/**
+ * ເຫັນເງິນເດືອນຄົນອື່ນໄດ້ບໍ — ມີສິດເມນູ "ເງິນເດືອນ" (ກົງກັບ canSeeSalary ຂອງ backend: ບໍ່ມີສິດ = API ສົ່ງ null ມາແທນ).
+ * ໃຊ້ຊ່ອນຊ່ອງ/ຖັນເງິນເດືອນໃນໜ້າພະນັກງານ, OT …
+ */
+export const useCanSeeSalary = () => useAccountMenus().some((menu) => menu.id === 'payroll');
+
 /** ພະນັກງານທີ່ບັນຊີນີ້ຜູກໄວ້ — null = ບໍ່ໄດ້ຜູກ, undefined = ກຳລັງກວດ (ໜ້າພື້ນທີ່ຂອງຂ້ອຍໃຊ້ຫົວ/ຮູບ) */
 export const useMyEmployee = () => useSyncExternalStore(subscribe, () => selfState);
 

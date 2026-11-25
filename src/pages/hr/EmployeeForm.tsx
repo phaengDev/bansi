@@ -7,6 +7,7 @@ import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { InputField } from '../../utils/inputFields';
 import { useT } from '../../context/LanguageContext';
+import { useCanSeeSalary } from '../account/accountMenus';
 import { amountFormatter } from '../account/gl/glKit';
 import { FormStep, PickerField, SwitchRow } from '../account/setting/settingKit';
 import { ReportLineBox, bossOption, bossValue, useBossOptions } from './org/OrgBits';
@@ -118,6 +119,8 @@ const NameWithGender = ({ gender, onGender }: { gender: number; onGender: (value
  */
 const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
   const t = useT();
+  /** ບໍ່ມີສິດເມນູເງິນເດືອນ = ບໍ່ເຫັນ/ບໍ່ສົ່ງເງິນເດືອນພື້ນຖານ (backend ຄົງຄ່າເດີມໄວ້) */
+  const canSeeSalary = useCanSeeSalary();
   const formRef = useRef<FormInstance>(null);
   const [saving, setSaving] = useState(false);
   const departments = useDepartments();
@@ -298,7 +301,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
     body.append('position_id', inputs.position_id ? String(inputs.position_id) : '');
     body.append('reports_to_id', inputs.reports_to_id ? String(inputs.reports_to_id) : '');
     body.append('start_date', apiDate(inputs.start_date));
-    body.append('basic_salary', String(Number(inputs.basic_salary) || 0));
+    if (canSeeSalary) body.append('basic_salary', String(Number(inputs.basic_salary) || 0));
     body.append('bank_id', inputs.bank_id ? String(inputs.bank_id) : '');
     body.append('bank_account_no', inputs.bank_id ? text(inputs.bank_account_no) : '');
     body.append('bank_account_name', inputs.bank_id ? text(inputs.bank_account_name) : '');
@@ -410,9 +413,11 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
             <InputField name="start_date" label={t('hrStartDate')} accepter={DatePicker} oneTap format="dd/MM/yyyy" block required={false}
               placeholder="dd/mm/yyyy"
             />
-            <InputField name="basic_salary" label={t('hrBasicSalary')} accepter={NumberInput} required={false} formatter={amountFormatter}
-              controls={false} prefix="₭"
-            />
+            {canSeeSalary && (
+              <InputField name="basic_salary" label={t('hrBasicSalary')} accepter={NumberInput} required={false} formatter={amountFormatter}
+                controls={false} prefix="₭"
+              />
+            )}
           </FormStep>
 
           {/* ---- ຂັ້ນ 3: ບັນຊີຮັບເງິນເດືອນ (ໂອນທ້າຍເດືອນ) ---- */}

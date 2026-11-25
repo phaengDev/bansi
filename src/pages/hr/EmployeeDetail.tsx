@@ -6,6 +6,7 @@ import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
+import { useCanSeeSalary } from '../account/accountMenus';
 import {
   DEFAULT_APP_PASSWORD, GENDERS, RESIGNED, WORKING, fullName, type Employee, type EmployeeSummary,
 } from './hrApi';
@@ -115,6 +116,8 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged, onOpenE
   onOpenEmployee?: (id: number) => void;
 }) => {
   const t = useT();
+  /** ບໍ່ມີສິດເມນູເງິນເດືອນ = ບໍ່ສະແດງເງິນເດືອນ, ເງິນເບີກຄ້າງ ແລະ ເງິນເດືອນງວດລ່າສຸດ (API ສົ່ງ null) */
+  const canSeeSalary = useCanSeeSalary();
   const [employee, setEmployee] = useState(initial);
   const [tab, setTab] = useState<'info' | 'profile' | 'docs'>('info');
   /** ບັນທຶກປະຫວັດ/ທັກສະ/ເອກະສານແລ້ວ — ໃຊ້ຂໍ້ມູນລ່າສຸດຈາກເຊີບເວີ ແລະ ໃຫ້ລາຍການໂຫຼດຄືນ */
@@ -182,8 +185,8 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged, onOpenE
     ['hrPosition', employee.position?.position_name ?? '—'],
     ['hrStartDate', <>{showDate(employee.start_date)} <small>{spanText(employee.start_date, employee.end_date, t)}</small></>],
     ...(employee.end_date ? [['hrEndDate', showDate(employee.end_date)] as [string, ReactNode, boolean?]] : []),
-    ['hrBasicSalary', employee.basic_salary ? `₭ ${formatNumber(employee.basic_salary)}` : '—'],
-    ...(employee.basic_salary ? [['hrAnnualSalary', <>₭ {formatNumber(Number(employee.basic_salary) * 12)} <small>× 12</small></>] as [string, ReactNode, boolean?]] : []),
+    ...(canSeeSalary ? [['hrBasicSalary', employee.basic_salary ? `₭ ${formatNumber(employee.basic_salary)}` : '—'] as [string, ReactNode, boolean?]] : []),
+    ...(canSeeSalary && employee.basic_salary ? [['hrAnnualSalary', <>₭ {formatNumber(Number(employee.basic_salary) * 12)} <small>× 12</small></>] as [string, ReactNode, boolean?]] : []),
     ['hrGender', gender ? <><i className={`fa-solid ${gender.icon}`} /> {t(gender.label)}</> : '—'],
     ['hrBirthday', <>{showDate(employee.birthday)} <small>{employee.birthday ? `${moment().diff(moment(employee.birthday), 'years')} ${t('hrYears')}` : ''}</small></>],
     ['hrPhone', employee.phone || '—'],
@@ -260,15 +263,19 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged, onOpenE
 
         {summary && (
           <div className="hr-summary">
-            <span className={summary.advance_balance ? 'is-due' : ''}>
-              <small><i className="fa-solid fa-hand-holding-dollar" /> {t('advBalance')}</small>
-              <b>₭ {formatNumber(summary.advance_balance)}</b>
-            </span>
-            <span>
-              <small><i className="fa-solid fa-money-check-dollar" /> {t('hrLastPayroll')}</small>
-              <b>{summary.last_payroll ? `₭ ${formatNumber(summary.last_payroll.net)}` : '—'}</b>
-              {summary.last_payroll && <em>{moment(`${summary.last_payroll.period}-01`).format('MM/YYYY')}</em>}
-            </span>
+            {canSeeSalary && (
+              <>
+                <span className={summary.advance_balance ? 'is-due' : ''}>
+                  <small><i className="fa-solid fa-hand-holding-dollar" /> {t('advBalance')}</small>
+                  <b>₭ {formatNumber(summary.advance_balance)}</b>
+                </span>
+                <span>
+                  <small><i className="fa-solid fa-money-check-dollar" /> {t('hrLastPayroll')}</small>
+                  <b>{summary.last_payroll ? `₭ ${formatNumber(summary.last_payroll.net)}` : '—'}</b>
+                  {summary.last_payroll && <em>{moment(`${summary.last_payroll.period}-01`).format('MM/YYYY')}</em>}
+                </span>
+              </>
+            )}
             {summary.leave.filter((l) => l.max_per_year).slice(0, 2).map((l) => (
               <span key={l._uuid}>
                 <small><i className="fa-solid fa-plane-departure" /> {l.name} {summary.year}</small>

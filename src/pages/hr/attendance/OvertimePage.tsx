@@ -7,6 +7,7 @@ import { Notific } from '../../../utils/Notification';
 import { exportExcel } from '../../../utils/exportHelpers';
 import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
+import { useCanSeeSalary } from '../../account/accountMenus';
 import { fullName } from '../hrApi';
 import { HrAvatar } from '../hrKit';
 import { SearchBox } from '../../account/setting/settingKit';
@@ -43,6 +44,8 @@ const PayCell = ({ row, rate }: { row: Overtime; rate: number }) => {
  */
 const OvertimePage = () => {
   const t = useT();
+  /** ເງິນ OT ໂດຍປະມານ ຄິດຈາກເງິນເດືອນ — ສະເພາະຜູ້ມີສິດເມນູເງິນເດືອນ (backend ສົ່ງ null ໃຫ້ຄົນອື່ນ) */
+  const canSeeSalary = useCanSeeSalary();
   const current = toPeriod(new Date());
   const [period, setPeriod] = useState(current);
   const [view, setView] = useState<'daily' | 'summary'>('daily');
@@ -56,7 +59,7 @@ const OvertimePage = () => {
   const summary = (data?.summary ?? []).filter((s) => match(s.employee));
   const byDate = [...rows.reduce((map, r) => map.set(r.work_date, [...(map.get(r.work_date) ?? []), r]), new Map<string, Overtime[]>())];
   const totalHours = summary.reduce((n, s) => n + s.hours, 0);
-  const totalEstimate = summary.reduce((n, s) => n + s.estimate, 0);
+  const totalEstimate = summary.reduce((n, s) => n + (Number(s.estimate) || 0), 0);
   const locked = !!data?.paid;
   const shift = (months: number) => setPeriod(moment(`${period}-01`).add(months, 'month').format('YYYY-MM'));
 
@@ -132,11 +135,13 @@ const OvertimePage = () => {
               <b>{summary.length}</b>
               <em>{byDate.length} {t('otDays')}</em>
             </div>
-            <div className="acc-rp-kpi">
-              <small>{t('otEstimate')}</small>
-              <b>₭ {kip(totalEstimate)}</b>
-              <em>{t('otEstimateHint')}</em>
-            </div>
+            {canSeeSalary && (
+              <div className="acc-rp-kpi">
+                <small>{t('otEstimate')}</small>
+                <b>₭ {kip(totalEstimate)}</b>
+                <em>{t('otEstimateHint')}</em>
+              </div>
+            )}
             <div className="acc-rp-kpi">
               <small>{t('otRates')}</small>
               <b className="ot-rates">
@@ -231,7 +236,7 @@ const OvertimePage = () => {
                         <th key={k} className="text-end"><span className={`ot-th ${meta.tone}`}><i className={`fa-solid ${meta.icon}`} /> {t(meta.label)}</span></th>
                       ))}
                       <th className="text-end">{t('otTotalHours')}</th>
-                      <th className="text-end">{t('otEstimate')}</th>
+                      {canSeeSalary && <th className="text-end">{t('otEstimate')}</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -250,7 +255,7 @@ const OvertimePage = () => {
                           <td key={k} className={`text-end${s.by_kind[Number(k)] ? '' : ' acc-gl-ref'}`}>{s.by_kind[Number(k)] ? hoursText(s.by_kind[Number(k)], t) : '—'}</td>
                         ))}
                         <td className="text-end"><b>{hoursText(s.hours, t)}</b></td>
-                        <td className="text-end"><b>₭ {kip(s.estimate)}</b></td>
+                        {canSeeSalary && <td className="text-end"><b>₭ {kip(s.estimate)}</b></td>}
                       </tr>
                     ))}
                   </tbody>
