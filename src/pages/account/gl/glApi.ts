@@ -130,6 +130,14 @@ export const ROLES = [
   { key: 'INCOME_TAX_EXPENSE', label: 'glRoleIncomeTaxExpense', hint: 'glRoleIncomeTaxExpenseHint', groups: [5] },
   { key: 'PROFIT_TAX_PAYABLE', label: 'glRoleProfitTaxPayable', hint: 'glRoleProfitTaxPayableHint', groups: [2] },
   { key: 'WHT_PAYABLE', label: 'glRoleWhtPayable', hint: 'glRoleWhtPayableHint', groups: [2] },
+  { key: 'LOAN_PAYABLE', label: 'glRoleLoanPayable', hint: 'glRoleLoanPayableHint', groups: [2] },
+  { key: 'LOAN_RECEIVABLE', label: 'glRoleLoanReceivable', hint: 'glRoleLoanReceivableHint', groups: [1] },
+  { key: 'INTEREST_EXPENSE', label: 'glRoleInterestExpense', hint: 'glRoleInterestExpenseHint', groups: [5] },
+  { key: 'INTEREST_INCOME', label: 'glRoleInterestIncome', hint: 'glRoleInterestIncomeHint', groups: [4] },
+  { key: 'INTEREST_PAYABLE', label: 'glRoleInterestPayable', hint: 'glRoleInterestPayableHint', groups: [2] },
+  { key: 'INTEREST_RECEIVABLE', label: 'glRoleInterestReceivable', hint: 'glRoleInterestReceivableHint', groups: [1] },
+  { key: 'LOAN_FEE_EXPENSE', label: 'glRoleLoanFeeExpense', hint: 'glRoleLoanFeeExpenseHint', groups: [5] },
+  { key: 'LOAN_FEE_INCOME', label: 'glRoleLoanFeeIncome', hint: 'glRoleLoanFeeIncomeHint', groups: [4] },
 ] as const;
 export const roleLabelOf = (key: string) => ROLES.find((r) => r.key === key)?.label ?? key;
 
@@ -155,6 +163,10 @@ export const SOURCES: Record<string, { label: string; icon: string; tone: string
   PROFIT_TAX: { label: 'glSourceProfitTax', icon: 'fa-percent', tone: 'is-slate' },
   WHT: { label: 'glSourceWht', icon: 'fa-hand-holding-dollar', tone: 'is-slate' },
   TAX_PAYMENT: { label: 'closeTaxPayment', icon: 'fa-building-columns', tone: 'is-slate' },
+  LOAN_START: { label: 'glSourceLoanStart', icon: 'fa-sack-dollar', tone: 'is-coral' },
+  LOAN_PAYMENT: { label: 'glSourceLoanPayment', icon: 'fa-money-bill-transfer', tone: 'is-coral' },
+  LOAN_ACCRUAL: { label: 'glSourceLoanAccrual', icon: 'fa-percent', tone: 'is-coral' },
+  LOAN_ACCRUAL_REV: { label: 'glSourceLoanAccrualRev', icon: 'fa-rotate-left', tone: 'is-coral' },
 };
 export const sourceOf = (type: string) => SOURCES[type] ?? { label: type, icon: 'fa-file', tone: 'is-slate' };
 

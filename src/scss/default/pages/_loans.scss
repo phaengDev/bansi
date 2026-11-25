@@ -1,0 +1,308 @@
+// ເງິນກູ້ (pages/account/loans) — ບັດຕົວຢ່າງໃນຟອມ, ລາຍລະອຽດ (KPI + ຕາຕະລາງຜ່ອນ), ປຸ່ມເລືອກໄວ, ດອກເບ້ຍຄ້າງ.
+// ໂທນສີ: ເງິນກູ້ຢືມ = ສົ້ມແດງ (ໜີ້ສິນ), ເງິນໃຫ້ກູ້ = ຂຽວ (ຊັບສິນ)
+
+// ---- ບັດຕົວຢ່າງ (ຄື .acc-fa-cp) ----
+.acc-ln-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 176px;
+  padding: 16px 18px;
+  overflow: hidden;
+  color: #fff;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, #c2412d 0%, #e0623f 48%, #8f2a1c 100%);
+  box-shadow: 0 14px 28px rgba(140, 40, 20, 0.26);
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -46px;
+    bottom: -64px;
+    width: 170px;
+    height: 170px;
+    border: 26px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+  }
+
+  &.is-lent {
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 55%),
+      linear-gradient(135deg, #0d8a63 0%, #1fae7f 48%, #075d43 100%);
+    box-shadow: 0 14px 28px rgba(6, 90, 64, 0.26);
+  }
+
+  &.is-empty { background: linear-gradient(135deg, #5d6f7e 0%, #3f5061 100%); box-shadow: 0 14px 28px rgba(30, 45, 60, 0.22); }
+}
+
+.acc-ln-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  > span { display: flex; min-width: 0; flex-direction: column; line-height: 1.35; }
+  b { font-family: var(--book-num-font); font-size: 13px; letter-spacing: 0.08em; opacity: 0.9; }
+  small { font-size: 12px; opacity: 0.85; }
+
+  > i {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    place-items: center;
+    color: #b8452d;
+    background: #fff;
+    border-radius: 9px;
+    font-size: 15px;
+  }
+}
+
+.acc-ln-card.is-lent .acc-ln-card-top > i { color: #0d8a63; }
+
+.acc-ln-card-name {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acc-ln-card-amount {
+  position: relative;
+  z-index: 1;
+  font-family: var(--book-num-font);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.acc-ln-card-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+
+  span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.9; }
+  em { flex: none; padding: 2px 9px; background: rgba(255, 255, 255, 0.2); border-radius: 999px; font-style: normal; font-weight: 700; }
+}
+
+// ຕົວຢ່າງຕາຕະລາງ 6 ງວດທຳອິດ
+.acc-ln-mini {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e3ecf3;
+  border-radius: 12px;
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th { padding: 0 4px 6px; color: #8a9aa8; font-size: 11px; font-weight: 700; text-align: right; }
+  th:first-child, td:first-child { width: 22px; text-align: left; }
+  th:nth-child(2), td:nth-child(2) { text-align: left; }
+  td { padding: 4px; color: #23435e; text-align: right; border-top: 1px dashed #edf2f6; }
+  small { display: block; margin-top: 6px; color: #8a9aa8; font-size: 11.5px; text-align: center; }
+}
+
+// ---- ປຸ່ມເລືອກໄວໃນຟອມຈ່າຍ ----
+.acc-ln-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  button {
+    display: grid;
+    gap: 2px;
+    padding: 9px 12px;
+    color: #23435e;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #dfe6ec;
+    border-radius: 10px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    b { font-size: 13px; }
+    small { color: #7b8a97; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    &:hover:not(:disabled) { border-color: #9fd5c2; }
+    &.is-active { color: #075c47; background: #eef8f4; border-color: #19a974; box-shadow: 0 0 0 1px #19a974 inset; }
+    &:disabled { opacity: 0.45; cursor: not-allowed; }
+  }
+}
+
+// ---- ລາຍລະອຽດເງິນກູ້ ----
+.acc-ln-detail .rs-modal-content { padding: 0; overflow: hidden; border-radius: 16px; }
+.acc-ln-detail .rs-modal-header { padding: 18px 22px 14px; border-bottom: 1px solid #edf2f6; }
+.acc-ln-detail .rs-modal-body { margin: 0; padding: 16px 22px 22px; }
+
+.acc-ln-head {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-right: 28px;
+}
+
+.acc-ln-head-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #e0623f, #b8452d);
+  border-radius: 13px;
+  font-size: 19px;
+
+  &.is-lent { background: linear-gradient(145deg, #1fae7f, #0d8a63); }
+}
+
+.acc-ln-head-text {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+
+  .rs-modal-title { overflow: hidden; color: #16324a; font-size: 18px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+  small { overflow: hidden; color: #6b7f90; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+  .acc-fs-code { margin-right: 6px; }
+}
+
+.acc-ln-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+
+  .acc-rp-btn { height: 34px; padding: 0 12px; }
+}
+
+.acc-ln-kpis {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.acc-ln-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: #f7fafc;
+  border: 1px solid #e3ecf3;
+  border-radius: 12px;
+
+  small { color: #6b7f90; font-size: 12px; font-weight: 600; }
+  b { color: #16324a; font-family: var(--book-num-font); font-size: 17px; font-weight: 800; }
+  em { color: #8a9aa8; font-size: 11.5px; font-style: normal; }
+
+  &.is-main { color: #fff; background: linear-gradient(135deg, #16324a, #23557a); border-color: transparent; }
+  &.is-main small, &.is-main em { color: rgba(255, 255, 255, 0.78); }
+  &.is-main b { color: #fff; font-size: 21px; }
+  &.is-bad { background: #fff5f5; border-color: #f6c9c9; }
+  &.is-bad b { color: #c4343a; }
+  &.is-done b { color: #17805c; }
+}
+
+.acc-ln-bar {
+  height: 6px;
+  margin: 4px 0 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+
+  i { display: block; height: 100%; background: linear-gradient(90deg, #5ee0b0, #22b07d); border-radius: inherit; }
+}
+
+.acc-ln-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 12px;
+  color: #5d7183;
+  font-size: 12.5px;
+
+  i { margin-right: 5px; color: #8aa0b1; }
+}
+
+.acc-ln-table-wrap { max-height: 46vh; margin-top: 10px; }
+
+.acc-ln-table {
+  td, th { font-variant-numeric: tabular-nums; }
+
+  tr.is-paid td, tr.is-settled td { color: #7b8a97; }
+  tr.is-closed td { color: #a0adb8; text-decoration: line-through; text-decoration-color: rgba(160, 173, 184, 0.6); }
+  tr.is-overdue td { background: #fff7f7; }
+  tr.is-next td { background: #f1faf6; }
+  tr.is-next td:first-child { box-shadow: 3px 0 0 #19a974 inset; }
+  tr.is-cancelled td { color: #a0adb8; text-decoration: line-through; }
+}
+
+// ສະຖານະຂອງງວດ
+.acc-ln-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  color: #5d7183;
+  background: #eef3f7;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+
+  &.is-paid { color: #17805c; background: #e4f6ee; }
+  &.is-settled { color: #5b3fc4; background: #efeafe; }
+  &.is-overdue { color: #c4343a; background: #fdecec; }
+  &.is-partial { color: #a25a07; background: #fff1dc; }
+  &.is-upcoming { color: #2b6cb0; background: #e8f1fb; }
+}
+
+// ---- ດອກເບ້ຍຄ້າງ ----
+.acc-ln-accrual-sum {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+
+  span {
+    display: grid;
+    gap: 2px;
+    padding: 10px 14px;
+    border-radius: 12px;
+
+    small { font-size: 12px; font-weight: 600; i { margin-right: 5px; } }
+    b { font-family: var(--book-num-font); font-size: 18px; font-weight: 800; }
+  }
+
+  .is-payable { color: #a23a26; background: #fff3ef; }
+  .is-receivable { color: #0d7a57; background: #eaf8f2; }
+}
+
+.acc-ln-dir {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+
+  &.is-borrowed { color: #a23a26; background: #fff0eb; }
+  &.is-lent { color: #0d7a57; background: #e4f6ee; }
+}
+
+@media (max-width: 991.98px) {
+  .acc-ln-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acc-ln-head { grid-template-columns: 40px minmax(0, 1fr); }
+  .acc-ln-head-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}

@@ -28,6 +28,7 @@ import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
 import FixedAssetWindow from './assets/FixedAssetWindow';
+import LoanWindow from './loans/LoanWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import PlatformWindow from '../platform/PlatformWindow';
 import { PlanBadge } from './PlanSummary';
@@ -66,6 +67,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   budget: <BudgetWindow />,
   fixedAssets: <FixedAssetWindow />,
   closing: <ClosingWindow />,
+  loans: <LoanWindow />,
   employees: <AppPage showHeader={false}><EmployeePage /></AppPage>,
   tasks: <AppPage showHeader={false}><TaskPage /></AppPage>,
   hr: <HrWindow />,
@@ -142,6 +144,7 @@ const AccountShell: React.FC = () => {
   const budgetWindow = usePopupWindow();
   const fixedAssetsWindow = usePopupWindow();
   const closingWindow = usePopupWindow();
+  const loansWindow = usePopupWindow();
   const employeesWindow = usePopupWindow();
   const tasksWindow = usePopupWindow();
   const hrWindow = usePopupWindow();
@@ -167,6 +170,7 @@ const AccountShell: React.FC = () => {
     budget: budgetWindow,
     fixedAssets: fixedAssetsWindow,
     closing: closingWindow,
+    loans: loansWindow,
     employees: employeesWindow,
     tasks: tasksWindow,
     hr: hrWindow,

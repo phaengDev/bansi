@@ -117,6 +117,7 @@ export type ShortcutId =
   | 'budget'
   | 'fixedAssets'
   | 'closing'
+  | 'loans'
   | 'employees'
   | 'tasks'
   | 'hr'
@@ -135,6 +136,7 @@ export type ShortcutId =
 export const shortcutNameKeys: Record<ShortcutId, string> = {
   fixedAssets: 'accountAppFixedAssets',
   closing: 'accountAppClosing',
+  loans: 'accountAppLoans',
   journal: 'accountAppJournal',
   chartOfAccounts: 'accountAppChartOfAccounts',
   generalLedger: 'accountAppGeneralLedger',
@@ -172,6 +174,7 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   budget: 'accountAppBudgetDesc',
   fixedAssets: 'accountAppFixedAssetsDesc',
   closing: 'accountAppClosingDesc',
+  loans: 'accountAppLoansDesc',
   employees: 'accountAppEmployeesDesc',
   tasks: 'accountAppTasksDesc',
   hr: 'accountAppHrDesc',
@@ -205,6 +208,7 @@ export const shortcuts: ReadonlyArray<{
   { id: 'budget', icon: 'fa-bullseye', tone: 'gold', path: '/account/budget', popup: true },
   { id: 'fixedAssets', icon: 'fa-building', tone: 'gold', path: '/account/fixed-assets', popup: true },
   { id: 'closing', icon: 'fa-clipboard-check', tone: 'violet', path: '/account/closing', popup: true },
+  { id: 'loans', icon: 'fa-sack-dollar', tone: 'coral', path: '/account/loans', popup: true },
   { id: 'employees', icon: 'fa-id-card', tone: 'cyan', path: '/hr/employees', popup: true },
   { id: 'tasks', icon: 'fa-list-check', tone: 'sky', path: '/hr/tasks', popup: true },
   { id: 'hr', icon: 'fa-users-gear', tone: 'violet', path: '/hr', popup: true },

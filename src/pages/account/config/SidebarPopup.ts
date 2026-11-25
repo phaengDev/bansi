@@ -338,6 +338,18 @@ export const MY_INBOX_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ໜ້າຕ່າງ ເງິນກູ້ */
+export const LOAN_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppLoans',
+    items: [
+      { key: 'borrowed', icon: 'fa-solid fa-building-columns', label: 'lnBorrowedMenu' },
+      { key: 'lent', icon: 'fa-solid fa-hand-holding-dollar', label: 'lnLentMenu' },
+      { key: 'accrual', icon: 'fa-solid fa-percent', label: 'lnAccrualMenu' },
+    ],
+  },
+];
+
 /** ຈັດການບໍລິສັດ (ເຈົ້າຂອງລະບົບ) */
 export const PLATFORM_MENU: SidebarPopupGroup[] = [
   {

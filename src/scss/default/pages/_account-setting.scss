@@ -155,6 +155,8 @@
 
   i { font-size: 34px; opacity: 0.45; }
   p { margin: 10px 0 0; }
+  // ປຸ່ມໃນກ່ອງວ່າງ (ເພີ່ມ…) — ໄອຄອນຂະໜາດປົກກະຕິ
+  .acc-rp-btn i { font-size: inherit; opacity: 1; }
 }
 
 @media (hover: none) {

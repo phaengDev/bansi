@@ -10,7 +10,7 @@ import { isNotReady } from '../gl/glApi';
 import { GlNotReady } from '../gl/glKit';
 import { refreshAccountSetting } from '../accountSettings';
 
-type Check = { key: 'depreciation' | 'bank' | 'fx'; ok: boolean; detail?: string };
+type Check = { key: 'depreciation' | 'bank' | 'fx' | 'loan_accrual'; ok: boolean; detail?: string };
 type Month = { month: string; start: string; end: string; closed: boolean; entries: number; checks?: Check[] };
 type Status = {
   fiscal: { _uuid: number; fiscal_code: string; fiscal_name?: string; start_date: string; end_date: string; status: number };
@@ -20,10 +20,11 @@ type Status = {
 };
 
 /** ລາຍການກວດອັດຕະໂນມັດ → ຂໍ້ຄວາມ + ແຖບທີ່ໄປແກ້ */
-const AUTO: Record<Check['key'], { label: string; target: string; window?: string }> = {
-  depreciation: { label: 'closeCheckDepreciation', target: 'depreciation', window: 'fixedAssets' },
+const AUTO: Record<Check['key'], { label: string; target: string; window?: string; hint?: string }> = {
+  depreciation: { label: 'closeCheckDepreciation', target: 'depreciation', window: 'fixedAssets', hint: 'closeOpenFixedAssets' },
   bank: { label: 'closeCheckBank', target: 'bankRec' },
   fx: { label: 'closeCheckFx', target: 'fxReval' },
+  loan_accrual: { label: 'closeCheckLoanAccrual', target: 'accrual', window: 'loans', hint: 'closeOpenLoans' },
 };
 
 /** ສິ່ງທີ່ຕ້ອງເຮັດກ່ອນປິດເດືອນ (ກົດໝາຍບັນຊີ ມາດຕາ 23) — ຕິກຢືນຢັນເອງ, ບໍ່ບັນທຶກ */
@@ -141,7 +142,7 @@ const PeriodClosePage = ({ onOpen }: { onOpen: (key: string) => void }) => {
                     {t('closeGoFix')} <i className="fa-solid fa-arrow-right" />
                   </button>
                 )}
-                {!c.ok && AUTO[c.key].window && <em>{t('closeOpenFixedAssets')}</em>}
+                {!c.ok && AUTO[c.key].window && <em>{t(AUTO[c.key].hint ?? 'closeOpenFixedAssets')}</em>}
               </li>
             ))}
             {MANUAL.map((key) => (

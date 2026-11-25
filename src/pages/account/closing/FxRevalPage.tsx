@@ -9,7 +9,7 @@ import { useT } from '../../../context/LanguageContext';
 import { isNotReady } from '../gl/glApi';
 import { GlNotReady } from '../gl/glKit';
 
-type Item = { kind: 'treasury' | 'ar' | 'ap'; label: string; currency: string; foreign: number; book: number; rate: number; target: number; diff: number };
+type Item = { kind: 'treasury' | 'ar' | 'ap' | 'loan'; label: string; currency: string; foreign: number; book: number; rate: number; target: number; diff: number };
 type Preview = {
   month: string;
   posted: { entry_number: string; entry_date: string; total: number } | null;
@@ -18,7 +18,7 @@ type Preview = {
   net: number;
 };
 
-const KIND_LABEL: Record<Item['kind'], string> = { treasury: 'fxKindTreasury', ar: 'fxKindAr', ap: 'fxKindAp' };
+const KIND_LABEL: Record<Item['kind'], string> = { treasury: 'fxKindTreasury', ar: 'fxKindAr', ap: 'fxKindAp', loan: 'fxKindLoan' };
 
 /**
  * ປັບມູນຄ່າເງິນຕາຕ່າງປະເທດທ້າຍເດືອນ — ຍອດ USD/THB… ຂອງ ບັນຊີເງິນຄັງ, ລູກໜີ້ ແລະ ເຈົ້າໜີ້ ຄິດເປັນກີບຕາມອັດຕາທ້າຍເດືອນ
