@@ -8,6 +8,7 @@ import { canCreate, canDelete } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { isNotReady } from '../gl/glApi';
 import { GlNotReady, SourceChip, amountFormatter } from '../gl/glKit';
+import { matchStatement, readStatement, statementBalanceAt, type StatementRow } from './bankStatement';
 
 type BankAccount = {
   id: number;
@@ -44,6 +45,8 @@ const BankRecPage = () => {
   const [picked, setPicked] = useState<number[]>([]);
   const [history, setHistory] = useState<Rec[]>([]);
   const [busy, setBusy] = useState(false);
+  /** ໃບແຈ້ງຍອດທີ່ນຳເຂົ້າ (Excel/CSV) — ແຖວ + ຜົນຈັບຄູ່ກັບລາຍການໃນລະບົບ */
+  const [imported, setImported] = useState<{ file: string; rows: StatementRow[]; matched: number[]; unmatched: StatementRow[] } | null>(null);
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -72,6 +75,7 @@ const BankRecPage = () => {
       setOpen(o.data);
       setHistory(h.data?.data ?? []);
       setPicked([]);
+      setImported(null);
     } catch (err) {
       Notific.error(getErrorMessage(err));
     }
@@ -110,6 +114,24 @@ const BankRecPage = () => {
       Notific.error(getErrorMessage(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  /** ນຳເຂົ້າໃບແຈ້ງຍອດ: ຕິກລາຍການທີ່ກົງກັນ (ຈຳນວນເທົ່າກັນ, ວັນທີຫ່າງ ≤ 7 ມື້) ແລະ ເຕີມຍອດໃນໃບແຈ້ງຍອດ (ຖ້າຍັງບໍ່ປ້ອນ) */
+  const importStatement = async (file: File) => {
+    if (!open) return;
+    try {
+      const rows = await readStatement(file);
+      const result = matchStatement(rows, open.lines, dateKey);
+      setPicked((cur) => [...new Set([...cur, ...result.matched])]);
+      if (statement === null) {
+        const balance = statementBalanceAt(rows, dateKey);
+        if (balance !== null) setStatement(balance);
+      }
+      setImported({ file: file.name, rows: rows.filter((r) => r.date <= dateKey), matched: result.matched, unmatched: result.unmatched });
+    } catch (err) {
+      console.error(err);
+      Notific.warning('bankRecImportFail');
     }
   };
 
@@ -158,7 +180,41 @@ const BankRecPage = () => {
             <NumberInput value={statement ?? ''} onChange={(v) => setStatement(v === '' || v === null ? null : Number(String(v).replace(/,/g, '')))}
               formatter={amountFormatter} controls={false} />
           </label>
+          <label className="acc-bankrec-import-btn" title={t('bankRecImportHint')}>
+            <span>{t('bankRecImportLabel')}</span>
+            <span className="acc-rp-btn"><i className="fa-solid fa-file-import" /> {t('bankRecImport')}</span>
+            <input type="file" accept=".xlsx,.xls,.csv" hidden disabled={!open} onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (file) importStatement(file);
+            }} />
+          </label>
         </div>
+
+        {imported && (
+          <div className="acc-bankrec-import">
+            <p>
+              <i className="fa-solid fa-file-excel" /> <b>{imported.file}</b> · {imported.rows.length} {t('closeEntries')}
+              <span className="is-ok"><i className="fa-solid fa-circle-check" /> {t('bankRecMatched')} {imported.matched.length}</span>
+              {!!imported.unmatched.length && <span className="is-bad"><i className="fa-solid fa-triangle-exclamation" /> {t('bankRecUnmatched')} {imported.unmatched.length}</span>}
+              <button type="button" onClick={() => setImported(null)} aria-label={t('close')}><i className="fa-solid fa-xmark" /></button>
+            </p>
+            {!!imported.unmatched.length && (
+              <>
+                <small>{t('bankRecUnmatchedHint')}</small>
+                <ul>
+                  {imported.unmatched.map((r, i) => (
+                    <li key={`${r.date}-${i}`}>
+                      <span>{moment(r.date).format('DD/MM/YYYY')}</span>
+                      <span>{r.description || '—'}</span>
+                      <b className={r.amount < 0 ? 'is-out' : 'is-in'}>{r.amount < 0 ? '−' : '+'}{formatDecimal(Math.abs(r.amount))}</b>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
 
         {!open ? (
           <div className="text-center py-4"><Loader size="sm" /></div>
@@ -185,12 +241,15 @@ const BankRecPage = () => {
                   {open.lines.length ? open.lines.map((l) => {
                     const on = picked.includes(l.line_id);
                     return (
-                      <tr key={l.line_id} className={`is-line${on ? ' is-picked' : ''}`}
+                      <tr key={l.line_id} className={`is-line${on ? ' is-picked' : ''}${imported?.matched.includes(l.line_id) ? ' is-matched' : ''}`}
                         onClick={() => setPicked(on ? picked.filter((id) => id !== l.line_id) : [...picked, l.line_id])}
                       >
                         <td><Checkbox checked={on} /></td>
                         <td>{moment(l.entry_date).format('DD/MM/YYYY')}</td>
-                        <td><b>{l.reference || l.entry_number}</b><small><SourceChip type={l.source_type} /></small></td>
+                        <td>
+                          <b>{l.reference || l.entry_number}</b>
+                          <small><SourceChip type={l.source_type} />{imported?.matched.includes(l.line_id) && <em className="acc-bankrec-match"><i className="fa-solid fa-link" /> {t('bankRecInStatement')}</em>}</small>
+                        </td>
                         <td>{l.description ?? '—'}</td>
                         <td>{l.amount > 0 ? formatDecimal(l.amount) : ''}</td>
                         <td>{l.amount < 0 ? formatDecimal(-l.amount) : ''}</td>

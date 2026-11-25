@@ -3352,6 +3352,14 @@ export const laoDict = {
   recurMadeHint: { la: 'ຕັ້ງແລ້ວ — ເບິ່ງ ແລະ ບັນທຶກແຕ່ລະເດືອນທີ່ເມນູ "ລາຍຈ່າຍປະຈຳ"', en: 'Saved — see and record it each month under "Recurring expenses"', cn: '已设置——每月在“固定支出”中查看并记录' },
   recurDueTitle: { la: 'ລາຍຈ່າຍປະຈຳຄົບກຳນົດ', en: 'Recurring expenses due', cn: '固定支出已到期' },
   recurDueSub: { la: 'ເດືອນນີ້ຍັງບໍ່ໄດ້ບັນທຶກ · ລາຍການ', en: 'Not recorded this month · items', cn: '本月尚未记录 · 项' },
+  bankRecImportLabel: { la: 'ໃບແຈ້ງຍອດຈາກທະນາຄານ', en: 'Bank statement file', cn: '银行对账单文件' },
+  bankRecImport: { la: 'ນຳເຂົ້າ Excel / CSV', en: 'Import Excel / CSV', cn: '导入 Excel / CSV' },
+  bankRecImportHint: { la: 'ໄຟລ໌ statement ຈາກ i-Bank — ຕິກລາຍການທີ່ກົງກັນໃຫ້ (ຈຳນວນເທົ່າກັນ, ວັນທີຫ່າງບໍ່ເກີນ 7 ມື້) ແລະ ເອົາຍອດເຫຼືອມາໃສ່', en: 'Statement file from i-Bank — ticks matching items (same amount, within 7 days) and fills the closing balance', cn: '网银对账单——自动勾选匹配项（金额相同、相差不超过7天）并填入期末余额' },
+  bankRecMatched: { la: 'ກົງກັບລະບົບ (ຕິກໃຫ້ແລ້ວ)', en: 'Matched (ticked)', cn: '已匹配（已勾选）' },
+  bankRecUnmatched: { la: 'ບໍ່ພົບໃນລະບົບ', en: 'Not in the books', cn: '账上未找到' },
+  bankRecUnmatchedHint: { la: 'ເຊັ່ນ ຄ່າທຳນຽມ ຫຼື ດອກເບ້ຍ — ບັນທຶກເປັນລາຍຈ່າຍ / ລາຍຮັບກ່ອນ ແລ້ວນຳເຂົ້າໄຟລ໌ຄືນ', en: 'e.g. bank fees or interest — record them as expense / income first, then import the file again', cn: '如手续费或利息——先记为支出/收入，再重新导入文件' },
+  bankRecInStatement: { la: 'ໃນ statement', en: 'in statement', cn: '对账单中' },
+  bankRecImportFail: { la: 'ອ່ານໄຟລ໌ບໍ່ໄດ້ — ຕ້ອງມີຖັນ ວັນທີ ແລະ ຖອນ / ຝາກ (ຫຼື ຈຳນວນເງິນ)', en: 'Could not read the file — it needs a date column and debit / credit (or amount) columns', cn: '无法读取文件——需要日期列以及借/贷（或金额）列' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

@@ -7778,6 +7778,65 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
   span { color: #5b6f80; font-size: 12px; font-weight: 700; }
 }
 
+// ນຳເຂົ້າໃບແຈ້ງຍອດ — ປຸ່ມ (ສູງເທົ່າຊ່ອງ), ແຖບຜົນ (ກົງກັນ / ບໍ່ພົບ) ແລະ ລາຍການທີ່ບໍ່ພົບໃນລະບົບ
+.acc-bankrec-import-btn {
+  cursor: pointer;
+
+  .acc-rp-btn { height: 38px; justify-content: center; color: #08735f; border-style: dashed; }
+  &:hover .acc-rp-btn { border-color: var(--rp-accent); background: #f3fbf8; }
+}
+
+.acc-bankrec-import {
+  margin: -2px 0 12px;
+  padding: 10px 12px;
+  background: #f7fafc;
+  border: 1px solid var(--rp-line);
+  border-radius: 12px;
+  font-size: 12.5px;
+
+  > p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin: 0;
+    color: #3d5266;
+
+    > i { color: #1d7a45; }
+    .is-ok { color: #08735f; font-weight: 700; }
+    .is-bad { color: #c4343a; font-weight: 700; }
+    button { margin-left: auto; padding: 0 4px; color: #7b8a97; background: none; border: 0; }
+  }
+
+  > small { display: block; margin: 6px 0 4px; color: #7b8a97; }
+
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  li {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 4px 0;
+    border-top: 1px dashed #e3eaf0;
+    font-variant-numeric: tabular-nums;
+
+    span:nth-child(2) { overflow: hidden; color: #5b6f80; text-overflow: ellipsis; white-space: nowrap; }
+    b.is-in { color: #08735f; }
+    b.is-out { color: #c4343a; }
+  }
+}
+
+.acc-bankrec-match {
+  margin-left: 6px;
+  padding: 0 6px;
+  color: #08735f;
+  background: #e3f6ef;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .acc-bankrec-table {
   min-width: 640px;
 
