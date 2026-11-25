@@ -3284,6 +3284,16 @@ export const laoDict = {
   shTitle: { la: 'ປະຫວັດເງິນເດືອນ', en: 'Salary history', cn: '薪资历史' },
   shMonths: { la: 'ເດືອນ', en: 'months', cn: '个月' },
   shNextPay: { la: 'ງວດໜ້າຈະໃຊ້', en: 'Next payroll uses', cn: '下期将使用' },
+  hrExpiring: { la: 'ໃກ້ໝົດອາຍຸ', en: 'Expiring', cn: '即将到期' },
+  hrExpiringTitle: { la: 'ເອກະສານ / ສັນຍາ ໃກ້ໝົດອາຍຸ', en: 'Documents / contracts expiring', cn: '证件/合同即将到期' },
+  hrExpiringSub: { la: 'ພາຍໃນ 30 ມື້ (ທົດລອງວຽກ 14 ມື້) · ຄົນ', en: 'Within 30 days (probation 14) · people', cn: '30天内（试用期14天）· 人' },
+  expContract: { la: 'ສັນຍາໝົດ', en: 'Contract ends', cn: '合同到期' },
+  expProbation: { la: 'ຄົບທົດລອງວຽກ', en: 'Probation ends', cn: '试用期结束' },
+  expIdCard: { la: 'ບັດປະຈຳຕົວໝົດ', en: 'ID card expires', cn: '身份证到期' },
+  expPassport: { la: 'Passport ໝົດ', en: 'Passport expires', cn: '护照到期' },
+  expOverdue: { la: 'ໝົດແລ້ວ {n} ມື້', en: 'expired {n} days ago', cn: '已过期 {n} 天' },
+  expToday: { la: 'ມື້ນີ້', en: 'today', cn: '今天' },
+  expIn: { la: 'ອີກ {n} ມື້', en: 'in {n} days', cn: '还有 {n} 天' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

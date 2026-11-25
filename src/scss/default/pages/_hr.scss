@@ -1902,3 +1902,22 @@
   .audit-page .audit-who { flex-direction: row; align-items: center; gap: 8px; }
   .audit-page .audit-changes em { min-width: 0; }
 }
+
+// ເອກະສານ / ສັນຍາ ໃກ້ໝົດອາຍຸ — ປ້າຍໃຕ້ຊື່ໃນລາຍການພະນັກງານ (ໝົດແລ້ວ = ແດງ, ≤ 7 ມື້ = ສົ້ມ)
+.hr-expiry-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 3px 4px 0 0;
+  padding: 1px 8px;
+  color: #8a5a00;
+  background: #fff4dc;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  i { font-size: 9.5px; }
+  &.is-soon { color: #b3541e; background: #ffe9d9; }
+  &.is-over { color: #c4343a; background: #fdecec; }
+}

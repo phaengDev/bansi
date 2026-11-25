@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import moment from 'moment';
-import { deleteApi, formatNumber } from '../../utils/configApi';
+import { deleteApi, formatNumber, getApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
@@ -12,8 +12,14 @@ import { GENDERS, RESIGNED, WORKING, fullName, useHrList, type Employee } from '
 import { HrAvatar, WorkStatusPill } from './hrKit';
 import EmployeeForm from './EmployeeForm';
 import EmployeeDetail from './EmployeeDetail';
+import { useRequestedEmployeesTab, type ExpiringItem } from './hrPending';
 
-type StatusFilter = 'working' | 'resigned' | 'all';
+type StatusFilter = 'working' | 'resigned' | 'all' | 'expiring';
+
+/** ປ້າຍເອກະສານໃກ້ໝົດອາຍຸ — ຊື່ (dict key) ຕາມປະເພດ */
+const EXPIRY_LABEL: Record<ExpiringItem['kind'], string> = {
+  contract: 'expContract', probation: 'expProbation', id_card: 'expIdCard', passport: 'expPassport',
+};
 
 const showDate = (value: string | null) => (value ? moment(value, 'YYYY-MM-DD').format('DD/MM/YYYY') : '—');
 
@@ -25,8 +31,25 @@ const EmployeePage = () => {
   const t = useT();
   const canSeeSalary = useCanSeeSalary();
   const { rows, extra, loading, reload } = useHrList<Employee>('/employee/fetch');
+  /** ເອກະສານ / ສັນຍາ ໃກ້ໝົດອາຍຸ (ຄົນທີ່ເຮັດວຽກຢູ່) — ກົດຈາກ "ຕ້ອງຕິດຕາມ" ໃນ desktop = ເປີດແຖບນີ້ */
+  const [expiring, setExpiring] = useState<ExpiringItem[]>([]);
+  useEffect(() => {
+    let alive = true;
+    getApi('/employee/expiring')
+      .then((res) => alive && setExpiring(res.data?.data ?? []))
+      .catch(() => alive && setExpiring([]));
+    return () => {
+      alive = false;
+    };
+  }, [rows]);
+  const expiryOf = useMemo(() => {
+    const map = new Map<number, ExpiringItem[]>();
+    expiring.forEach((item) => map.set(item.employee_id, [...(map.get(item.employee_id) ?? []), item]));
+    return map;
+  }, [expiring]);
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<StatusFilter>('working');
+  useRequestedEmployeesTab(setStatus);
   const [department, setDepartment] = useState<number | null>(null);
   const [editing, setEditing] = useState<Employee | null | undefined>(undefined);
   const [viewing, setViewing] = useState<Employee | null>(null);
@@ -35,7 +58,8 @@ const EmployeePage = () => {
     .sort((a, b) => a.depart_name.localeCompare(b.depart_name));
   const q = keyword.trim().toLowerCase();
   const shown = rows.filter((r) =>
-    (status === 'all' || (status === 'working' ? Number(r.work_status) === WORKING : Number(r.work_status) === RESIGNED))
+    (status === 'all' || (status === 'expiring' ? expiryOf.has(r._uuid)
+      : status === 'working' ? Number(r.work_status) === WORKING : Number(r.work_status) === RESIGNED))
     && (!department || r.department_id === department)
     && (!q || `${r.emp_code} ${fullName(r)} ${r.phone ?? ''} ${r.email ?? ''} ${r.position?.position_name ?? ''} ${r.bank_account_no ?? ''}`.toLowerCase().includes(q)));
   const working = rows.filter((r) => Number(r.work_status) === WORKING).length;
@@ -77,7 +101,10 @@ const EmployeePage = () => {
     { key: 'working', label: 'hrWorking', count: working },
     { key: 'resigned', label: 'hrResigned', count: rows.length - working },
     { key: 'all', label: 'all', count: rows.length },
+    ...(expiryOf.size || status === 'expiring' ? [{ key: 'expiring' as StatusFilter, label: 'hrExpiring', count: expiryOf.size }] : []),
   ];
+  /** "ອີກ 5 ມື້" / "ມື້ນີ້" / "ໝົດແລ້ວ 3 ມື້" */
+  const daysText = (days: number) => (days < 0 ? t('expOverdue').replace('{n}', String(-days)) : days === 0 ? t('expToday') : t('expIn').replace('{n}', String(days)));
 
   return (
     <div className="acs-page">
@@ -130,6 +157,11 @@ const EmployeePage = () => {
                         <span>
                           <b>{fullName(r)}</b>
                           <small className="acc-gl-ref">{r.emp_code}{r.documents.length ? <> · <i className="fa-solid fa-paperclip" /> {r.documents.length}</> : null}</small>
+                          {expiryOf.get(r._uuid)?.map((item) => (
+                            <span key={item.kind} className={`hr-expiry-chip${item.days < 0 ? ' is-over' : item.days <= 7 ? ' is-soon' : ''}`}>
+                              <i className="fa-solid fa-hourglass-end" /> {t(EXPIRY_LABEL[item.kind])} {moment(item.date).format('DD/MM/YYYY')} · {daysText(item.days)}
+                            </span>
+                          ))}
                         </span>
                       </span>
                     </td>

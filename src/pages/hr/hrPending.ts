@@ -2,7 +2,42 @@ import { useEffect, useState } from 'react';
 import { getApi } from '../../utils/configApi';
 
 /** ຄຳຮ້ອງທີ່ລໍຖ້າ HR (GET /hr/pending) — advance_to_pay = ອະນຸມັດແລ້ວ ລໍຖ້າຈ່າຍເງິນ */
-export type HrPending = { leave: number; correction: number; advance: number; advance_to_pay: number };
+export type HrPending = {
+  leave: number;
+  correction: number;
+  advance: number;
+  advance_to_pay: number;
+  /** ຈຳນວນຄົນທີ່ມີເອກະສານ / ສັນຍາ ໃກ້ໝົດອາຍຸ (API ລຸ້ນເກົ່າ = ບໍ່ມີ) */
+  expiring?: number;
+};
+
+/** ລາຍການໃກ້ໝົດອາຍຸ (GET /employee/expiring) — days ລົບ = ໝົດແລ້ວ */
+export type ExpiryKind = 'contract' | 'probation' | 'id_card' | 'passport';
+export type ExpiringItem = { employee_id: number; emp_code: string; name: string; kind: ExpiryKind; date: string; days: number };
+
+const TAB_EVENT = 'employees-tab-request';
+let wantedTab: 'expiring' | null = null;
+
+/** ເປີດໜ້າພະນັກງານທີ່ແຖບ "ໃກ້ໝົດອາຍຸ" (ຈາກ "ຕ້ອງຕິດຕາມ" ໃນ desktop) — ເອີ້ນກ່ອນເປີດໜ້າຕ່າງ */
+export const requestEmployeesTab = (tab: 'expiring') => {
+  wantedTab = tab;
+  window.dispatchEvent(new Event(TAB_EVENT));
+};
+
+/** ໜ້າພະນັກງານຮັບແຖບທີ່ຖືກຂໍ (ຕອນເປີດ ຫຼື ເປີດຢູ່ແລ້ວ) */
+export const useRequestedEmployeesTab = (apply: (tab: 'expiring') => void) => {
+  useEffect(() => {
+    const take = () => {
+      if (!wantedTab) return;
+      apply(wantedTab);
+      wantedTab = null;
+    };
+    take();
+    window.addEventListener(TAB_EVENT, take);
+    return () => window.removeEventListener(TAB_EVENT, take);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+};
 
 const EVENT = 'hr-pending-refresh';
 

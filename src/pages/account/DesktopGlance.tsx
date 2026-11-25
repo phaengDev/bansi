@@ -10,6 +10,7 @@ import { isNotReady, type Balance, type ChartAccount } from './gl/glApi';
 import { budgetName, percentOf, percentText, planToDate, statusOf, type BudgetData } from './budget/budgetApi';
 import { useAccountMenusLoaded, type AccountMenu } from './accountMenus';
 import type { ShortcutId } from './DesktopShared';
+import { requestEmployeesTab, type HrPending } from '../hr/hrPending';
 
 /** ສະຖານະຂອງເມນູຕໍ່ພາບລວມ: ບໍ່ມີສິດ (ບໍ່ສະແດງ) / ລັອກ (ບໍ່ດຶງ ບໍ່ສະແດງຕົວເລກ) / ເປີດ */
 type Access = 'none' | 'locked' | 'open';
@@ -39,7 +40,6 @@ type BudgetSummary = {
 } | null;
 
 /** ຄຳຮ້ອງທີ່ລໍຖ້າ HR (GET /hr/pending) */
-type HrPending = { leave: number; correction: number; advance: number; advance_to_pay: number };
 
 type Glance = {
   hr?: HrPending | Failed;
@@ -417,7 +417,7 @@ const useGlanceDrag = () => {
   };
 };
 
-type Todo = { key: string; tone: 'danger' | 'warn'; icon: string; title: string; sub: string; amount: string; target: ShortcutId };
+type Todo = { key: string; tone: 'danger' | 'warn'; icon: string; title: string; sub: string; amount: string; target: ShortcutId; before?: () => void };
 
 /**
  * ພາບລວມສິ່ງທີ່ຕ້ອງຮູ້ທັນທີ ຢູ່ຂວາຂອງ desktop: ເງິນທີ່ມີ, ກຳໄລເດືອນນີ້, ລູກໜີ້ ແລະ ເຈົ້າໜີ້ຄ້າງ,
@@ -451,8 +451,8 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     budget: accessOf('budget'),
   };
   // ຄຳຮ້ອງຂອງ HR ຂຶ້ນໃນ "ຕ້ອງຕິດຕາມ" ສະເພາະເມື່ອເປີດໜ້າຕ່າງນັ້ນໄດ້ (ບໍ່ນັບເຂົ້າ anyOpen — ບໍ່ມີບັດຂອງຕົນເອງ)
-  const hrAccess = { attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open' };
-  const accessKey = [...Object.values(access), hrAccess.attendance || hrAccess.payroll ? 'open' : 'none'].join('|');
+  const hrAccess = { attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open', employees: accessOf('employees') === 'open' };
+  const accessKey = [...Object.values(access), hrAccess.attendance || hrAccess.payroll || hrAccess.employees ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
@@ -645,14 +645,17 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   }));
   // ຄຳຮ້ອງຈາກພະນັກງານທີ່ລໍຖ້າ HR (ບໍ່ມີສິດ / API ລຸ້ນເກົ່າ = ບໍ່ຂຶ້ນ)
   const hr = isFailed(data?.hr) ? undefined : data?.hr;
-  const hrTodo = (key: string, count: number | undefined, icon: string, title: string, target: 'attendance' | 'payroll') => {
+  const hrTodo = (key: string, count: number | undefined, icon: string, title: string, target: 'attendance' | 'payroll' | 'employees',
+    sub = 'glanceHrWaiting', before?: () => void) => {
     if (!count || !hrAccess[target]) return;
-    todos.push({ key, tone: 'warn', icon, title: t(title), sub: t('glanceHrWaiting'), amount: `${count}`, target });
+    todos.push({ key, tone: 'warn', icon, title: t(title), sub: t(sub), amount: `${count}`, target, before });
   };
   hrTodo('hr-leave', hr?.leave, 'fa-plane-departure', 'attLeaveRequests', 'attendance');
   hrTodo('hr-correction', hr?.correction, 'fa-fingerprint', 'attCorrections', 'attendance');
   hrTodo('hr-advance', hr?.advance, 'fa-hand-holding-dollar', 'advMenu', 'payroll');
   hrTodo('hr-advance-pay', hr?.advance_to_pay, 'fa-money-bill-transfer', 'advToPay', 'payroll');
+  // ສັນຍາ / ທົດລອງວຽກ / ບັດ / passport ໃກ້ໝົດ — ເປີດໜ້າພະນັກງານທີ່ແຖບ "ໃກ້ໝົດອາຍຸ"
+  hrTodo('hr-expiring', hr?.expiring, 'fa-hourglass-end', 'hrExpiringTitle', 'employees', 'hrExpiringSub', () => requestEmployeesTab('expiring'));
   if (ar) debtTodos('ar', ar.overdue, 'danger');
   if (ap) debtTodos('ap', ap.overdue, 'danger');
   if (ap) debtTodos('ap', ap.dueSoon, 'warn');
@@ -701,7 +704,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
           ) : (
             <>
               {todos.slice(0, MAX_TODO).map((todo) => (
-                <button key={todo.key} type="button" className={`acc-glance-item is-${todo.tone}`} onClick={() => openShortcut(todo.target)}>
+                <button key={todo.key} type="button" className={`acc-glance-item is-${todo.tone}`} onClick={() => { todo.before?.(); openShortcut(todo.target); }}>
                   <i className={`fa-solid ${todo.icon}`} />
                   <span>
                     <b>{todo.title}</b>
