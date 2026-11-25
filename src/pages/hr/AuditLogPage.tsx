@@ -47,6 +47,7 @@ const ACTIONS: Record<string, { label: string; icon: string; tone: string }> = {
 const ENTITIES: Record<string, { label: string; icon: string }> = {
   income: { label: 'auditEntIncome', icon: 'fa-arrow-down' },
   expense: { label: 'auditEntExpense', icon: 'fa-arrow-up' },
+  recurring: { label: 'recurMenu', icon: 'fa-repeat' },
   invoice: { label: 'auditEntInvoice', icon: 'fa-file-invoice-dollar' },
   payment: { label: 'auditEntPayment', icon: 'fa-hand-holding-dollar' },
   journal: { label: 'auditEntJournal', icon: 'fa-book' },
@@ -79,6 +80,7 @@ const FIELDS: Record<string, string> = {
   menu_access: 'auditFMenus', approve_leave: 'auditFApproveLeave', approve_correction: 'auditFApproveCorrection', approve_advance: 'auditFApproveAdvance',
   account_code: 'auditFCode', tax_code: 'auditFCode', parent_id: 'auditFParent', account_type: 'auditFAccountType', is_postable: 'auditFPostable',
   doc_no: 'cdNo', issue_date: 'cdIssueDate', expiry_date: 'cdExpiryDate', original_name: 'auditFFile',
+  day_of_month: 'recurDay',
   rate: 'auditFRate', calc_method: 'auditFCalcMethod', is_default: 'auditFDefault', lock_date: 'auditFLockDate',
   accounting_mode: 'acgMode', number_format: 'acgNumberFormat', tax_id: 'acgTaxId', chief_accountant: 'acgChiefAccountant', director: 'acgDirector',
   use_vat: 'acgVat', use_fixed_assets: 'acgFixedAssets', use_withholding: 'acgWithholding', use_fx_revaluation: 'acgFxReval', use_bank_reconciliation: 'acgBankRec',

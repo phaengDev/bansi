@@ -79,6 +79,30 @@ export type Expense = {
 
 export const expenseDateOf = (row: Pick<Expense, 'expense_date'>) => moment(row.expense_date, 'YYYY-MM-DD');
 
+/** ລາຍຈ່າຍປະຈຳເດືອນ (GET /expense-recurring) — ແມ່ແບບທີ່ຟອມໃຊ້ເຕີມຂໍ້ມູນ ແລະ ສະຖານະຂອງເດືອນນີ້ */
+export type RecurringExpense = {
+  _uuid: number;
+  title: string;
+  day_of_month: number;
+  sub_category_id: number;
+  acount_id_fk: number;
+  partner_id: number | null;
+  payee_name: string | null;
+  payee_bank_id: number | null;
+  payee_account_number: string | null;
+  items: { name: string; qty: number; unit: string; price: number }[];
+  amount: number;
+  description: string | null;
+  /** 1 = ໃຊ້ຢູ່, 0 = ຢຸດ */
+  status: number;
+  sub: { _uuid: number; name: string; category_id: number } | null;
+  account: { _uuid: number; acountName: string; acount_number: string | null } | null;
+  /** ລາຍຈ່າຍຂອງເດືອນນີ້ທີ່ບັນທຶກຈາກແມ່ແບບແລ້ວ — null = ຍັງ */
+  this_month: { _uuid: number; number: string; expense_date: string; total: number } | null;
+  /** ຄົບກຳນົດແລ້ວ ແຕ່ຍັງບໍ່ບັນທຶກ */
+  due: boolean;
+};
+
 /** ລາຍການຍ່ອຍ 1 ແຖວ (ຈະເປັນ table ລາຍລະອຽດ ແຍກຈາກຫົວ) — key ໃຊ້ພາຍໃນຟອມເທົ່ານັ້ນ */
 type Line = {
   key: number;
@@ -113,6 +137,8 @@ const lineErrors = (line: Line) => ({
 type Props = {
   /** null = ບັນທຶກໃໝ່ */
   data: Expense | null;
+  /** ບັນທຶກໃໝ່ຈາກລາຍຈ່າຍປະຈຳ — ເຕີມປະເພດ, ບັນຊີ, ຜູ້ຮັບ, ລາຍການ (ກວດຈຳນວນເອງກ່ອນບັນທຶກ) */
+  template?: RecurringExpense;
   /** ບັນຊີເງິນຄັງທັງໝົດ (ມີ banks + treasury.currency + ຍອດ) — ເລືອກໄດ້ສະເພາະອັນທີ່ໃຊ້ງານ */
   accounts: TreasuryAccount[];
   onClose: () => void;
@@ -126,7 +152,7 @@ type Props = {
  * ລວມເປັນເງິນ = ຜົນລວມທຸກແຖວ → ຄິດອາກອນ → ຍອດຈ່າຍທັງໝົດ. ບັນຊີທີ່ຈ່າຍບໍ່ສະແດງຍອດ ແຕ່ເຕືອນເມື່ອຍອດບໍ່ພໍ.
  * ບັນທຶກແລ້ວເງິນອອກທັນທີ ຈຶ່ງຢືນຢັນກ່ອນ; ຕອນແກ້ໄຂ ລາຍການ / ບັນຊີ / ອາກອນ ລັອກ (ຕ້ອງຍົກເລີກແລ້ວບັນທຶກໃໝ່)
  */
-const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
+const ExpenseForm = ({ data, template, accounts, onClose, onSaved }: Props) => {
   const t = useT();
   const vatOn = useVatOn();
   const formRef = useRef<FormInstance>(null);
@@ -137,18 +163,23 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const taxes = useTaxes();
   /** ຈ່າຍໃຫ້ໃຜ — ເລືອກລູກຄ້າ/ຜູ້ສະໜອງ ຫຼື ພິມຊື່ເອງ (ຊື່ເກັບໃນ payee_name) */
   const [customer, setCustomer] = useState<CustomerValue>({
-    partner: data?.partner_id ? data.partner ?? null : null,
-    name: data?.payee_name ?? data?.partner?.name ?? '',
+    partner: data?.partner_id ? data.partner ?? null
+      : template?.partner_id ? { _uuid: template.partner_id, partner_code: '', name: template.payee_name ?? '', partner_type: 0 } : null,
+    name: data?.payee_name ?? data?.partner?.name ?? template?.payee_name ?? '',
   });
   const classes = useAccountClasses();
-  const [payClassPicked, setPayClass] = useState<number | null>(classIdOf(data?.acount ?? undefined) ?? null);
+  const [payClassPicked, setPayClass] = useState<number | null>(
+    classIdOf(data?.acount ?? (template ? accounts.find((a) => a._uuid === template.acount_id_fk) : undefined) ?? undefined) ?? null,
+  );
   /** ຍັງບໍ່ເລືອກ = ໝວດເງິນສົດ (ຫຼື ໝວດທຳອິດ) */
   const payClass = payClassPicked ?? defaultClassId(classes);
   const [taxMode, setTaxMode] = useState<TaxMode>('none');
   const [manualMethod, setManualMethod] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [lines, setLines] = useState<Line[]>(() => [newLine()]);
+  const [lines, setLines] = useState<Line[]>(() => (template?.items.length
+    ? template.items.map((item) => ({ ...newLine(), name: item.name, qty: item.qty, unit: item.unit, price: item.price }))
+    : [newLine()]));
   /** ກົດບັນທຶກແລ້ວ — ເລີ່ມໝາຍແຖວທີ່ປ້ອນບໍ່ຄົບເປັນສີແດງ */
   const [checked, setChecked] = useState(false);
   /** ແຖວທີ່ຫາກໍ່ເພີ່ມ — ໂຟກັສຊ່ອງຊື່ລາຍການໃຫ້ພິມຕໍ່ໄດ້ເລີຍ */
@@ -156,15 +187,15 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
   const [inputs, setInputs] = useState<any>({
     expense_date: data ? expenseDateOf(data).toDate() : new Date(),
     /** ໃຊ້ກັ່ນລາຍການຍ່ອຍໃນຟອມເທົ່ານັ້ນ (ບໍ່ສົ່ງ) */
-    category_id: data?.sub?.category_id ?? null,
-    sub_category_id: data?.sub_category_id ?? null,
+    category_id: data?.sub?.category_id ?? template?.sub?.category_id ?? null,
+    sub_category_id: data?.sub_category_id ?? template?.sub_category_id ?? null,
     bill_no: data?.bill_no ?? '',
-    acount_id_fk: data?.acount_id_fk ?? null,
+    acount_id_fk: data?.acount_id_fk ?? template?.acount_id_fk ?? null,
     tax_id: null,
     tax: null,
-    payee_bank_id: data?.payee_bank_id ?? null,
-    payee_account_number: data?.payee_account_number ?? '',
-    description: data?.description ?? '',
+    payee_bank_id: data?.payee_bank_id ?? template?.payee_bank_id ?? null,
+    payee_account_number: data?.payee_account_number ?? template?.payee_account_number ?? '',
+    description: data?.description ?? template?.description ?? '',
   });
 
   useEffect(() => () => {
@@ -327,6 +358,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
       if (removeFile && !file) body.append('remove_file', '1');
     } else {
       body.append('acount_id_fk', String(inputs.acount_id_fk));
+      if (template) body.append('recurring_id', String(template._uuid));
       body.append('items', JSON.stringify(filled.map((l) => ({
         item_name: l.name.trim(),
         quantity: num(l.qty),
@@ -378,7 +410,7 @@ const ExpenseForm = ({ data, accounts, onClose, onSaved }: Props) => {
         <div className="acc-book-modal-head">
           <span className="acc-book-modal-icon"><i className={`fa-solid ${isEdit ? 'fa-pen-to-square' : 'fa-arrow-trend-down'}`} /></span>
           <span>
-            <Modal.Title>{t(isEdit ? 'expenseEdit' : 'expenseAdd')}</Modal.Title>
+            <Modal.Title>{t(isEdit ? 'expenseEdit' : 'expenseAdd')}{template ? ` · ${template.title}` : ''}</Modal.Title>
             <small>{isEdit ? `${data.number} · ${t(data.payroll_id ? 'expenseFromPayrollNote' : 'expenseLockedNote')}` : t('expenseHint')}</small>
           </span>
         </div>

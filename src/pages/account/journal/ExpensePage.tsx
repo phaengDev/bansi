@@ -10,6 +10,7 @@ import type { TreasuryAccount } from '../ledger/TreasuryAccountForm';
 import { currencySymbol } from '../ledger/currency';
 import ExpenseForm, { expenseDateOf, type Expense } from './ExpenseForm';
 import ExpenseDetail from './ExpenseDetail';
+import { RecurringForm } from './RecurringExpensePage';
 import { DailyChart, DayHead, MonthSwitch } from './JournalParts';
 import { TRANSFER, formatQty } from './journalKit';
 import { SearchBox } from '../setting/settingKit';
@@ -39,6 +40,8 @@ const ExpensePage = ({ startNew = false }: { startNew?: boolean }) => {
   /** undefined = ປິດຟອມ, null = ບັນທຶກໃໝ່, ມີແຖວ = ແກ້ໄຂ */
   const [editing, setEditing] = useState<Expense | null | undefined>(startNew && canCreate ? null : undefined);
   const [viewing, setViewing] = useState<Expense | null>(null);
+  /** ລາຍຈ່າຍທີ່ກຳລັງຕັ້ງເປັນລາຍຈ່າຍປະຈຳ */
+  const [makingRecurring, setMakingRecurring] = useState<Expense | null>(null);
 
   const fetchData = async () => {
     try {
@@ -344,6 +347,16 @@ const ExpensePage = ({ startNew = false }: { startNew?: boolean }) => {
             setViewing(null);
           }}
           onCancel={viewing.payroll_id ? undefined : () => cancelExpense(viewing)}
+          onMakeRecurring={() => {
+            setMakingRecurring(viewing);
+            setViewing(null);
+          }}
+        />
+      )}
+      {makingRecurring && (
+        <RecurringForm expenseId={makingRecurring._uuid}
+          defaults={{ title: makingRecurring.expense_title, day: moment(makingRecurring.expense_date).date() }}
+          onClose={() => setMakingRecurring(null)} onSaved={() => Notific.success('recurMadeHint')}
         />
       )}
 

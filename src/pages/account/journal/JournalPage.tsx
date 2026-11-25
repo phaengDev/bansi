@@ -7,6 +7,7 @@ import ExpensePage from './ExpensePage';
 import EntryReport from './EntryReport';
 import GeneralJournalPage from '../gl/GeneralJournalPage';
 import JournalOverview from './JournalOverview';
+import RecurringExpensePage from './RecurringExpensePage';
 import { useRailKey } from '../windowMemory';
 
 /**
@@ -19,6 +20,7 @@ const PAGES: Record<string, ReactNode> = {
   expenseReport: <EntryReport key="expense" kind="expense" />,
   generalEntry: <GeneralJournalPage key="manual" manualOnly />,
   journalBook: <GeneralJournalPage key="book" />,
+  recurring: <RecurringExpensePage />,
 };
 
 const JournalPage = () => {

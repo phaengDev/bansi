@@ -42,8 +42,12 @@ type BudgetSummary = {
 
 /** ຄຳຮ້ອງທີ່ລໍຖ້າ HR (GET /hr/pending) */
 
+/** ລາຍຈ່າຍປະຈຳທີ່ຄົບກຳນົດແລ້ວ ແຕ່ເດືອນນີ້ຍັງບໍ່ບັນທຶກ (GET /expense-recurring → due) */
+type RecurringDue = { due: number };
+
 type Glance = {
   hr?: HrPending | Failed;
+  recurring?: RecurringDue | Failed;
   cash?: CashSummary | Failed;
   month?: MonthSummary | Failed;
   ar?: DebtSummary | Failed;
@@ -190,6 +194,9 @@ const loadBudget = async (): Promise<BudgetSummary> => {
 };
 
 const loadHrPending = async () => (await getApi('/hr/pending')).data?.data as HrPending;
+const loadRecurring = async (): Promise<RecurringDue> => ({
+  due: ((await getApi('/expense-recurring')).data?.data as { due: boolean }[] ?? []).filter((row) => row.due).length,
+});
 
 const settle = <T,>(enabled: boolean, load: () => Promise<T>) =>
   enabled ? load().catch((error): Failed => failOf(error)) : Promise.resolve(undefined);
@@ -451,19 +458,21 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     ap: accessOf('payables'),
     budget: accessOf('budget'),
   };
+  /** ລາຍຈ່າຍປະຈຳ — ຢູ່ໜ້າຕ່າງ ບັນທຶກບັນຊີປະຈຳວັນ (ບໍ່ມີບັດຂອງຕົນເອງ, ຂຶ້ນແຕ່ໃນ "ຕ້ອງຕິດຕາມ") */
+  const journalOpen = accessOf('journal') === 'open';
   // ຄຳຮ້ອງຂອງ HR ຂຶ້ນໃນ "ຕ້ອງຕິດຕາມ" ສະເພາະເມື່ອເປີດໜ້າຕ່າງນັ້ນໄດ້ (ບໍ່ນັບເຂົ້າ anyOpen — ບໍ່ມີບັດຂອງຕົນເອງ)
   const hrAccess = {
     attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open',
     employees: accessOf('employees') === 'open', hr: accessOf('hr') === 'open',
   };
-  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none'].join('|');
+  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
   useEffect(() => {
     if (!menusLoaded) return;
     let cancelled = false;
-    const [cash, month, ar, ap, budget, hr] = accessKey.split('|').map((a) => a === 'open');
+    const [cash, month, ar, ap, budget, hr, journal] = accessKey.split('|').map((a) => a === 'open');
     setLoading(true);
     Promise.all([
       settle(cash, loadCash),
@@ -472,9 +481,10 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
       settle(ap, () => loadDebt(2)),
       settle(budget, loadBudget),
       settle(hr, loadHrPending),
-    ]).then(([c, m, r, p, b, h]) => {
+      settle(journal, loadRecurring),
+    ]).then(([c, m, r, p, b, h, rec]) => {
       if (cancelled) return;
-      setData({ cash: c, month: m, ar: r, ap: p, budget: b, hr: h, at: new Date() });
+      setData({ cash: c, month: m, ar: r, ap: p, budget: b, hr: h, recurring: rec, at: new Date() });
       setLoading(false);
     });
     return () => {
@@ -660,6 +670,14 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   hrTodo('hr-advance-pay', hr?.advance_to_pay, 'fa-money-bill-transfer', 'advToPay', 'payroll');
   // ສັນຍາ / ທົດລອງວຽກ / ບັດ / passport ໃກ້ໝົດ — ເປີດໜ້າພະນັກງານທີ່ແຖບ "ໃກ້ໝົດອາຍຸ"
   hrTodo('hr-expiring', hr?.expiring, 'fa-hourglass-end', 'hrExpiringTitle', 'employees', 'hrExpiringSub', () => requestEmployeesTab('expiring'));
+  // ລາຍຈ່າຍປະຈຳເດືອນທີ່ຄົບກຳນົດ — ເປີດ ບັນທຶກບັນຊີປະຈຳວັນ → ລາຍຈ່າຍປະຈຳ
+  const recurring = isFailed(data?.recurring) ? undefined : data?.recurring;
+  if (recurring?.due) {
+    todos.push({
+      key: 'recurring-due', tone: 'warn', icon: 'fa-repeat', title: t('recurDueTitle'), sub: t('recurDueSub'), amount: `${recurring.due}`,
+      target: 'journal', before: () => requestRailKey('journal', 'recurring'),
+    });
+  }
   // ເອກະສານບໍລິສັດ (ໃບອະນຸຍາດ…) ໃກ້ໝົດ — ເປີດ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ → ຂໍ້ມູນບໍລິສັດ
   hrTodo('hr-company-docs', hr?.company_docs, 'fa-folder-open', 'cdDueTitle', 'hr', 'cdDueSub', () => requestRailKey('hr', 'company'));
   if (ar) debtTodos('ar', ar.overdue, 'danger');

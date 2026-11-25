@@ -80,6 +80,7 @@ export const JOURNAL_MENU: SidebarPopupGroup[] = [
     items: [
       { key: 'income', icon: 'fa-solid fa-arrow-trend-up', label: 'journalIncome' },
       { key: 'expense', icon: 'fa-solid fa-arrow-trend-down', label: 'journalExpense' },
+      { key: 'recurring', icon: 'fa-solid fa-repeat', label: 'recurMenu' },
     ],
   },
   {

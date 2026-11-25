@@ -6,7 +6,7 @@ import { formatNumber, getApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { printElementByFrame } from '../../../utils/Print';
-import { canDelete, canEdit } from '../../../utils/localStorage';
+import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import { currencySymbol } from '../ledger/currency';
 import { expenseDateOf, type Expense } from './ExpenseForm';
@@ -20,9 +20,11 @@ const ACTIVE = 1;
  * ລາຍລະອຽດລາຍຈ່າຍ (Drawer ຂວາ) — ໃບຈ່າຍເງິນ (ຫົວ + ຕາຕະລາງລາຍການຍ່ອຍ + ລວມ/ອາກອນ/ຍອດຈ່າຍ) ທີ່ພິມ ຫຼື
  * ດາວໂຫຼດເປັນຮູບໄດ້ + ໃບບິນຄັດຕິດ (ເບິ່ງ / ດາວໂຫຼດ). ແບບດຽວກັບ IncomeDetail; ແກ້ໄຂ ຫຼື ຍົກເລີກ ໄດ້ຈາກນີ້
  */
-const ExpenseDetail = ({ expense, onClose, onEdit, onCancel }: {
+const ExpenseDetail = ({ expense, onClose, onEdit, onCancel, onMakeRecurring }: {
   expense: Expense;
   onClose: () => void;
+  /** ຕັ້ງເປັນລາຍຈ່າຍປະຈຳເດືອນ (ບໍ່ສົ່ງ = ບໍ່ມີປຸ່ມ) */
+  onMakeRecurring?: () => void;
   /** ບໍ່ສົ່ງ = ເບິ່ງຢ່າງດຽວ (ເຊັ່ນ ເປີດຈາກໜ້າລາຍງານ) — ບໍ່ມີປຸ່ມແກ້ໄຂ / ຍົກເລີກ */
   onEdit?: () => void;
   onCancel?: () => void;
@@ -283,6 +285,11 @@ const ExpenseDetail = ({ expense, onClose, onEdit, onCancel }: {
 
         {/* ປຸ່ມຄຳສັ່ງ — ຕິດລຸ່ມຂອງ body */}
         <div className="acc-inv-footer">
+          {active && onMakeRecurring && !expense.payroll_id && (
+            <Button appearance="default" className="acc-inv-btn" disabled={!canCreate} onClick={onMakeRecurring}>
+              <i className="fa-solid fa-repeat" /> {t('recurMake')}
+            </Button>
+          )}
           {active && onCancel && (
             <Button appearance="default" className="acc-inv-btn is-danger" disabled={!canDelete} onClick={onCancel}>
               <i className="fa-solid fa-ban" /> {t('expenseCancel')}

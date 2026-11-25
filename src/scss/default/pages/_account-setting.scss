@@ -8617,3 +8617,38 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
     small, small i { color: #b3541e; }
   }
 }
+
+// ---- ລາຍຈ່າຍປະຈຳເດືອນ (RecurringExpensePage) ----
+.recur-page {
+  .recur-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    span { padding: 5px 12px; color: #5b6f80; background: #f1f4f7; border-radius: 999px; font-size: 12.5px; }
+    b { color: #14314d; font-variant-numeric: tabular-nums; }
+    .is-due { color: #b3541e; background: #fff0e3; b { color: #b3541e; } }
+    .is-done { color: #08735f; background: #e3f6ef; b { color: #08735f; } }
+  }
+
+  .recur-note { display: flex; gap: 7px; margin: 2px 0 0; color: #5b6f80; font-size: 12px; i { margin-top: 3px; color: #1d7fc4; } }
+
+  .recur-table {
+    tr.is-due td { background: #fffaf3; }
+    .recur-actions { white-space: nowrap; }
+    .recur-actions .acc-rp-btn { height: 30px; padding: 0 10px; font-size: 12px; }
+  }
+
+  .recur-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #7b8a97;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    &.is-done { color: #08735f; }
+    &.is-due { color: #c4343a; }
+    &.is-paused { color: #a7b4bf; }
+  }
+}
