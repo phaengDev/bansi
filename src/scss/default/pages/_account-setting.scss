@@ -5315,7 +5315,10 @@ td > .acc-code-tag + .acc-ov-name { margin-left: 6px; }
 
   b { overflow: hidden; color: var(--stmt-ink); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
   small { color: var(--stmt-muted); font-size: 12px; }
-  a { color: #0a8fc2; font-size: 12px; font-weight: 600; }
+  a,
+  .acs-link-btn { color: #0a8fc2; font-size: 12px; font-weight: 600; }
+  .acs-link-btn { align-self: flex-start; padding: 0; background: none; border: 0; }
+  .acs-link-btn:hover { text-decoration: underline; }
 }
 
 .acc-jr-file-remove {

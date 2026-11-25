@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Button, Form, Loader, Modal, SelectPicker, Toggle } from 'rsuite';
 import { useT } from '../../../context/LanguageContext';
 
@@ -69,6 +69,66 @@ export const DepartmentFilter = ({ departments, value, onChange, width = 220, cl
     <FilterSelect data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))} value={value} onChange={onChange}
       placeholder={t('hrAllDepartments')} width={width} className={className}
     />
+  );
+};
+
+/**
+ * ໄຟລ໌ຄັດຕິດ 1 ໄຟລ໌ໃນຟອມ — ຍັງບໍ່ມີ = ກ່ອງເລືອກໄຟລ໌; ມີ = ບັດ (ຮູບຕົວຢ່າງ / ໄອຄອນ PDF, ຊື່, ຂະໜາດ ຫຼື ລິ້ງເປີດ) + ປຸ່ມລຶບ.
+ * ໄຟລ໌ເດີມ (existingName) ເປີດຜ່ານ onOpenExisting (ດາວໂຫຼດທີ່ຕ້ອງ login). ກວດປະເພດ / ຂະໜາດ ຢູ່ຜູ້ເອີ້ນ (onPick)
+ */
+export const AttachmentPicker = ({ file, existingName, onOpenExisting, onPick, onClear, accept = 'image/*,application/pdf', hint, icon = 'fa-file-lines' }: {
+  file: File | null;
+  existingName?: string | null;
+  onOpenExisting?: () => void;
+  onPick: (file: File) => void;
+  onClear: () => void;
+  accept?: string;
+  hint: string;
+  icon?: string;
+}) => {
+  const t = useT();
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file || !/^image\//.test(file.type)) {
+      setPreview(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  const name = file?.name ?? existingName;
+  if (!name) {
+    return (
+      <label className="acs-logo-pick">
+        <span className="acs-logo-preview"><i className={`fa-solid ${icon}`} /></span>
+        <span className="acs-logo-text">
+          <b><i className="fa-solid fa-upload" /> {t('attachPick')}</b>
+          <small>{hint}</small>
+        </span>
+        <input type="file" accept={accept} hidden onChange={(e) => {
+          const next = e.target.files?.[0];
+          e.target.value = '';
+          if (next) onPick(next);
+        }} />
+      </label>
+    );
+  }
+  return (
+    <div className="acc-jr-file-card">
+      <span className="acc-jr-file-thumb">
+        {preview ? <img src={preview} alt="" /> : <i className={`fa-solid ${/\.pdf$/i.test(name) ? 'fa-file-pdf' : 'fa-file-image'}`} />}
+      </span>
+      <span className="acc-jr-file-name">
+        <b>{name}</b>
+        {file
+          ? <small>{Math.max(1, Math.round(file.size / 1024)).toLocaleString('en-US')} KB</small>
+          : onOpenExisting && <button type="button" className="acs-link-btn" onClick={onOpenExisting}>{t('attachOpen')}</button>}
+      </span>
+      <button type="button" className="acc-jr-file-remove" onClick={onClear} aria-label={t('attachRemove')} title={t('attachRemove')}>
+        <i className="fa-solid fa-trash" />
+      </button>
+    </div>
   );
 };
 

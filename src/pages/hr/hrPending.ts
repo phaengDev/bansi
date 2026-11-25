@@ -9,6 +9,8 @@ export type HrPending = {
   advance_to_pay: number;
   /** ຈຳນວນຄົນທີ່ມີເອກະສານ / ສັນຍາ ໃກ້ໝົດອາຍຸ (API ລຸ້ນເກົ່າ = ບໍ່ມີ) */
   expiring?: number;
+  /** ເອກະສານບໍລິສັດ ໝົດແລ້ວ / ໝົດພາຍໃນ 60 ມື້ */
+  company_docs?: number;
 };
 
 /** ລາຍການໃກ້ໝົດອາຍຸ (GET /employee/expiring) — days ລົບ = ໝົດແລ້ວ */

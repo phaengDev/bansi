@@ -11,6 +11,7 @@ import { budgetName, percentOf, percentText, planToDate, statusOf, type BudgetDa
 import { useAccountMenusLoaded, type AccountMenu } from './accountMenus';
 import type { ShortcutId } from './DesktopShared';
 import { requestEmployeesTab, type HrPending } from '../hr/hrPending';
+import { requestRailKey } from './windowMemory';
 
 /** ສະຖານະຂອງເມນູຕໍ່ພາບລວມ: ບໍ່ມີສິດ (ບໍ່ສະແດງ) / ລັອກ (ບໍ່ດຶງ ບໍ່ສະແດງຕົວເລກ) / ເປີດ */
 type Access = 'none' | 'locked' | 'open';
@@ -451,8 +452,11 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     budget: accessOf('budget'),
   };
   // ຄຳຮ້ອງຂອງ HR ຂຶ້ນໃນ "ຕ້ອງຕິດຕາມ" ສະເພາະເມື່ອເປີດໜ້າຕ່າງນັ້ນໄດ້ (ບໍ່ນັບເຂົ້າ anyOpen — ບໍ່ມີບັດຂອງຕົນເອງ)
-  const hrAccess = { attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open', employees: accessOf('employees') === 'open' };
-  const accessKey = [...Object.values(access), hrAccess.attendance || hrAccess.payroll || hrAccess.employees ? 'open' : 'none'].join('|');
+  const hrAccess = {
+    attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open',
+    employees: accessOf('employees') === 'open', hr: accessOf('hr') === 'open',
+  };
+  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
@@ -645,7 +649,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   }));
   // ຄຳຮ້ອງຈາກພະນັກງານທີ່ລໍຖ້າ HR (ບໍ່ມີສິດ / API ລຸ້ນເກົ່າ = ບໍ່ຂຶ້ນ)
   const hr = isFailed(data?.hr) ? undefined : data?.hr;
-  const hrTodo = (key: string, count: number | undefined, icon: string, title: string, target: 'attendance' | 'payroll' | 'employees',
+  const hrTodo = (key: string, count: number | undefined, icon: string, title: string, target: 'attendance' | 'payroll' | 'employees' | 'hr',
     sub = 'glanceHrWaiting', before?: () => void) => {
     if (!count || !hrAccess[target]) return;
     todos.push({ key, tone: 'warn', icon, title: t(title), sub: t(sub), amount: `${count}`, target, before });
@@ -656,6 +660,8 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   hrTodo('hr-advance-pay', hr?.advance_to_pay, 'fa-money-bill-transfer', 'advToPay', 'payroll');
   // ສັນຍາ / ທົດລອງວຽກ / ບັດ / passport ໃກ້ໝົດ — ເປີດໜ້າພະນັກງານທີ່ແຖບ "ໃກ້ໝົດອາຍຸ"
   hrTodo('hr-expiring', hr?.expiring, 'fa-hourglass-end', 'hrExpiringTitle', 'employees', 'hrExpiringSub', () => requestEmployeesTab('expiring'));
+  // ເອກະສານບໍລິສັດ (ໃບອະນຸຍາດ…) ໃກ້ໝົດ — ເປີດ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ → ຂໍ້ມູນບໍລິສັດ
+  hrTodo('hr-company-docs', hr?.company_docs, 'fa-folder-open', 'cdDueTitle', 'hr', 'cdDueSub', () => requestRailKey('hr', 'company'));
   if (ar) debtTodos('ar', ar.overdue, 'danger');
   if (ap) debtTodos('ap', ap.overdue, 'danger');
   if (ap) debtTodos('ap', ap.dueSoon, 'warn');

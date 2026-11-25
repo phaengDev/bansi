@@ -14,6 +14,7 @@ import { MAX_FILE, workHours, type Company } from './hrApi';
 import { refreshAccountSetting } from '../account/accountSettings';
 import { LocationModal, LocationPreview, type CompanyLocationValue } from './CompanyLocation';
 import CompanyScanQr from './CompanyScanQr';
+import CompanyDocsSection from './CompanyDocsSection';
 
 const { StringType } = Schema.Types;
 const IMAGE = /^image\/(jpeg|png|webp)$/;
@@ -671,6 +672,7 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
         </div>
         <div className="hr-company-col">
           <CompanyScanQr company={company} />
+          <CompanyDocsSection />
         </div>
       </div>
 

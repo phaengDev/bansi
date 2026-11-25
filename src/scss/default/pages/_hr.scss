@@ -1921,3 +1921,49 @@
   &.is-soon { color: #b3541e; background: #ffe9d9; }
   &.is-over { color: #c4343a; background: #fdecec; }
 }
+
+// ເອກະສານບໍລິສັດ (CompanyDocsSection) — ລາຍການໃນບັດ: ໄອຄອນ, ຊື່ + ເລກທີ, ອອກ/ໝົດ, ປ້າຍໃກ້ໝົດ, ປຸ່ມ
+.hr-company-docs {
+  > header .acc-rp-btn { margin-left: auto; height: 32px; padding: 0 12px; }
+
+  .hr-company-docs-empty { margin: 4px 0 0; color: #7b8a97; font-size: 12.5px; i { margin-right: 6px; } }
+}
+
+.hr-company-doc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 2px;
+  }
+
+  > li + li { border-top: 1px solid #eef2f5; }
+}
+
+.hr-company-doc-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--book-accent);
+  background: #e7f5f0;
+  border-radius: 10px;
+}
+
+.hr-company-doc-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.4;
+
+  b { color: #14314d; font-size: 13px; small { color: #7b8a97; font-weight: 600; } }
+  > small { color: #7b8a97; font-size: 11.5px; }
+}
+
+.hr-company-doc-actions { display: flex; gap: 2px; }
