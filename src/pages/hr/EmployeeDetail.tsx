@@ -7,6 +7,7 @@ import { Notific } from '../../utils/Notification';
 import { canEdit } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
 import { useCanSeeSalary } from '../account/accountMenus';
+import SalaryHistorySection from './SalaryHistorySection';
 import {
   DEFAULT_APP_PASSWORD, GENDERS, RESIGNED, WORKING, fullName, type Employee, type EmployeeSummary,
 } from './hrApi';
@@ -294,6 +295,9 @@ const EmployeeDetail = ({ employee: initial, onClose, onEdit, onChanged, onOpenE
 
         {/* ສິດວັນລາພັກ (HR ຕັ້ງສະເພາະຄົນໄດ້) */}
         {!resigned && <LeaveQuotaSection employee={employee} />}
+
+        {/* ປະຫວັດເງິນເດືອນ (ໃບເງິນເດືອນທີ່ຈ່າຍແລ້ວ + ໃຜປ່ຽນ) — ສະເພາະຜູ້ມີສິດເມນູເງິນເດືອນ */}
+        {canSeeSalary && <SalaryHistorySection employee={employee} />}
 
         <ExtraInfo employee={employee} />
         </>}

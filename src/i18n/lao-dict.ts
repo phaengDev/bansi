@@ -3281,6 +3281,9 @@ export const laoDict = {
   ptrNoSsoHint: { la: 'ໃສ່ໃນຂໍ້ມູນພະນັກງານ (ບັດ ແລະ ຂໍ້ມູນສ່ວນຕົວ)', en: 'Add it in the employee profile (ID & personal)', cn: '请在员工资料（证件与个人信息）中填写' },
   ptrRemitSso: { la: 'ປກສ ທີ່ຕ້ອງນຳສົ່ງ', en: 'SSO to remit', cn: '应缴社保' },
   ptrRemitTax: { la: 'ອາກອນລາຍໄດ້ທີ່ຕ້ອງນຳສົ່ງ', en: 'Income tax to remit', cn: '应缴个税' },
+  shTitle: { la: 'ປະຫວັດເງິນເດືອນ', en: 'Salary history', cn: '薪资历史' },
+  shMonths: { la: 'ເດືອນ', en: 'months', cn: '个月' },
+  shNextPay: { la: 'ງວດໜ້າຈະໃຊ້', en: 'Next payroll uses', cn: '下期将使用' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;
