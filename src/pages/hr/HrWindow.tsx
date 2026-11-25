@@ -10,6 +10,7 @@ import HrOptionPage from './HrOptionPage';
 import SkillPage from './SkillPage';
 import OrgChartPage from './org/OrgChartPage';
 import AppReleasePage from './AppReleasePage';
+import AuditLogPage from './AuditLogPage';
 import { useRailKey } from '../account/windowMemory';
 
 /** key ຂອງເມນູ (HR_MENU) → ໜ້າ */
@@ -22,6 +23,7 @@ const HR_PAGES: Record<string, ReactNode> = {
   skills: <SkillPage />,
   orgChart: <OrgChartPage />,
   appRelease: <AppReleasePage />,
+  auditLog: <AuditLogPage />,
 };
 
 /**

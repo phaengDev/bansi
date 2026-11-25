@@ -35,9 +35,28 @@ export const SearchBox = ({ value, onChange, placeholder, grow, className = '' }
 };
 
 /**
- * ຕົວກັ່ນພະແນກທີ່ຢູ່ຄຽງ SearchBox — ສູງ 38px, ມົນ ແລະ ຂອບແບບດຽວກັບຊ່ອງຄົ້ນຫາ, ປຸ່ມເຕັມກ່ອງ (ລູກສອນຢູ່ຂອບຂວາ).
- * ຄົ້ນຫາໃນລາຍການເມື່ອມີຫຼາຍກວ່າ 8 ພະແນກ; width = ຄວາມກວ້າງ (px) ໃນແຖວກວ້າງ — ພື້ນທີ່ແຄບເຕັມແຖວເອງ
+ * ຕົວກັ່ນແບບເລືອກທີ່ຢູ່ຄຽງ SearchBox — ສູງ 38px, ມົນ ແລະ ຂອບແບບດຽວກັບຊ່ອງຄົ້ນຫາ, ປຸ່ມເຕັມກ່ອງ (ລູກສອນຢູ່ຂອບຂວາ).
+ * ຄົ້ນຫາໃນລາຍການເມື່ອມີຫຼາຍກວ່າ 8 ອັນ; width = ຄວາມກວ້າງ (px) ໃນແຖວກວ້າງ — ພື້ນທີ່ແຄບເຕັມແຖວເອງ
  */
+export const FilterSelect = <T extends string | number>({ data, value, onChange, placeholder, width = 220, className = '' }: {
+  data: { value: T; label: string }[];
+  value: T | null;
+  onChange: (value: T | null) => void;
+  placeholder: string;
+  width?: number;
+  className?: string;
+}) => {
+  const t = useT();
+  return (
+    <SelectPicker block className={`app-filter-picker${className ? ` ${className}` : ''}`} style={{ width }}
+      data={data} value={value} onChange={(v) => onChange((v ?? null) as T | null)}
+      placeholder={placeholder} searchable={data.length > 8} placement="bottomEnd"
+      locale={{ searchPlaceholder: t('search') }}
+    />
+  );
+};
+
+/** ຕົວກັ່ນພະແນກ (FilterSelect) — ໃຊ້ໃນໜ້າພະນັກງານ, ການເຂົ້າວຽກ, ເລືອກຜູ້ຮັບຜິດຊອບ, ທີມງານ */
 export const DepartmentFilter = ({ departments, value, onChange, width = 220, className = '' }: {
   departments: { _uuid: number; depart_name: string }[];
   value: number | null;
@@ -47,10 +66,8 @@ export const DepartmentFilter = ({ departments, value, onChange, width = 220, cl
 }) => {
   const t = useT();
   return (
-    <SelectPicker block className={`app-filter-picker${className ? ` ${className}` : ''}`} style={{ width }}
-      data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))} value={value} onChange={onChange}
-      placeholder={t('hrAllDepartments')} searchable={departments.length > 8} placement="bottomEnd"
-      locale={{ searchPlaceholder: t('search') }}
+    <FilterSelect data={departments.map((d) => ({ value: d._uuid, label: d.depart_name }))} value={value} onChange={onChange}
+      placeholder={t('hrAllDepartments')} width={width} className={className}
     />
   );
 };

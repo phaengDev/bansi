@@ -1774,3 +1774,131 @@
     font-weight: 700;
   }
 }
+
+// ---- ປະຫວັດການແກ້ໄຂ (AuditLogPage) — ກຸ່ມຕາມມື້; ແຖວ = ການກະທຳ · ລາຍການ + ຄ່າເກົ່າ → ໃໝ່ · ຜູ້ໃຊ້/ເວລາ ----
+.audit-page {
+  .audit-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 2px 0 0;
+    color: #5b6f80;
+    font-size: 12px;
+    line-height: 1.5;
+
+    i { margin-top: 3px; color: #1d7fc4; }
+    &.is-warn { margin: 0 0 10px; color: #8a5a00; i { color: #d9822b; } }
+  }
+
+  .audit-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 14px;
+    transition: opacity 0.2s ease;
+
+    &.is-refreshing { opacity: 0.5; }
+  }
+
+  .audit-day {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 8px 2px;
+    color: #3d5266;
+    font-size: 13px;
+    font-weight: 800;
+
+    i { color: #7b8a97; }
+    em { padding: 0 8px; border-radius: 999px; color: #5b6f80; background: #eef2f5; font-size: 11px; font-style: normal; }
+  }
+
+  .audit-list {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #e3eaf0;
+    border-radius: 14px;
+  }
+
+  .audit-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 14px;
+    padding: 11px 14px;
+
+    & + & { border-top: 1px solid #eef2f5; }
+  }
+
+  .audit-action {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &.is-blue { color: #1d6fae; background: #e6f2fb; }
+    &.is-red { color: #c4343a; background: #fdecec; }
+    &.is-violet { color: #6a4bc4; background: #f1eafd; }
+    &.is-gold { color: #9a6410; background: #fff4dc; }
+    &.is-green { color: #08735f; background: #e3f6ef; }
+  }
+
+  .audit-main {
+    min-width: 0;
+
+    > b {
+      display: block;
+      color: #14314d;
+      font-size: 13.5px;
+
+      i { margin-right: 4px; color: #7b8a97; font-size: 12px; }
+      span { font-variant-numeric: tabular-nums; }
+    }
+  }
+
+  .audit-changes {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+
+    li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+    em { min-width: 130px; color: #5b6f80; font-style: normal; }
+    s { color: #a7b4bf; font-variant-numeric: tabular-nums; }
+    i { color: #a7b4bf; font-size: 10px; }
+    strong { color: #14314d; font-weight: 700; font-variant-numeric: tabular-nums; }
+  }
+
+  .audit-empty { color: #a7b4bf; font-weight: 400; }
+
+  .audit-who {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    color: #3d5266;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+
+    i { color: #7b8a97; font-size: 11px; }
+    small { color: #7b8a97; font-weight: 400; font-variant-numeric: tabular-nums; }
+  }
+}
+
+@container (max-width: 760px) {
+  .audit-page .audit-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .audit-page .audit-who { flex-direction: row; align-items: center; gap: 8px; }
+  .audit-page .audit-changes em { min-width: 0; }
+}
