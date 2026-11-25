@@ -338,6 +338,17 @@ export const MY_INBOX_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ຈັດການບໍລິສັດ (ເຈົ້າຂອງລະບົບ) */
+export const PLATFORM_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'platGroup',
+    items: [
+      { key: 'companies', icon: 'fa-solid fa-building', label: 'platCompanies' },
+      { key: 'packages', icon: 'fa-solid fa-box-open', label: 'platPackages' },
+    ],
+  },
+];
+
 export const toRailNav = (groups: SidebarPopupGroup[], t: (key: string) => string) =>
   groups.flatMap(({ group, items }) =>
     items.map((item) => ({ ...item, label: t(item.label), group: t(group) }))

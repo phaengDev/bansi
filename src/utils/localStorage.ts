@@ -9,6 +9,9 @@ export const getPermission = (key: string): number => {
   return value ? parseInt(value, 10) : 2; // default 2 = no permission
 };
 
+/** ແພັກເກດຂອງບໍລິສັດໝົດອາຍຸ = ອ່ານໄດ້ຢ່າງດຽວ (ຕັ້ງໂດຍ pages/account/companyPlan — PLAN_READ_ONLY_KEY) */
+const planReadOnly = () => getLocal("planReadOnly") === "1";
+
 // Define storage getters
 
 const storage = {
@@ -17,15 +20,15 @@ const storage = {
   },
 
   get canCreate(): boolean {
-    return getPermission("creates") === 1;
+    return getPermission("creates") === 1 && !planReadOnly();
   },
 
   get canEdit(): boolean {
-    return getPermission("updates") === 1;
+    return getPermission("updates") === 1 && !planReadOnly();
   },
 
   get canDelete(): boolean {
-    return getPermission("deletes") === 1;
+    return getPermission("deletes") === 1 && !planReadOnly();
   }
 
 };

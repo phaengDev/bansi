@@ -45,6 +45,10 @@ export interface TextFieldProps extends Omit<FormControlProps, "name"> {
   controls?: boolean | ((trigger: "up" | "down") => ReactNode);
 }
 
+/** prop ຊ່ອງລະຫັດຜ່ານຂອງ InputField (type ບໍ່ຢູ່ໃນ TextFieldProps) — ລະຫັດໃໝ່ / ລະຫັດປັດຈຸບັນ (ໃຫ້ browser ຕື່ມຖືກ) */
+export const newPasswordProps = { type: 'password', autoComplete: 'new-password' } as object;
+export const currentPasswordProps = { type: 'password', autoComplete: 'current-password' } as object;
+
 export function InputField({
   name,
   label,

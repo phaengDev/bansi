@@ -128,7 +128,8 @@ export type ShortcutId =
   | 'myTasks'
   | 'myTeam'
   | 'myInbox'
-  | 'settings';
+  | 'settings'
+  | 'platform';
 
 /** Dict key (src/i18n/lao-dict.ts) for each shortcut's display name, for use with useT()/t(). */
 export const shortcutNameKeys: Record<ShortcutId, string> = {
@@ -155,6 +156,7 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   myTeam: 'accountAppMyTeam',
   myInbox: 'accountAppMyInbox',
   settings: 'accountAppSettings',
+  platform: 'accountAppPlatform',
 };
 
 /** Dict key for the one-line description shown in each module's window (and as its window subtitle). */
@@ -181,6 +183,7 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   myTeam: 'accountAppMyTeamDesc',
   myInbox: 'accountAppMyInboxDesc',
   settings: 'accountAppSettingsDesc',
+  platform: 'accountAppPlatformDesc',
 };
 
 export const shortcuts: ReadonlyArray<{
@@ -215,6 +218,8 @@ export const shortcuts: ReadonlyArray<{
   { id: 'myTeam', icon: 'fa-people-group', tone: 'violet', path: '/me/team', popup: true },
   { id: 'myInbox', icon: 'fa-bell', tone: 'coral', path: '/me/inbox', popup: true },
   { id: 'settings', icon: 'fa-gears', tone: 'slate', path: '/account/setting', popup: true },
+  // ຈັດການບໍລິສັດ / ແພັກເກດ — ບໍ່ຢູ່ໃນ tbl_main_menu: ຂຶ້ນສະເພາະເຈົ້າຂອງລະບົບ (GET /platform/me, useAccountMenus)
+  { id: 'platform', icon: 'fa-building-shield', tone: 'violet', path: '/platform', popup: true },
 ];
 
 export type Shortcut = (typeof shortcuts)[number];

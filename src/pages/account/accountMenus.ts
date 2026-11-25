@@ -3,6 +3,7 @@ import { getApi, postApi } from '../../utils/configApi';
 import { useLangField, useT } from '../../context/LanguageContext';
 import { menuGroupOf, shortcutNameKeys, shortcuts, type Shortcut, type ShortcutId } from './DesktopShared';
 import type { Employee } from '../hr/hrApi';
+import { planBlocks, refreshCompanyPlan, useCompanyPlan, useIsPlatformAdmin } from './companyPlan';
 
 /** ແຖວຈາກ GET /menu/main ແລະ /menu/all (tbl_main_menu types 2) — backend ບໍ່ສົ່ງ hash ລະຫັດຜ່ານ ສົ່ງແຕ່ locked */
 type MainMenuRow = {
@@ -31,6 +32,10 @@ const UNLOCKABLE: ShortcutId[] = ['settings', 'calendar'];
 /** ເມນູຂອງຂ້ອຍ (/me/… — ຂໍ້ມູນຂອງພະນັກງານເອງ) — ບໍ່ມາຈາກ tbl_main_menu, ຂຶ້ນສະເພາະບັນຊີທີ່ຜູກກັບພະນັກງານ */
 const SELF_SERVICE = shortcuts.filter((shortcut) => menuGroupOf(shortcut.path) === 'me');
 const isSelfService = (id: ShortcutId) => SELF_SERVICE.some((shortcut) => shortcut.id === id);
+/** ຈັດການບໍລິສັດ — ບໍ່ມາຈາກ tbl_main_menu, ຂຶ້ນສະເພາະເຈົ້າຂອງລະບົບ */
+const PLATFORM = shortcuts.find((shortcut) => shortcut.id === 'platform')!;
+/** ເມນູທີ່ບໍ່ມາຈາກ tbl_main_menu (ບໍ່ຢູ່ໃນລາຍການສຳຮອງ ເມື່ອ DB ຍັງບໍ່ມີແຖວເມນູ) */
+const isExtra = (id: ShortcutId) => isSelfService(id) || id === PLATFORM.id;
 
 /**
  * ເມນູທີ່ຜູ້ໃຊ້ຄົນນີ້ເຂົ້າໄດ້ (backend ກັ່ນຕາມ tbl_users.menu_access ແລ້ວ). all = ໄດ້ທຸກເມນູ.
@@ -51,6 +56,8 @@ const listeners = new Set<() => void>();
  * ເທື່ອຕໍ່ມາ = ໃຊ້ລາຍການເກົ່າ (ເນັດສະດຸດ ບໍ່ໃຫ້ປິດໜ້າຕ່າງທີ່ເປີດຢູ່)
  */
 export const refreshAccountMenus = async () => {
+  // ແພັກເກດຂອງບໍລິສັດ (ໂມດູນ / ໝົດອາຍຸ) ໂຫຼດພ້ອມກັນ — ມີ store ຂອງຕົນເອງ (companyPlan)
+  refreshCompanyPlan().catch((error) => console.error(error));
   const [menus, self] = await Promise.allSettled([getApi('/menu/main'), getApi('/employee/me')]);
   if (menus.status === 'fulfilled') {
     menuState = { rows: menus.value.data?.data ?? [], all: menus.value.data?.all !== false };
@@ -82,7 +89,7 @@ const useToMenus = () => {
     name: (row && lf(row, 'name')) || t(shortcutNameKeys[shortcut.id]),
     iconClass: row?.icons || `fa-solid ${shortcut.icon}`,
     locked: !!row?.locked,
-    lockable: !!row && !UNLOCKABLE.includes(shortcut.id) && !isSelfService(shortcut.id),
+    lockable: !!row && !UNLOCKABLE.includes(shortcut.id) && !isExtra(shortcut.id),
   });
 
   return { toMenu, fromRows: (rows: MainMenuRow[]) => rows.flatMap((row) => {
@@ -98,12 +105,16 @@ const useToMenus = () => {
 export const useAccountMenus = (): AccountMenu[] => {
   const state = useSyncExternalStore(subscribe, () => menuState);
   const self = useSyncExternalStore(subscribe, () => selfState);
+  // ໜ້າຂອງຂ້ອຍຂອງໂມດູນທີ່ບໍລິສັດບໍ່ໄດ້ຊື້ (ເຊັ່ນ ບໍ່ມີເງິນເດືອນ → ບໍ່ມີ ເງິນເດືອນຂອງຂ້ອຍ) — backend ກັ່ນເມນູ DB ແລ້ວ
+  const plan = useCompanyPlan();
+  const platformAdmin = useIsPlatformAdmin();
   const { toMenu, fromRows } = useToMenus();
   if (!state) return [];
   const menus = !state.rows.length
-    ? (state.all ? shortcuts.filter((shortcut) => !isSelfService(shortcut.id)).map((shortcut) => toMenu(shortcut)) : [])
+    ? (state.all ? shortcuts.filter((shortcut) => !isExtra(shortcut.id) && !planBlocks(plan, shortcut.path)).map((shortcut) => toMenu(shortcut)) : [])
     : fromRows(state.rows);
-  return self ? [...menus, ...SELF_SERVICE.map((shortcut) => toMenu(shortcut))] : menus;
+  const mine = self ? SELF_SERVICE.filter((shortcut) => !planBlocks(plan, shortcut.path)).map((shortcut) => toMenu(shortcut)) : [];
+  return [...menus, ...mine, ...(platformAdmin ? [toMenu(PLATFORM)] : [])];
 };
 
 /**

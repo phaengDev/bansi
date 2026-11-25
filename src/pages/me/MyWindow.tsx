@@ -4,6 +4,7 @@ import { useT } from '../../context/LanguageContext';
 import { toRailNav, type SidebarPopupGroup } from '../account/config/SidebarPopup';
 import { useRailKey } from '../account/windowMemory';
 import { useMyEmployee } from '../account/accountMenus';
+import { planHas, useCompanyPlan } from '../account/companyPlan';
 import { shortcutNameKeys, type ShortcutId } from '../account/DesktopShared';
 import MyToday from './MyToday';
 import MyAttendance from './MyAttendance';
@@ -21,6 +22,9 @@ import { canApprove, pendingApprovals, unreadNotifications, useMyInbox } from '.
 import { clearMyPageRequest, hasPage, openMyPage, useMyPageRequest } from './meNav';
 import type { MyIntent, MyOpen } from './meApi';
 
+/** ແຖບຂອງໂມດູນມອບໝາຍວຽກ */
+const TASK_RAILS = ['tasks', 'assigned'];
+
 /**
  * ໜ້າຕ່າງຂອງເມນູຂອງຂ້ອຍ (ການເຮັດວຽກ / ເງິນເດືອນ …) — ສຳລັບຜູ້ໃຊ້ທີ່ຜູກກັບພະນັກງານ: ໃຊ້ຂໍ້ມູນ ແລະ ຄຳຮ້ອງຂອງຕົນເອງຜ່ານຄອມ
  * ຄືກັນກັບ app ພະນັກງານ (route /…/me ຂອງ backend). ແຖບຊ້າຍ = ໜ້າຂອງເມນູນີ້; ເປີດໜ້າຂອງເມນູອື່ນ = ໜ້າຕ່າງນັ້ນເປີດຂຶ້ນ
@@ -34,9 +38,12 @@ const MyWindow = ({ id, menu }: { id: ShortcutId; menu: SidebarPopupGroup[] }) =
   const approver = canApprove(inbox);
   const approvals = pendingApprovals(inbox);
   const unread = unreadNotifications(inbox);
+  // ວຽກທີ່ໄດ້ຮັບ / ມອບໝາຍ = ໂມດູນມອບໝາຍວຽກ (ແຜນວຽກ + ບັນທຶກ ຢູ່ໜ້າຕ່າງດຽວກັນ ເປັນພື້ນຖານ)
+  const tasksOn = planHas(useCompanyPlan(), 'tasks');
   const railNav = useMemo(() => toRailNav(menu, t)
     .filter((item) => item.key !== 'approvals' || approver !== false)
-    .map((item) => ({ ...item, badge: item.key === 'approvals' ? approvals : item.key === 'notifications' ? unread : undefined })), [menu, t, approver, approvals, unread]);
+    .filter((item) => tasksOn || !TASK_RAILS.includes(item.key))
+    .map((item) => ({ ...item, badge: item.key === 'approvals' ? approvals : item.key === 'notifications' ? unread : undefined })), [menu, t, approver, approvals, unread, tasksOn]);
   const active = railNav.find((item) => item.key === savedKey) ?? railNav[0];
   const activeKey = active?.key ?? savedKey;
   /** ສິ່ງທີ່ໜ້າປາຍທາງຕ້ອງເຮັດເມື່ອເປີດ (ເຊັ່ນ ເປີດຟອມຂໍໃໝ່) — ໜ້າເຮັດແລ້ວລ້າງ */

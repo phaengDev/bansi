@@ -29,6 +29,8 @@ import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
 import FixedAssetWindow from './assets/FixedAssetWindow';
 import MenuUnlockModal from './MenuUnlockModal';
+import PlatformWindow from '../platform/PlatformWindow';
+import { PlanBadge } from './PlanSummary';
 import MenuContextMenu from './MenuContextMenu';
 import { MenuLockForm, type MenuLockMode } from './setting/MenuLockPage';
 import { refreshAccountMenus, useAccountMenus, useAccountMenusLoaded } from './accountMenus';
@@ -74,6 +76,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   myTasks: <MyWindow id="myTasks" menu={MY_TASKS_MENU} />,
   myTeam: <MyWindow id="myTeam" menu={MY_TEAM_MENU} />,
   myInbox: <MyWindow id="myInbox" menu={MY_INBOX_MENU} />,
+  platform: <PlatformWindow />,
 };
 
 /**
@@ -151,6 +154,7 @@ const AccountShell: React.FC = () => {
   const myTeamWindow = usePopupWindow();
   const myInboxWindow = usePopupWindow();
   const settingsWindow = usePopupWindow();
+  const platformWindow = usePopupWindow();
   const popupWindows: Partial<Record<ShortcutId, ReturnType<typeof usePopupWindow>>> = {
     journal: journalWindow,
     chartOfAccounts: chartWindow,
@@ -175,6 +179,7 @@ const AccountShell: React.FC = () => {
     myTeam: myTeamWindow,
     myInbox: myInboxWindow,
     settings: settingsWindow,
+    platform: platformWindow,
   };
   // ໜ້າຕ່າງທີ່ເປີດຢູ່ ແລະ ຍັງບໍ່ໄດ້ຫຍໍ້ — ປຸ່ມ "ຫຍໍ້ທັງໝົດ" ໃນ taskbar ຫຍໍ້ລົງທັງໝົດເພື່ອເຫັນ desktop
   const shownWindows = Object.values(popupWindows).filter((popup) => popup?.open && !popup.minimized);
@@ -710,6 +715,8 @@ const AccountShell: React.FC = () => {
         </div>
 
         <div className="life-taskbar-tray" aria-label={`${time}, ${date}`}>
+          {/* ທົດລອງໃຊ້ / ໃກ້ໝົດອາຍຸ / ໝົດອາຍຸ — ບໍ່ຂຶ້ນເມື່ອແພັກເກດບໍ່ມີວັນໝົດອາຍຸ */}
+          <PlanBadge />
           {TRAY_APPS.filter((id) => menuOf(id)).map((id) => (
             <button
               key={id}

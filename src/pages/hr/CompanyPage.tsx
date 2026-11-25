@@ -15,6 +15,7 @@ import { refreshAccountSetting } from '../account/accountSettings';
 import { LocationModal, LocationPreview, type CompanyLocationValue } from './CompanyLocation';
 import CompanyScanQr from './CompanyScanQr';
 import CompanyDocsSection from './CompanyDocsSection';
+import { CompanyPlanCard } from '../account/PlanSummary';
 
 const { StringType } = Schema.Types;
 const IMAGE = /^image\/(jpeg|png|webp)$/;
@@ -673,6 +674,7 @@ const CompanyView = ({ company, onEdit, onSaved }: { company: Company; onEdit: (
         <div className="hr-company-col">
           <CompanyScanQr company={company} />
           <CompanyDocsSection />
+          <CompanyPlanCard />
         </div>
       </div>
 

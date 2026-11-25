@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Checkbox, Form, Schema, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
-import { InputField } from '../../utils/inputFields';
+import { InputField, newPasswordProps, currentPasswordProps } from '../../utils/inputFields';
 import { deleteApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
@@ -22,8 +22,6 @@ import {
 const { StringType, NumberType } = Schema.Types;
 const MIN_PASSWORD = 6;
 /** TextFieldProps ຂອງ InputField ບໍ່ໄດ້ປະກາດ type — ສົ່ງຕໍ່ໃຫ້ Input ຄືກັບ MenuLockPage */
-const newSecret = { type: 'password', autoComplete: 'new-password' } as object;
-const currentSecret = { type: 'password', autoComplete: 'current-password' } as object;
 
 /** ພະນັກງານໃນ SelectPicker — ຮູບ + ລະຫັດ + ຊື່ + ພະແນກ */
 const employeeLabel = (_: unknown, item: any) => item && (
@@ -221,8 +219,8 @@ const UserForm = ({ data, types, menus, onClose, onSaved }: {
           <InputField name="phones" label={t('hrLoginPhone')} icon={<i className="fa-solid fa-phone" />} placeholder="20xxxxxxxx" />
           {!data && (
             <>
-              <InputField name="password" label={t('hrPassword')} {...newSecret} icon={<i className="fa-solid fa-key" />} />
-              <InputField name="confirm" label={t('hrPasswordConfirm')} {...newSecret} icon={<i className="fa-solid fa-key" />} />
+              <InputField name="password" label={t('hrPassword')} {...newPasswordProps} icon={<i className="fa-solid fa-key" />} />
+              <InputField name="confirm" label={t('hrPasswordConfirm')} {...newPasswordProps} icon={<i className="fa-solid fa-key" />} />
             </>
           )}
           <ChoiceTiles<number>
@@ -312,14 +310,14 @@ const PasswordForm = ({ user, onClose }: { user: User; onClose: () => void }) =>
         <FormSection title={t('hrPassword')}>
           {isSelf && (
             <div className="is-wide">
-              <InputField name="current_password" label={t('hrPasswordCurrent')} {...currentSecret} />
+              <InputField name="current_password" label={t('hrPasswordCurrent')} {...currentPasswordProps} />
             </div>
           )}
           <div className="is-wide">
-            <InputField name="password" label={t('hrPasswordNew')} {...newSecret} />
+            <InputField name="password" label={t('hrPasswordNew')} {...newPasswordProps} />
           </div>
           <div className="is-wide">
-            <InputField name="confirm" label={t('hrPasswordConfirm')} {...newSecret} />
+            <InputField name="confirm" label={t('hrPasswordConfirm')} {...newPasswordProps} />
           </div>
         </FormSection>
       </Form>
