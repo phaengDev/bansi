@@ -167,6 +167,9 @@ export const SOURCES: Record<string, { label: string; icon: string; tone: string
   LOAN_PAYMENT: { label: 'glSourceLoanPayment', icon: 'fa-money-bill-transfer', tone: 'is-coral' },
   LOAN_ACCRUAL: { label: 'glSourceLoanAccrual', icon: 'fa-percent', tone: 'is-coral' },
   LOAN_ACCRUAL_REV: { label: 'glSourceLoanAccrualRev', icon: 'fa-rotate-left', tone: 'is-coral' },
+  LOAN_PROVISION: { label: 'glSourceLoanProvision', icon: 'fa-layer-group', tone: 'is-coral' },
+  LOAN_WRITEOFF: { label: 'glSourceLoanWriteoff', icon: 'fa-skull-crossbones', tone: 'is-coral' },
+  LOAN_RESTRUCTURE: { label: 'glSourceLoanRestructure', icon: 'fa-shuffle', tone: 'is-coral' },
 };
 export const sourceOf = (type: string) => SOURCES[type] ?? { label: type, icon: 'fa-file', tone: 'is-slate' };
 

@@ -314,6 +314,8 @@ export type Contract = Loan & {
   paid_penalty: number;
   days_overdue: number;
   aging: AgingKey;
+  close_reason: number | null;
+  closed_balance: number;
   customer: { _uuid: number; code: string; name: string; phone: string | null } | null;
   product: { _uuid: number; code: string; name: string } | null;
 };
@@ -331,12 +333,64 @@ export type ContractDetail = Omit<LoanDetail, 'payments'> & Omit<Contract, 'cust
   penalty: PenaltyState;
   waivers: Waiver[];
   collections: FollowUp[];
+  notices: Notice[];
+  closure: Closure;
+  /** ຍອດທີ່ຕັດໜີ້ສູນ / ຍ້າຍໄປສັນຍາໃໝ່ */
+  closed_balance: number;
+  close_reason: number | null;
+  closed_date: string | null;
 };
 
 export type ContractPayment = LoanPayment & { penalty: number; payment_type: number; balance_after: number | null };
 
+/** tbl_loan.close_reason: 1 ຈ່າຍຄົບ, 2 ປິດກ່ອນກຳນົດ, 3 ປັບໂຄງສ້າງ, 4 ຕັດໜີ້ສູນ */
+export const CLOSE_REASONS: Record<number, { label: string; icon: string; tone: string }> = {
+  1: { label: 'crClosePaid', icon: 'fa-circle-check', tone: 'is-full' },
+  2: { label: 'crCloseEarly', icon: 'fa-flag-checkered', tone: 'is-full' },
+  3: { label: 'crCloseRestructured', icon: 'fa-shuffle', tone: 'is-pending' },
+  4: { label: 'crCloseWrittenOff', icon: 'fa-skull-crossbones', tone: 'is-black' },
+};
+export type Restructure = {
+  _uuid: number; date: string; reason: string; other_id: number; other_code: string | null; old_outstanding: number;
+  capitalized_interest: number; old_rate: number; new_rate: number; old_term: number; new_term: number; by: string | null;
+};
+export type Closure = {
+  close_reason: number | null;
+  writeoff: { _uuid: number; date: string; principal: number; interest: number; penalty: number; recovered: number; reason: string; by: string | null } | null;
+  restructured_from: Restructure | null;
+  restructured_into: Restructure | null;
+};
+export type Notice = { _uuid: number; loan_id: number; notice_type: number; channel: number; phone: string | null; message: string; sent_at: string };
+export type CreditDocument = {
+  _uuid: number; owner_type: string; owner_id: number; doc_type: string | null; title: string | null; file_name: string | null;
+  mime: string | null; size: number | null; expiry_date: string | null; createdAt: string; by: string | null;
+};
+export const DOC_TYPES = [
+  { value: 'ID_CARD', label: 'crIdCard', icon: 'fa-id-card' },
+  { value: 'FAMILY_BOOK', label: 'crIdFamilyBook', icon: 'fa-book' },
+  { value: 'PASSPORT', label: 'crIdPassport', icon: 'fa-passport' },
+  { value: 'COMPANY_REG', label: 'crIdCompanyReg', icon: 'fa-building' },
+  { value: 'CONTRACT', label: 'crDocContract', icon: 'fa-file-signature' },
+  { value: 'LAND_TITLE', label: 'crDocLand', icon: 'fa-map' },
+  { value: 'VEHICLE_REG', label: 'crDocVehicle', icon: 'fa-car' },
+  { value: 'INCOME', label: 'crDocIncome', icon: 'fa-money-bill-trend-up' },
+  { value: 'PHOTO', label: 'crDocPhoto', icon: 'fa-camera' },
+  { value: 'OTHER', label: 'crColOther', icon: 'fa-file' },
+];
+export type ClassificationRow = {
+  loan_id: number; loan_code: string; counterparty: string; currency: LoanCurrency; days_overdue: number; outstanding: number;
+  overdue_principal: number; overdue_interest: number; loan_class: number; class_code: string; is_npl: boolean; provision_rate: number; provision_amount: number;
+};
+export type Classification = {
+  period: string; end: string; posted: boolean; entry_number: string | null; latest: string | null; can_post: boolean; can_undo: boolean;
+  rows: ClassificationRow[];
+  summary: { loan_class: number; class_code: string; name_la: string; is_npl: boolean; provision_rate: number; contracts: number; outstanding: number; provision: number }[];
+  allowance: { currency_id: number; currency: LoanCurrency; target: number; balance: number; delta: number }[];
+  total: number; npl: number; npl_ratio: number;
+};
+
 /** ແຖວໃນໜ້າ ຕິດຕາມໜີ້ */
-export type CollectionRow = Contract & { last_contact: FollowUp | null; contacts: number };
+export type CollectionRow = Contract & { last_contact: FollowUp | null; contacts: number; last_notice: string | null };
 
 /** ດຶງລາຍການ (GET) + ລະຫັດຖັດໄປ */
 export const useCreditList = <T,>(path: string) => {

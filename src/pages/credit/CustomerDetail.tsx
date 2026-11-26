@@ -11,11 +11,12 @@ import CollateralForm from './CollateralForm';
 import ApplicationForm from './ApplicationForm';
 import ApplicationDetail from './ApplicationDetail';
 import ContractDetail from './ContractDetail';
+import DocumentsPanel from './DocumentsPanel';
 import { ID_TYPES, customerAddress, type Application, type Collateral, type Contract, type CreditCustomer } from './creditApi';
 import { AppStatusChip, CollateralList, DetailTabs, InfoRows, RiskChip, creditTermText, useCreditProducts } from './creditKit';
 
 type Full = CreditCustomer & { loans: Contract[]; applications: Application[]; collaterals: Collateral[]; guaranteeing: number };
-type Tab = 'info' | 'collateral' | 'applications' | 'contracts';
+type Tab = 'info' | 'collateral' | 'applications' | 'contracts' | 'documents';
 
 /**
  * ລູກຄ້າສິນເຊື່ອ — KYC, ຫຼັກຊັບ (ເພີ່ມ / ແກ້ / ສົ່ງຄືນ / ຍຶດ), ຄຳຮ້ອງ ແລະ ສັນຍາທັງໝົດຂອງລູກຄ້າ;
@@ -149,6 +150,7 @@ const CustomerDetail = ({ id, onClose, onChanged }: { id: number; onClose: () =>
           { key: 'collateral', icon: 'fa-house-lock', label: t('crCollaterals'), count: c.collaterals.length },
           { key: 'applications', icon: 'fa-file-pen', label: t('crApplicationsMenu'), count: c.applications.length },
           { key: 'contracts', icon: 'fa-file-signature', label: t('crContractsMenu'), count: c.loans.length },
+          { key: 'documents', icon: 'fa-folder-open', label: t('crDocuments') },
         ]}
         />
 
@@ -240,6 +242,7 @@ const CustomerDetail = ({ id, onClose, onChanged }: { id: number; onClose: () =>
             </div>
           ) : <div className="acc-class-empty cr-empty-sm"><i className="fa-solid fa-file-signature" /><p>{t('crNoContracts')}</p></div>
         )}
+        {tab === 'documents' && <DocumentsPanel ownerType="customer" ownerId={c._uuid} />}
       </Modal.Body>
 
       {editing && <CustomerForm row={c} nextCode="" onClose={() => setEditing(false)} onSaved={changed} />}

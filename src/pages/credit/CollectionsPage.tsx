@@ -10,6 +10,7 @@ import CollectForm from './CollectForm';
 import ContractDetail from './ContractDetail';
 import { AGING_BUCKETS, FOLLOW_METHODS, FOLLOW_RESULTS, useCreditList, type AgingKey, type CollectionRow } from './creditApi';
 import { DaysLateChip, FollowUpForm } from './collectKit';
+import ReminderModal from './ReminderModal';
 import { AgingBars } from './creditCharts';
 
 type Filter = 'overdue' | 'today' | 'promise' | 'week' | 'all';
@@ -28,6 +29,7 @@ const CollectionsPage = () => {
   const [viewing, setViewing] = useState<{ id: number; receipt?: number } | null>(null);
   const [collecting, setCollecting] = useState<CollectionRow | null>(null);
   const [logging, setLogging] = useState<CollectionRow | null>(null);
+  const [reminding, setReminding] = useState<CollectionRow | null>(null);
   if (error) return <div className="acc-class-empty"><i className="fa-solid fa-triangle-exclamation" /><p>{error}</p></div>;
 
   const weekEnd = moment(today).add(7, 'days').format('YYYY-MM-DD');
@@ -163,9 +165,17 @@ const CollectionsPage = () => {
                           </span>
                         </span>
                       ) : <span className="cr-muted">{t('crNotContacted')}</span>}
+                      {r.last_notice && <small className="acc-gl-ref"><i className="fa-solid fa-bell" /> {t('crReminderSentOn').replace('{d}', moment(r.last_notice).format('DD/MM'))}</small>}
                     </td>
                     <td className="acc-fa-actions" onClick={(e) => e.stopPropagation()}>
                       {phone && <a href={`tel:${phone}`} title={t('crCall')} aria-label={t('crCall')}><i className="fa-solid fa-phone" /></a>}
+                      {canCreate && (
+                        <button type="button" onClick={() => setReminding(r)} title={t('crReminder')} aria-label={t('crReminder')}
+                          className={r.last_notice ? 'is-sent' : ''}
+                        >
+                          <i className="fa-solid fa-bell" />
+                        </button>
+                      )}
                       {canCreate && (
                         <button type="button" onClick={() => setLogging(r)} title={t('crFollowUpAdd')} aria-label={t('crFollowUpAdd')}><i className="fa-solid fa-comment-dots" /></button>
                       )}
@@ -187,6 +197,7 @@ const CollectionsPage = () => {
           onSaved={(paymentId) => { reload(); setViewing({ id: collecting._uuid, receipt: paymentId || undefined }); }}
         />
       )}
+      {reminding && <ReminderModal row={reminding} onClose={() => setReminding(null)} onSent={reload} />}
       {logging && <FollowUpForm loanId={logging._uuid} title={`${logging.loan_code} · ${logging.customer?.name ?? ''}`} onClose={() => setLogging(null)} onSaved={reload} />}
     </div>
   );

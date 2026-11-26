@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import moment from 'moment';
 import { Loader, Modal } from 'rsuite';
 import { deleteApi, getApi, postApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
@@ -8,12 +9,15 @@ import { useT } from '../../context/LanguageContext';
 import { PaymentsTable, ScheduleTable } from '../account/loans/loanKit';
 import { LOAN_METHODS, money, showDate } from '../account/loans/loanApi';
 import { PAYMENT_TYPES, customerAddress, type ContractDetail as Detail, type ContractPayment, type Waiver } from './creditApi';
+import ContractPrint from './ContractPrint';
+import DocumentsPanel from './DocumentsPanel';
+import { ClosureBanner, RecoverForm, RestructureForm, WriteOffForm } from './riskForms';
 import CollectForm from './CollectForm';
 import ReceiptPrint from './ReceiptPrint';
 import { FollowUpForm, FollowUpList, PenaltyPanel, WaiveForm } from './collectKit';
 import { CollateralList, DetailTabs, GuarantorList, InfoRows, RiskChip, creditTermText } from './creditKit';
 
-type Tab = 'schedule' | 'payments' | 'penalty' | 'followups' | 'security' | 'customer';
+type Tab = 'schedule' | 'payments' | 'penalty' | 'followups' | 'security' | 'documents' | 'manage';
 
 /**
  * ສັນຍາສິນເຊື່ອ — ຍອດຄ້າງ / ງວດຕໍ່ໄປ / ກາຍກຳນົດ / ດອກເບ້ຍ ແລະ ຄ່າທຳນຽມທີ່ໄດ້ຮັບ, ຕາຕະລາງຜ່ອນ, ການຊຳລະ (ຍົກເລີກໄດ້),
@@ -24,7 +28,9 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
   const t = useT();
   const [loan, setLoan] = useState<Detail | null>(null);
   const [tab, setTab] = useState<Tab>(openReceipt ? 'payments' : 'schedule');
-  const [form, setForm] = useState<'collect' | 'waive' | 'followup' | null>(null);
+  const [form, setForm] = useState<'collect' | 'waive' | 'followup' | 'restructure' | 'writeoff' | 'recover' | 'print' | null>(null);
+  /** ເປີດສັນຍາອື່ນ (ສັນຍາໃໝ່ / ເດີມ ຂອງການປັບໂຄງສ້າງ) */
+  const [otherId, setOtherId] = useState<number | null>(null);
   /** ໃບຮັບເງິນທີ່ກຳລັງເບິ່ງ / ພິມ (ເລກການຊຳລະ) */
   const [receiptId, setReceiptId] = useState<number | null>(openReceipt ?? null);
 
@@ -83,6 +89,36 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
     }
   });
 
+  const undoWriteOff = () => Notific.confirm(`${t('crUndoWriteOffConfirm')} ${loan.loan_code}`, async () => {
+    try {
+      await deleteApi(`/credit/writeoff/${loan.closure.writeoff!._uuid}`);
+      Notific.success('acsSaved');
+      changed();
+    } catch (err) {
+      Notific.error(getErrorMessage(err));
+    }
+  });
+  const undoRestructure = () => Notific.confirm(`${t('crUndoRestructureConfirm')} ${loan.closure.restructured_into?.other_code ?? ''}`, async () => {
+    try {
+      await deleteApi(`/credit/restructure/${loan.closure.restructured_into!._uuid}`);
+      Notific.success('acsSaved');
+      changed();
+    } catch (err) {
+      Notific.error(getErrorMessage(err));
+    }
+  });
+
+  const open = !loan.closed;
+  const writtenOff = Number(loan.close_reason) === 4;
+  /** ການຈັດການທີ່ມີຜົນຕໍ່ບັນຊີ — ແຕ່ລະອັນມີຄຳອະທິບາຍ */
+  const actions = [
+    { key: 'print', icon: 'fa-print', label: t('crAgreement'), hint: t('crAgreementHint'), show: true, run: () => setForm('print') },
+    { key: 'restructure', icon: 'fa-shuffle', label: t('crRestructure'), hint: loan.penalty.due > 0 ? t('crRestructureNeedsPenalty') : t('crRestructureHint'), show: open && canEdit, run: () => setForm('restructure') },
+    { key: 'writeoff', icon: 'fa-skull-crossbones', label: t('crWriteOff'), hint: t('crWriteOffHint'), show: open && canDelete, run: () => setForm('writeoff'), danger: true },
+    { key: 'recover', icon: 'fa-hand-holding-dollar', label: t('crRecover'), hint: t('crRecoverHint'), show: writtenOff && canCreate, run: () => setForm('recover') },
+    { key: 'undo', icon: 'fa-rotate-left', label: t('crUndoDisburse'), hint: t('crUndoDisburseHint'), show: open && canDelete && !loan.locked && !!loan.application, run: undo, danger: true },
+  ].filter((a) => a.show);
+
   const cancelPayment = (paymentId: number, number: string | null) => Notific.confirm(`${t('lnCancelPaymentConfirm')} ${number ?? ''}`, async () => {
     try {
       await putApi(`/loan/payment/cancel/${paymentId}`, {});
@@ -107,16 +143,17 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
             </small>
           </span>
           <span className="acc-ln-head-actions">
-            {canDelete && !loan.locked && (
-              <button type="button" className="acc-rp-btn is-danger" onClick={undo}><i className="fa-solid fa-rotate-left" /> {t('crUndoDisburse')}</button>
-            )}
-            {canCreate && (!loan.closed || loan.penalty.due > 0) && (
+            <button type="button" className="acc-rp-btn" onClick={() => setForm('print')} title={t('crAgreement')}><i className="fa-solid fa-print" /> {t('crAgreementShort')}</button>
+            {canCreate && (open || loan.penalty.due > 0) && (
               <button type="button" className="acc-rp-btn" onClick={() => setForm('followup')}><i className="fa-solid fa-phone-volume" /> {t('crFollowUpAdd')}</button>
             )}
-            {canCreate && (!loan.closed || loan.penalty.due > 0) && (
+            {canCreate && (open || loan.penalty.due > 0) && (
               <button type="button" className="acc-rp-btn is-primary" onClick={() => setForm('collect')}>
                 <i className="fa-solid fa-hand-holding-dollar" /> {t('crCollect')}
               </button>
+            )}
+            {canCreate && writtenOff && (
+              <button type="button" className="acc-rp-btn is-primary" onClick={() => setForm('recover')}><i className="fa-solid fa-hand-holding-dollar" /> {t('crRecover')}</button>
             )}
           </span>
         </div>
@@ -154,6 +191,8 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
           </div>
         </div>
 
+        <ClosureBanner contract={loan} onOpen={setOtherId} onRecover={() => setForm('recover')} onUndoWriteOff={undoWriteOff} onUndoRestructure={undoRestructure} />
+
         <p className="acc-ln-meta">
           <span><i className="fa-solid fa-calendar-day" /> {t('crDisbursedOn')} {showDate(loan.start_date)}</span>
           {loan.treasury && <span><i className="fa-solid fa-building-columns" /> {loan.treasury.acountName}</span>}
@@ -168,8 +207,9 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
           { key: 'payments', icon: 'fa-receipt', label: t('lnReceipts'), count: active.length },
           { key: 'penalty', icon: 'fa-gavel', label: t('crPenalty'), count: loan.penalty.rows.length },
           { key: 'followups', icon: 'fa-phone-volume', label: t('crFollowUps'), count: loan.collections.length },
-          { key: 'security', icon: 'fa-house-lock', label: t('crSecurity'), count: loan.collaterals.length + loan.guarantors.length },
-          { key: 'customer', icon: 'fa-address-card', label: t('crCustomer') },
+          { key: 'security', icon: 'fa-address-card', label: t('crCustomerSecurity'), count: loan.collaterals.length + loan.guarantors.length },
+          { key: 'documents', icon: 'fa-folder-open', label: t('crDocuments') },
+          { key: 'manage', icon: 'fa-sliders', label: t('crManage') },
         ]}
         />
 
@@ -191,14 +231,41 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
             <PenaltyPanel state={loan.penalty} waivers={loan.waivers} currency={cur} rate={loan.penalty_rate} grace={loan.grace_days} onUndoWaiver={undoWaiver} />
           </>
         )}
-        {tab === 'followups' && <FollowUpList rows={loan.collections} />}
+        {tab === 'followups' && (
+          <>
+            <FollowUpList rows={loan.collections} />
+            {loan.notices.length > 0 && (
+              <section className="cr-notices">
+                <h5>{t('crNoticesSent')}</h5>
+                {loan.notices.map((n) => (
+                  <div key={n._uuid} className="cr-notice">
+                    <i className="fa-solid fa-bell" />
+                    <span><b>{moment(n.sent_at).format('DD/MM/YYYY HH:mm')}</b> · {n.phone ?? ''}<small>{n.message}</small></span>
+                  </div>
+                ))}
+              </section>
+            )}
+          </>
+        )}
         {tab === 'security' && (
           <div className="cr-split">
             <section><h5>{t('crCollaterals')}</h5><CollateralList rows={loan.collaterals} /></section>
             <section><h5>{t('crGuarantors')}</h5><GuarantorList rows={loan.guarantors} /></section>
           </div>
         )}
-        {tab === 'customer' && c && (
+        {tab === 'documents' && <DocumentsPanel ownerType="loan" ownerId={loan._uuid} />}
+        {tab === 'manage' && (
+          <div className="cr-actions">
+            {actions.map((a) => (
+              <button key={a.key} type="button" className={`cr-action${a.danger ? ' is-danger' : ''}`} onClick={a.run}>
+                <i className={`fa-solid ${a.icon}`} />
+                <span><b>{a.label}</b><small>{a.hint}</small></span>
+                <i className="fa-solid fa-chevron-right" />
+              </button>
+            ))}
+          </div>
+        )}
+        {tab === 'security' && c && (
           <div className="cr-split">
             <InfoRows rows={[
               [t('faCode'), c.customer_code],
@@ -230,6 +297,13 @@ const ContractDetail = ({ id, onClose, onChanged, openReceipt }: { id: number; o
         <WaiveForm loanId={loan._uuid} title={`${loan.loan_code} · ${c?.full_name ?? ''}`} due={loan.penalty.due} currency={cur} onClose={() => setForm(null)} onSaved={changed} />
       )}
       {form === 'followup' && <FollowUpForm loanId={loan._uuid} title={`${loan.loan_code} · ${c?.full_name ?? ''}`} onClose={() => setForm(null)} onSaved={() => { changed(); setTab('followups'); }} />}
+      {form === 'print' && <ContractPrint contract={loan} onClose={() => setForm(null)} />}
+      {form === 'writeoff' && <WriteOffForm contract={loan} onClose={() => setForm(null)} onSaved={changed} />}
+      {form === 'recover' && (
+        <RecoverForm contract={loan} onClose={() => setForm(null)} onSaved={(paymentId) => { changed(); setTab('payments'); if (paymentId) setReceiptId(paymentId); }} />
+      )}
+      {form === 'restructure' && <RestructureForm contract={loan} onClose={() => setForm(null)} onSaved={(newId) => { changed(); if (newId) setOtherId(newId); }} />}
+      {otherId && <ContractDetail id={otherId} onClose={() => setOtherId(null)} onChanged={changed} />}
       {receiptId && loan.payments.some((p) => p._uuid === receiptId) && (
         <ReceiptPrint contract={loan} payment={loan.payments.find((p) => p._uuid === receiptId)!} onClose={() => setReceiptId(null)} />
       )}

@@ -10,7 +10,7 @@ import { isNotReady } from '../gl/glApi';
 import { GlNotReady } from '../gl/glKit';
 import { refreshAccountSetting } from '../accountSettings';
 
-type Check = { key: 'depreciation' | 'bank' | 'fx' | 'loan_accrual'; ok: boolean; detail?: string };
+type Check = { key: 'depreciation' | 'bank' | 'fx' | 'loan_accrual' | 'loan_provision'; ok: boolean; detail?: string };
 type Month = { month: string; start: string; end: string; closed: boolean; entries: number; checks?: Check[] };
 type Status = {
   fiscal: { _uuid: number; fiscal_code: string; fiscal_name?: string; start_date: string; end_date: string; status: number };
@@ -25,6 +25,7 @@ const AUTO: Record<Check['key'], { label: string; target: string; window?: strin
   bank: { label: 'closeCheckBank', target: 'bankRec' },
   fx: { label: 'closeCheckFx', target: 'fxReval' },
   loan_accrual: { label: 'closeCheckLoanAccrual', target: 'accrual', window: 'loans', hint: 'closeOpenLoans' },
+  loan_provision: { label: 'closeCheckLoanProvision', target: 'classification', window: 'creditContracts', hint: 'closeOpenProvision' },
 };
 
 /** ສິ່ງທີ່ຕ້ອງເຮັດກ່ອນປິດເດືອນ (ກົດໝາຍບັນຊີ ມາດຕາ 23) — ຕິກຢືນຢັນເອງ, ບໍ່ບັນທຶກ */

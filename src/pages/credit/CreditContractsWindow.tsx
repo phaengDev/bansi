@@ -14,8 +14,10 @@ import ApplicationDetail from './ApplicationDetail';
 import ContractDetail from './ContractDetail';
 import CreditOverview from './CreditOverview';
 import CollectionsPage from './CollectionsPage';
+import ClassificationPage from './ClassificationPage';
+import CreditReportsPage from './CreditReportsPage';
 import { DaysLateChip } from './collectKit';
-import { useCreditList, type Application, type Contract } from './creditApi';
+import { CLOSE_REASONS, useCreditList, type Application, type Contract } from './creditApi';
 import { AppStatusChip, creditTermText } from './creditKit';
 
 /** ຍອດລວມແຍກຕາມສະກຸນ — "₭ 145,000,000 · $ 10,000" */
@@ -209,7 +211,10 @@ const ContractsPage = () => {
                       <div className="acc-fa-name">
                         <span className="acc-fs-code">{r.loan_code}</span>
                         <b>{r.customer?.name ?? r.counterparty}</b>
-                        {r.closed && <em className="acc-fa-chip is-full"><i className="fa-solid fa-circle-check" /> {t('lnClosed')}</em>}
+                        {r.closed && (() => {
+                          const why = CLOSE_REASONS[Number(r.close_reason)] ?? CLOSE_REASONS[1];
+                          return <em className={`acc-fa-chip ${why.tone}`}><i className={`fa-solid ${why.icon}`} /> {t(why.label)}</em>;
+                        })()}
                       </div>
                       <small>{[r.product?.name, r.customer?.phone, r.contract_no].filter(Boolean).join(' · ')}</small>
                     </td>
@@ -252,6 +257,7 @@ const CreditContractsWindow = () => {
   const active = railNav.find((item) => item.key === activeKey);
   const pages: Record<string, ReactNode> = {
     overview: <CreditOverview />, applications: <ApplicationsPage />, contracts: <ContractsPage />, collections: <CollectionsPage />,
+    classification: <ClassificationPage />, reports: <CreditReportsPage />,
   };
   return (
     <AppPage title={active?.label ?? t('accountAppCreditContracts')} subtitle={t('accountAppCreditContracts')}

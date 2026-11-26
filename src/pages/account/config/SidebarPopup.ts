@@ -359,6 +359,8 @@ export const CREDIT_CONTRACTS_MENU: SidebarPopupGroup[] = [
       { key: 'applications', icon: 'fa-solid fa-file-pen', label: 'crApplicationsMenu' },
       { key: 'contracts', icon: 'fa-solid fa-file-signature', label: 'crContractsMenu' },
       { key: 'collections', icon: 'fa-solid fa-phone-volume', label: 'crCollectionsMenu' },
+      { key: 'classification', icon: 'fa-solid fa-layer-group', label: 'crClassMenu' },
+      { key: 'reports', icon: 'fa-solid fa-chart-column', label: 'crReportsMenu' },
     ],
   },
 ];
