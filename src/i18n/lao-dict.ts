@@ -4388,6 +4388,15 @@ export const laoDict = {
   crSubmitNeeds: { la: 'ຍັງສົ່ງພິຈາລະນາບໍ່ໄດ້:', en: 'Cannot submit yet:', cn: '暂不能提交：' },
   crLtvOver: { la: 'LTV {v}% ເກີນເກນຂອງຜະລິດຕະພັນ ({max}%). ', en: 'LTV {v}% is above the product limit ({max}%). ', cn: 'LTV {v}% 超过产品上限（{max}%）。' },
   crLtvFix: { la: 'ເພີ່ມຫຼັກຊັບໃຫ້ມູນຄ່າລວມຢ່າງໜ້ອຍ ₭ {c} ຫຼື ຫຼຸດຍອດກູ້ລົງເຫຼືອບໍ່ເກີນ ₭ {a}', en: 'Add collateral worth at least ₭ {c} in total, or lower the amount to ₭ {a} or less', cn: '增加抵押物使总价值至少 ₭ {c}，或将贷款额降至 ₭ {a} 以下' },
+  crFlowTitle: { la: 'ຂັ້ນຕອນອະນຸມັດ', en: 'Approval steps', cn: '审批流程' },
+  crFlowRule: { la: 'ຜະລິດຕະພັນນີ້ຕ້ອງອະນຸມັດ {n} ຂັ້ນ — ແຕ່ລະຂັ້ນເປັນຄົນລະຄົນ ແລະ ບໍ່ແມ່ນຜູ້ສ້າງຄຳຮ້ອງ', en: 'This product needs {n} approval level(s) — a different person for each, not the creator', cn: '本产品需 {n} 级审批 — 每级不同人且非申请创建人' },
+  crFlowSubmitted: { la: 'ຍື່ນຄຳຮ້ອງ', en: 'Submitted', cn: '已提交' },
+  crFlowNotSent: { la: 'ຍັງບໍ່ໄດ້ສົ່ງພິຈາລະນາ', en: 'Not sent yet', cn: '尚未提交' },
+  crFlowWaiting: { la: 'ລໍຖ້າພິຈາລະນາ', en: 'Waiting', cn: '待审批' },
+  crFlowRejectedAt: { la: 'ຂັ້ນ {n}: ປະຕິເສດ', en: 'Level {n}: rejected', cn: '第 {n} 级：拒绝' },
+  crFlowYouCan: { la: 'ທ່ານພິຈາລະນາຂັ້ນ {n} ໄດ້', en: 'You can decide level {n}', cn: '您可以审批第 {n} 级' },
+  crFlowWho: { la: 'ຜູ້ທີ່ພິຈາລະນາຂັ້ນ {n} ໄດ້:', en: 'Who can decide level {n}:', cn: '可审批第 {n} 级的人：' },
+  crFlowNobody: { la: 'ຍັງບໍ່ມີຜູ້ໃຊ້ຄົນອື່ນທີ່ພິຈາລະນາໄດ້ — ເພີ່ມບັນຊີຜູ້ໃຊ້ທີ່ມີສິດແກ້ໄຂ (ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ → ຜູ້ໃຊ້ລະບົບ) ຫຼື ຫຼຸດຈຳນວນຂັ້ນອະນຸມັດຂອງຜະລິດຕະພັນ', en: 'No other user can decide yet — add a user with edit rights (Basic settings → System users) or lower the product approval levels', cn: '暂无其他可审批用户 — 请添加有编辑权限的用户（基础设置 → 用户）或减少产品审批级数' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

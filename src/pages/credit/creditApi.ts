@@ -232,6 +232,8 @@ export type ApplicationDetail = Application & {
   guarantors: Guarantor[];
   approvals: Approval[];
   created_by_name: string | null;
+  /** ຜູ້ທີ່ພິຈາລະນາຂັ້ນຕໍ່ໄປໄດ້ (ສະເພາະຕອນລໍຖ້າພິຈາລະນາ) */
+  approvers: { _uuid: number; name: string }[] | null;
   check: { issues: string[]; ltv: number | null; debt_ratio: number | null; monthly: number | null; collateral_value: number };
   schedule: { no: number; due_date: string; principal: number; interest: number; payment: number }[];
   fee: number;

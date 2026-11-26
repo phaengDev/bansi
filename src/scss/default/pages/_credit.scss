@@ -1413,6 +1413,105 @@ button.cr-aging-row { cursor: pointer; }
   b { font-weight: 700; }
 }
 
+// ຄຳຮ້ອງ: ຂັ້ນຕອນອະນຸມັດ (ຍື່ນ → ຂັ້ນ 1…N → ປ່ອຍກູ້) ແລະ ໃຜພິຈາລະນາໄດ້
+.cr-flow {
+  margin: 12px 0 2px;
+
+  > header { margin-bottom: 14px; }
+  > header b i { margin-right: 6px; color: #604bd8; }
+}
+.cr-flow-steps {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px;
+    text-align: center;
+
+    // ເສັ້ນເຊື່ອມໄປຫາຂັ້ນກ່ອນ (ຂຽວ = ຂັ້ນນີ້ຜ່ານແລ້ວ ຫຼື ກຳລັງລໍ)
+    &:not(:first-child)::before {
+      position: absolute;
+      top: 17px;
+      right: calc(50% + 22px);
+      left: calc(-50% + 22px);
+      height: 3px;
+      border-radius: 2px;
+      background: #e3eaf0;
+      content: '';
+    }
+    &.is-done:not(:first-child)::before,
+    &.is-current:not(:first-child)::before,
+    &.is-bad:not(:first-child)::before { background: #1fae7f; }
+
+    b { margin-top: 6px; color: #14314d; font-size: 13px; }
+    small { overflow: hidden; max-width: 100%; color: #7b8a97; font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .is-todo b { color: #8a9aa8; font-weight: 600; }
+  .is-current small:first-of-type { color: #604bd8; font-weight: 700; }
+  .is-bad b, .is-bad small:first-of-type { color: #c4343a; }
+}
+.cr-flow-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #9aa7b3;
+  font-size: 14px;
+  background: #f1f4f7;
+  border: 2px solid #e3eaf0;
+  border-radius: 50%;
+
+  .is-done > & { color: #fff; background: linear-gradient(145deg, #1fae7f, #0d8a63); border-color: transparent; }
+  .is-current > & {
+    color: #fff;
+    background: linear-gradient(145deg, #aa8cff, #604bd8);
+    border-color: transparent;
+    box-shadow: 0 0 0 5px rgba(96, 75, 216, 0.15);
+  }
+  .is-bad > & { color: #fff; background: linear-gradient(145deg, #ff8b7c, #c4343a); border-color: transparent; }
+}
+.cr-flow-who {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed #e3eaf0;
+
+  p { display: flex; align-items: center; gap: 10px; margin: 0; color: #3d5266; font-size: 13px; }
+  p > i { width: 16px; color: #604bd8; text-align: center; }
+  p > span { flex: 1; min-width: 0; }
+  p .acc-rp-btn { flex: none; }
+  &.is-blocked p:first-child { padding: 8px 10px; color: #8a5a00; background: #fff6e5; border-radius: 10px; }
+  &.is-blocked p:first-child > i { color: #c27c0e; }
+}
+.cr-flow-names em {
+  display: inline-block;
+  margin: 2px 0 2px 6px;
+  padding: 1px 10px;
+  color: #4b36b8;
+  font-size: 12.5px;
+  font-style: normal;
+  font-weight: 700;
+  background: #efecfd;
+  border-radius: 99px;
+}
+.cr-flow-none { padding: 8px 10px; color: #9c2025 !important; background: #fdf0f0; border-radius: 10px; }
+.cr-flow-none > i { color: #c4343a !important; }
+
 @media (max-width: 767.98px) {
   .cr-split { grid-template-columns: minmax(0, 1fr); }
   .cr-collateral { grid-template-columns: 40px minmax(0, 1fr); }
@@ -1422,6 +1521,10 @@ button.cr-aging-row { cursor: pointer; }
   .cr-guarantor > button { grid-column: 3; }
   .cr-rules-head { flex-direction: column; align-items: stretch; }
   .cr-ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr-flow-steps li { padding: 0 2px; }
+  .cr-flow-steps li b { font-size: 11.5px; }
+  .cr-flow-steps li small { font-size: 10.5px; }
+  .cr-flow-who p { flex-wrap: wrap; }
   .cr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cr-kpi.is-hero { grid-column: 1 / -1; }
   .cr-grid { grid-template-columns: minmax(0, 1fr); }

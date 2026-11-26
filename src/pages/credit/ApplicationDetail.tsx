@@ -28,6 +28,88 @@ const DECISIONS = [
 ];
 const myId = () => Number(localStorage.getItem('userid')) || 0;
 
+type FlowStep = { key: string; icon: string; title: string; state: 'done' | 'current' | 'todo' | 'bad'; who?: string | null; when?: string | null };
+
+/**
+ * ຂັ້ນຕອນອະນຸມັດ — ຍື່ນຄຳຮ້ອງ → ຂັ້ນ 1…N (ຕາມຜະລິດຕະພັນ) → ປ່ອຍກູ້: ໃຜເຮັດ ແລະ ເມື່ອໃດ, ຂັ້ນທີ່ກຳລັງລໍ.
+ * ລໍຖ້າພິຈາລະນາ: ບອກວ່າໃຜພິຈາລະນາຂັ້ນນີ້ໄດ້ (ຈາກ API) ແລະ ຖ້າຜູ້ເບິ່ງພິຈາລະນາບໍ່ໄດ້ ບອກເຫດຜົນ (ຜູ້ສ້າງ / ອະນຸມັດຂັ້ນກ່ອນແລ້ວ)
+ */
+const ApprovalFlow = ({ app, blocked, canDecide, onDecide }: { app: Detail; blocked: string; canDecide: boolean; onDecide: () => void }) => {
+  const t = useT();
+  const status = Number(app.status);
+  const levels = app.product?.approval_levels ?? 1;
+  const reached = Number(app.approval_level) || 0;
+  const date = (d?: string | null) => (d ? moment(d).format('DD/MM/YYYY HH:mm') : null);
+  // ອະນຸມັດຫຼ້າສຸດຂອງແຕ່ລະຂັ້ນ (ຮອບທີ່ສົ່ງກັບແກ້ໄຂ ອັນໃໝ່ກວ່າທັບອັນເກົ່າ)
+  const approvedAt = (level: number) => [...app.approvals].reverse().find((a) => Number(a.level) === level && Number(a.decision) === 1);
+  const rejected = status === 4 ? [...app.approvals].reverse().find((a) => Number(a.decision) === 2) : undefined;
+  const steps: FlowStep[] = [
+    {
+      key: 'submit', icon: 'fa-paper-plane', title: t(status === 1 ? 'crStDraft' : 'crFlowSubmitted'),
+      state: status === 1 ? 'current' : 'done', who: app.created_by_name, when: status === 1 ? null : moment(app.apply_date).format('DD/MM/YYYY'),
+    },
+    ...Array.from({ length: levels }, (_, i): FlowStep => {
+      const level = i + 1;
+      const done = status === 3 || status === 5 || level <= reached;
+      const record = done ? approvedAt(level) : undefined;
+      if (rejected && Number(rejected.level) === level) {
+        return { key: `l${level}`, icon: 'fa-circle-xmark', title: t('crFlowRejectedAt').replace('{n}', String(level)), state: 'bad', who: rejected.approver_name, when: date(rejected.decided_at) };
+      }
+      return {
+        key: `l${level}`, icon: done ? 'fa-circle-check' : 'fa-gavel', title: t('crLevelN').replace('{n}', String(level)),
+        state: done ? 'done' : status === 2 && level === reached + 1 ? 'current' : 'todo',
+        who: record?.approver_name ?? null, when: date(record?.decided_at),
+      };
+    }),
+    {
+      key: 'disburse', icon: 'fa-money-bill-transfer', title: t(status === 5 ? 'crStDisbursed' : 'crDisburse'),
+      state: status === 5 ? 'done' : status === 3 ? 'current' : 'todo', who: status === 5 ? app.loan?.loan_code : null,
+    },
+  ];
+  const stateText = (s: FlowStep) => (s.state === 'current' ? t(s.key === 'disburse' ? 'crFilterToDisburse' : s.key === 'submit' ? 'crFlowNotSent' : 'crFlowWaiting') : s.state === 'todo' ? '—' : '');
+  const next = reached + 1;
+  const approvers = app.approvers ?? [];
+
+  return (
+    <section className="cr-card cr-flow">
+      <header>
+        <b><i className="fa-solid fa-route" /> {t('crFlowTitle')}</b>
+        <small>{t('crFlowRule').replace('{n}', String(levels))}</small>
+      </header>
+      <ol className="cr-flow-steps">
+        {steps.map((s) => (
+          <li key={s.key} className={`is-${s.state}`}>
+            <span className="cr-flow-dot"><i className={`fa-solid ${s.state === 'current' && s.key !== 'disburse' && s.key !== 'submit' ? 'fa-hourglass-half' : s.icon}`} /></span>
+            <b>{s.title}</b>
+            <small>{s.who ?? stateText(s)}</small>
+            {s.when && <small>{s.when}</small>}
+          </li>
+        ))}
+      </ol>
+      {status === 2 && (
+        <div className={`cr-flow-who${blocked ? ' is-blocked' : ''}`}>
+          {blocked ? (
+            <p><i className="fa-solid fa-user-lock" /> <span><b>{blocked}</b></span></p>
+          ) : canDecide ? (
+            <p>
+              <i className="fa-solid fa-user-check" /> <span><b>{t('crFlowYouCan').replace('{n}', String(next))}</b></span>
+              <button type="button" className="acc-rp-btn is-primary" onClick={onDecide}><i className="fa-solid fa-gavel" /> {t('crDecide')}</button>
+            </p>
+          ) : null}
+          {approvers.length ? (
+            <p className="cr-flow-names">
+              <i className="fa-solid fa-users" />
+              <span>{t('crFlowWho').replace('{n}', String(next))} {approvers.map((u) => <em key={u._uuid}>{u.name}</em>)}</span>
+            </p>
+          ) : (
+            <p className="cr-flow-none"><i className="fa-solid fa-triangle-exclamation" /> <span>{t('crFlowNobody')}</span></p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+};
+
 /** ພິຈາລະນາ (ຂັ້ນຕໍ່ໄປ) — ອະນຸມັດ (ປັບຍອດ / ງວດ / ດອກເບ້ຍ ລົງໄດ້), ສົ່ງກັບແກ້ໄຂ ຫຼື ປະຕິເສດ (ຕ້ອງບອກເຫດຜົນ) */
 const DecisionForm = ({ app, onClose, onSaved }: { app: Detail; onClose: () => void; onSaved: () => void }) => {
   const t = useT();
@@ -321,6 +403,9 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
           )
         )}
         {status === 4 && app.reject_reason && <div className="cr-issues"><b><i className="fa-solid fa-circle-xmark" /> {t('crRejectedReason')}</b> {app.reject_reason}</div>}
+        {status <= 5 && (
+          <ApprovalFlow app={app} blocked={status === 2 ? decideBlocked : ''} canDecide={status === 2 && canEdit && !decideBlocked} onDecide={() => setForm('decide')} />
+        )}
 
         <DetailTabs<Tab> value={tab} onChange={setTab} tabs={[
           { key: 'summary', icon: 'fa-address-card', label: t('crSummary') },
