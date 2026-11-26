@@ -118,8 +118,13 @@ export type ShortcutId =
   | 'fixedAssets'
   | 'closing'
   | 'loans'
+  | 'creditOverview'
   | 'creditCustomers'
+  | 'creditApplications'
   | 'creditContracts'
+  | 'creditCollections'
+  | 'creditClassification'
+  | 'creditReports'
   | 'creditSettings'
   | 'employees'
   | 'tasks'
@@ -140,8 +145,13 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   fixedAssets: 'accountAppFixedAssets',
   closing: 'accountAppClosing',
   loans: 'accountAppLoans',
+  creditOverview: 'accountAppCreditOverview',
   creditCustomers: 'accountAppCreditCustomers',
+  creditApplications: 'accountAppCreditApplications',
   creditContracts: 'accountAppCreditContracts',
+  creditCollections: 'accountAppCreditCollections',
+  creditClassification: 'accountAppCreditClassification',
+  creditReports: 'accountAppCreditReports',
   creditSettings: 'accountAppCreditSettings',
   journal: 'accountAppJournal',
   chartOfAccounts: 'accountAppChartOfAccounts',
@@ -181,8 +191,13 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   fixedAssets: 'accountAppFixedAssetsDesc',
   closing: 'accountAppClosingDesc',
   loans: 'accountAppLoansDesc',
+  creditOverview: 'accountAppCreditOverviewDesc',
   creditCustomers: 'accountAppCreditCustomersDesc',
+  creditApplications: 'accountAppCreditApplicationsDesc',
   creditContracts: 'accountAppCreditContractsDesc',
+  creditCollections: 'accountAppCreditCollectionsDesc',
+  creditClassification: 'accountAppCreditClassificationDesc',
+  creditReports: 'accountAppCreditReportsDesc',
   creditSettings: 'accountAppCreditSettingsDesc',
   employees: 'accountAppEmployeesDesc',
   tasks: 'accountAppTasksDesc',
@@ -219,8 +234,13 @@ export const shortcuts: ReadonlyArray<{
   { id: 'closing', icon: 'fa-clipboard-check', tone: 'violet', path: '/account/closing', popup: true },
   { id: 'loans', icon: 'fa-sack-dollar', tone: 'coral', path: '/account/loans', popup: true },
   // ລະບົບສິນເຊື່ອ (/credit/…) — ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ → use_credit)
+  { id: 'creditOverview', icon: 'fa-chart-pie', tone: 'violet', path: '/credit/overview', popup: true },
   { id: 'creditCustomers', icon: 'fa-address-card', tone: 'sky', path: '/credit/customers', popup: true },
+  { id: 'creditApplications', icon: 'fa-file-pen', tone: 'gold', path: '/credit/applications', popup: true },
   { id: 'creditContracts', icon: 'fa-file-signature', tone: 'emerald', path: '/credit/contracts', popup: true },
+  { id: 'creditCollections', icon: 'fa-phone-volume', tone: 'coral', path: '/credit/collections', popup: true },
+  { id: 'creditClassification', icon: 'fa-layer-group', tone: 'violet', path: '/credit/classification', popup: true },
+  { id: 'creditReports', icon: 'fa-chart-column', tone: 'cyan', path: '/credit/reports', popup: true },
   { id: 'creditSettings', icon: 'fa-sliders', tone: 'slate', path: '/credit/settings', popup: true },
   { id: 'employees', icon: 'fa-id-card', tone: 'cyan', path: '/hr/employees', popup: true },
   { id: 'tasks', icon: 'fa-list-check', tone: 'sky', path: '/hr/tasks', popup: true },
@@ -418,6 +438,18 @@ const listItems = (menuIds: ShortcutId[], folders: DesktopFolder[]): Omit<Deskto
 type Placement = { items: DesktopItem[]; sections: DesktopSection[]; cellOf: Cells };
 
 /**
+ * ກອບສິນເຊື່ອ / ເງິນກູ້: ໄອຄອນທີ່ຍັງບໍ່ເຄີຍລາກ ລຽງຕາມຂັ້ນຕອນວຽກ (ພາບລວມ → ລູກຄ້າ → ຄຳຮ້ອງ → ສັນຍາ → ຕິດຕາມ →
+ * ຈັດຊັ້ນ → ລາຍງານ → ຕັ້ງຄ່າ → ເງິນກູ້ທົ່ວໄປ) ບໍ່ແມ່ນຕາມລຳດັບທີ່ເມນູຖືກເພີ່ມໃນລະບົບ
+ */
+const LOANS_FRAME_ORDER: string[] = [
+  'creditOverview', 'creditCustomers', 'creditApplications', 'creditContracts', 'creditCollections', 'creditClassification', 'creditReports', 'creditSettings', 'loans',
+];
+const loansOrder = (id: string) => {
+  const index = LOANS_FRAME_ORDER.indexOf(id);
+  return index < 0 ? LOANS_FRAME_ORDER.length : index;
+};
+
+/**
  * ຈັດກອບ ແລະ ໄອຄອນ: ແຕ່ລະກຸ່ມເມນູ (MENU_GROUPS) ມີກອບຂອງມັນ — ໄອຄອນທີ່ຍັງບໍ່ເຄີຍລາກ ລຽງລົງທາງລຸ່ມກ່ອນ
  * ແລ້ວຂຶ້ນຖັນໃໝ່ (ຖັນ = ຈຳນວນ ÷ ແຖວທີ່ພໍດີຈໍ), ອັນທີ່ລາກແລ້ວຢູ່ຊ່ອງຂອງມັນ. ກອບວາງຈາກຊ້າຍໄປຂວາ,
  * ກອບທີ່ພໍລົງຢູ່ກ້ອງກອບກ່ອນໄດ້ (ສູງບໍ່ເກີນຈໍ) ກໍ່ລົງຢູ່ກ້ອງ ບໍ່ກິນພື້ນທີ່ທາງຂວາ
@@ -428,7 +460,8 @@ const placeLayout = (list: Omit<DesktopItem, 'position'>[], cells: Cells, area: 
   const sections: DesktopSection[] = [];
 
   MENU_GROUPS.forEach((group) => {
-    const members = list.filter((item) => item.section === group.key);
+    const inGroup = list.filter((item) => item.section === group.key);
+    const members = group.key === 'loans' ? [...inGroup].sort((a, b) => loansOrder(a.id) - loansOrder(b.id)) : inGroup;
     if (!members.length) return;
     const stored = members.flatMap((item) => (cells[item.id] && cells[item.id].row < maxRows ? [cells[item.id]] : []));
     // ຢ່າງໜ້ອຍ 2 ຖັນ (ມີ 2 ອັນຂຶ້ນໄປ) — ກອບບໍ່ເປັນເສົາສູງແຄບ ແລະ ຊື່ກອບບໍ່ຖືກຕັດ

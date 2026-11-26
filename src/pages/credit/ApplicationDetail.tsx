@@ -332,23 +332,34 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
 
         {tab === 'summary' && (
           <div className="cr-split">
-            <InfoRows rows={[
-              [t('crCustomer'), c && <>{c.customer_code} · {c.full_name} {Number(c.blacklisted) === 1 && <span className="cr-status is-rejected">{t('crBlacklist')}</span>}</>],
-              [t('phone'), c?.phone],
-              [t('crIdNo'), c?.id_no],
-              [t('crAddress'), c && customerAddress(c)],
-              [t('crOccupation'), c && [c.occupation, c.workplace].filter(Boolean).join(' · ')],
-              [t('crRisk'), c && <RiskChip level={c.risk_level} />],
-            ]}
-            />
-            <InfoRows rows={[
-              [t('lnPurpose'), app.purpose],
-              [t('crRepaymentSource'), app.repayment_source],
-              [t('crItem'), app.item_description && `${app.item_description} · ${money(app.item_price, app.currency)} (${t('crDownPayment')} ${money(app.down_payment, app.currency)})`],
-              [t('crRequestedAmount'), `${money(app.requested_amount, app.currency)} · ${app.requested_term} ${t('lnInstallments')} · ${app.annual_rate}%`],
-              [t('note'), app.note],
-            ]}
-            />
+            <section>
+              <h5><i className="fa-solid fa-user" /> {t('crBorrower')}</h5>
+              <InfoRows rows={[
+                [t('crCustomer'), c && <>{c.customer_code} · {c.full_name} {Number(c.blacklisted) === 1 && <span className="cr-status is-rejected">{t('crBlacklist')}</span>}</>],
+                [t('phone'), c?.phone],
+                [t('crIdNo'), c?.id_no],
+                [t('crAddress'), c && customerAddress(c)],
+                [t('crOccupation'), c && [c.occupation, c.workplace].filter(Boolean).join(' · ')],
+                [t('crRisk'), c && <RiskChip level={c.risk_level} />],
+              ]}
+              />
+            </section>
+            <section>
+              <h5><i className="fa-solid fa-file-pen" /> {t('crApplication')}</h5>
+              <InfoRows rows={[
+                [t('crProduct'), app.product && `${app.product.product_code} · ${app.product.name_la}`],
+                [t('crApplyDate'), showDate(app.apply_date)],
+                [t('crRequestedAmount'), `${money(app.requested_amount, app.currency)} · ${creditTermText(app.requested_term, app.frequency_days, app.frequency_months, t)} · ${app.annual_rate}%`],
+                [t('crApprovedAmount'), app.approved_amount !== null && `${money(app.approved_amount, app.currency)} · ${app.approved_term ?? app.requested_term} ${t('lnInstallments')} · ${app.approved_rate ?? app.annual_rate}%`],
+                [t('lnMethod'), (() => { const m = LOAN_METHODS.find((x) => x.value === Number(app.method)); return m ? t(m.label) : ''; })()],
+                [t('lnPurpose'), app.purpose],
+                [t('crRepaymentSource'), app.repayment_source],
+                [t('crItem'), app.item_description && `${app.item_description} · ${money(app.item_price, app.currency)} (${t('crDownPayment')} ${money(app.down_payment, app.currency)})`],
+                [t('crCreatedBy'), app.created_by_name],
+                [t('note'), app.note],
+              ]}
+              />
+            </section>
           </div>
         )}
         {tab === 'security' && (

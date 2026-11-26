@@ -492,7 +492,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   /** ເງິນກູ້ — ບໍ່ມີບັດຂອງຕົນເອງ, ຂຶ້ນແຕ່ງວດທີ່ຮອດກຳນົດໃນ "ຕ້ອງຕິດຕາມ" */
   const loansOpen = accessOf('loans') === 'open';
   /** ສັນຍາສິນເຊື່ອ — ງວດທີ່ຄ້າງ / ໃກ້ຮອດ ລວມເປັນລາຍການດຽວ ເປີດໜ້າຕ່າງ ຄຳຮ້ອງ ແລະ ສັນຍາ */
-  const creditOpen = accessOf('creditContracts') === 'open';
+  const creditOpen = accessOf('creditCollections') === 'open';
   const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none', loansOpen || creditOpen ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
@@ -733,7 +733,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
       title: t(kind === 'overdue' ? 'glanceCreditOverdue' : 'glanceCreditDue'),
       sub: t('glanceCreditContracts').replace('{n}', String(list.length)),
       amount: money(symbol, list.filter((l) => l.symbol === symbol).reduce((n, l) => n + l.amount, 0)),
-      target: 'creditContracts', before: () => requestRailKey('creditContracts', 'contracts'),
+      target: 'creditCollections',
     });
   });
   if (ar) debtTodos('ar', ar.overdue, 'danger');

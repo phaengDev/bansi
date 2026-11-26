@@ -30,7 +30,11 @@ import ClosingWindow from './closing/ClosingWindow';
 import FixedAssetWindow from './assets/FixedAssetWindow';
 import LoanWindow from './loans/LoanWindow';
 import CreditCustomersWindow from '../credit/CreditCustomersWindow';
-import CreditContractsWindow from '../credit/CreditContractsWindow';
+import CreditContractsWindow, { CreditApplicationsWindow } from '../credit/CreditContractsWindow';
+import CreditOverview from '../credit/CreditOverview';
+import CollectionsPage from '../credit/CollectionsPage';
+import ClassificationPage from '../credit/ClassificationPage';
+import CreditReportsWindow from '../credit/CreditReportsWindow';
 import CreditSettingsWindow from '../credit/CreditSettingsWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import PlatformWindow from '../platform/PlatformWindow';
@@ -71,8 +75,13 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   fixedAssets: <FixedAssetWindow />,
   closing: <ClosingWindow />,
   loans: <LoanWindow />,
+  creditOverview: <AppPage showHeader={false}><CreditOverview /></AppPage>,
   creditCustomers: <CreditCustomersWindow />,
+  creditApplications: <CreditApplicationsWindow />,
   creditContracts: <CreditContractsWindow />,
+  creditCollections: <AppPage showHeader={false}><CollectionsPage /></AppPage>,
+  creditClassification: <AppPage showHeader={false}><ClassificationPage /></AppPage>,
+  creditReports: <CreditReportsWindow />,
   creditSettings: <CreditSettingsWindow />,
   employees: <AppPage showHeader={false}><EmployeePage /></AppPage>,
   tasks: <AppPage showHeader={false}><TaskPage /></AppPage>,
@@ -88,7 +97,7 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
 };
 
 /** ໜ້າຕ່າງຂອງລະບົບສິນເຊື່ອ — ຂຶ້ນເມື່ອເປີດ use_credit */
-const CREDIT_WINDOWS: ShortcutId[] = ['creditCustomers', 'creditContracts', 'creditSettings'];
+const CREDIT_WINDOWS: ShortcutId[] = ['creditOverview', 'creditCustomers', 'creditApplications', 'creditContracts', 'creditCollections', 'creditClassification', 'creditReports', 'creditSettings'];
 
 /**
  * The persistent chrome around every `/account/*` page — taskbar (start button, running popups, pinned
@@ -157,8 +166,13 @@ const AccountShell: React.FC = () => {
   const fixedAssetsWindow = usePopupWindow();
   const closingWindow = usePopupWindow();
   const loansWindow = usePopupWindow();
+  const creditOverviewWindow = usePopupWindow();
   const creditCustomersWindow = usePopupWindow();
+  const creditApplicationsWindow = usePopupWindow();
   const creditContractsWindow = usePopupWindow();
+  const creditCollectionsWindow = usePopupWindow();
+  const creditClassificationWindow = usePopupWindow();
+  const creditReportsWindow = usePopupWindow();
   const creditSettingsWindow = usePopupWindow();
   const employeesWindow = usePopupWindow();
   const tasksWindow = usePopupWindow();
@@ -186,8 +200,13 @@ const AccountShell: React.FC = () => {
     fixedAssets: fixedAssetsWindow,
     closing: closingWindow,
     loans: loansWindow,
+    creditOverview: creditOverviewWindow,
     creditCustomers: creditCustomersWindow,
+    creditApplications: creditApplicationsWindow,
     creditContracts: creditContractsWindow,
+    creditCollections: creditCollectionsWindow,
+    creditClassification: creditClassificationWindow,
+    creditReports: creditReportsWindow,
     creditSettings: creditSettingsWindow,
     employees: employeesWindow,
     tasks: tasksWindow,

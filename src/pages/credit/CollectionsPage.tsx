@@ -4,12 +4,12 @@ import moment from 'moment';
 import { formatNumber } from '../../utils/configApi';
 import { canCreate } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
-import { SettingToolbar } from '../account/setting/settingKit';
 import { money, showDate } from '../account/loans/loanApi';
 import CollectForm from './CollectForm';
 import ContractDetail from './ContractDetail';
 import { AGING_BUCKETS, FOLLOW_METHODS, FOLLOW_RESULTS, useCreditList, type AgingKey, type CollectionRow } from './creditApi';
 import { DaysLateChip, FollowUpForm } from './collectKit';
+import { CreditListBar, CreditTiles, IdentityCell } from './creditKit';
 import ReminderModal from './ReminderModal';
 import { AgingBars } from './creditCharts';
 
@@ -49,6 +49,8 @@ const CollectionsPage = () => {
   const open = rows.filter((r) => !r.closed);
   const overdue = rows.filter(test.overdue);
   const outstanding = open.reduce((n, r) => n + r.outstanding, 0);
+  const overdueAmount = overdue.reduce((n, r) => n + r.overdue_amount, 0);
+  const dueToday = rows.filter(test.today);
   const par30 = open.filter((r) => r.days_overdue >= 30).reduce((n, r) => n + r.outstanding, 0);
   const agingRows = AGING_BUCKETS.map((b) => {
     const list = open.filter((r) => r.aging === b.key);
@@ -64,42 +66,38 @@ const CollectionsPage = () => {
 
   return (
     <div className="acs-page acc-fa acc-ln cr-page cr-collections">
-      <SettingToolbar
-        stats={[
-          { label: t('crOverdueContracts'), value: overdue.length, tone: overdue.length ? 'red' : undefined },
-          { label: t('crOverdueAmount'), value: `₭ ${formatNumber(Math.round(overdue.reduce((n, r) => n + r.overdue_amount, 0)))}`, tone: 'gold' },
-          { label: t('crPenaltyDue'), value: `₭ ${formatNumber(Math.round(rows.reduce((n, r) => n + r.penalty_due, 0)))}`, tone: 'violet' },
-          { label: 'PAR30', value: `${outstanding > 0 ? Math.round((par30 / outstanding) * 1000) / 10 : 0}%`, tone: par30 > 0 ? 'red' : 'green' },
-        ]}
+      <div className="cr-collect-top">
+        <CreditTiles
+          className="is-2x2"
+          tiles={[
+            { icon: 'fa-triangle-exclamation', label: t('crOverdueContracts'), value: formatNumber(overdue.length), sub: `${t('crOverdueAmount')} ₭ ${formatNumber(Math.round(overdueAmount))}`, tone: overdue.length ? 'red' : 'slate' },
+            { icon: 'fa-calendar-day', label: t('crDueToday'), value: formatNumber(dueToday.length), sub: `₭ ${formatNumber(Math.round(dueToday.reduce((n, r) => n + (r.next?.amount ?? 0), 0)))}`, tone: 'violet' },
+            { icon: 'fa-gavel', label: t('crPenaltyDue'), value: `₭ ${formatNumber(Math.round(rows.reduce((n, r) => n + r.penalty_due, 0)))}`, tone: 'gold' },
+            { icon: 'fa-chart-pie', label: 'PAR30', value: `${outstanding > 0 ? Math.round((par30 / outstanding) * 1000) / 10 : 0}%`, sub: `₭ ${formatNumber(Math.round(par30))} / ${formatNumber(Math.round(outstanding))}`, tone: par30 > 0 ? 'red' : 'green' },
+          ]}
+        />
+        {open.length > 0 && (
+          <div className="cr-card cr-aging-card">
+            <span className="cr-aging-title"><b>{t('crAgingTitle')}</b><small>{t('crAgingHint')}</small></span>
+            <AgingBars rows={agingRows} active={aging} onPick={(key) => {
+              const next = aging === key ? null : (key as AgingKey);
+              setAging(next);
+              if (next) setFilter(next === 'current' ? 'all' : 'overdue');
+            }}
+            />
+          </div>
+        )}
+      </div>
+
+      <CreditListBar
+        tabs={filters.map((f) => ({ ...f, count: rows.filter(test[f.key]).length }))} value={filter} onChange={(key) => { setFilter(key); setAging(null); }}
         keyword={keyword} onKeyword={setKeyword} placeholder={t('crContractSearch')}
-      />
-
-      {open.length > 0 && (
-        <div className="cr-aging-card">
-          <span className="cr-aging-title"><b>{t('crAgingTitle')}</b><small>{t('crAgingHint')}</small></span>
-          <AgingBars rows={agingRows} active={aging} onPick={(key) => {
-            const next = aging === key ? null : (key as AgingKey);
-            setAging(next);
-            if (next) setFilter(next === 'current' ? 'all' : 'overdue');
-          }}
-          />
-        </div>
-      )}
-
-      <div className="acc-type-segment acc-fa-filter-tabs" role="tablist">
-        {filters.map((f) => (
-          <button key={f.key} type="button" role="tab" aria-selected={filter === f.key} className={filter === f.key ? 'is-active' : ''}
-            onClick={() => { setFilter(f.key); setAging(null); }}
-          >
-            <i className={`fa-solid ${f.icon}`} /> {f.label} <small>{rows.filter(test[f.key]).length}</small>
-          </button>
-        ))}
-        {aging && (
+        extra={aging && (
           <button type="button" className="cr-filter-chip" onClick={() => setAging(null)}>
             {t(AGING_BUCKETS.find((b) => b.key === aging)!.label)} <i className="fa-solid fa-xmark" />
           </button>
         )}
-      </div>
+      />
 
       {loading && !rows.length ? (
         <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>
@@ -109,14 +107,14 @@ const CollectionsPage = () => {
           <p><b>{t(filter === 'overdue' ? 'crNoOverdue' : 'rpEmpty')}</b></p>
         </div>
       ) : (
-        <div className="acc-rp-scroll">
-          <table className="acc-fs-table acc-ln-list cr-collect-list">
+        <div className="cr-card cr-list-card acc-rp-scroll">
+          <table className="acc-fs-table cr-list cr-collect-list">
             <thead>
               <tr>
-                <th>{t('crCustomer')}</th>
+                <th>{t('crContract')}</th>
                 <th>{t('lnOverdue')}</th>
                 <th>{t('lnNextDue')}</th>
-                <th>{t('crLastContact')}</th>
+                <th className="is-text">{t('crLastContact')}</th>
                 <th />
               </tr>
             </thead>
@@ -127,32 +125,30 @@ const CollectionsPage = () => {
                 const result = last && FOLLOW_RESULTS.find((x) => x.value === Number(last.result));
                 const phone = r.customer?.phone;
                 return (
-                  <tr key={r._uuid} className="is-line is-click" onClick={() => setViewing({ id: r._uuid })}>
+                  <tr key={r._uuid} className="is-click" onClick={() => setViewing({ id: r._uuid })}>
                     <td>
-                      <div className="acc-fa-name">
-                        <span className="acc-fs-code">{r.loan_code}</span>
-                        <b>{r.customer?.name ?? r.counterparty}</b>
-                      </div>
-                      <small>{[r.customer?.code, phone, r.product?.name].filter(Boolean).join(' · ')}</small>
+                      <IdentityCell icon="fa-file-signature" tone={r.days_overdue > 0 ? 'is-red' : 'is-blue'} title={r.customer?.name ?? r.counterparty}
+                        code={r.loan_code} meta={[r.customer?.code, phone, r.product?.name]}
+                      />
                     </td>
                     <td>
                       {r.days_overdue > 0 ? (
                         <>
                           <b>{money(r.overdue_amount, r.currency)}</b>
                           <DaysLateChip days={r.days_overdue} aging={r.aging} />
-                          {r.penalty_due > 0 && <small className="acc-gl-ref">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
+                          {r.penalty_due > 0 && <small className="cr-text-bad">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
                         </>
-                      ) : r.penalty_due > 0 ? <small className="acc-gl-ref">{t('crPenalty')} {formatNumber(r.penalty_due)}</small> : '—'}
+                      ) : r.penalty_due > 0 ? <small className="cr-text-bad">{t('crPenalty')} {formatNumber(r.penalty_due)}</small> : <span className="cr-muted">—</span>}
                     </td>
                     <td>
                       {r.next ? (
                         <>
                           <b>{money(r.next.amount, r.currency)}</b>
-                          <small className="acc-gl-ref">{t('lnInstallmentNo')} {r.next.no} · {showDate(r.next.due_date)}</small>
+                          <small>{t('lnInstallmentNo')} {r.next.no} · {showDate(r.next.due_date)}</small>
                         </>
-                      ) : '—'}
+                      ) : <span className="cr-muted">—</span>}
                     </td>
-                    <td>
+                    <td className="is-text">
                       {last ? (
                         <span className="cr-last">
                           <i className={`fa-solid ${method?.icon ?? 'fa-phone'}`} />
@@ -165,7 +161,7 @@ const CollectionsPage = () => {
                           </span>
                         </span>
                       ) : <span className="cr-muted">{t('crNotContacted')}</span>}
-                      {r.last_notice && <small className="acc-gl-ref"><i className="fa-solid fa-bell" /> {t('crReminderSentOn').replace('{d}', moment(r.last_notice).format('DD/MM'))}</small>}
+                      {r.last_notice && <small><i className="fa-solid fa-bell" /> {t('crReminderSentOn').replace('{d}', moment(r.last_notice).format('DD/MM'))}</small>}
                     </td>
                     <td className="acc-fa-actions" onClick={(e) => e.stopPropagation()}>
                       {phone && <a href={`tel:${phone}`} title={t('crCall')} aria-label={t('crCall')}><i className="fa-solid fa-phone" /></a>}

@@ -350,17 +350,40 @@ export const LOAN_MENU: SidebarPopupGroup[] = [
   },
 ];
 
-/** ລະບົບສິນເຊື່ອ — ພາບລວມ, ຄຳຮ້ອງ (ພິຈາລະນາ / ປ່ອຍກູ້), ສັນຍາ (ຮັບຊຳລະ) ແລະ ຕິດຕາມໜີ້ */
-export const CREDIT_CONTRACTS_MENU: SidebarPopupGroup[] = [
+/** ລາຍງານສິນເຊື່ອ — ໜ້າຕ່າງຂອງຕົນເອງ, ແບ່ງກຸ່ມ */
+export const CREDIT_REPORTS_MENU: SidebarPopupGroup[] = [
   {
-    group: 'accountAppCreditContracts',
+    group: 'crRepGroupPortfolio',
     items: [
-      { key: 'overview', icon: 'fa-solid fa-chart-pie', label: 'crOverviewMenu' },
-      { key: 'applications', icon: 'fa-solid fa-file-pen', label: 'crApplicationsMenu' },
-      { key: 'contracts', icon: 'fa-solid fa-file-signature', label: 'crContractsMenu' },
-      { key: 'collections', icon: 'fa-solid fa-phone-volume', label: 'crCollectionsMenu' },
-      { key: 'classification', icon: 'fa-solid fa-layer-group', label: 'crClassMenu' },
-      { key: 'reports', icon: 'fa-solid fa-chart-column', label: 'crReportsMenu' },
+      { key: 'portfolio', icon: 'fa-solid fa-briefcase', label: 'crRepPortfolio' },
+      { key: 'aging', icon: 'fa-solid fa-hourglass-half', label: 'crRepAging' },
+      { key: 'byProduct', icon: 'fa-solid fa-box-open', label: 'crRepByProduct' },
+      { key: 'byOfficer', icon: 'fa-solid fa-user-tie', label: 'crRepByOfficer' },
+      { key: 'byClass', icon: 'fa-solid fa-layer-group', label: 'crRepByClass' },
+      { key: 'classes', icon: 'fa-solid fa-clock-rotate-left', label: 'crRepClasses' },
+    ],
+  },
+  {
+    group: 'crRepGroupActivity',
+    items: [
+      { key: 'disbursements', icon: 'fa-solid fa-money-bill-transfer', label: 'crRepDisbursements' },
+      { key: 'collections', icon: 'fa-solid fa-hand-holding-dollar', label: 'crRepCollections' },
+      { key: 'due', icon: 'fa-solid fa-calendar-check', label: 'crRepDue' },
+      { key: 'applications', icon: 'fa-solid fa-file-pen', label: 'crRepApplications' },
+    ],
+  },
+  {
+    group: 'crRepGroupIncome',
+    items: [{ key: 'income', icon: 'fa-solid fa-coins', label: 'crRepIncome' }],
+  },
+  {
+    group: 'crRepGroupControl',
+    items: [
+      { key: 'cancelled', icon: 'fa-solid fa-ban', label: 'crRepCancelled' },
+      { key: 'waivers', icon: 'fa-solid fa-hand-holding-heart', label: 'crRepWaivers' },
+      { key: 'restructures', icon: 'fa-solid fa-shuffle', label: 'crRepRestructures' },
+      { key: 'writeoffs', icon: 'fa-solid fa-skull-crossbones', label: 'crRepWriteoffs' },
+      { key: 'followups', icon: 'fa-solid fa-phone-volume', label: 'crRepFollowups' },
     ],
   },
 ];

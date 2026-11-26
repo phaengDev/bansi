@@ -41,6 +41,13 @@ const ACTIONS: Record<string, { label: string; icon: string; tone: string }> = {
   password: { label: 'auditActPassword', icon: 'fa-key', tone: 'is-violet' },
   lock: { label: 'auditActLock', icon: 'fa-lock', tone: 'is-violet' },
   unlock: { label: 'auditActUnlock', icon: 'fa-lock-open', tone: 'is-gold' },
+  decide: { label: 'auditActDecide', icon: 'fa-gavel', tone: 'is-violet' },
+  disburse: { label: 'auditActDisburse', icon: 'fa-money-bill-transfer', tone: 'is-green' },
+  collect: { label: 'auditActCollect', icon: 'fa-hand-holding-dollar', tone: 'is-green' },
+  waive: { label: 'auditActWaive', icon: 'fa-hand-holding-heart', tone: 'is-gold' },
+  writeoff: { label: 'auditActWriteoff', icon: 'fa-skull-crossbones', tone: 'is-red' },
+  restructure: { label: 'auditActRestructure', icon: 'fa-shuffle', tone: 'is-violet' },
+  classify: { label: 'auditActClassify', icon: 'fa-layer-group', tone: 'is-blue' },
 };
 
 /** ປະເພດລາຍການ → ຊື່ + ໄອຄອນ (ລຳດັບ = ລຳດັບໃນຕົວກັ່ນ) */
@@ -53,6 +60,14 @@ const ENTITIES: Record<string, { label: string; icon: string }> = {
   journal: { label: 'auditEntJournal', icon: 'fa-book' },
   loan: { label: 'auditEntLoan', icon: 'fa-sack-dollar' },
   loan_payment: { label: 'auditEntLoanPayment', icon: 'fa-money-bill-transfer' },
+  credit_contract: { label: 'auditEntCreditContract', icon: 'fa-file-signature' },
+  credit_application: { label: 'auditEntCreditApplication', icon: 'fa-file-pen' },
+  credit_customer: { label: 'auditEntCreditCustomer', icon: 'fa-address-card' },
+  credit_product: { label: 'auditEntCreditProduct', icon: 'fa-box-open' },
+  credit_penalty: { label: 'auditEntCreditPenalty', icon: 'fa-gavel' },
+  credit_writeoff: { label: 'auditEntCreditWriteoff', icon: 'fa-skull-crossbones' },
+  credit_restructure: { label: 'auditEntCreditRestructure', icon: 'fa-shuffle' },
+  credit_classification: { label: 'auditEntCreditClassification', icon: 'fa-layer-group' },
   chart_account: { label: 'auditEntChartAccount', icon: 'fa-sitemap' },
   tax: { label: 'auditEntTax', icon: 'fa-percent' },
   account_setting: { label: 'auditEntAccountSetting', icon: 'fa-gears' },

@@ -10,7 +10,7 @@ import { CurrencyField } from '../../components/Elements/CurrencyPicker';
 import { CREDIT_SETTINGS_MENU, toRailNav } from '../account/config/SidebarPopup';
 import { useRailKey } from '../account/windowMemory';
 import { accountOptionLabel, amountFormatter, useAccountOptions, useChartAccounts } from '../account/gl/glKit';
-import { ChoiceTiles, FormStep, ListState, MetaChip, PickerField, SettingCard, SettingModal, SettingToolbar } from '../account/setting/settingKit';
+import { ChoiceTiles, FormStep, ListState, PickerField, SettingModal, SettingToolbar } from '../account/setting/settingKit';
 import { postfixProp, runSave } from '../account/setting/settingApi';
 import { LOAN_METHODS } from '../account/loans/loanApi';
 import { BORROWER_TYPES, FREQUENCIES, PRODUCT_KINDS, frequencyOf, type ClassRule, type CreditProduct } from './creditApi';
@@ -270,27 +270,47 @@ const ProductForm = ({ row, onClose, onSaved }: { row: CreditProduct | null; onC
 /** ສີຂອງບັດຕາມປະເພດ: ເງິນສົດ, ຂາຍຜ່ອນ, ຈຳນຳ */
 const KIND_TONES: Record<number, string> = { 1: 'is-emerald', 2: 'is-sky', 3: 'is-gold' };
 
-/** ບັດຜະລິດຕະພັນໜຶ່ງ */
+/**
+ * ບັດຜະລິດຕະພັນ — ຫົວ (ໄອຄອນຕາມປະເພດ, ຊື່, ລະຫັດ · ປະເພດ, ສະຖານະ, ແກ້ໄຂ), ຕາລາງເງື່ອນໄຂ 3 ຖັນ (ປ້າຍ + ຄ່າ),
+ * ແຖວລຸ່ມ = ເງື່ອນໄຂການອະນຸມັດ (ຫຼັກຊັບ / LTV, ຜູ້ຄ້ຳ, ອັດຕາສ່ວນໜີ້ຕໍ່ລາຍຮັບ)
+ */
 const ProductCard = ({ p, onEdit }: { p: CreditProduct; onEdit: () => void }) => {
   const t = useT();
   const cur = useProductCurrency(p.currency_id);
   const kind = PRODUCT_KINDS.find((k) => k.value === Number(p.product_kind)) ?? PRODUCT_KINDS[0];
+  const active = Number(p.status) === 1;
+  const rules = [
+    Number(p.require_collateral) === 1 && { icon: 'fa-house-lock', text: `${t('crNeedCollateral')}${p.max_ltv ? ` · LTV ≤ ${p.max_ltv}%` : ''}` },
+    Number(p.require_guarantor) === 1 && { icon: 'fa-user-shield', text: t('crNeedGuarantor') },
+    p.max_debt_ratio > 0 && { icon: 'fa-scale-unbalanced', text: `${t('crDtiShort')} ≤ ${p.max_debt_ratio}%` },
+  ].filter(Boolean) as { icon: string; text: string }[];
   return (
-    <SettingCard tone={KIND_TONES[Number(p.product_kind)] ?? 'is-emerald'} badge={<i className={`fa-solid ${kind.icon}`} />} active={Number(p.status) === 1}
-      title={p.name_la}
-      subtitle={[p.product_code, t(kind.label), t(LOAN_METHODS.find((m) => m.value === Number(p.method))?.label ?? '')].join(' · ')}
-      meta={(
-        <>
-          {productFacts(p, cur, t).map((f) => <MetaChip key={f.icon} icon={f.icon}>{f.text}</MetaChip>)}
-          {Number(p.borrower_type) !== 3 && <MetaChip icon={Number(p.borrower_type) === 1 ? 'fa-user' : 'fa-building'}>{t(BORROWER_TYPES.find((b) => b.value === Number(p.borrower_type))!.label)}</MetaChip>}
-          {Number(p.require_collateral) === 1 && <MetaChip icon="fa-house-lock" tone="gold">{t('crNeedCollateral')}{p.max_ltv ? ` · LTV ≤ ${p.max_ltv}%` : ''}</MetaChip>}
-          {Number(p.require_guarantor) === 1 && <MetaChip icon="fa-user-shield" tone="gold">{t('crNeedGuarantor')}</MetaChip>}
-          {p.max_debt_ratio > 0 && <MetaChip icon="fa-scale-unbalanced">{t('crDtiShort')} ≤ {p.max_debt_ratio}%</MetaChip>}
-          <MetaChip icon="fa-users" tone="violet">{t('crLevelsN').replace('{n}', String(p.approval_levels))}</MetaChip>
-        </>
-      )}
-      onEdit={onEdit} canEdit={canEdit}
-    />
+    <article className={`cr-product${active ? '' : ' is-off'}`}>
+      <header>
+        <span className={`acc-class-code cr-product-badge ${KIND_TONES[Number(p.product_kind)] ?? 'is-emerald'}`}><i className={`fa-solid ${kind.icon}`} /></span>
+        <div>
+          <h4>{p.name_la}</h4>
+          <small><span className="acc-fs-code">{p.product_code}</span> {t(kind.label)}</small>
+        </div>
+        <span className={`acc-class-status${active ? ' is-active' : ''}`}><i className="fa-solid fa-circle" /> {active ? t('active') : t('inactive')}</span>
+        <button type="button" className="acc-class-edit" disabled={!canEdit} aria-label={t('edit')} title={t('edit')} onClick={onEdit}>
+          <i className="fa-solid fa-pen" />
+        </button>
+      </header>
+      <dl className="cr-product-facts">
+        {productFacts(p, cur, t).map((f) => (
+          <div key={f.icon}>
+            <dt><i className={`fa-solid ${f.icon}`} /> {f.label}</dt>
+            <dd title={'title' in f ? f.title : undefined}>{f.value}</dd>
+            {f.sub && <small>{f.sub}</small>}
+          </div>
+        ))}
+      </dl>
+      <footer>
+        {rules.length ? rules.map((r) => <span key={r.icon} className="cr-product-rule"><i className={`fa-solid ${r.icon}`} /> {r.text}</span>)
+          : <span className="cr-muted"><i className="fa-solid fa-circle-check" /> {t('crNoExtraRules')}</span>}
+      </footer>
+    </article>
   );
 };
 
@@ -319,7 +339,7 @@ const ProductsPage = () => {
         </div>
       ) : (
         <ListState loading={loading && !rows.length} empty={!shown.length} icon="fa-box-open">
-          <div className="acs-grid">
+          <div className="cr-products">
             {shown.map((p) => <ProductCard key={p._uuid} p={p} onEdit={() => setEditing(p)} />)}
           </div>
         </ListState>
@@ -353,43 +373,62 @@ const ClassRulesPage = () => {
   const cell = (node: ReactNode) => <td>{node}</td>;
   return (
     <div className="acs-page cr-page">
-      <div className="cr-rules-head">
-        <p className="acc-gl-hint"><i className="fa-solid fa-scale-balanced" /> {t('crRulesHint')}</p>
-        {canEdit && (
-          <button type="button" className="acc-rp-btn is-primary" disabled={!dirty || saving} onClick={save}>
-            <i className="fa-solid fa-check" /> {t('save')}
-          </button>
-        )}
-      </div>
-      <div className="acc-rp-scroll">
-        <table className="acc-fs-table cr-rules">
-          <thead>
-            <tr>
-              <th>{t('crClass')}</th>
-              <th>{t('crClassName')}</th>
-              <th>{t('crDaysFrom')}</th>
-              <th>{t('crDaysTo')}</th>
-              <th>{t('crProvisionRate')}</th>
-              <th>NPL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {draft.map((r, i) => (
-              <tr key={r.loan_class} className="is-line">
-                {cell(<span className={`cr-class is-${r.class_code}`}>{r.class_code}</span>)}
-                {cell(<Input value={r.name_la} disabled={!canEdit} onChange={(v) => set(i, { name_la: v })} />)}
-                {cell(<b>{r.min_days}</b>)}
-                {cell(i === draft.length - 1
-                  ? <span className="cr-muted">{t('crAndAbove')}</span>
-                  : <NumberInput min={r.min_days} value={r.max_days ?? ''} disabled={!canEdit} postfix={t('crDays')} onChange={(v) => set(i, { max_days: v === '' || v === null ? null : Number(v) })} />)}
-                {cell(<NumberInput min={0} max={100} value={r.provision_rate} disabled={!canEdit} postfix="%" onChange={(v) => set(i, { provision_rate: Number(v) || 0 })} />)}
-                {cell(<Toggle size="sm" checked={!!r.is_npl} disabled={!canEdit} onChange={(on) => set(i, { is_npl: on ? 1 : 0 })} />)}
+      <section className="cr-card cr-rules-card">
+        <header className="cr-rules-head">
+          <span>
+            <b>{t('crRulesMenu')}</b>
+            <small><i className="fa-solid fa-scale-balanced" /> {t('crRulesHint')}</small>
+          </span>
+          {canEdit && (
+            <button type="button" className="acc-rp-btn is-primary" disabled={!dirty || saving} onClick={save}>
+              <i className={`fa-solid ${saving ? 'fa-spinner fa-spin' : 'fa-check'}`} /> {t('save')}
+            </button>
+          )}
+        </header>
+        {/* ຂັ້ນໄດຊັ້ນໜີ້ — ເບິ່ງໄລຍະມື້ ແລະ ເງິນແຮຂອງທຸກຊັ້ນໃນແຖວດຽວ (ປ່ຽນຕາມທີ່ແກ້ຢູ່ລຸ່ມທັນທີ) */}
+        <ol className="cr-ladder">
+          {draft.map((r, i) => (
+            <li key={r.loan_class} className={`is-${r.class_code}`}>
+              <span className={`cr-class is-${r.class_code}`}>{r.class_code}</span>
+              <span>
+                <b>{r.name_la}</b>
+                <small>{i === draft.length - 1 ? `${r.min_days}+ ${t('crDays')}` : `${r.min_days}–${r.max_days ?? '…'} ${t('crDays')}`}</small>
+                <em>{t('crProvision')} {r.provision_rate}%</em>
+              </span>
+              {!!r.is_npl && <span className="cr-npl">NPL</span>}
+            </li>
+          ))}
+        </ol>
+        <div className="acc-rp-scroll">
+          <table className="acc-fs-table cr-rules">
+            <thead>
+              <tr>
+                <th>{t('crClass')}</th>
+                <th>{t('crClassName')}</th>
+                <th>{t('crDaysFrom')}</th>
+                <th>{t('crDaysTo')}</th>
+                <th>{t('crProvisionRate')}</th>
+                <th>NPL</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="acc-gl-hint cr-rules-foot"><i className="fa-solid fa-circle-info" /> {t('crRulesFoot')}</p>
+            </thead>
+            <tbody>
+              {draft.map((r, i) => (
+                <tr key={r.loan_class} className="is-line">
+                  {cell(<span className={`cr-class is-${r.class_code}`}>{r.class_code}</span>)}
+                  {cell(<Input value={r.name_la} disabled={!canEdit} onChange={(v) => set(i, { name_la: v })} />)}
+                  {cell(<b>{r.min_days}</b>)}
+                  {cell(i === draft.length - 1
+                    ? <span className="cr-muted">{t('crAndAbove')}</span>
+                    : <NumberInput min={r.min_days} value={r.max_days ?? ''} disabled={!canEdit} postfix={t('crDays')} onChange={(v) => set(i, { max_days: v === '' || v === null ? null : Number(v) })} />)}
+                  {cell(<NumberInput min={0} max={100} value={r.provision_rate} disabled={!canEdit} postfix="%" onChange={(v) => set(i, { provision_rate: Number(v) || 0 })} />)}
+                  {cell(<Toggle size="sm" checked={!!r.is_npl} disabled={!canEdit} onChange={(on) => set(i, { is_npl: on ? 1 : 0 })} />)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="acc-gl-hint cr-rules-foot"><i className="fa-solid fa-circle-info" /> {t('crRulesFoot')}</p>
+      </section>
     </div>
   );
 };

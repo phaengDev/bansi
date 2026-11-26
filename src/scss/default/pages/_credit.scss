@@ -79,7 +79,9 @@
   margin-top: 12px;
 
   h5 { margin: 0 0 8px; color: #3d5266; font-size: 13px; font-weight: 800; }
+  h5 i { margin-right: 4px; color: #8a9aa8; font-size: 12px; }
 }
+.cr-split > :only-child { grid-column: 1 / -1; }
 
 .cr-info {
   display: grid;
@@ -345,23 +347,63 @@
 }
 
 // ---- ການຈັດຊັ້ນໜີ້ ----
+.cr-rules-card { max-width: 1120px; padding: 18px 20px; }
 .cr-rules-head {
   display: flex;
-  max-width: 1040px;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 
-  .acc-gl-hint { margin: 0; }
+  > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  b { color: #14314d; font-size: 15px; }
+  small { color: #6b7c8b; font-size: 12.5px; }
+  small i { margin-right: 4px; color: #8a9aa8; }
   .acc-rp-btn { flex: none; }
+}
+.cr-ladder {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 10px 12px;
+    background: #f7f9fb;
+    border: 1px solid #e6edf2;
+    border-radius: 12px;
+  }
+  li > span:nth-child(2) { display: flex; flex-direction: column; min-width: 0; }
+  b { overflow: hidden; color: #14314d; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  small { color: #3d5266; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  em { color: #7b8a97; font-size: 11.5px; font-style: normal; }
+  .cr-class { flex: none; }
+}
+.cr-npl {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 0 6px;
+  color: #b42d33;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 800;
+  background: #fdecec;
+  border-radius: 5px;
 }
 
 .cr-rules {
-  max-width: 1040px;
-
   th, td { text-align: left; vertical-align: middle; }
-  td { padding-top: 8px; padding-bottom: 8px; }
+  thead th { background: #f7f9fb; }
+  td { padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid #f1f4f7; }
+  tbody tr:last-child td { border-bottom: 0; }
   th:nth-child(3), td:nth-child(3) { width: 130px; }
   .rs-input-group, .rs-number-input { max-width: 180px; }
   td:nth-child(2) .rs-input { max-width: 260px; }
@@ -1022,9 +1064,17 @@ button.cr-aging-row { cursor: pointer; }
   b { display: block; font-size: 15px; }
   small { color: #666; font-size: 12px; }
 }
+.cr-report-group td { padding-top: 12px !important; background: #f6f8fa; }
+.cr-report-group small { margin-left: 6px; color: #7b8a97; font-weight: 400; }
+.cr-report-subtotal td { font-weight: 700; color: #3d5266; border-top: 1px solid #dfe6ec; }
 .cr-report-table {
-  .is-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th, td { text-align: left; }
+  th.is-num, td.is-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   td { vertical-align: top; }
+  thead th { background: #f7f9fb; }
+  tbody tr.is-line td { border-bottom: 1px solid #f1f4f7; }
+  tbody tr.is-click { cursor: pointer; }
+  tbody tr.is-click:hover td { background: #f5f9fd; }
   td small.acc-gl-ref { display: block; }
   tfoot td { font-weight: 800; border-top: 2px solid #dfe6ec; }
 }
@@ -1080,6 +1130,253 @@ button.cr-aging-row { cursor: pointer; }
 .cr-agreement-table { font-size: 12px; th, td { padding: 4px 6px; } td:nth-child(n+3) { text-align: right; } }
 .cr-mini-preview p { margin: 0 0 6px; font-size: 12.5px; }
 
+// ---- ຜະລິດຕະພັນສິນເຊື່ອ (ບັດກວ້າງ + ຕາລາງເງື່ອນໄຂ) ----
+.cr-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr));
+  gap: 14px;
+}
+.cr-product {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e3eaf0;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(20, 40, 60, 0.04);
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover { border-color: #cfe0ea; box-shadow: 0 6px 18px rgba(20, 40, 60, 0.08); }
+  &.is-off { background: #fafbfc; }
+  &.is-off .cr-product-badge { filter: grayscale(0.85); opacity: 0.6; }
+
+  > header {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #eef2f6;
+
+    h4 { margin: 0; overflow: hidden; color: #16324a; font-size: 15.5px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    small { display: flex; gap: 6px; align-items: center; margin-top: 2px; color: #7b8a97; font-size: 12px; }
+  }
+
+  > footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 16px 14px;
+    margin-top: auto;
+    border-top: 1px dashed #e6edf2;
+  }
+}
+.cr-product-badge { min-width: 46px; height: 46px; font-size: 18px; border-radius: 12px; }
+.cr-product-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 4px 8px;
+
+  > div { min-width: 0; padding: 10px 8px; }
+  > div:nth-child(-n+3) { border-bottom: 1px solid #f1f4f7; }
+  dt { overflow: hidden; color: #7b8a97; font-size: 11.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  dt i { width: 14px; margin-right: 3px; color: #a3b1bd; }
+  dd { margin: 3px 0 0; overflow: hidden; color: #16324a; font-size: 13.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  small { display: block; overflow: hidden; color: #8a9aa8; font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+}
+.cr-product-rule {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 3px 10px;
+  color: #8a5a00;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff6e6;
+  border-radius: 99px;
+}
+
+
+// ===== ລາຍການສິນເຊື່ອ (ລູກຄ້າ / ຄຳຮ້ອງ / ສັນຍາ / ຕິດຕາມໜີ້): ບັດສະຖິຕິ, ແຖບກັ່ນ, ຕາຕະລາງໃນບັດ =====
+.cr-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+
+  &.is-2x2 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+}
+.cr-tile {
+  --tone: #1d7fc4;
+  --tint: #e8f2fc;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e6edf2;
+  border-radius: 14px;
+
+  &.is-green { --tone: #0d7a57; --tint: #e3f5ee; }
+  &.is-violet { --tone: #604bd8; --tint: #efecfd; }
+  &.is-gold { --tone: #b86e00; --tint: #fff3dc; }
+  &.is-red { --tone: #c4343a; --tint: #fdecec; }
+  &.is-slate { --tone: #5b6f80; --tint: #eef2f5; }
+  &.is-red .cr-tile-text b { color: #c4343a; }
+
+  &.is-navy {
+    background: linear-gradient(135deg, #16324a, #23557a);
+    border-color: transparent;
+
+    .cr-tile-icon { color: #fff; background: rgba(255, 255, 255, 0.14); }
+    .cr-tile-text small, .cr-tile-text em { color: rgba(255, 255, 255, 0.78); }
+    .cr-tile-text b { color: #fff; }
+  }
+}
+.cr-tile-icon {
+  display: grid;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: var(--tone);
+  font-size: 17px;
+  background: var(--tint);
+  border-radius: 12px;
+}
+.cr-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  small { color: #6b7c8b; font-size: 12px; font-weight: 600; }
+  b { overflow: hidden; color: #14314d; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+  em { overflow: hidden; color: #8a9aa8; font-size: 11.5px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.cr-listbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  .acc-type-segment { margin: 0; }
+  .cr-filter-chip { margin-left: 0; }
+  .acc-class-add { height: 38px; }
+}
+
+.cr-card.cr-list-card { padding: 0; overflow: auto; }
+.acc-fs-table.cr-list {
+  min-width: 780px;
+
+  th, td { padding: 12px 16px; vertical-align: middle; }
+  thead th { padding-top: 11px; padding-bottom: 11px; background: #f7f9fb; border-bottom: 1px solid #e6edf2; }
+  tbody td { border-bottom: 1px solid #eef2f5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr.is-click { cursor: pointer; }
+  tbody tr.is-click:hover td { background: #f5f9fd; }
+  tbody tr.is-off td { color: #9aa7b3; }
+  tbody tr.is-off .cr-avatar { opacity: 0.55; }
+  th.is-text, td.is-text { text-align: left; }
+  th.is-center, td.is-center { text-align: center; }
+  td b { color: #14314d; font-weight: 700; }
+  tr.is-off td b { color: #7b8a97; }
+  td small { display: block; margin-top: 2px; color: #7b8a97; font-size: 11.5px; }
+  td .cr-muted { color: #b3bec8; }
+  td .hr-expiry-chip, td .cr-late { margin: 4px 0 0; }
+}
+
+.cr-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+}
+.cr-avatar {
+  display: grid;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #fff;
+  font-size: 15px;
+  background: linear-gradient(145deg, #3b9bff, #1559c9);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(21, 89, 201, 0.18);
+
+  &.is-pink { background: linear-gradient(145deg, #ff8fc0, #d63f86); box-shadow: 0 2px 6px rgba(214, 63, 134, 0.18); }
+  &.is-teal { background: linear-gradient(145deg, #3fd0a4, #0b8a6a); box-shadow: 0 2px 6px rgba(11, 138, 106, 0.18); }
+  &.is-black { background: linear-gradient(145deg, #4a525c, #1f252c); box-shadow: none; }
+  &.is-red, &.is-rejected { background: linear-gradient(145deg, #ff7b7f, #c4343a); box-shadow: 0 2px 6px rgba(196, 52, 58, 0.2); }
+  &.is-slate, &.is-draft, &.is-cancelled { background: linear-gradient(145deg, #a9b6c2, #6c7c8b); box-shadow: none; }
+  &.is-pending { background: linear-gradient(145deg, #aa8cff, #604bd8); box-shadow: 0 2px 6px rgba(96, 75, 216, 0.2); }
+  &.is-approved { background: linear-gradient(145deg, #ffc35c, #d98a00); box-shadow: 0 2px 6px rgba(217, 138, 0, 0.2); }
+  &.is-disbursed { background: linear-gradient(145deg, #3fd0a4, #0b8a6a); box-shadow: 0 2px 6px rgba(11, 138, 106, 0.18); }
+}
+.cr-who-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  small { margin: 0 !important; }
+}
+.cr-who-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+
+  b { font-size: 13.5px; }
+  .acc-fa-chip { margin: 0; }
+}
+.cr-who-code {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  color: #3d5266;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #eef2f5;
+  border-radius: 5px;
+}
+.cr-phone i { margin-right: 4px; color: #9aa7b3; font-size: 11px; }
+.cr-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 5px;
+
+  small { margin: 0 !important; min-width: 30px; text-align: right; }
+}
+.cr-progress {
+  display: block;
+  width: 110px;
+  max-width: 100%;
+  height: 5px;
+  overflow: hidden;
+  background: #eef2f5;
+  border-radius: 99px;
+
+  i { display: block; height: 100%; background: linear-gradient(90deg, #3fd0a4, #0b8a6a); border-radius: 99px; }
+}
+
+// ໜ້າຕິດຕາມໜີ້: ບັດສະຖິຕິ 2×2 ຄຽງກຣາບອາຍຸໜີ້
+.cr-collect-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+
+  &:has(.cr-aging-card) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+
+  .cr-aging-card { grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0; }
+}
+
 @media (max-width: 767.98px) {
   .cr-split { grid-template-columns: minmax(0, 1fr); }
   .cr-collateral { grid-template-columns: 40px minmax(0, 1fr); }
@@ -1088,6 +1385,7 @@ button.cr-aging-row { cursor: pointer; }
   .cr-guarantor > label { grid-column: 2 !important; }
   .cr-guarantor > button { grid-column: 3; }
   .cr-rules-head { flex-direction: column; align-items: stretch; }
+  .cr-ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cr-kpi.is-hero { grid-column: 1 / -1; }
   .cr-grid { grid-template-columns: minmax(0, 1fr); }
@@ -1096,9 +1394,24 @@ button.cr-aging-row { cursor: pointer; }
   .cr-meter { grid-template-columns: 80px minmax(0, 1fr) 80px; }
   .cr-meter-state { grid-column: 2 / -1; }
   .cr-actions, .cr-class-cards { grid-template-columns: minmax(0, 1fr); }
+  .cr-product-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr-product-facts > div:nth-child(-n+4) { border-bottom: 1px solid #f1f4f7; }
   .cr-docs-upload { grid-template-columns: minmax(0, 1fr); }
   .cr-closure { grid-template-columns: 34px minmax(0, 1fr); }
   .cr-closure > span { grid-column: 1 / -1; justify-content: flex-start; }
+  .cr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr-tiles > .cr-tile.is-navy:first-child { grid-column: 1 / -1; }
+  .cr-tile { padding: 12px; gap: 10px; }
+  .cr-tile-icon { width: 36px; height: 36px; font-size: 15px; }
+  .cr-tile-text b { font-size: 16px; }
+  .cr-listbar .acc-type-segment { flex-wrap: nowrap; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .cr-listbar .acc-type-segment button { flex: none; white-space: nowrap; }
+  .cr-listbar .cr-filter-spacer { display: none; }
+  .cr-listbar .app-search { flex: 1 1 0; width: auto; min-width: 0; }
+  .cr-who { min-width: 200px; }
+}
+@media (max-width: 1199.98px) {
+  .cr-collect-top:has(.cr-aging-card) { grid-template-columns: minmax(0, 1fr); }
 }
 @media (min-width: 768px) and (max-width: 1199.98px) {
   .cr-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }

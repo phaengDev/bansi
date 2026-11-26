@@ -25,7 +25,7 @@ const AUTO: Record<Check['key'], { label: string; target: string; window?: strin
   bank: { label: 'closeCheckBank', target: 'bankRec' },
   fx: { label: 'closeCheckFx', target: 'fxReval' },
   loan_accrual: { label: 'closeCheckLoanAccrual', target: 'accrual', window: 'loans', hint: 'closeOpenLoans' },
-  loan_provision: { label: 'closeCheckLoanProvision', target: 'classification', window: 'creditContracts', hint: 'closeOpenProvision' },
+  loan_provision: { label: 'closeCheckLoanProvision', target: 'classification', window: 'creditClassification', hint: 'closeOpenProvision' },
 };
 
 /** ສິ່ງທີ່ຕ້ອງເຮັດກ່ອນປິດເດືອນ (ກົດໝາຍບັນຊີ ມາດຕາ 23) — ຕິກຢືນຢັນເອງ, ບໍ່ບັນທຶກ */

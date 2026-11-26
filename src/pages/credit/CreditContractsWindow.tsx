@@ -1,24 +1,17 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Loader } from 'rsuite';
 import moment from 'moment';
 import AppPage from '../../components/Elements/AppPage';
 import { formatNumber } from '../../utils/configApi';
 import { canCreate } from '../../utils/localStorage';
 import { useT } from '../../context/LanguageContext';
-import { CREDIT_CONTRACTS_MENU, toRailNav } from '../account/config/SidebarPopup';
-import { useRailKey } from '../account/windowMemory';
-import { SettingToolbar } from '../account/setting/settingKit';
 import { money, showDate } from '../account/loans/loanApi';
 import ApplicationForm from './ApplicationForm';
 import ApplicationDetail from './ApplicationDetail';
 import ContractDetail from './ContractDetail';
-import CreditOverview from './CreditOverview';
-import CollectionsPage from './CollectionsPage';
-import ClassificationPage from './ClassificationPage';
-import CreditReportsPage from './CreditReportsPage';
 import { DaysLateChip } from './collectKit';
-import { CLOSE_REASONS, useCreditList, type Application, type Contract } from './creditApi';
-import { AppStatusChip, creditTermText } from './creditKit';
+import { APP_STATUS, CLOSE_REASONS, useCreditList, type Application, type Contract } from './creditApi';
+import { AppStatusChip, CreditListBar, CreditTiles, IdentityCell, creditTermText } from './creditKit';
 
 /** ຍອດລວມແຍກຕາມສະກຸນ — "₭ 145,000,000 · $ 10,000" */
 const totalsText = (rows: Contract[], value: (r: Contract) => number) => {
@@ -60,25 +53,25 @@ const ApplicationsPage = () => {
     .filter((r) => !q || `${r.application_no} ${r.customer?.code ?? ''} ${r.customer?.name ?? ''} ${r.customer?.phone ?? ''} ${r.product?.name ?? ''}`.toLowerCase().includes(q));
   const pendingAmount = rows.filter((r) => [2, 3].includes(Number(r.status))).reduce((n, r) => n + (r.approved_amount ?? r.requested_amount), 0);
 
+  const sumOf = (statuses: number[]) => rows.filter((r) => statuses.includes(Number(r.status))).reduce((n, r) => n + (r.approved_amount ?? r.requested_amount), 0);
+
   return (
     <div className="acs-page acc-fa acc-ln cr-page">
-      <SettingToolbar
-        stats={[
-          { label: t('crStPending'), value: count([2]), tone: 'violet' },
-          { label: t('crFilterToDisburse'), value: count([3]), tone: 'gold' },
-          { label: t('crPipeline'), value: `₭ ${formatNumber(Math.round(pendingAmount))}`, tone: 'green' },
+      <CreditTiles
+        tiles={[
+          { icon: 'fa-file-pen', label: t('crPipeline'), value: `₭ ${formatNumber(Math.round(pendingAmount))}`, sub: `${count([2, 3])} ${t('crApplicationsN')}`, tone: 'navy' },
+          { icon: 'fa-hourglass-half', label: t('crStPending'), value: formatNumber(count([2])), sub: `₭ ${formatNumber(Math.round(sumOf([2])))}`, tone: 'violet' },
+          { icon: 'fa-money-bill-transfer', label: t('crFilterToDisburse'), value: formatNumber(count([3])), sub: `₭ ${formatNumber(Math.round(sumOf([3])))}`, tone: 'gold' },
+          { icon: 'fa-circle-check', label: t('crStDisbursed'), value: formatNumber(count([5])), sub: `₭ ${formatNumber(Math.round(sumOf([5])))}`, tone: 'green' },
+          { icon: 'fa-pen-ruler', label: t('crStDraft'), value: formatNumber(count([1])), tone: 'slate' },
         ]}
-        keyword={keyword} onKeyword={setKeyword} placeholder={t('crAppSearch')}
-        addLabel={t('crAppAdd')} onAdd={() => setAdding(true)} canAdd={canCreate}
       />
       {rows.length > 0 && (
-        <div className="acc-type-segment acc-fa-filter-tabs" role="tablist">
-          {APP_FILTERS.map((f) => (
-            <button key={f.key} type="button" role="tab" aria-selected={filter === f.key} className={filter === f.key ? 'is-active' : ''} onClick={() => setFilter(f.key)}>
-              {t(f.label)} <small>{count(f.statuses)}</small>
-            </button>
-          ))}
-        </div>
+        <CreditListBar
+          tabs={APP_FILTERS.map((f) => ({ key: f.key, label: t(f.label), count: count(f.statuses) }))} value={filter} onChange={setFilter}
+          keyword={keyword} onKeyword={setKeyword} placeholder={t('crAppSearch')}
+          addLabel={t('crAppAdd')} onAdd={() => setAdding(true)} canAdd={canCreate}
+        />
       )}
       {loading && !rows.length ? (
         <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>
@@ -91,40 +84,41 @@ const ApplicationsPage = () => {
       ) : !shown.length ? (
         <div className="acc-class-empty"><i className="fa-solid fa-magnifying-glass" /><p>{t('rpEmpty')}</p></div>
       ) : (
-        <div className="acc-rp-scroll">
-          <table className="acc-fs-table acc-ln-list">
+        <div className="cr-card cr-list-card acc-rp-scroll">
+          <table className="acc-fs-table cr-list">
             <thead>
               <tr>
-                <th>{t('crCustomer')}</th>
-                <th>{t('crProduct')}</th>
+                <th>{t('crApplication')}</th>
+                <th className="is-text">{t('crProduct')}</th>
                 <th>{t('crRequestedAmount')}</th>
                 <th>{t('status')}</th>
               </tr>
             </thead>
             <tbody>
-              {shown.map((r) => (
-                <tr key={r._uuid} className="is-line is-click" onClick={() => setViewing(r._uuid)}>
-                  <td>
-                    <div className="acc-fa-name">
-                      <span className="acc-fs-code">{r.application_no}</span>
-                      <b>{r.customer?.name ?? '—'}</b>
-                    </div>
-                    <small>{[r.customer?.code, r.customer?.phone, showDate(r.apply_date)].filter(Boolean).join(' · ')}</small>
-                  </td>
-                  <td>
-                    <b>{r.product?.name ?? '—'}</b>
-                    <small className="acc-gl-ref">{r.purpose ?? ''}</small>
-                  </td>
-                  <td>
-                    <b>₭ {formatNumber(r.approved_amount ?? r.requested_amount)}</b>
-                    <small className="acc-gl-ref">{creditTermText(r.approved_term ?? r.requested_term, r.frequency_days, r.frequency_months, t)} · {r.approved_rate ?? r.annual_rate}%</small>
-                  </td>
-                  <td>
-                    <AppStatusChip status={Number(r.status)} level={r.approval_level} levels={r.product?.approval_levels} />
-                    {r.loan_code && <small className="acc-gl-ref">{r.loan_code}</small>}
-                  </td>
-                </tr>
-              ))}
+              {shown.map((r) => {
+                const st = APP_STATUS[Number(r.status)] ?? APP_STATUS[1];
+                return (
+                  <tr key={r._uuid} className="is-click" onClick={() => setViewing(r._uuid)}>
+                    <td>
+                      <IdentityCell icon={st.icon} tone={st.tone} title={r.customer?.name ?? '—'} code={r.application_no}
+                        meta={[r.customer?.code, r.customer?.phone, showDate(r.apply_date)]}
+                      />
+                    </td>
+                    <td className="is-text">
+                      <b>{r.product?.name ?? '—'}</b>
+                      {r.purpose && <small>{r.purpose}</small>}
+                    </td>
+                    <td>
+                      <b>₭ {formatNumber(r.approved_amount ?? r.requested_amount)}</b>
+                      <small>{creditTermText(r.approved_term ?? r.requested_term, r.frequency_days, r.frequency_months, t)} · {r.approved_rate ?? r.annual_rate}%</small>
+                    </td>
+                    <td>
+                      <AppStatusChip status={Number(r.status)} level={r.approval_level} levels={r.product?.approval_levels} />
+                      {r.loan_code && <small>{r.loan_code}</small>}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -159,27 +153,27 @@ const ContractsPage = () => {
   const today = moment().format('YYYY-MM-DD');
   const dueToday = active.filter((r) => r.next && r.next.due_date === today);
 
+  const overdueRows = rows.filter(test.overdue);
+
   return (
     <div className="acs-page acc-fa acc-ln cr-page">
-      <SettingToolbar
-        stats={[
-          { label: t('crContractsActive'), value: active.length },
-          { label: t('crDisbursedTotal'), value: totalsText(rows, (r) => r.principal) },
-          { label: t('lnOutstanding'), value: totalsText(active, (r) => r.outstanding), tone: 'green' },
-          { label: t('crIncomeEarned'), value: totalsText(rows, (r) => r.paid_interest + r.paid_fee + (r.upfront_fee || 0) + (r.paid_penalty || 0)), tone: 'gold' },
-          ...(dueToday.length ? [{ label: t('crDueToday'), value: dueToday.length, tone: 'violet' as const }] : []),
-          ...(rows.some(test.overdue) ? [{ label: t('lnOverdue'), value: rows.filter(test.overdue).length, tone: 'red' as const }] : []),
+      <CreditTiles
+        tiles={[
+          { icon: 'fa-sack-dollar', label: t('lnOutstanding'), value: totalsText(active, (r) => r.outstanding), sub: `${active.length} ${t('crContractsActive')}`, tone: 'navy' },
+          { icon: 'fa-money-bill-transfer', label: t('crDisbursedTotal'), value: totalsText(rows, (r) => r.principal), sub: `${rows.length} ${t('crContracts')}`, tone: 'blue' },
+          { icon: 'fa-coins', label: t('crIncomeEarned'), value: totalsText(rows, (r) => r.paid_interest + r.paid_fee + (r.upfront_fee || 0) + (r.paid_penalty || 0)), sub: t('crIncomeHint'), tone: 'green' },
+          { icon: 'fa-calendar-day', label: t('crDueToday'), value: formatNumber(dueToday.length), sub: dueToday.length ? totalsText(dueToday, (r) => r.next?.amount ?? 0) : '', tone: 'violet' },
+          { icon: 'fa-triangle-exclamation', label: t('lnOverdue'), value: formatNumber(overdueRows.length), sub: overdueRows.length ? totalsText(overdueRows, (r) => r.overdue_amount ?? 0) : '', tone: overdueRows.length ? 'red' : 'slate' },
         ]}
-        keyword={keyword} onKeyword={setKeyword} placeholder={t('crContractSearch')}
       />
       {rows.length > 0 && (
-        <div className="acc-type-segment acc-fa-filter-tabs" role="tablist">
-          {(['active', 'overdue', 'closed', 'all'] as ContractFilter[]).map((key) => (
-            <button key={key} type="button" role="tab" aria-selected={filter === key} className={filter === key ? 'is-active' : ''} onClick={() => setFilter(key)}>
-              {t(key === 'active' ? 'lnFilterActive' : key === 'overdue' ? 'lnOverdue' : key === 'closed' ? 'lnFilterClosed' : 'faFilterAll')} <small>{rows.filter(test[key]).length}</small>
-            </button>
-          ))}
-        </div>
+        <CreditListBar
+          tabs={(['active', 'overdue', 'closed', 'all'] as ContractFilter[]).map((key) => ({
+            key, count: rows.filter(test[key]).length,
+            label: t(key === 'active' ? 'lnFilterActive' : key === 'overdue' ? 'lnOverdue' : key === 'closed' ? 'lnFilterClosed' : 'faFilterAll'),
+          }))}
+          value={filter} onChange={setFilter} keyword={keyword} onKeyword={setKeyword} placeholder={t('crContractSearch')}
+        />
       )}
       {loading && !rows.length ? (
         <div className="text-center py-5"><Loader size="md" content={t('loadingDots')} vertical /></div>
@@ -191,12 +185,12 @@ const ContractsPage = () => {
       ) : !shown.length ? (
         <div className="acc-class-empty"><i className="fa-solid fa-magnifying-glass" /><p>{t('rpEmpty')}</p></div>
       ) : (
-        <div className="acc-rp-scroll">
-          <table className="acc-fs-table acc-ln-list">
+        <div className="cr-card cr-list-card acc-rp-scroll">
+          <table className="acc-fs-table cr-list">
             <thead>
               <tr>
-                <th>{t('crCustomer')}</th>
-                <th>{t('lnTermsShort')}</th>
+                <th>{t('crContract')}</th>
+                <th className="is-text">{t('lnTermsShort')}</th>
                 <th>{t('lnPrincipal')}</th>
                 <th>{t('lnOutstanding')}</th>
                 <th>{t('lnNextDue')}</th>
@@ -205,37 +199,38 @@ const ContractsPage = () => {
             <tbody>
               {shown.map((r) => {
                 const pct = r.principal > 0 ? Math.min(100, (r.paid_principal / r.principal) * 100) : 0;
+                const why = r.closed ? CLOSE_REASONS[Number(r.close_reason)] ?? CLOSE_REASONS[1] : null;
                 return (
-                  <tr key={r._uuid} className={`is-line is-click${r.closed ? ' is-disposed' : ''}`} onClick={() => setViewing(r._uuid)}>
+                  <tr key={r._uuid} className={`is-click${r.closed ? ' is-off' : ''}`} onClick={() => setViewing(r._uuid)}>
                     <td>
-                      <div className="acc-fa-name">
-                        <span className="acc-fs-code">{r.loan_code}</span>
-                        <b>{r.customer?.name ?? r.counterparty}</b>
-                        {r.closed && (() => {
-                          const why = CLOSE_REASONS[Number(r.close_reason)] ?? CLOSE_REASONS[1];
-                          return <em className={`acc-fa-chip ${why.tone}`}><i className={`fa-solid ${why.icon}`} /> {t(why.label)}</em>;
-                        })()}
-                      </div>
-                      <small>{[r.product?.name, r.customer?.phone, r.contract_no].filter(Boolean).join(' · ')}</small>
+                      <IdentityCell icon="fa-file-signature" tone={r.closed ? 'is-slate' : r.days_overdue > 0 ? 'is-red' : 'is-blue'}
+                        title={r.customer?.name ?? r.counterparty} code={r.loan_code} meta={[r.product?.name, r.customer?.phone, r.contract_no]}
+                        chips={why && <em className={`acc-fa-chip ${why.tone}`}><i className={`fa-solid ${why.icon}`} /> {t(why.label)}</em>}
+                      />
                     </td>
-                    <td>
-                      <b>{r.annual_rate}%</b>
-                      <small className="acc-gl-ref">{creditTermText(r.term, r.frequency_days, r.frequency_months, t)} · {showDate(r.start_date)}</small>
+                    <td className="is-text">
+                      <b>{r.annual_rate}% / {t('lnYear')}</b>
+                      <small>{creditTermText(r.term, r.frequency_days, r.frequency_months, t)} · {showDate(r.start_date)}</small>
                     </td>
                     <td>{money(r.principal, r.currency)}</td>
                     <td>
                       <b>{money(r.outstanding, r.currency)}</b>
-                      <span className="acc-fa-bar" title={`${pct.toFixed(0)}%`}><i style={{ width: `${pct}%` }} /></span>
+                      {!r.closed && (
+                        <span className="cr-progress-row" title={t('crPaidPct').replace('{p}', pct.toFixed(0))}>
+                          <span className="cr-progress"><i style={{ width: `${pct}%` }} /></span>
+                          <small>{pct.toFixed(0)}%</small>
+                        </span>
+                      )}
                     </td>
                     <td>
-                      {r.closed ? '—' : r.next ? (
+                      {r.closed ? <span className="cr-muted">—</span> : r.next ? (
                         <>
                           <b>{money(r.next.amount, r.currency)}</b>
-                          <small className="acc-gl-ref">{t('lnInstallmentNo')} {r.next.no} · {showDate(r.next.due_date)}</small>
+                          <small>{t('lnInstallmentNo')} {r.next.no} · {showDate(r.next.due_date)}</small>
                         </>
-                      ) : '—'}
+                      ) : <span className="cr-muted">—</span>}
                       <DaysLateChip days={r.days_overdue} aging={r.aging} />
-                      {r.penalty_due > 0 && <small className="acc-gl-ref">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
+                      {r.penalty_due > 0 && <small className="cr-text-bad">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
                     </td>
                   </tr>
                 );
@@ -249,23 +244,10 @@ const ContractsPage = () => {
   );
 };
 
-/** ໜ້າຕ່າງ ຄຳຮ້ອງ ແລະ ສັນຍາ */
-const CreditContractsWindow = () => {
-  const t = useT();
-  const railNav = useMemo(() => toRailNav(CREDIT_CONTRACTS_MENU, t), [t]);
-  const [activeKey, setActiveKey] = useRailKey('creditContracts', CREDIT_CONTRACTS_MENU);
-  const active = railNav.find((item) => item.key === activeKey);
-  const pages: Record<string, ReactNode> = {
-    overview: <CreditOverview />, applications: <ApplicationsPage />, contracts: <ContractsPage />, collections: <CollectionsPage />,
-    classification: <ClassificationPage />, reports: <CreditReportsPage />,
-  };
-  return (
-    <AppPage title={active?.label ?? t('accountAppCreditContracts')} subtitle={t('accountAppCreditContracts')}
-      railNav={railNav} railActiveKey={activeKey} onRailSelect={setActiveKey}
-    >
-      {pages[activeKey] ?? null}
-    </AppPage>
-  );
-};
+/** ໜ້າຕ່າງ ສັນຍາສິນເຊື່ອ */
+const CreditContractsWindow = () => <AppPage showHeader={false}><ContractsPage /></AppPage>;
+
+/** ໜ້າຕ່າງ ຄຳຮ້ອງຂໍກູ້ */
+export const CreditApplicationsWindow = () => <AppPage showHeader={false}><ApplicationsPage /></AppPage>;
 
 export default CreditContractsWindow;
