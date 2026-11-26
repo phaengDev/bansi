@@ -128,7 +128,10 @@ export const useCanSeeSalary = () => useAccountMenus().some((menu) => menu.id ==
 /** ພະນັກງານທີ່ບັນຊີນີ້ຜູກໄວ້ — null = ບໍ່ໄດ້ຜູກ, undefined = ກຳລັງກວດ (ໜ້າພື້ນທີ່ຂອງຂ້ອຍໃຊ້ຫົວ/ຮູບ) */
 export const useMyEmployee = () => useSyncExternalStore(subscribe, () => selfState);
 
-/** ທຸກເມນູ (GET /menu/all) — ຟອມຜູ້ໃຊ້ໃຊ້ຕິກວ່າບັນຊີໃດເຂົ້າເມນູໃດໄດ້; null = ກຳລັງໂຫຼດ */
+/** ເມນູທີ່ທຸກບັນຊີໄດ້ສະເໝີ ບໍ່ຢູ່ໃນການຕິກສິດ — ກົງກັບ ALWAYS_ON_PATHS ຂອງ backend (menuController) */
+export const ALWAYS_ON_PATHS = ['/calendar'];
+
+/** ທຸກເມນູທີ່ຕິກສິດໄດ້ (GET /menu/all ບໍ່ລວມເມນູທີ່ໄດ້ສະເໝີ) — ຟອມຜູ້ໃຊ້ໃຊ້ຕິກວ່າບັນຊີໃດເຂົ້າເມນູໃດໄດ້; null = ກຳລັງໂຫຼດ */
 export const useAllAccountMenus = (): AccountMenu[] | null => {
   const [rows, setRows] = useState<MainMenuRow[] | null>(null);
   const { fromRows } = useToMenus();
@@ -144,7 +147,7 @@ export const useAllAccountMenus = (): AccountMenu[] | null => {
       cancelled = true;
     };
   }, []);
-  return rows && fromRows(rows);
+  return rows && fromRows(rows.filter((row) => !ALWAYS_ON_PATHS.includes(row.path)));
 };
 
 /** ກຸ່ມຂອງເມນູ — ຢູ່ DesktopShared (ກອບເທິງ desktop ໃຊ້ນຳ); ສົ່ງຕໍ່ໃຫ້ຟອມສິດເຂົ້າເມນູ */

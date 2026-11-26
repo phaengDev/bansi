@@ -233,13 +233,18 @@ export const TRAY_APPS: ShortcutId[] = ['calendar'];
 
 export type ShortcutPosition = { x: number; y: number };
 
+/** ເມນູຂອງລະບົບສິນເຊື່ອ / ເງິນກູ້ (path ຂຶ້ນຕົ້ນ /account/ ແຕ່ເປັນກຸ່ມຂອງຕົນເອງ) */
+const isLoanPath = (path: string) => path === '/account/loans' || path.startsWith('/account/loans/');
+
 /**
  * ກຸ່ມຂອງເມນູ (ຕາມ path) — ໃຊ້ຮ່ວມກັນທັງກອບເທິງ desktop ແລະ ຟອມສິດເຂົ້າເມນູ (ຕິກທັງກຸ່ມ, UserPage).
  * ລຳດັບໃນນີ້ = ລຳດັບຂອງກອບຈາກຊ້າຍໄປຂວາ
  */
 export const MENU_GROUPS = [
-  { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') },
+  { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') && !isLoanPath(path) },
   { key: 'hr', label: 'hrMenuGroupHr', icon: 'fa-people-group', match: (path: string) => path === '/hr' || path.startsWith('/hr/') },
+  // ສິນເຊື່ອ / ເງິນກູ້ — ກຸ່ມ (ກອບ) ຂອງຕົນເອງ ແຍກຈາກບັນຊີ
+  { key: 'loans', label: 'lnMenuGroup', icon: 'fa-sack-dollar', match: isLoanPath },
   { key: 'me', label: 'myMenuGroup', icon: 'fa-house-user', match: (path: string) => path === '/me' || path.startsWith('/me/') },
   // ຈັດການບໍລິສັດ — ກອບຂອງຕົນເອງ (ຂຶ້ນສະເພາະເຈົ້າຂອງລະບົບ)
   { key: 'platform', label: 'platGroup', icon: 'fa-building-shield', match: (path: string) => path === '/platform' || path.startsWith('/platform/') },
