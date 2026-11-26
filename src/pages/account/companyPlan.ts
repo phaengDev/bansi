@@ -6,7 +6,7 @@ import { getApi } from '../../utils/configApi';
  * ໃຊ້ຮ່ວມກັນ: ເມນູ (accountMenus ຊ່ອນໜ້າ /me/… ຂອງໂມດູນທີ່ບໍ່ມີ), ປ້າຍໃນ taskbar, ບັດແພັກເກດໃນຂໍ້ມູນບໍລິສັດ.
  * server ລຸ້ນທີ່ຍັງບໍ່ມີແພັກເກດ (404) = null → ບໍ່ຈຳກັດຫຍັງ
  */
-export type ModuleCode = 'accounting' | 'arap' | 'budget' | 'lao_compliance' | 'loans' | 'hr' | 'attendance' | 'payroll' | 'tasks' | 'ai';
+export type ModuleCode = 'accounting' | 'arap' | 'budget' | 'lao_compliance' | 'loans' | 'credit' | 'hr' | 'attendance' | 'payroll' | 'tasks' | 'ai';
 
 export type CompanyPlan = {
   /** true = ບໍ່ມີແພັກເກດ (ທຸກໂມດູນ) */
@@ -31,6 +31,7 @@ export const PLAN_MODULES: { code: ModuleCode; label: string; icon: string; tone
   { code: 'budget', label: 'planModBudget', icon: 'fa-bullseye', tone: 'coral' },
   { code: 'lao_compliance', label: 'planModCompliance', icon: 'fa-clipboard-check', tone: 'violet' },
   { code: 'loans', label: 'planModLoans', icon: 'fa-sack-dollar', tone: 'coral' },
+  { code: 'credit', label: 'planModCredit', icon: 'fa-file-signature', tone: 'emerald' },
   { code: 'hr', label: 'planModHr', icon: 'fa-id-card', tone: 'sky' },
   { code: 'attendance', label: 'planModAttendance', icon: 'fa-user-clock', tone: 'sky' },
   { code: 'payroll', label: 'planModPayroll', icon: 'fa-money-check-dollar', tone: 'emerald' },
