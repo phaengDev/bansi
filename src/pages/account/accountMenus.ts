@@ -92,7 +92,9 @@ const useToMenus = () => {
     lockable: !!row && !UNLOCKABLE.includes(shortcut.id) && !isExtra(shortcut.id),
   });
 
-  return { toMenu, fromRows: (rows: MainMenuRow[]) => rows.flatMap((row) => {
+  // path ຊ້ຳ (ແຖວເມນູຊ້ຳໃນ DB) = ເອົາແຖວທຳອິດ — ໄອຄອນ / ໜ້າຕ່າງ ມີອັນດຽວຕໍ່ເມນູ
+  return { toMenu, fromRows: (rows: MainMenuRow[]) => rows.flatMap((row, i) => {
+    if (rows.findIndex((other) => other.path === row.path) !== i) return [];
     const shortcut = shortcuts.find((item) => item.path === row.path);
     return shortcut ? [toMenu(shortcut, row)] : [];
   }) };

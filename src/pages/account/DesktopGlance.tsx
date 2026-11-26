@@ -12,6 +12,7 @@ import { useAccountMenusLoaded, type AccountMenu } from './accountMenus';
 import type { ShortcutId } from './DesktopShared';
 import { requestEmployeesTab, type HrPending } from '../hr/hrPending';
 import { requestRailKey } from './windowMemory';
+import { BORROWED, type Loan } from './loans/loanApi';
 
 /** ສະຖານະຂອງເມນູຕໍ່ພາບລວມ: ບໍ່ມີສິດ (ບໍ່ສະແດງ) / ລັອກ (ບໍ່ດຶງ ບໍ່ສະແດງຕົວເລກ) / ເປີດ */
 type Access = 'none' | 'locked' | 'open';
@@ -45,7 +46,11 @@ type BudgetSummary = {
 /** ລາຍຈ່າຍປະຈຳທີ່ຄົບກຳນົດແລ້ວ ແຕ່ເດືອນນີ້ຍັງບໍ່ບັນທຶກ (GET /expense-recurring → due) */
 type RecurringDue = { due: number };
 
+/** ງວດເງິນກູ້ທີ່ຕ້ອງຈ່າຍ / ຮັບ: ກາຍກຳນົດ ຫຼື ຄົບກຳນົດພາຍໃນ LOAN_DUE_DAYS ມື້ */
+type LoanDue = { id: number; direction: number; name: string; no: number; date: string; days: number; amount: number; symbol: string; overdue: number }[];
+
 type Glance = {
+  loans?: LoanDue | Failed;
   hr?: HrPending | Failed;
   recurring?: RecurringDue | Failed;
   cash?: CashSummary | Failed;
@@ -191,6 +196,23 @@ const loadBudget = async (): Promise<BudgetSummary> => {
       .slice(0, MAX_BUDGET_LINES)
       .map((r) => ({ id: r._uuid, name: budgetName(r), amount: r.amount, used: r.actual })),
   };
+};
+
+/** ເຕືອນງວດເງິນກູ້ລ່ວງໜ້າຈັກມື້ */
+const LOAN_DUE_DAYS = 7;
+const loadLoanDue = async (): Promise<LoanDue> => {
+  const today = moment().startOf('day');
+  return ((await getApi('/loan/fetch')).data?.data as Loan[] ?? [])
+    .filter((l) => !l.closed && l.next)
+    .map((l) => ({
+      id: l._uuid, direction: Number(l.direction), name: l.counterparty, no: l.next!.no, date: l.next!.due_date,
+      days: moment(l.next!.due_date, 'YYYY-MM-DD').diff(today, 'days'),
+      // ກາຍກຳນົດ = ຍອດທີ່ຄ້າງທັງໝົດ, ບໍ່ດັ່ງນັ້ນ = ງວດຕໍ່ໄປ
+      amount: l.overdue_count ? l.overdue_amount : l.next!.amount,
+      symbol: l.currency?.genus || l.currency?.name || BASE, overdue: l.overdue_count,
+    }))
+    .filter((l) => l.overdue > 0 || l.days <= LOAN_DUE_DAYS)
+    .sort((a, b) => a.days - b.days);
 };
 
 const loadHrPending = async () => (await getApi('/hr/pending')).data?.data as HrPending;
@@ -465,14 +487,16 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
     attendance: accessOf('attendance') === 'open', payroll: accessOf('payroll') === 'open',
     employees: accessOf('employees') === 'open', hr: accessOf('hr') === 'open',
   };
-  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none'].join('|');
+  /** ເງິນກູ້ — ບໍ່ມີບັດຂອງຕົນເອງ, ຂຶ້ນແຕ່ງວດທີ່ຮອດກຳນົດໃນ "ຕ້ອງຕິດຕາມ" */
+  const loansOpen = accessOf('loans') === 'open';
+  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none', loansOpen ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
   useEffect(() => {
     if (!menusLoaded) return;
     let cancelled = false;
-    const [cash, month, ar, ap, budget, hr, journal] = accessKey.split('|').map((a) => a === 'open');
+    const [cash, month, ar, ap, budget, hr, journal, loans] = accessKey.split('|').map((a) => a === 'open');
     setLoading(true);
     Promise.all([
       settle(cash, loadCash),
@@ -482,9 +506,10 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
       settle(budget, loadBudget),
       settle(hr, loadHrPending),
       settle(journal, loadRecurring),
-    ]).then(([c, m, r, p, b, h, rec]) => {
+      settle(loans, loadLoanDue),
+    ]).then(([c, m, r, p, b, h, rec, ln]) => {
       if (cancelled) return;
-      setData({ cash: c, month: m, ar: r, ap: p, budget: b, hr: h, recurring: rec, at: new Date() });
+      setData({ cash: c, month: m, ar: r, ap: p, budget: b, hr: h, recurring: rec, loans: ln, at: new Date() });
       setLoading(false);
     });
     return () => {
@@ -680,9 +705,25 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   }
   // ເອກະສານບໍລິສັດ (ໃບອະນຸຍາດ…) ໃກ້ໝົດ — ເປີດ ຕັ້ງຄ່າຂໍ້ມູນພື້ນຖານ → ຂໍ້ມູນບໍລິສັດ
   hrTodo('hr-company-docs', hr?.company_docs, 'fa-folder-open', 'cdDueTitle', 'hr', 'cdDueSub', () => requestRailKey('hr', 'company'));
+  // ງວດເງິນກູ້: ກາຍກຳນົດ (ແດງ) / ຄົບກຳນົດພາຍໃນ 7 ມື້ — ເປີດ ເງິນກູ້ ທີ່ແຖບຂອງມັນ
+  const loanDue = isFailed(data?.loans) ? undefined : data?.loans;
+  loanDue?.forEach((l) => {
+    const borrowed = l.direction === BORROWED;
+    todos.push({
+      key: `loan${l.id}`, tone: l.overdue ? 'danger' : 'warn', icon: borrowed ? 'fa-sack-dollar' : 'fa-hand-holding-dollar',
+      title: `${t(borrowed ? 'glanceLoanPay' : 'glanceLoanCollect')} · ${l.name}`,
+      sub: l.overdue
+        ? `${t('lnOverdueN').replace('{n}', String(l.overdue))}`
+        : `${t('lnInstallmentNo')} ${l.no} · ${l.days === 0 ? t('glanceDueToday') : `${t('glanceDueIn')} ${l.days} ${t('glanceDays')}`}`,
+      amount: money(l.symbol, l.amount),
+      target: 'loans', before: () => requestRailKey('loans', borrowed ? 'borrowed' : 'lent'),
+    });
+  });
   if (ar) debtTodos('ar', ar.overdue, 'danger');
   if (ap) debtTodos('ap', ap.overdue, 'danger');
   if (ap) debtTodos('ap', ap.dueSoon, 'warn');
+  // ແດງ (ກາຍກຳນົດ / ຕິດລົບ) ຂຶ້ນກ່ອນສະເໝີ — sort ຮັກສາລຳດັບເດີມພາຍໃນແຕ່ລະສີ
+  todos.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'danger' ? -1 : 1));
   const anyOpen = Object.values(access).some((a) => a === 'open');
 
   return (

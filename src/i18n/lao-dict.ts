@@ -3463,6 +3463,8 @@ export const laoDict = {
   // ---- ເງິນກູ້ (pages/account/loans) ----
   accountAppLoans: { la: 'ເງິນກູ້', en: 'Loans', cn: '借贷款' },
   accountAppLoansDesc: { la: 'ເງິນກູ້ຢືມ / ເງິນໃຫ້ກູ້, ຕາຕະລາງຜ່ອນ ແລະ ດອກເບ້ຍຄ້າງ', en: 'Borrowed and lent loans, schedules and accrued interest', cn: '借款/贷出、还款计划与应计利息' },
+  glanceLoanPay: { la: 'ຈ່າຍງວດເງິນກູ້', en: 'Loan instalment to pay', cn: '应还借款' },
+  glanceLoanCollect: { la: 'ຮັບງວດເງິນໃຫ້ກູ້', en: 'Loan instalment to collect', cn: '应收贷款' },
   lnBorrowedMenu: { la: 'ເງິນກູ້ຢືມ', en: 'Borrowings', cn: '借款' },
   lnLentMenu: { la: 'ເງິນໃຫ້ກູ້', en: 'Loans given', cn: '贷出款' },
   lnAccrualMenu: { la: 'ດອກເບ້ຍຄ້າງ', en: 'Accrued interest', cn: '应计利息' },
