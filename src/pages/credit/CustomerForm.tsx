@@ -4,6 +4,7 @@ import type { FormInstance } from 'rsuite';
 import moment from 'moment';
 import { postApi, putApi } from '../../utils/configApi';
 import { InputField } from '../../utils/inputFields';
+import NameWithGenderField from '../../components/Elements/NameWithGenderField';
 import { useDistricts, useEmployees, useProvinces } from '../../utils/selectOption';
 import { useT } from '../../context/LanguageContext';
 import { amountFormatter } from '../account/gl/glKit';
@@ -120,18 +121,18 @@ const CustomerForm = ({ row, nextCode, onClose, onSaved }: {
           />
           <div className="is-wide acs-code-name">
             <AutoCodeField label={t('faCode')} code={row?.customer_code ?? nextCode} locked={!!row} autoText={t('crCodeAuto')} lockedText={t('crCodeLocked')} compact />
-            <InputField name="full_name" label={t(person ? 'crFullName' : 'crCompanyName')} placeholder={t(person ? 'crFullNamePlaceholder' : 'crCompanyNamePlaceholder')}
-              icon={<i className={`fa-solid ${person ? 'fa-user' : 'fa-building'}`} />}
-            />
+            {person ? (
+              // ເພດເລືອກຢູ່ທາງໜ້າຊ່ອງຊື່ (ຄືຟອມພະນັກງານ)
+              <NameWithGenderField name="full_name" label={`${t('crGender')} · ${t('crFullName')}`} placeholder={t('crFullNamePlaceholder')}
+                gender={gender} onGender={setGender}
+              />
+            ) : (
+              <InputField name="full_name" label={t('crCompanyName')} placeholder={t('crCompanyNamePlaceholder')} icon={<i className="fa-solid fa-building" />} />
+            )}
           </div>
           <InputField name="name_en" label={t('crNameEn')} required={false} icon={<i className="fa-solid fa-language" />} />
           {person ? date('birth_date', t('crBirthDate'), { shouldDisableDate: (d: Date) => moment(d).isAfter(moment(), 'day') }) : (
             <InputField name="tax_number" label={t('crTaxNumber')} required={false} icon={<i className="fa-solid fa-receipt" />} />
-          )}
-          {person && (
-            <ChoiceTiles<number> className="is-wide" label={t('crGender')} value={gender} onChange={setGender}
-              options={[{ value: 1, label: t('crMale'), icon: 'fa-mars' }, { value: 2, label: t('crFemale'), icon: 'fa-venus' }]}
-            />
           )}
         </FormStep>
 

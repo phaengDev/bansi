@@ -3789,7 +3789,7 @@ export const laoDict = {
   crCodeAuto: { la: 'ລະບົບອອກລະຫັດໃຫ້', en: 'Code is assigned automatically', cn: '系统自动编号' },
   crCodeLocked: { la: 'ລະຫັດປ່ຽນບໍ່ໄດ້', en: 'Code cannot change', cn: '编号不可更改' },
   crFullName: { la: 'ຊື່ ແລະ ນາມສະກຸນ', en: 'Full name', cn: '姓名' },
-  crFullNamePlaceholder: { la: 'ເຊັ່ນ ທ້າວ ສົມສັກ ພົມມະຈັນ', en: 'e.g. Somsak Phommachan', cn: '例如 Somsak Phommachan' },
+  crFullNamePlaceholder: { la: 'ເຊັ່ນ ສົມສັກ ພົມມະຈັນ', en: 'e.g. Somsak Phommachan', cn: '例如 Somsak Phommachan' },
   crCompanyName: { la: 'ຊື່ນິຕິບຸກຄົນ', en: 'Company name', cn: '企业名称' },
   crCompanyNamePlaceholder: { la: 'ເຊັ່ນ ບໍລິສັດ ... ຈຳກັດ', en: 'e.g. ... Co., Ltd.', cn: '例如 …有限公司' },
   crBirthDate: { la: 'ວັນເດືອນປີເກີດ', en: 'Date of birth', cn: '出生日期' },

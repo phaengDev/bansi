@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Button, DatePicker, Form, InputGroup, Modal, NumberInput, Schema, SelectPicker, Textarea } from 'rsuite';
+import { Button, DatePicker, Form, Modal, NumberInput, Schema, Textarea } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import moment from 'moment';
 import { postApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { InputField } from '../../utils/inputFields';
+import NameWithGenderField from '../../components/Elements/NameWithGenderField';
 import { useT } from '../../context/LanguageContext';
 import { useCanSeeSalary } from '../account/accountMenus';
 import { amountFormatter } from '../account/gl/glKit';
@@ -15,7 +16,7 @@ import { buildOrgTree, suggestBoss, useOrgData } from './org/orgModel';
 import { levelText } from './hrApi';
 import { fromApiDate } from '../account/setting/settingApi';
 import {
-  APP_PHONE, BLOOD_TYPES, GENDERS, MARITAL_STATUSES, MAX_FILE, WAGE_TYPES, fileSizeText, fullName, useHrOptions, type Employee,
+  APP_PHONE, BLOOD_TYPES, MARITAL_STATUSES, MAX_FILE, WAGE_TYPES, fileSizeText, fullName, useHrOptions, type Employee,
 } from './hrApi';
 import { useBanks, useDepartments, useDistricts, usePositions, useProvinces } from '../../utils/selectOption';
 import { bankLabel } from './hrKit';
@@ -81,33 +82,6 @@ const PhotoPicker = ({ url, onPick, onClear }: {
       </div>
       <small>JPG, PNG, WEBP · ≤ 5MB</small>
     </div>
-  );
-};
-
-/** ຊ່ອງຊື່ ທີ່ມີ dropdown ເລືອກເພດຢູ່ທາງໜ້າ ເຊັ່ນ [ເພດຍິງ ▾] ບົວລາຍ */
-const NameWithGender = ({ gender, onGender }: { gender: number; onGender: (value: number) => void }) => {
-  const t = useT();
-  const options = GENDERS.map((g) => ({ value: g.value, label: t(g.long), icon: g.icon }));
-  const genderLabel = (_: unknown, item: any) => item && (
-    <span className={`hr-gender-value is-${item.value === 2 ? 'female' : 'male'}`}>
-      <i className={`fa-solid ${item.icon}`} /> {item.label}
-    </span>
-  );
-  return (
-    <Form.Group controlId="first_name-1" className="mb-2">
-      <Form.Label className="fs-5 form-label">
-        {t('hrGender')} · {t('hrFirstName')}<span className="text-danger">*</span>
-      </Form.Label>
-      <InputGroup className="hr-name-field">
-        <InputGroup.Addon className="hr-gender">
-          <SelectPicker data={options} value={gender} onChange={(value) => value && onGender(value)}
-            cleanable={false} searchable={false} appearance="subtle" size="sm" aria-label={t('hrGender')}
-            popupClassName="acc-book-menu" renderValue={genderLabel} renderOption={genderLabel}
-          />
-        </InputGroup.Addon>
-        <Form.Control name="first_name" placeholder={t('hrFirstName')} />
-      </InputGroup>
-    </Form.Group>
   );
 };
 
@@ -381,7 +355,7 @@ const EmployeeForm = ({ data, nextCode, onClose, onSaved }: Props) => {
                 <InputField name="birthday" label={t('hrBirthday')} accepter={DatePicker} oneTap format="dd/MM/yyyy" block required={false}
                   placeholder="dd/mm/yyyy" shouldDisableDate={(date) => moment(date).isAfter(moment(), 'day')}
                 />
-                <NameWithGender gender={gender} onGender={setGender} />
+                <NameWithGenderField name="first_name" label={`${t('hrGender')} · ${t('hrFirstName')}`} placeholder={t('hrFirstName')} gender={gender} onGender={setGender} />
                 <InputField name="last_name" label={t('hrLastName')} required={false} placeholder={t('hrLastName')} />
                 <InputField name="phone" label={t('hrPhoneApp')} icon={<i className="fa-solid fa-phone" />} placeholder="20XXXXXXXX" {...phoneProps} />
                 <InputField name="email" label={t('hrEmail')} required={false} icon={<i className="fa-solid fa-envelope" />} placeholder="name@example.com" />
