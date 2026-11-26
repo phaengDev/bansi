@@ -4385,6 +4385,9 @@ export const laoDict = {
   crPendingApps: { la: 'ຄຳຮ້ອງທີ່ຄ້າງ', en: 'Open applications', cn: '待处理申请' },
   crBorrower: { la: 'ຜູ້ກູ້', en: 'Borrower', cn: '借款人' },
   mySeeAllNotifications: { la: 'ເບິ່ງແຈ້ງເຕືອນທັງໝົດ', en: 'See all notifications', cn: '查看全部通知' },
+  crSubmitNeeds: { la: 'ຍັງສົ່ງພິຈາລະນາບໍ່ໄດ້:', en: 'Cannot submit yet:', cn: '暂不能提交：' },
+  crLtvOver: { la: 'LTV {v}% ເກີນເກນຂອງຜະລິດຕະພັນ ({max}%). ', en: 'LTV {v}% is above the product limit ({max}%). ', cn: 'LTV {v}% 超过产品上限（{max}%）。' },
+  crLtvFix: { la: 'ເພີ່ມຫຼັກຊັບໃຫ້ມູນຄ່າລວມຢ່າງໜ້ອຍ ₭ {c} ຫຼື ຫຼຸດຍອດກູ້ລົງເຫຼືອບໍ່ເກີນ ₭ {a}', en: 'Add collateral worth at least ₭ {c} in total, or lower the amount to ₭ {a} or less', cn: '增加抵押物使总价值至少 ₭ {c}，或将贷款额降至 ₭ {a} 以下' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

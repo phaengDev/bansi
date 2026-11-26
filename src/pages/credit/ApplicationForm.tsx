@@ -149,6 +149,12 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
     }
   }
   const passed = checks.length > 0 && checks.every((c) => c.ok);
+  /** ຂໍ້ທີ່ຍັງບໍ່ຜ່ານ — ບອກຢູ່ທ້າຍຟອມຄຽງປຸ່ມ "ສົ່ງພິຈາລະນາ" (ລາຍການກວດຢູ່ທາງຊ້າຍອາດເລື່ອນພົ້ນຈໍ) */
+  const failed = checks.filter((c) => !c.ok);
+  // LTV ເກີນ: ຫຼັກຊັບຕ້ອງມີມູນຄ່າຢ່າງໜ້ອຍເທົ່າໃດ ຫຼື ກູ້ໄດ້ສູງສຸດເທົ່າໃດ ກັບຫຼັກຊັບທີ່ເລືອກ
+  const ltvOver = !!product && product.max_ltv > 0 && ltv !== null && ltv > product.max_ltv;
+  const ltvNeedCollateral = ltvOver ? Math.ceil((amount * 100) / product!.max_ltv) : 0;
+  const ltvMaxAmount = ltvOver ? Math.floor((collateralValue * product!.max_ltv) / 100) : 0;
 
   const model = useMemo(() => Schema.Model<any>({
     customer_id: NumberType().isRequired(t('selectRequired')),
@@ -319,7 +325,7 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
               </div>
             </FormStep>
 
-            <FormStep no={3} done={chosen.length > 0} title={t('crStepCollateralPick')}
+            <FormStep no={3} done={chosen.length > 0 && !ltvOver} title={t('crStepCollateralPick')}
               hint={product?.require_collateral ? t('crCollateralRequiredHint').replace('{p}', product.max_ltv ? String(product.max_ltv) : '—') : t('crCollateralOptionalHint')}
             >
               <div className="is-wide cr-pick-list">
@@ -344,7 +350,16 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
                       <i className="fa-solid fa-plus" /> {t('crCollateralAdd')}
                     </button>
                     {chosen.length > 0 && (
-                      <p className="acc-gl-hint"><i className="fa-solid fa-scale-balanced" /> {t('crCollateralTotal')} <b>₭ {formatNumber(collateralValue)}</b>{ltv !== null && <> · LTV <b>{ltv}%</b></>}</p>
+                      <p className="acc-gl-hint"><i className="fa-solid fa-scale-balanced" /> {t('crCollateralTotal')} <b>₭ {formatNumber(collateralValue)}</b>{ltv !== null && <> · LTV <b className={ltvOver ? 'cr-text-bad' : ''}>{ltv}%</b></>}</p>
+                    )}
+                    {ltvOver && (
+                      <p className="cr-ltv-warn">
+                        <i className="fa-solid fa-triangle-exclamation" />
+                        <span>
+                          <b>{t('crLtvOver').replace('{v}', String(ltv)).replace('{max}', String(product!.max_ltv))}</b>
+                          {t('crLtvFix').replace('{c}', formatNumber(ltvNeedCollateral)).replace('{a}', formatNumber(ltvMaxAmount))}
+                        </span>
+                      </p>
                     )}
                   </>
                 )}
@@ -380,7 +395,12 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
       </Modal.Body>
 
       <Modal.Footer>
-        <span className="acc-book-footnote"><span className="text-danger">*</span> {t('requiredFieldsNote')}</span>
+        {failed.length ? (
+          <span className="cr-submit-why" role="status">
+            <i className="fa-solid fa-circle-exclamation" />
+            <span><b>{t('crSubmitNeeds')}</b> {failed.map((c) => (c.hint ? `${c.label} (${c.hint})` : c.label)).join(' · ')}</span>
+          </span>
+        ) : <span className="acc-book-footnote"><span className="text-danger">*</span> {t('requiredFieldsNote')}</span>}
         <Button appearance="default" className="acc-book-btn is-cancel" onClick={onClose}>{t('cancel')}</Button>
         <Button appearance="default" className="acc-book-btn" loading={saving === 'draft'} disabled={!!saving} onClick={() => save(false)}>
           <i className="fa-solid fa-floppy-disk" /> {t('crSaveDraft')}

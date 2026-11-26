@@ -1377,6 +1377,42 @@ button.cr-aging-row { cursor: pointer; }
   .cr-aging-card { grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0; }
 }
 
+// ຟອມຄຳຮ້ອງ: ເຫດຜົນທີ່ຍັງສົ່ງພິຈາລະນາບໍ່ໄດ້ (ທ້າຍຟອມ) ແລະ ຄຳແນະນຳເມື່ອ LTV ເກີນ
+.cr-submit-why {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1 1 260px;
+  align-items: flex-start;
+  gap: 8px;
+  margin-right: auto;
+  padding: 7px 10px;
+  color: #9c2025;
+  font-size: 12.5px;
+  line-height: 1.45;
+  background: #fdf0f0;
+  border: 1px solid #f6caca;
+  border-radius: 10px;
+
+  > i { margin-top: 2px; }
+  b { margin-right: 4px; }
+}
+.cr-ltv-warn {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  color: #8a1f24;
+  font-size: 12.5px;
+  line-height: 1.5;
+  background: #fdf0f0;
+  border: 1px solid #f6caca;
+  border-radius: 10px;
+
+  > i { margin-top: 3px; color: #c4343a; }
+  b { font-weight: 700; }
+}
+
 @media (max-width: 767.98px) {
   .cr-split { grid-template-columns: minmax(0, 1fr); }
   .cr-collateral { grid-template-columns: 40px minmax(0, 1fr); }
