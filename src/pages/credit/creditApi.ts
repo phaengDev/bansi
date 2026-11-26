@@ -189,6 +189,10 @@ export type Approval = {
   approved_rate: number | null;
   comment: string | null;
   decided_at: string;
+  /** decision 4 = ສົ່ງໃຫ້ພິຈາລະນາ: ຜູ້ຮັບ ແລະ ແບບ (1 ອັດຕະໂນມັດ / 2 ເລືອກເອງ) */
+  forward_to?: number | null;
+  forward_mode?: number | null;
+  forward_name?: string | null;
 };
 
 export type Application = {
@@ -222,7 +226,16 @@ export type Application = {
   customer: { _uuid: number; code?: string; customer_code?: string; name?: string; full_name?: string; phone: string | null } | null;
   product: { _uuid: number; code?: string; name?: string; approval_levels: number } | null;
   loan_code?: string | null;
+  /** ຜູ້ທີ່ຄຳຮ້ອງລໍພິຈາລະນາຢູ່ (ລາຍການ) */
+  assigned_to?: number | null;
+  assigned_name?: string | null;
 };
+
+/** ສົ່ງໃຫ້ຜູ້ພິຈາລະນາ: ອັດຕະໂນມັດ (ຫົວໜ້າສາຍງານ) / ເລືອກເອງ (ຕຳແໜ່ງສູງກວ່າ) / ເປີດໃຫ້ທຸກຄົນ (ເມື່ອບໍ່ມີໃຜສູງກວ່າ) */
+export type RouteMode = 'auto' | 'manual' | 'open';
+export type RouteChoice = { mode: RouteMode; to: number | null };
+export type RoutePerson = { _uuid: number; name: string; employee: string | null; position: string | null; level: number | null };
+export type RouteOptions = { auto: RoutePerson | null; manual: RoutePerson[]; lineManager: boolean };
 
 export type ApplicationDetail = Application & {
   customer: CreditCustomer | null;
@@ -232,8 +245,10 @@ export type ApplicationDetail = Application & {
   guarantors: Guarantor[];
   approvals: Approval[];
   created_by_name: string | null;
-  /** ຜູ້ທີ່ພິຈາລະນາຂັ້ນຕໍ່ໄປໄດ້ (ສະເພາະຕອນລໍຖ້າພິຈາລະນາ) */
+  /** ລໍຖ້າພິຈາລະນາ ແລະ ບໍ່ໄດ້ສົ່ງໃຫ້ຄົນໃດ (ຄຳຮ້ອງເກົ່າ / ເປີດໃຫ້ທຸກຄົນ): ຜູ້ທີ່ພິຈາລະນາຂັ້ນຕໍ່ໄປໄດ້ */
   approvers: { _uuid: number; name: string }[] | null;
+  /** ລໍຖ້າພິຈາລະນາ ແລະ ສົ່ງໃຫ້ຄົນໃດຄົນໜຶ່ງ: ໃຜ, ໃຜສົ່ງ, ເມື່ອໃດ, mode 1 ອັດຕະໂນມັດ / 2 ເລືອກເອງ */
+  assigned: { to: number; to_name: string | null; by: number | null; by_name: string | null; at: string | null; mode: number | null } | null;
   check: { issues: string[]; ltv: number | null; debt_ratio: number | null; monthly: number | null; collateral_value: number };
   schedule: { no: number; due_date: string; principal: number; interest: number; payment: number }[];
   fee: number;

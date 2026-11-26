@@ -1495,8 +1495,8 @@ button.cr-aging-row { cursor: pointer; }
   p > i { width: 16px; color: #604bd8; text-align: center; }
   p > span { flex: 1; min-width: 0; }
   p .acc-rp-btn { flex: none; }
-  &.is-blocked p:first-child { padding: 8px 10px; color: #8a5a00; background: #fff6e5; border-radius: 10px; }
-  &.is-blocked p:first-child > i { color: #c27c0e; }
+  .cr-flow-blocked { padding: 8px 10px; color: #8a5a00; background: #fff6e5; border-radius: 10px; }
+  .cr-flow-blocked > i { color: #c27c0e; }
 }
 .cr-flow-names em {
   display: inline-block;
@@ -1511,6 +1511,82 @@ button.cr-aging-row { cursor: pointer; }
 }
 .cr-flow-none { padding: 8px 10px; color: #9c2025 !important; background: #fdf0f0; border-radius: 10px; }
 .cr-flow-none > i { color: #c4343a !important; }
+
+// ເລືອກຜູ້ພິຈາລະນາ (RoutePicker) — ອັດຕະໂນມັດ / ເລືອກເອງ, ລາຍຊື່ຄົນທີ່ຕຳແໜ່ງສູງກວ່າ
+.cr-route { display: flex; flex-direction: column; gap: 10px; }
+.cr-route-list { display: grid; gap: 8px; }
+.cr-route-person {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: inherit;
+  text-align: left;
+  background: #fff;
+  border: 1.5px solid #e3eaf0;
+  border-radius: 12px;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:not(.is-static):hover { border-color: #b9a8f5; }
+  &.is-active { background: #f5f2ff; border-color: #604bd8; }
+  &.is-static { background: #f7f9fb; }
+  .cr-avatar { width: 34px; height: 34px; font-size: 13px; }
+}
+.cr-route-person-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+
+  b { overflow: hidden; color: #14314d; font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap; }
+  small { overflow: hidden; color: #7b8a97; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+}
+.cr-route-badge {
+  flex: none;
+  padding: 1px 8px;
+  color: #4b36b8;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  background: #efecfd;
+  border-radius: 99px;
+}
+.cr-route-check { flex: none; color: #c9d4dd; font-size: 16px; }
+.cr-route-person.is-active .cr-route-check { color: #604bd8; }
+.cr-route-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 12px;
+  color: #3d5266;
+  font-size: 13px;
+  background: #f5f2ff;
+  border-radius: 10px;
+
+  > i { margin-top: 2px; color: #604bd8; }
+  &.is-bad { color: #9c2025; background: #fdf0f0; }
+  &.is-bad > i { color: #c4343a; }
+}
+.cr-route-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+
+  small { color: #5b6f80; font-size: 12px; font-weight: 700; }
+}
+.cr-flow-sent {
+  padding: 8px 10px;
+  background: #f5f2ff;
+  border-radius: 10px;
+
+  > span { display: flex; flex-direction: column; }
+  small { color: #7b8a97; font-size: 12px; }
+}
+.cr-timeline .is-forward .cr-timeline-dot { background: linear-gradient(145deg, #aa8cff, #604bd8); }
+.cr-waiting-me { color: #604bd8 !important; font-weight: 700; }
 
 @media (max-width: 767.98px) {
   .cr-split { grid-template-columns: minmax(0, 1fr); }

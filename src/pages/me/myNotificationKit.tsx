@@ -2,6 +2,7 @@ import moment from 'moment';
 import { putApi } from '../../utils/configApi';
 import { markReadLocally, refreshMyInbox } from './meInbox';
 import { idOf, type MyIntent, type MyNotification, type MyOpen } from './meApi';
+import { openCreditApplication } from '../credit/creditNav';
 
 /** ໄອຄອນ + ສີ ຕາມປະເພດແຈ້ງເຕືອນ (type ຈາກ notify() ຂອງ backend) */
 const TYPE_META: Record<string, { icon: string; tone: string }> = {
@@ -18,8 +19,11 @@ const TYPE_META: Record<string, { icon: string; tone: string }> = {
   birthday_wish: { icon: 'fa-gift', tone: 'is-coral' },
   birthday_reply: { icon: 'fa-comment-dots', tone: 'is-coral' },
   announcement: { icon: 'fa-bullhorn', tone: 'is-slate' },
+  credit: { icon: 'fa-file-pen', tone: 'is-violet' },
 };
 const metaOf = (type: string) => TYPE_META[type] ?? { icon: 'fa-bell', tone: 'is-slate' };
+
+const CREDIT_APP = 'credit-app';
 
 /** ແຈ້ງເຕືອນ → ໜ້າຂອງພື້ນທີ່ຂອງຂ້ອຍທີ່ກ່ຽວຂ້ອງ (ref = "<ປະເພດ>:<id>…"); null = ອ່ານຢ່າງດຽວ (ເຊັ່ນ ແຈ້ງການ) */
 export const notificationTarget = (n: MyNotification): { key: string; intent?: MyIntent } | null => {
@@ -36,6 +40,8 @@ export const notificationTarget = (n: MyNotification): { key: string; intent?: M
     case 'holiday': return { key: 'today' };
     case 'birthday':
     case 'wish': return { key: 'team' };
+    // ຄຳຮ້ອງຂໍກູ້ລໍທ່ານພິຈາລະນາ → ໜ້າຕ່າງ ຄຳຮ້ອງຂໍກູ້ (ບໍ່ແມ່ນໜ້າຂອງຂ້ອຍ)
+    case 'credit-app': return Number(a) > 0 ? { key: CREDIT_APP, intent: { action: 'open', id: Number(a) } } : null;
     default: break;
   }
   return n.type === 'attendance' ? { key: 'attendance' } : null;
@@ -48,7 +54,8 @@ export const openNotification = (n: MyNotification, onOpen: MyOpen) => {
     putApi(`/notification/me/read/${idOf(n)}`, {}).catch(() => refreshMyInbox());
   }
   const target = notificationTarget(n);
-  if (target) onOpen(target.key, target.intent);
+  if (target?.key === CREDIT_APP) openCreditApplication(target.intent?.action === 'open' ? Number(target.intent.id) : 0);
+  else if (target) onOpen(target.key, target.intent);
 };
 
 /** ໃໝ່ສຸດກ່ອນ */

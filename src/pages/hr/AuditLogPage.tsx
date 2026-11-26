@@ -48,6 +48,7 @@ const ACTIONS: Record<string, { label: string; icon: string; tone: string }> = {
   writeoff: { label: 'auditActWriteoff', icon: 'fa-skull-crossbones', tone: 'is-red' },
   restructure: { label: 'auditActRestructure', icon: 'fa-shuffle', tone: 'is-violet' },
   classify: { label: 'auditActClassify', icon: 'fa-layer-group', tone: 'is-blue' },
+  forward: { label: 'auditActForward', icon: 'fa-share-from-square', tone: 'is-blue' },
 };
 
 /** ປະເພດລາຍການ → ຊື່ + ໄອຄອນ (ລຳດັບ = ລຳດັບໃນຕົວກັ່ນ) */

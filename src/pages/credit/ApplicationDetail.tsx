@@ -16,7 +16,8 @@ import { ScheduleTable } from '../account/loans/loanKit';
 import { LOAN_METHODS, money, showDate, useTreasuryAccounts } from '../account/loans/loanApi';
 import ApplicationForm from './ApplicationForm';
 import ContractDetail from './ContractDetail';
-import { APP_STATUS, customerAddress, type ApplicationDetail as Detail } from './creditApi';
+import { APP_STATUS, customerAddress, type ApplicationDetail as Detail, type RouteChoice } from './creditApi';
+import { RouteModal, RoutePicker, defaultRoute, routeReady, useRouteOptions } from './RoutePicker';
 import { AppStatusChip, CollateralList, DetailTabs, GuarantorList, InfoRows, RiskChip, creditTermText, monthlyRate } from './creditKit';
 
 const { NumberType, StringType, DateType } = Schema.Types;
@@ -26,6 +27,8 @@ const DECISIONS = [
   { value: 3, label: 'crDecReturn', icon: 'fa-rotate-left' },
   { value: 2, label: 'crDecReject', icon: 'fa-circle-xmark' },
 ];
+/** decision 4 = ສົ່ງໃຫ້ພິຈາລະນາ (ປະຫວັດເທົ່ານັ້ນ — ບໍ່ແມ່ນທາງເລືອກໃນຟອມພິຈາລະນາ) */
+const FORWARD = 4;
 const myId = () => Number(localStorage.getItem('userid')) || 0;
 
 type FlowStep = { key: string; icon: string; title: string; state: 'done' | 'current' | 'todo' | 'bad'; who?: string | null; when?: string | null };
@@ -34,7 +37,14 @@ type FlowStep = { key: string; icon: string; title: string; state: 'done' | 'cur
  * ຂັ້ນຕອນອະນຸມັດ — ຍື່ນຄຳຮ້ອງ → ຂັ້ນ 1…N (ຕາມຜະລິດຕະພັນ) → ປ່ອຍກູ້: ໃຜເຮັດ ແລະ ເມື່ອໃດ, ຂັ້ນທີ່ກຳລັງລໍ.
  * ລໍຖ້າພິຈາລະນາ: ບອກວ່າໃຜພິຈາລະນາຂັ້ນນີ້ໄດ້ (ຈາກ API) ແລະ ຖ້າຜູ້ເບິ່ງພິຈາລະນາບໍ່ໄດ້ ບອກເຫດຜົນ (ຜູ້ສ້າງ / ອະນຸມັດຂັ້ນກ່ອນແລ້ວ)
  */
-const ApprovalFlow = ({ app, blocked, canDecide, onDecide }: { app: Detail; blocked: string; canDecide: boolean; onDecide: () => void }) => {
+const ApprovalFlow = ({ app, blocked, canDecide, onDecide, onRoute }: {
+  app: Detail;
+  blocked: string;
+  canDecide: boolean;
+  onDecide: () => void;
+  /** ປ່ຽນ (ຜູ້ສົ່ງ) / ສົ່ງຕໍ່ (ຜູ້ຖືກສົ່ງໃຫ້) / ສົ່ງໃຫ້ຄົນ (ຄຳຮ້ອງທີ່ເປີດໃຫ້ທຸກຄົນ) — null = ຜູ້ເບິ່ງເຮັດບໍ່ໄດ້ */
+  onRoute: { label: string; icon: string; run: () => void } | null;
+}) => {
   const t = useT();
   const status = Number(app.status);
   const levels = app.product?.approval_levels ?? 1;
@@ -55,10 +65,12 @@ const ApprovalFlow = ({ app, blocked, canDecide, onDecide }: { app: Detail; bloc
       if (rejected && Number(rejected.level) === level) {
         return { key: `l${level}`, icon: 'fa-circle-xmark', title: t('crFlowRejectedAt').replace('{n}', String(level)), state: 'bad', who: rejected.approver_name, when: date(rejected.decided_at) };
       }
+      const current = status === 2 && level === reached + 1;
       return {
         key: `l${level}`, icon: done ? 'fa-circle-check' : 'fa-gavel', title: t('crLevelN').replace('{n}', String(level)),
-        state: done ? 'done' : status === 2 && level === reached + 1 ? 'current' : 'todo',
-        who: record?.approver_name ?? null, when: date(record?.decided_at),
+        state: done ? 'done' : current ? 'current' : 'todo',
+        who: record?.approver_name ?? (current && app.assigned?.to_name ? t('crFlowWaitingFor').replace('{n}', app.assigned.to_name) : null),
+        when: date(record?.decided_at),
       };
     }),
     {
@@ -87,22 +99,37 @@ const ApprovalFlow = ({ app, blocked, canDecide, onDecide }: { app: Detail; bloc
         ))}
       </ol>
       {status === 2 && (
-        <div className={`cr-flow-who${blocked ? ' is-blocked' : ''}`}>
+        <div className="cr-flow-who">
+          {app.assigned && (
+            <p className="cr-flow-sent">
+              <i className="fa-solid fa-share-from-square" />
+              <span>
+                <b>{t('crFlowSentTo').replace('{n}', String(next)).replace('{to}', app.assigned.to_name ?? '—')}</b>
+                <small>{[t(app.assigned.mode === 1 ? 'crRouteAuto' : 'crRouteManual'), app.assigned.by_name && t('crFlowSentBy').replace('{by}', app.assigned.by_name), date(app.assigned.at)].filter(Boolean).join(' · ')}</small>
+              </span>
+              {onRoute && <button type="button" className="acc-rp-btn" onClick={onRoute.run}><i className={`fa-solid ${onRoute.icon}`} /> {onRoute.label}</button>}
+            </p>
+          )}
           {blocked ? (
-            <p><i className="fa-solid fa-user-lock" /> <span><b>{blocked}</b></span></p>
+            <p className="cr-flow-blocked"><i className="fa-solid fa-user-lock" /> <span><b>{blocked}</b></span></p>
           ) : canDecide ? (
             <p>
               <i className="fa-solid fa-user-check" /> <span><b>{t('crFlowYouCan').replace('{n}', String(next))}</b></span>
               <button type="button" className="acc-rp-btn is-primary" onClick={onDecide}><i className="fa-solid fa-gavel" /> {t('crDecide')}</button>
             </p>
           ) : null}
-          {approvers.length ? (
+          {app.assigned ? null : approvers.length ? (
             <p className="cr-flow-names">
               <i className="fa-solid fa-users" />
               <span>{t('crFlowWho').replace('{n}', String(next))} {approvers.map((u) => <em key={u._uuid}>{u.name}</em>)}</span>
             </p>
           ) : (
             <p className="cr-flow-none"><i className="fa-solid fa-triangle-exclamation" /> <span>{t('crFlowNobody')}</span></p>
+          )}
+          {!app.assigned && onRoute && (
+            <p><i className="fa-solid fa-share-from-square" /> <span>{t('crFlowOpenToAll')}</span>
+              <button type="button" className="acc-rp-btn" onClick={onRoute.run}><i className={`fa-solid ${onRoute.icon}`} /> {onRoute.label}</button>
+            </p>
           )}
         </div>
       )}
@@ -125,6 +152,11 @@ const DecisionForm = ({ app, onClose, onSaved }: { app: Detail; onClose: () => v
   const levels = app.product?.approval_levels ?? 1;
   const level = Number(app.approval_level) + 1;
   const approve = decision === 1;
+  // ອະນຸມັດ ແລະ ຍັງມີຂັ້ນຕໍ່ໄປ → ເລືອກຜູ້ພິຈາລະນາຂັ້ນຕໍ່ໄປ (ອັດຕະໂນມັດ / ຄົນທີ່ຕຳແໜ່ງສູງກວ່າຂ້ອຍ)
+  const forward = approve && level < levels;
+  const { options: routeOptions, error: routeError } = useRouteOptions(app._uuid, forward);
+  const [route, setRoute] = useState<RouteChoice | null>(null);
+  const routeValue = route ?? defaultRoute(routeOptions);
   const model = useMemo(() => Schema.Model<any>({
     ...(approve ? {
       approved_amount: NumberType(t('faNumberOnly')).isRequired(t('inputRequired')).min(1, t('lnPrincipalPositive')).max(app.requested_amount, t('crOverRequested')),
@@ -135,8 +167,15 @@ const DecisionForm = ({ app, onClose, onSaved }: { app: Detail; onClose: () => v
 
   const submit = async () => {
     if (!formRef.current?.check()) return;
+    if (forward && !routeReady(routeValue, routeOptions)) {
+      Notific.warning(t('crRoutePickFirst'));
+      return;
+    }
     const body = approve
-      ? { decision, approved_amount: num(inputs.approved_amount), approved_term: num(inputs.approved_term), approved_rate: num(inputs.approved_rate), comment: inputs.comment }
+      ? {
+        decision, approved_amount: num(inputs.approved_amount), approved_term: num(inputs.approved_term), approved_rate: num(inputs.approved_rate), comment: inputs.comment,
+        ...(forward ? { route: routeValue } : {}),
+      }
       : { decision, comment: inputs.comment };
     if (await runSave(() => postApi(`/credit/application/${app._uuid}/decide`, body), setSaving)) {
       onSaved();
@@ -170,6 +209,12 @@ const DecisionForm = ({ app, onClose, onSaved }: { app: Detail; onClose: () => v
             <InputField name="comment" label={t(approve ? 'crComment' : 'crReason')} required={!approve} icon={<i className="fa-solid fa-comment" />} />
           </div>
         </FormStep>
+        {forward && (
+          <FormStep no={2} done={routeReady(routeValue, routeOptions)} title={t('crRouteTitle').replace('{n}', String(level + 1))} hint={t('crRouteRule')}>
+            {routeError ? <p className="cr-route-note is-bad is-wide"><i className="fa-solid fa-triangle-exclamation" /> {routeError}</p>
+              : <RoutePicker options={routeOptions} value={routeValue} onChange={setRoute} level={level + 1} />}
+          </FormStep>
+        )}
       </Form>
     </SettingModal>
   );
@@ -257,6 +302,8 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
   const [app, setApp] = useState<Detail | null>(null);
   const [tab, setTab] = useState<Tab>('summary');
   const [form, setForm] = useState<'edit' | 'decide' | 'disburse' | null>(null);
+  /** ເລືອກຜູ້ພິຈາລະນາ: ສົ່ງພິຈາລະນາ (ຮ່າງ) / ປ່ຽນ ຫຼື ສົ່ງຕໍ່ (ລໍຖ້າພິຈາລະນາ) */
+  const [routing, setRouting] = useState<'submit' | 'route' | null>(null);
   const [contractId, setContractId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -309,7 +356,14 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
       setBusy(false);
     }
   };
-  const submit = () => act(() => putApi(`/credit/application/${app._uuid}`, { submit: true }), 'crSubmitted');
+  const submitTo = async (route: RouteChoice) => {
+    await putApi(`/credit/application/${app._uuid}`, { submit: true, route });
+    changed();
+  };
+  const routeTo = async (route: RouteChoice, comment: string) => {
+    await postApi(`/credit/application/${app._uuid}/route`, { route, comment });
+    changed();
+  };
   const cancel = () => Notific.confirm(`${t('crCancelAppConfirm')} ${app.application_no}`, () => act(() => postApi(`/credit/application/${app._uuid}/cancel`, {})));
   const remove = () => Notific.confirm(`${t('crDeleteAppConfirm')} ${app.application_no}`, async () => {
     try {
@@ -321,7 +375,18 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
       Notific.error(getErrorMessage(err));
     }
   });
-  const decideBlocked = mine ? t('crMakerChecker') : approvedBefore ? t('crApprovedBefore') : '';
+  // ສົ່ງໃຫ້ຄົນໃດຄົນໜຶ່ງແລ້ວ → ສະເພາະຄົນນັ້ນພິຈາລະນາໄດ້
+  const assignedOther = !!app.assigned && app.assigned.to !== myId();
+  const decideBlocked = mine ? t('crMakerChecker') : approvedBefore ? t('crApprovedBefore')
+    : assignedOther ? t('crAssignedOther').replace('{n}', app.assigned?.to_name ?? '—') : '';
+  // ປ່ຽນຜູ້ພິຈາລະນາ: ຜູ້ສົ່ງ (ປ່ຽນ) / ຜູ້ຖືກສົ່ງໃຫ້ (ສົ່ງຕໍ່ຂຶ້ນໄປ) / ຄຳຮ້ອງທີ່ເປີດໃຫ້ທຸກຄົນ: ຜູ້ສ້າງ ຫຼື ຜູ້ອະນຸມັດຂັ້ນລ່າສຸດ
+  const lastApprover = [...app.approvals].reverse().find((a) => Number(a.decision) === 1 && Number(a.level) === Number(app.approval_level));
+  const routeAction = status !== 2 || !canEdit ? null
+    : app.assigned?.by === myId() ? { label: t('crRouteChange'), icon: 'fa-user-pen', run: () => setRouting('route') }
+      : app.assigned?.to === myId() ? { label: t('crRouteForward'), icon: 'fa-share', run: () => setRouting('route') }
+        : !app.assigned && (mine || Number(lastApprover?.approver_id) === myId()) ? { label: t('crRouteSend'), icon: 'fa-share-from-square', run: () => setRouting('route') }
+          : null;
+  const decisions = app.approvals.filter((a) => Number(a.decision) !== FORWARD);
 
   return (
     <Modal open onClose={onClose} size="lg" className="acc-ln-detail cr-detail">
@@ -338,14 +403,14 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
           <span className="acc-ln-head-actions">
             <AppStatusChip status={status} level={app.approval_level} levels={levels} />
             {status === 1 && canEdit && <button type="button" className="acc-rp-btn" disabled={busy} onClick={() => setForm('edit')}><i className="fa-solid fa-pen" /> {t('edit')}</button>}
-            {[1, 4, 6].includes(status) && canDelete && !app.approvals.length && (
+            {[1, 4, 6].includes(status) && canDelete && !decisions.length && (
               <button type="button" className="acc-rp-btn is-danger" disabled={busy} onClick={remove}><i className="fa-solid fa-trash" /> {t('delete')}</button>
             )}
             {[1, 2, 3].includes(status) && canEdit && (
               <button type="button" className="acc-rp-btn is-danger" disabled={busy} onClick={cancel}><i className="fa-solid fa-ban" /> {t('crCancelApp')}</button>
             )}
             {status === 1 && canEdit && (
-              <button type="button" className="acc-rp-btn is-primary" disabled={busy || issues.length > 0} title={issues.length ? t('crSubmitBlocked') : undefined} onClick={submit}>
+              <button type="button" className="acc-rp-btn is-primary" disabled={busy || issues.length > 0} title={issues.length ? t('crSubmitBlocked') : undefined} onClick={() => setRouting('submit')}>
                 <i className="fa-solid fa-paper-plane" /> {t('crSubmit')}
               </button>
             )}
@@ -404,13 +469,13 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
         )}
         {status === 4 && app.reject_reason && <div className="cr-issues"><b><i className="fa-solid fa-circle-xmark" /> {t('crRejectedReason')}</b> {app.reject_reason}</div>}
         {status <= 5 && (
-          <ApprovalFlow app={app} blocked={status === 2 ? decideBlocked : ''} canDecide={status === 2 && canEdit && !decideBlocked} onDecide={() => setForm('decide')} />
+          <ApprovalFlow app={app} blocked={status === 2 ? decideBlocked : ''} canDecide={status === 2 && canEdit && !decideBlocked} onDecide={() => setForm('decide')} onRoute={routeAction} />
         )}
 
         <DetailTabs<Tab> value={tab} onChange={setTab} tabs={[
           { key: 'summary', icon: 'fa-address-card', label: t('crSummary') },
           { key: 'security', icon: 'fa-house-lock', label: t('crSecurity'), count: app.collaterals.length + app.guarantors.length },
-          { key: 'history', icon: 'fa-clock-rotate-left', label: t('crHistory'), count: app.approvals.length },
+          { key: 'history', icon: 'fa-clock-rotate-left', label: t('crHistory'), count: decisions.length },
           { key: 'schedule', icon: 'fa-table-list', label: t('lnSchedule'), count: app.schedule.length },
         ]}
         />
@@ -457,6 +522,18 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
           app.approvals.length ? (
             <ol className="cr-timeline">
               {app.approvals.map((a) => {
+                if (Number(a.decision) === FORWARD) {
+                  return (
+                    <li key={a._uuid} className="is-forward">
+                      <span className="cr-timeline-dot"><i className="fa-solid fa-share-from-square" /></span>
+                      <div>
+                        <b>{t('crFlowSentTo').replace('{n}', String(a.level)).replace('{to}', a.forward_name ?? '—')}</b>
+                        <small>{[t(Number(a.forward_mode) === 1 ? 'crRouteAuto' : 'crRouteManual'), a.approver_name && t('crFlowSentBy').replace('{by}', a.approver_name), moment(a.decided_at).format('DD/MM/YYYY HH:mm')].filter(Boolean).join(' · ')}</small>
+                        {a.comment && <p className="cr-timeline-comment"><i className="fa-solid fa-comment" /> {a.comment}</p>}
+                      </div>
+                    </li>
+                  );
+                }
                 const d = DECISIONS.find((x) => x.value === Number(a.decision)) ?? DECISIONS[0];
                 return (
                   <li key={a._uuid} className={`is-${d.value === 1 ? 'approve' : d.value === 2 ? 'reject' : 'return'}`}>
@@ -480,6 +557,13 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
 
       {form === 'edit' && <ApplicationForm row={app} onClose={() => setForm(null)} onSaved={changed} />}
       {form === 'decide' && <DecisionForm app={app} onClose={() => setForm(null)} onSaved={changed} />}
+      {routing && (
+        <RouteModal applicationId={app._uuid} level={Number(app.approval_level) + 1} levels={levels} withComment={routing === 'route'} allowOpen={routing === 'submit'}
+          title={t(routing === 'submit' ? 'crSubmit' : routeAction?.label ? 'crRouteTitleShort' : 'crSubmit')}
+          submitLabel={routing === 'submit' ? t('crSubmit') : routeAction?.label ?? t('crRouteSend')}
+          onClose={() => setRouting(null)} onConfirm={(route, comment) => (routing === 'submit' ? submitTo(route) : routeTo(route, comment))}
+        />
+      )}
       {form === 'disburse' && (
         <DisburseForm app={app} onClose={() => setForm(null)} onSaved={(loanId) => {
           changed();

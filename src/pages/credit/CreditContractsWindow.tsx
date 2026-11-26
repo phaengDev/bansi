@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader } from 'rsuite';
 import moment from 'moment';
 import AppPage from '../../components/Elements/AppPage';
@@ -12,6 +12,9 @@ import ContractDetail from './ContractDetail';
 import { DaysLateChip } from './collectKit';
 import { APP_STATUS, CLOSE_REASONS, useCreditList, type Application, type Contract } from './creditApi';
 import { AppStatusChip, CreditListBar, CreditTiles, IdentityCell, creditTermText } from './creditKit';
+import { clearCreditAppRequest, useCreditAppRequest } from './creditNav';
+
+const myId = () => Number(localStorage.getItem('userid')) || 0;
 
 /** ຍອດລວມແຍກຕາມສະກຸນ — "₭ 145,000,000 · $ 10,000" */
 const totalsText = (rows: Contract[], value: (r: Contract) => number) => {
@@ -25,8 +28,10 @@ const totalsText = (rows: Contract[], value: (r: Contract) => number) => {
   return [...by.values()].map((c) => `${c.symbol} ${formatNumber(Math.round(c.total * 100) / 100)}`).join(' · ') || '0';
 };
 
-type AppFilter = 'open' | 'draft' | 'pending' | 'approved' | 'disbursed' | 'closed' | 'all';
+type AppFilter = 'mine' | 'open' | 'draft' | 'pending' | 'approved' | 'disbursed' | 'closed' | 'all';
 const APP_FILTERS: { key: AppFilter; label: string; statuses: number[] }[] = [
+  // ສົ່ງມາໃຫ້ຂ້ອຍພິຈາລະນາ (assigned_to = ຂ້ອຍ)
+  { key: 'mine', label: 'crFilterMine', statuses: [2] },
   { key: 'open', label: 'crFilterOpen', statuses: [1, 2, 3] },
   { key: 'draft', label: 'crStDraft', statuses: [1] },
   { key: 'pending', label: 'crStPending', statuses: [2] },
@@ -44,12 +49,21 @@ const ApplicationsPage = () => {
   const [keyword, setKeyword] = useState('');
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<number | null>(null);
+  // ເປີດຈາກແຈ້ງເຕືອນ (ຄຳຮ້ອງລໍທ່ານພິຈາລະນາ)
+  const request = useCreditAppRequest();
+  useEffect(() => {
+    if (!request) return;
+    setViewing(request.id);
+    clearCreditAppRequest(request);
+  }, [request]);
   if (error) return <div className="acc-class-empty"><i className="fa-solid fa-triangle-exclamation" /><p>{error}</p></div>;
 
+  const inFilter =(f: (typeof APP_FILTERS)[number], r: Application) => f.statuses.includes(Number(r.status)) && (f.key !== 'mine' || Number(r.assigned_to) === myId());
   const count = (statuses: number[]) => rows.filter((r) => statuses.includes(Number(r.status))).length;
+  const mineCount = rows.filter((r) => inFilter(APP_FILTERS[0], r)).length;
   const q = keyword.trim().toLowerCase();
   const shown = rows
-    .filter((r) => APP_FILTERS.find((f) => f.key === filter)!.statuses.includes(Number(r.status)))
+    .filter((r) => inFilter(APP_FILTERS.find((f) => f.key === filter)!, r))
     .filter((r) => !q || `${r.application_no} ${r.customer?.code ?? ''} ${r.customer?.name ?? ''} ${r.customer?.phone ?? ''} ${r.product?.name ?? ''}`.toLowerCase().includes(q));
   const pendingAmount = rows.filter((r) => [2, 3].includes(Number(r.status))).reduce((n, r) => n + (r.approved_amount ?? r.requested_amount), 0);
 
@@ -68,7 +82,8 @@ const ApplicationsPage = () => {
       />
       {rows.length > 0 && (
         <CreditListBar
-          tabs={APP_FILTERS.map((f) => ({ key: f.key, label: t(f.label), count: count(f.statuses) }))} value={filter} onChange={setFilter}
+          tabs={APP_FILTERS.filter((f) => f.key !== 'mine' || mineCount > 0).map((f) => ({ key: f.key, label: t(f.label), count: f.key === 'mine' ? mineCount : count(f.statuses), icon: f.key === 'mine' ? 'fa-user-clock' : undefined }))}
+          value={filter === 'mine' && !mineCount ? 'open' : filter} onChange={setFilter}
           keyword={keyword} onKeyword={setKeyword} placeholder={t('crAppSearch')}
           addLabel={t('crAppAdd')} onAdd={() => setAdding(true)} canAdd={canCreate}
         />
@@ -115,6 +130,9 @@ const ApplicationsPage = () => {
                     <td>
                       <AppStatusChip status={Number(r.status)} level={r.approval_level} levels={r.product?.approval_levels} />
                       {r.loan_code && <small>{r.loan_code}</small>}
+                      {Number(r.status) === 2 && r.assigned_name && (
+                        <small className={Number(r.assigned_to) === myId() ? 'cr-waiting-me' : ''}><i className="fa-solid fa-user-clock" /> {t('crFlowWaitingFor').replace('{n}', Number(r.assigned_to) === myId() ? t('crYou') : r.assigned_name)}</small>
+                      )}
                     </td>
                   </tr>
                 );

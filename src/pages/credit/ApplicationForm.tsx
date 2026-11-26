@@ -13,7 +13,8 @@ import { FormStep, PickerField } from '../account/setting/settingKit';
 import { postfixProp } from '../account/setting/settingApi';
 import { LOAN_METHODS, money, showDate } from '../account/loans/loanApi';
 import CollateralForm from './CollateralForm';
-import { collateralTypeOf, type ApplicationDetail, type Collateral, type CreditCustomer, type Guarantor } from './creditApi';
+import { collateralTypeOf, type ApplicationDetail, type Collateral, type CreditCustomer, type Guarantor, type RouteChoice } from './creditApi';
+import { RouteModal } from './RoutePicker';
 import { creditTermText, monthlyRate, useCreditCustomers, useCreditProducts, useProductCurrency } from './creditKit';
 
 const { NumberType, DateType } = Schema.Types;
@@ -165,23 +166,37 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
     annual_rate: NumberType(t('faNumberOnly')).min(0, t('crRateRange')).max(240, t('crRateRange')),
   }), [t]);
 
+  const payloadOf = (submit: boolean, route?: RouteChoice) => ({
+    ...inputs,
+    apply_date: toKey(inputs.apply_date),
+    requested_amount: amount, requested_term: term, annual_rate: rate,
+    item_price: num(inputs.item_price), down_payment: num(inputs.down_payment),
+    collateral_ids: collateralIds,
+    guarantors: guarantors.filter((g) => g.full_name.trim()).map((g) => ({ ...g, monthly_income: num(g.monthly_income) })),
+    submit,
+    ...(route ? { route } : {}),
+  });
+  const send = (payload: ReturnType<typeof payloadOf>) => (row ? putApi(`/credit/application/${row._uuid}`, payload) : postApi('/credit/application', payload));
+  /** ສົ່ງພິຈາລະນາ: ກວດຟອມແລ້ວເລືອກຜູ້ພິຈາລະນາ (RouteModal) ກ່ອນສົ່ງ */
+  const [routing, setRouting] = useState(false);
+  const submitTo = async (route: RouteChoice) => {
+    const res = await send(payloadOf(true, route));
+    onSaved(res.data?.data?._uuid ?? row?._uuid ?? 0);
+    onClose();
+  };
   const save = async (submit: boolean) => {
     if (!formRef.current?.check()) return;
-    const payload = {
-      ...inputs,
-      apply_date: toKey(inputs.apply_date),
-      requested_amount: amount, requested_term: term, annual_rate: rate,
-      item_price: num(inputs.item_price), down_payment: num(inputs.down_payment),
-      collateral_ids: collateralIds,
-      guarantors: guarantors.filter((g) => g.full_name.trim()).map((g) => ({ ...g, monthly_income: num(g.monthly_income) })),
-      submit,
-    };
+    if (submit) {
+      setRouting(true);
+      return;
+    }
+    const payload = payloadOf(false);
     try {
-      setSaving(submit ? 'submit' : 'draft');
-      const res = row ? await putApi(`/credit/application/${row._uuid}`, payload) : await postApi('/credit/application', payload);
+      setSaving('draft');
+      const res = await send(payload);
       const issues: string[] = res.data?.issues ?? [];
-      if (!submit && issues.length) Notific.warning(`${t('crSavedWithIssues')} ${issues.join(' · ')}`);
-      else Notific.success(submit ? 'crSubmitted' : 'saveSuccessDone');
+      if (issues.length) Notific.warning(`${t('crSavedWithIssues')} ${issues.join(' · ')}`);
+      else Notific.success('saveSuccessDone');
       onSaved(res.data?.data?._uuid ?? row?._uuid ?? 0);
       onClose();
     } catch (err) {
@@ -405,13 +420,19 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
         <Button appearance="default" className="acc-book-btn" loading={saving === 'draft'} disabled={!!saving} onClick={() => save(false)}>
           <i className="fa-solid fa-floppy-disk" /> {t('crSaveDraft')}
         </Button>
-        <Button appearance="primary" className="acc-book-btn is-save" loading={saving === 'submit'} disabled={!!saving || !passed} onClick={() => save(true)}
+        <Button appearance="primary" className="acc-book-btn is-save" loading={saving === 'submit' || routing} disabled={!!saving || !passed} onClick={() => save(true)}
           title={passed ? undefined : t('crSubmitBlocked')}
         >
           <i className="fa-solid fa-paper-plane" /> {t('crSubmit')}
         </Button>
       </Modal.Footer>
 
+      {routing && (
+        <RouteModal applicationId={row?._uuid} level={1} levels={product?.approval_levels ?? 1} title={t('crSubmit')} submitLabel={t('crSubmit')}
+          hint={`${customer?.customer_code ?? ''} ${customer?.full_name ?? ''} · ₭ ${formatNumber(amount)} · ${t('crLevelOf').replace('{n}', '1').replace('{m}', String(product?.approval_levels ?? 1))}`}
+          onClose={() => setRouting(false)} onConfirm={submitTo}
+        />
+      )}
       {addingCollateral && customer && (
         <CollateralForm customerId={customer._uuid} row={null} onClose={() => setAddingCollateral(false)}
           onSaved={async (id) => {

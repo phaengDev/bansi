@@ -24,6 +24,7 @@ import TaskPage from '../hr/task/TaskPage';
 import MyWindow from '../me/MyWindow';
 import { MY_WINDOWS, useMyPageRequest } from '../me/meNav';
 import MySpaceTray from '../me/MySpaceTray';
+import { useCreditAppRequest } from '../credit/creditNav';
 import { MY_INBOX_MENU, MY_PAY_MENU, MY_TASKS_MENU, MY_TEAM_MENU, MY_WORK_MENU } from './config/SidebarPopup';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
@@ -284,6 +285,13 @@ const AccountShell: React.FC = () => {
     if (myPageRequest) openShortcut(myPageRequest.window);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myPageRequest]);
+
+  // ແຈ້ງເຕືອນ "ຄຳຮ້ອງຂໍກູ້ລໍທ່ານພິຈາລະນາ" → ເປີດໜ້າຕ່າງ ຄຳຮ້ອງຂໍກູ້ (ໜ້າຄຳຮ້ອງເປີດລາຍລະອຽດເອງ)
+  const creditAppRequest = useCreditAppRequest();
+  useEffect(() => {
+    if (creditAppRequest) openShortcut('creditApplications');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creditAppRequest]);
 
   // ສິດເຂົ້າເມນູອາດຖືກປ່ຽນຈາກເຄື່ອງອື່ນ — ກວດຄືນທຸກເທື່ອທີ່ກັບມາທີ່ແຖບນີ້
   useEffect(() => {
