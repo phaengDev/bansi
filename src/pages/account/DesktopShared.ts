@@ -241,6 +241,8 @@ export const MENU_GROUPS = [
   { key: 'account', label: 'hrMenuGroupAccount', icon: 'fa-calculator', match: (path: string) => path.startsWith('/account/') },
   { key: 'hr', label: 'hrMenuGroupHr', icon: 'fa-people-group', match: (path: string) => path === '/hr' || path.startsWith('/hr/') },
   { key: 'me', label: 'myMenuGroup', icon: 'fa-house-user', match: (path: string) => path === '/me' || path.startsWith('/me/') },
+  // ຈັດການບໍລິສັດ — ກອບຂອງຕົນເອງ (ຂຶ້ນສະເພາະເຈົ້າຂອງລະບົບ)
+  { key: 'platform', label: 'platGroup', icon: 'fa-building-shield', match: (path: string) => path === '/platform' || path.startsWith('/platform/') },
   { key: 'other', label: 'hrMenuGroupOther', icon: 'fa-shapes', match: () => true },
 ] as const;
 export type MenuGroupKey = (typeof MENU_GROUPS)[number]['key'];
