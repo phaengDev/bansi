@@ -29,6 +29,9 @@ import PayrollWindow from '../hr/payroll/PayrollWindow';
 import ClosingWindow from './closing/ClosingWindow';
 import FixedAssetWindow from './assets/FixedAssetWindow';
 import LoanWindow from './loans/LoanWindow';
+import CreditCustomersWindow from '../credit/CreditCustomersWindow';
+import CreditContractsWindow from '../credit/CreditContractsWindow';
+import CreditSettingsWindow from '../credit/CreditSettingsWindow';
 import MenuUnlockModal from './MenuUnlockModal';
 import PlatformWindow from '../platform/PlatformWindow';
 import { PlanBadge } from './PlanSummary';
@@ -68,6 +71,9 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   fixedAssets: <FixedAssetWindow />,
   closing: <ClosingWindow />,
   loans: <LoanWindow />,
+  creditCustomers: <CreditCustomersWindow />,
+  creditContracts: <CreditContractsWindow />,
+  creditSettings: <CreditSettingsWindow />,
   employees: <AppPage showHeader={false}><EmployeePage /></AppPage>,
   tasks: <AppPage showHeader={false}><TaskPage /></AppPage>,
   hr: <HrWindow />,
@@ -80,6 +86,9 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
   myInbox: <MyWindow id="myInbox" menu={MY_INBOX_MENU} />,
   platform: <PlatformWindow />,
 };
+
+/** ໜ້າຕ່າງຂອງລະບົບສິນເຊື່ອ — ຂຶ້ນເມື່ອເປີດ use_credit */
+const CREDIT_WINDOWS: ShortcutId[] = ['creditCustomers', 'creditContracts', 'creditSettings'];
 
 /**
  * The persistent chrome around every `/account/*` page — taskbar (start button, running popups, pinned
@@ -121,8 +130,11 @@ const AccountShell: React.FC = () => {
   /** ເມນູທີ່ຜູ້ໃຊ້ຄົນນີ້ເຂົ້າໄດ້ ຈາກ GET /menu/main (ລຳດັບ, ຊື່, ໄອຄອນ, ລັອກ) — ບໍ່ຢູ່ໃນລາຍການ = ເປີດບໍ່ໄດ້ */
   const setting = useAccountSetting();
   const settingLoaded = useAccountSettingLoaded();
-  // ຊັບສົມບັດຄົງທີ່ ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ລໍຮູ້ຕັ້ງຄ່າກ່ອນ ບໍ່ໃຫ້ກະພິບຂຶ້ນ
-  const menus = useAccountMenus().filter((menu) => menu.id !== 'fixedAssets' || (settingLoaded && featureOn(setting, 'use_fixed_assets')));
+  // ຊັບສົມບັດຄົງທີ່ / ລະບົບສິນເຊື່ອ ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ) — ລໍຮູ້ຕັ້ງຄ່າກ່ອນ ບໍ່ໃຫ້ກະພິບຂຶ້ນ
+  const menus = useAccountMenus().filter((menu) => {
+    const feature = menu.id === 'fixedAssets' ? 'use_fixed_assets' : CREDIT_WINDOWS.includes(menu.id) ? 'use_credit' : null;
+    return !feature || (settingLoaded && featureOn(setting, feature));
+  });
   const menusLoaded = useAccountMenusLoaded();
   /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop — ປະຕິທິນບໍ່ຢູ່ desktop (ເປີດຈາກປຸ່ມໃນ taskbar ທາງຂວາ / Start menu) */
   const desktopLayout = useDesktopLayout(menus.filter((menu) => !TRAY_APPS.includes(menu.id)).map((menu) => menu.id));
@@ -145,6 +157,9 @@ const AccountShell: React.FC = () => {
   const fixedAssetsWindow = usePopupWindow();
   const closingWindow = usePopupWindow();
   const loansWindow = usePopupWindow();
+  const creditCustomersWindow = usePopupWindow();
+  const creditContractsWindow = usePopupWindow();
+  const creditSettingsWindow = usePopupWindow();
   const employeesWindow = usePopupWindow();
   const tasksWindow = usePopupWindow();
   const hrWindow = usePopupWindow();
@@ -171,6 +186,9 @@ const AccountShell: React.FC = () => {
     fixedAssets: fixedAssetsWindow,
     closing: closingWindow,
     loans: loansWindow,
+    creditCustomers: creditCustomersWindow,
+    creditContracts: creditContractsWindow,
+    creditSettings: creditSettingsWindow,
     employees: employeesWindow,
     tasks: tasksWindow,
     hr: hrWindow,

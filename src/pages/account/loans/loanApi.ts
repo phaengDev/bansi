@@ -67,6 +67,8 @@ export type Loan = LoanSummary & {
   interest_account_id: number | null;
   purpose: string | null;
   note: string | null;
+  /** ມີ = ສັນຍາສິນເຊື່ອ (ລະບົບສິນເຊື່ອ) — ບໍ່ຢູ່ໃນລາຍການເງິນໃຫ້ກູ້ທົ່ວໄປ */
+  customer_id?: number | null;
 };
 
 /** ສະຖານະຂອງງວດ (backend summarize) */

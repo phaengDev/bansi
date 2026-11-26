@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Loader, Modal } from 'rsuite';
-import { deleteApi, formatNumber, getApi, putApi } from '../../../utils/configApi';
+import { deleteApi, getApi, putApi } from '../../../utils/configApi';
 import { getErrorMessage } from '../../../utils/useCRUD';
 import { Notific } from '../../../utils/Notification';
 import { exportExcel } from '../../../utils/exportHelpers';
@@ -8,6 +8,7 @@ import { canCreate, canDelete, canEdit } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
 import LoanForm from './LoanForm';
 import LoanPayForm from './LoanPayForm';
+import { PaymentsTable, ScheduleTable } from './loanKit';
 import { BORROWED, LOAN_METHODS, STATE_CHIPS, money, showDate, termText, type LoanDetail as Detail } from './loanApi';
 
 type Tab = 'schedule' | 'payments';
@@ -88,8 +89,6 @@ const LoanDetail = ({ id, nextCode, onClose, onChanged }: { id: number; nextCode
     [t('status')]: t(STATE_CHIPS[r.state].label),
   })), `loan_${loan.loan_code}`, `${loan.loan_code} ${loan.counterparty}`);
 
-  let running = loan.principal;
-
   return (
     <Modal open onClose={onClose} size="lg" className="acc-ln-detail">
       <Modal.Header>
@@ -165,88 +164,9 @@ const LoanDetail = ({ id, nextCode, onClose, onChanged }: { id: number; nextCode
           </button>
         </div>
 
-        {tab === 'schedule' ? (
-          <div className="acc-rp-scroll acc-ln-table-wrap">
-            <table className="acc-fs-table acc-ln-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>{t('lnDue')}</th>
-                  <th>{t('lnPrincipalShort')}</th>
-                  <th>{t('lnInterestShort')}</th>
-                  <th>{t('total')}</th>
-                  <th>{t('lnBalanceAfter')}</th>
-                  <th>{t('lnPaidShort')}</th>
-                  <th>{t('status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loan.schedule.map((r) => {
-                  running = Math.max(0, Math.round((running - r.principal) * 100) / 100);
-                  const chip = STATE_CHIPS[r.state];
-                  const paid = r.paid_principal + r.paid_interest;
-                  return (
-                    <tr key={r.no} className={`is-line is-${r.state}${loan.next?.no === r.no ? ' is-next' : ''}`}>
-                      <td>{r.no}</td>
-                      <td>{showDate(r.due_date)}</td>
-                      <td>{formatNumber(r.principal)}</td>
-                      <td>{formatNumber(r.interest)}</td>
-                      <td><b>{formatNumber(r.payment)}</b></td>
-                      <td>{formatNumber(running)}</td>
-                      <td>{paid ? formatNumber(paid) : '—'}</td>
-                      <td><span className={`acc-ln-state is-${r.state}`}><i className={`fa-solid ${chip.icon}`} /> {t(chip.label)}</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : !loan.payments.length ? (
-          <div className="acc-class-empty"><i className="fa-solid fa-receipt" /><p>{t('lnNoPayments')}</p></div>
-        ) : (
-          <div className="acc-rp-scroll acc-ln-table-wrap">
-            <table className="acc-fs-table acc-ln-table">
-              <thead>
-                <tr>
-                  <th>{t('lnPayDate')}</th>
-                  <th>{t('lnPaymentNo')}</th>
-                  <th>{t('lnAccount')}</th>
-                  <th>{t('lnPrincipalShort')}</th>
-                  <th>{t('lnInterestShort')}</th>
-                  <th>{t('lnFee')}</th>
-                  <th>{t('total')}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {loan.payments.map((p) => {
-                  const cancelled = Number(p.status) !== 1;
-                  return (
-                    <tr key={p._uuid} className={`is-line${cancelled ? ' is-cancelled' : ''}`}>
-                      <td>{showDate(p.pay_date)}</td>
-                      <td>
-                        <b>{p.number}</b>
-                        <small className="acc-gl-ref">{[p.entry_number, p.reference].filter(Boolean).join(' · ')}</small>
-                      </td>
-                      <td>{p.treasury?.acountName ?? '—'}</td>
-                      <td>{formatNumber(p.principal)}</td>
-                      <td>{formatNumber(p.interest)}</td>
-                      <td>{p.fee ? formatNumber(p.fee) : '—'}</td>
-                      <td><b>{money(p.total, cur)}</b></td>
-                      <td className="acc-fa-actions">
-                        {cancelled ? <span className="acc-ln-state is-closed">{t('lnCancelled')}</span> : canDelete && (
-                          <button type="button" className="is-danger" onClick={() => cancelPayment(p._uuid, p.number)} title={t('lnCancelPayment')} aria-label={t('lnCancelPayment')}>
-                            <i className="fa-solid fa-rotate-left" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {tab === 'schedule'
+          ? <ScheduleTable rows={loan.schedule} principal={loan.principal} nextNo={loan.next?.no} />
+          : <PaymentsTable payments={loan.payments} currency={cur} onCancel={(p) => cancelPayment(p._uuid, p.number)} />}
       </Modal.Body>
 
       {paying && <LoanPayForm loan={loan} onClose={() => setPaying(false)} onSaved={changed} />}

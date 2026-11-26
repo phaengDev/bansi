@@ -47,7 +47,7 @@ type BudgetSummary = {
 type RecurringDue = { due: number };
 
 /** ງວດເງິນກູ້ທີ່ຕ້ອງຈ່າຍ / ຮັບ: ກາຍກຳນົດ ຫຼື ຄົບກຳນົດພາຍໃນ LOAN_DUE_DAYS ມື້ */
-type LoanDue = { id: number; direction: number; name: string; no: number; date: string; days: number; amount: number; symbol: string; overdue: number }[];
+type LoanDue = { id: number; direction: number; name: string; no: number; date: string; days: number; amount: number; symbol: string; overdue: number; credit: boolean }[];
 
 type Glance = {
   loans?: LoanDue | Failed;
@@ -210,6 +210,8 @@ const loadLoanDue = async (): Promise<LoanDue> => {
       // ກາຍກຳນົດ = ຍອດທີ່ຄ້າງທັງໝົດ, ບໍ່ດັ່ງນັ້ນ = ງວດຕໍ່ໄປ
       amount: l.overdue_count ? l.overdue_amount : l.next!.amount,
       symbol: l.currency?.genus || l.currency?.name || BASE, overdue: l.overdue_count,
+      // ສັນຍາສິນເຊື່ອ (ມີລູກຄ້າ) — ລວມເປັນລາຍການດຽວ ບໍ່ດັ່ງນັ້ນລູກຄ້າຫຼາຍຄົນຈະລົ້ນລາຍການ
+      credit: !!l.customer_id,
     }))
     .filter((l) => l.overdue > 0 || l.days <= LOAN_DUE_DAYS)
     .sort((a, b) => a.days - b.days);
@@ -489,7 +491,9 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   };
   /** ເງິນກູ້ — ບໍ່ມີບັດຂອງຕົນເອງ, ຂຶ້ນແຕ່ງວດທີ່ຮອດກຳນົດໃນ "ຕ້ອງຕິດຕາມ" */
   const loansOpen = accessOf('loans') === 'open';
-  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none', loansOpen ? 'open' : 'none'].join('|');
+  /** ສັນຍາສິນເຊື່ອ — ງວດທີ່ຄ້າງ / ໃກ້ຮອດ ລວມເປັນລາຍການດຽວ ເປີດໜ້າຕ່າງ ຄຳຮ້ອງ ແລະ ສັນຍາ */
+  const creditOpen = accessOf('creditContracts') === 'open';
+  const accessKey = [...Object.values(access), Object.values(hrAccess).some(Boolean) ? 'open' : 'none', journalOpen ? 'open' : 'none', loansOpen || creditOpen ? 'open' : 'none'].join('|');
 
   const refresh = useCallback(() => setTick((n) => n + 1), []);
 
@@ -707,7 +711,7 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
   hrTodo('hr-company-docs', hr?.company_docs, 'fa-folder-open', 'cdDueTitle', 'hr', 'cdDueSub', () => requestRailKey('hr', 'company'));
   // ງວດເງິນກູ້: ກາຍກຳນົດ (ແດງ) / ຄົບກຳນົດພາຍໃນ 7 ມື້ — ເປີດ ເງິນກູ້ ທີ່ແຖບຂອງມັນ
   const loanDue = isFailed(data?.loans) ? undefined : data?.loans;
-  loanDue?.forEach((l) => {
+  loanDue?.filter((l) => !l.credit && loansOpen).forEach((l) => {
     const borrowed = l.direction === BORROWED;
     todos.push({
       key: `loan${l.id}`, tone: l.overdue ? 'danger' : 'warn', icon: borrowed ? 'fa-sack-dollar' : 'fa-hand-holding-dollar',
@@ -717,6 +721,19 @@ const DesktopGlance = ({ menus, openShortcut, openWindows, onHide }: {
         : `${t('lnInstallmentNo')} ${l.no} · ${l.days === 0 ? t('glanceDueToday') : `${t('glanceDueIn')} ${l.days} ${t('glanceDays')}`}`,
       amount: money(l.symbol, l.amount),
       target: 'loans', before: () => requestRailKey('loans', borrowed ? 'borrowed' : 'lent'),
+    });
+  });
+  // ສັນຍາສິນເຊື່ອ: ກາຍກຳນົດ (ແດງ) / ຄົບກຳນົດພາຍໃນ 7 ມື້ — ລວມຕາມຈຳນວນສັນຍາ
+  const creditDue = creditOpen ? (loanDue ?? []).filter((l) => l.credit) : [];
+  ([['overdue', creditDue.filter((l) => l.overdue > 0)], ['soon', creditDue.filter((l) => !l.overdue)]] as const).forEach(([kind, list]) => {
+    if (!list.length) return;
+    const symbol = list[0].symbol;
+    todos.push({
+      key: `credit-${kind}`, tone: kind === 'overdue' ? 'danger' : 'warn', icon: 'fa-file-signature',
+      title: t(kind === 'overdue' ? 'glanceCreditOverdue' : 'glanceCreditDue'),
+      sub: t('glanceCreditContracts').replace('{n}', String(list.length)),
+      amount: money(symbol, list.filter((l) => l.symbol === symbol).reduce((n, l) => n + l.amount, 0)),
+      target: 'creditContracts', before: () => requestRailKey('creditContracts', 'contracts'),
     });
   });
   if (ar) debtTodos('ar', ar.overdue, 'danger');

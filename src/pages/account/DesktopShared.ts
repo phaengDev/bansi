@@ -118,6 +118,9 @@ export type ShortcutId =
   | 'fixedAssets'
   | 'closing'
   | 'loans'
+  | 'creditCustomers'
+  | 'creditContracts'
+  | 'creditSettings'
   | 'employees'
   | 'tasks'
   | 'hr'
@@ -137,6 +140,9 @@ export const shortcutNameKeys: Record<ShortcutId, string> = {
   fixedAssets: 'accountAppFixedAssets',
   closing: 'accountAppClosing',
   loans: 'accountAppLoans',
+  creditCustomers: 'accountAppCreditCustomers',
+  creditContracts: 'accountAppCreditContracts',
+  creditSettings: 'accountAppCreditSettings',
   journal: 'accountAppJournal',
   chartOfAccounts: 'accountAppChartOfAccounts',
   generalLedger: 'accountAppGeneralLedger',
@@ -175,6 +181,9 @@ export const shortcutDescKeys: Partial<Record<ShortcutId, string>> = {
   fixedAssets: 'accountAppFixedAssetsDesc',
   closing: 'accountAppClosingDesc',
   loans: 'accountAppLoansDesc',
+  creditCustomers: 'accountAppCreditCustomersDesc',
+  creditContracts: 'accountAppCreditContractsDesc',
+  creditSettings: 'accountAppCreditSettingsDesc',
   employees: 'accountAppEmployeesDesc',
   tasks: 'accountAppTasksDesc',
   hr: 'accountAppHrDesc',
@@ -209,6 +218,10 @@ export const shortcuts: ReadonlyArray<{
   { id: 'fixedAssets', icon: 'fa-building', tone: 'gold', path: '/account/fixed-assets', popup: true },
   { id: 'closing', icon: 'fa-clipboard-check', tone: 'violet', path: '/account/closing', popup: true },
   { id: 'loans', icon: 'fa-sack-dollar', tone: 'coral', path: '/account/loans', popup: true },
+  // ລະບົບສິນເຊື່ອ (/credit/…) — ຂຶ້ນສະເພາະບໍລິສັດທີ່ເປີດໃຊ້ (ຕັ້ງຄ່າບັນຊີ → ຕັ້ງຄ່າທົ່ວໄປ → use_credit)
+  { id: 'creditCustomers', icon: 'fa-address-card', tone: 'sky', path: '/credit/customers', popup: true },
+  { id: 'creditContracts', icon: 'fa-file-signature', tone: 'emerald', path: '/credit/contracts', popup: true },
+  { id: 'creditSettings', icon: 'fa-sliders', tone: 'slate', path: '/credit/settings', popup: true },
   { id: 'employees', icon: 'fa-id-card', tone: 'cyan', path: '/hr/employees', popup: true },
   { id: 'tasks', icon: 'fa-list-check', tone: 'sky', path: '/hr/tasks', popup: true },
   { id: 'hr', icon: 'fa-users-gear', tone: 'violet', path: '/hr', popup: true },
@@ -233,8 +246,8 @@ export const TRAY_APPS: ShortcutId[] = ['calendar'];
 
 export type ShortcutPosition = { x: number; y: number };
 
-/** ເມນູຂອງລະບົບສິນເຊື່ອ / ເງິນກູ້ (path ຂຶ້ນຕົ້ນ /account/ ແຕ່ເປັນກຸ່ມຂອງຕົນເອງ) */
-const isLoanPath = (path: string) => path === '/account/loans' || path.startsWith('/account/loans/');
+/** ເມນູຂອງລະບົບສິນເຊື່ອ (/credit/…) ແລະ ເງິນກູ້ (/account/loans — path ຂຶ້ນຕົ້ນ /account/ ແຕ່ເປັນກຸ່ມຂອງຕົນເອງ) */
+const isLoanPath = (path: string) => path === '/account/loans' || path.startsWith('/account/loans/') || path.startsWith('/credit/');
 
 /**
  * ກຸ່ມຂອງເມນູ (ຕາມ path) — ໃຊ້ຮ່ວມກັນທັງກອບເທິງ desktop ແລະ ຟອມສິດເຂົ້າເມນູ (ຕິກທັງກຸ່ມ, UserPage).

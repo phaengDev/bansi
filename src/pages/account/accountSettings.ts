@@ -18,6 +18,8 @@ export type AccountSetting = {
   use_withholding: number;
   use_fx_revaluation: number;
   use_bank_reconciliation: number;
+  /** ລະບົບສິນເຊື່ອ — 0 = ປິດ (ເມນູສິນເຊື່ອບໍ່ຂຶ້ນ) */
+  use_credit?: number;
   /** ປິດງວດຮອດວັນທີນີ້ (YYYY-MM-DD) — null = ຍັງບໍ່ປິດງວດໃດ */
   lock_date: string | null;
   profit_tax_rate: number | string;
@@ -29,7 +31,7 @@ export type AccountSetting = {
 };
 
 /** ຟັງຊັນທີ່ບໍລິສັດເປີດ/ປິດໄດ້ — ປິດ = ເມນູ ແລະ ໜ້າທີ່ກ່ຽວຂ້ອງບໍ່ຂຶ້ນ */
-export type FeatureKey = 'use_vat' | 'use_fixed_assets' | 'use_withholding' | 'use_fx_revaluation' | 'use_bank_reconciliation';
+export type FeatureKey = 'use_vat' | 'use_fixed_assets' | 'use_withholding' | 'use_fx_revaluation' | 'use_bank_reconciliation' | 'use_credit';
 
 /** ຟັງຊັນທີ່ມີສະເພາະແບບຄົບຕາມມາດຕະຖານ — ແບບທຳມະດາປິດສະເໝີ (ບໍ່ສະແດງໃນໜ້າຕັ້ງຄ່າ) */
 export const COMPLIANCE_FEATURES: FeatureKey[] = ['use_vat', 'use_withholding', 'use_fx_revaluation'];
@@ -49,6 +51,7 @@ export const DEFAULT_ACCOUNT_SETTING: AccountSetting = {
   use_withholding: 0,
   use_fx_revaluation: 0,
   use_bank_reconciliation: 1,
+  use_credit: 0,
   lock_date: null,
   profit_tax_rate: 20,
   policies: null,

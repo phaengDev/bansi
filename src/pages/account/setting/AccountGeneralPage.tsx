@@ -31,6 +31,7 @@ const FEATURES: { key: FeatureKey; icon: string; title: string; hint: string }[]
   { key: 'use_vat', icon: 'fa-receipt', title: 'acgVat', hint: 'acgVatHint' },
   { key: 'use_fixed_assets', icon: 'fa-building', title: 'acgFixedAssets', hint: 'acgFixedAssetsHint' },
   { key: 'use_bank_reconciliation', icon: 'fa-scale-unbalanced-flip', title: 'acgBankRec', hint: 'acgBankRecHint' },
+  { key: 'use_credit', icon: 'fa-handshake', title: 'acgCredit', hint: 'acgCreditHint' },
   { key: 'use_withholding', icon: 'fa-hand-holding-dollar', title: 'acgWithholding', hint: 'acgWithholdingHint' },
   { key: 'use_fx_revaluation', icon: 'fa-arrow-right-arrow-left', title: 'acgFxReval', hint: 'acgFxRevalHint' },
 ];

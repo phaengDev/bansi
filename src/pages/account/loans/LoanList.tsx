@@ -42,7 +42,8 @@ const LoanList = ({ direction }: { direction: Direction }) => {
   if (notReady) return <GlNotReady />;
   if (error) return <div className="acc-class-empty"><i className="fa-solid fa-triangle-exclamation" /><p>{error}</p></div>;
 
-  const rows = all.filter((r) => r.direction === direction);
+  // ສັນຍາສິນເຊື່ອ (ມີລູກຄ້າ) ຢູ່ໜ້າຕ່າງ ຄຳຮ້ອງ ແລະ ສັນຍາ — ບໍ່ສະແດງຊ້ຳຢູ່ນີ້
+  const rows = all.filter((r) => r.direction === direction && !r.customer_id);
   const active = rows.filter((r) => !r.closed);
   const q = keyword.trim().toLowerCase();
   const shown = rows

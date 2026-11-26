@@ -350,6 +350,28 @@ export const LOAN_MENU: SidebarPopupGroup[] = [
   },
 ];
 
+/** ລະບົບສິນເຊື່ອ — ຄຳຮ້ອງ (ພິຈາລະນາ / ປ່ອຍກູ້) ແລະ ສັນຍາ (ຮັບຊຳລະ) */
+export const CREDIT_CONTRACTS_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppCreditContracts',
+    items: [
+      { key: 'applications', icon: 'fa-solid fa-file-pen', label: 'crApplicationsMenu' },
+      { key: 'contracts', icon: 'fa-solid fa-file-signature', label: 'crContractsMenu' },
+    ],
+  },
+];
+
+/** ລະບົບສິນເຊື່ອ — ຜະລິດຕະພັນ ແລະ ເກນຈັດຊັ້ນໜີ້ */
+export const CREDIT_SETTINGS_MENU: SidebarPopupGroup[] = [
+  {
+    group: 'accountAppCreditSettings',
+    items: [
+      { key: 'products', icon: 'fa-solid fa-box-open', label: 'crProductsMenu' },
+      { key: 'rules', icon: 'fa-solid fa-layer-group', label: 'crRulesMenu' },
+    ],
+  },
+];
+
 /** ຈັດການບໍລິສັດ (ເຈົ້າຂອງລະບົບ) */
 export const PLATFORM_MENU: SidebarPopupGroup[] = [
   {
