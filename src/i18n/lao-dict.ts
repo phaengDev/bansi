@@ -4384,6 +4384,7 @@ export const laoDict = {
   crPaidPct: { la: 'ຈ່າຍຕົ້ນທຶນແລ້ວ {p}%', en: '{p}% of principal repaid', cn: '已还本金 {p}%' },
   crPendingApps: { la: 'ຄຳຮ້ອງທີ່ຄ້າງ', en: 'Open applications', cn: '待处理申请' },
   crBorrower: { la: 'ຜູ້ກູ້', en: 'Borrower', cn: '借款人' },
+  mySeeAllNotifications: { la: 'ເບິ່ງແຈ້ງເຕືອນທັງໝົດ', en: 'See all notifications', cn: '查看全部通知' },
 } satisfies Record<string, LaoDictEntry> ;
 
 export type LaoDictKey = keyof typeof laoDict;

@@ -2,10 +2,9 @@ import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useT } from '../../context/LanguageContext';
 import { isFolderId, type DesktopFolder, type LifeOutletContext, type ShortcutId } from './DesktopShared';
-import { useMyEmployee, type AccountMenu } from './accountMenus';
+import type { AccountMenu } from './accountMenus';
 import DesktopGlance, { useGlanceHidden } from './DesktopGlance';
 import { useHrPending } from '../hr/hrPending';
-import { pendingApprovals, unreadNotifications, useMyInbox } from '../me/meInbox';
 
 type DragState = {
   id: string;
@@ -55,9 +54,6 @@ const AccountDesktopMenu: React.FC = () => {
   const dragStateRef = useRef<DragState | null>(null);
   const wasDraggingRef = useRef(false);
   const pending = useHrPending();
-  // ພື້ນທີ່ຂອງຂ້ອຍ (ບັນຊີທີ່ຜູກກັບພະນັກງານ): ຄຳຂໍທີ່ລໍຂ້ອຍອະນຸມັດ ແລະ ແຈ້ງເຕືອນທີ່ຍັງບໍ່ອ່ານ
-  const myEmployee = useMyEmployee();
-  const inbox = useMyInbox(!!myEmployee);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   /** ໄອຄອນທີ່ກຳລັງຖືກທັບ — ປ່ອຍຕອນນີ້ = ລວມເປັນກຸ່ມ (ຫຼື ສະລັບລຳດັບ ຖ້າລາກຢູ່ໃນກຸ່ມ) */
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -236,12 +232,10 @@ const AccountDesktopMenu: React.FC = () => {
   };
 
   /**
-   * ຕົວເລກສີແດງຂອງໄອຄອນ = ຄຳຮ້ອງທີ່ລໍຖ້າ HR (ການເຂົ້າ-ອອກວຽກ: ລາພັກ + ລືມສະແກນ; ເງິນເດືອນ: ເບີກເງິນລໍຖ້າອະນຸມັດ / ຈ່າຍ);
-   * ທີມ ແລະ ອະນຸມັດ = ລໍຂ້ອຍອະນຸມັດ; ແຈ້ງເຕືອນຂອງຂ້ອຍ = ຍັງບໍ່ອ່ານ
+   * ຕົວເລກສີແດງຂອງໄອຄອນ = ຄຳຮ້ອງທີ່ລໍຖ້າ HR (ການເຂົ້າ-ອອກວຽກ: ລາພັກ + ລືມສະແກນ; ເງິນເດືອນ: ເບີກເງິນລໍຖ້າອະນຸມັດ / ຈ່າຍ).
+   * ຂອງຂ້ອຍ (ລໍອະນຸມັດ / ແຈ້ງເຕືອນ) ບອກຢູ່ປຸ່ມ "ຂອງຂ້ອຍ" ໃນ taskbar (MySpaceTray)
    */
   const badgeOf = (id: string) => {
-    if (id === 'myTeam') return pendingApprovals(inbox);
-    if (id === 'myInbox') return unreadNotifications(inbox);
     if (!pending) return 0;
     if (id === 'attendance') return pending.leave + pending.correction;
     if (id === 'payroll') return pending.advance + pending.advance_to_pay;

@@ -22,7 +22,8 @@ import HrWindow from '../hr/HrWindow';
 import EmployeePage from '../hr/EmployeePage';
 import TaskPage from '../hr/task/TaskPage';
 import MyWindow from '../me/MyWindow';
-import { useMyPageRequest } from '../me/meNav';
+import { MY_WINDOWS, useMyPageRequest } from '../me/meNav';
+import MySpaceTray from '../me/MySpaceTray';
 import { MY_INBOX_MENU, MY_PAY_MENU, MY_TASKS_MENU, MY_TEAM_MENU, MY_WORK_MENU } from './config/SidebarPopup';
 import AttendanceWindow from '../hr/attendance/AttendanceWindow';
 import PayrollWindow from '../hr/payroll/PayrollWindow';
@@ -97,6 +98,8 @@ const MODULE_PAGES: Partial<Record<ShortcutId, React.ReactNode>> = {
 };
 
 /** ໜ້າຕ່າງຂອງລະບົບສິນເຊື່ອ — ຂຶ້ນເມື່ອເປີດ use_credit */
+/** ໜ້າຕ່າງຂອງຂ້ອຍ — ຢູ່ໃນກ່ອງ "ຂອງຂ້ອຍ" ຂອງ taskbar ແທນກອບເທິງ desktop */
+const MY_WINDOW_IDS: ShortcutId[] = MY_WINDOWS.map((w) => w.id);
 const CREDIT_WINDOWS: ShortcutId[] = ['creditOverview', 'creditCustomers', 'creditApplications', 'creditContracts', 'creditCollections', 'creditClassification', 'creditReports', 'creditSettings'];
 
 /**
@@ -145,8 +148,12 @@ const AccountShell: React.FC = () => {
     return !feature || (settingLoaded && featureOn(setting, feature));
   });
   const menusLoaded = useAccountMenusLoaded();
-  /** ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop — ປະຕິທິນບໍ່ຢູ່ desktop (ເປີດຈາກປຸ່ມໃນ taskbar ທາງຂວາ / Start menu) */
-  const desktopLayout = useDesktopLayout(menus.filter((menu) => !TRAY_APPS.includes(menu.id)).map((menu) => menu.id));
+  /**
+   * ຕຳແໜ່ງໄອຄອນ ແລະ ກຸ່ມໄອຄອນເທິງ desktop — ປະຕິທິນ ແລະ ໜ້າຕ່າງຂອງຂ້ອຍບໍ່ຢູ່ desktop
+   * (ເປີດຈາກປຸ່ມໃນ taskbar ທາງຂວາ: ປະຕິທິນ / ກ່ອງ "ຂອງຂ້ອຍ" — ຫຼື Start menu)
+   */
+  const desktopLayout = useDesktopLayout(menus.filter((menu) => !TRAY_APPS.includes(menu.id) && !MY_WINDOW_IDS.includes(menu.id)).map((menu) => menu.id));
+  const myMenus = MY_WINDOW_IDS.flatMap((id) => menus.find((menu) => menu.id === id) ?? []);
   const menuOf = (id: ShortcutId) => menus.find((menu) => menu.id === id);
   const menuName = (id: ShortcutId) => menuOf(id)?.name ?? t(shortcutNameKeys[id]);
   /** ເມນູທີ່ກຳລັງຖາມລະຫັດຜ່ານ (null = ບໍ່ມີ) */
@@ -758,6 +765,7 @@ const AccountShell: React.FC = () => {
         <div className="life-taskbar-tray" aria-label={`${time}, ${date}`}>
           {/* ທົດລອງໃຊ້ / ໃກ້ໝົດອາຍຸ / ໝົດອາຍຸ — ບໍ່ຂຶ້ນເມື່ອແພັກເກດບໍ່ມີວັນໝົດອາຍຸ */}
           <PlanBadge />
+          <MySpaceTray menus={myMenus} onOpenMenu={openShortcut} openIds={MY_WINDOW_IDS.filter((id) => popupWindows[id]?.open)} />
           {TRAY_APPS.filter((id) => menuOf(id)).map((id) => (
             <button
               key={id}
