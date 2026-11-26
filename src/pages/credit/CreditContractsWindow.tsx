@@ -12,6 +12,9 @@ import { money, showDate } from '../account/loans/loanApi';
 import ApplicationForm from './ApplicationForm';
 import ApplicationDetail from './ApplicationDetail';
 import ContractDetail from './ContractDetail';
+import CreditOverview from './CreditOverview';
+import CollectionsPage from './CollectionsPage';
+import { DaysLateChip } from './collectKit';
 import { useCreditList, type Application, type Contract } from './creditApi';
 import { AppStatusChip, creditTermText } from './creditKit';
 
@@ -161,7 +164,7 @@ const ContractsPage = () => {
           { label: t('crContractsActive'), value: active.length },
           { label: t('crDisbursedTotal'), value: totalsText(rows, (r) => r.principal) },
           { label: t('lnOutstanding'), value: totalsText(active, (r) => r.outstanding), tone: 'green' },
-          { label: t('crIncomeEarned'), value: totalsText(rows, (r) => r.paid_interest + r.paid_fee + (r.upfront_fee || 0)), tone: 'gold' },
+          { label: t('crIncomeEarned'), value: totalsText(rows, (r) => r.paid_interest + r.paid_fee + (r.upfront_fee || 0) + (r.paid_penalty || 0)), tone: 'gold' },
           ...(dueToday.length ? [{ label: t('crDueToday'), value: dueToday.length, tone: 'violet' as const }] : []),
           ...(rows.some(test.overdue) ? [{ label: t('lnOverdue'), value: rows.filter(test.overdue).length, tone: 'red' as const }] : []),
         ]}
@@ -226,9 +229,8 @@ const ContractsPage = () => {
                           <small className="acc-gl-ref">{t('lnInstallmentNo')} {r.next.no} · {showDate(r.next.due_date)}</small>
                         </>
                       ) : '—'}
-                      {r.overdue_count > 0 && (
-                        <span className="hr-expiry-chip is-over"><i className="fa-solid fa-triangle-exclamation" /> {t('lnOverdueN').replace('{n}', String(r.overdue_count))}</span>
-                      )}
+                      <DaysLateChip days={r.days_overdue} aging={r.aging} />
+                      {r.penalty_due > 0 && <small className="acc-gl-ref">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
                     </td>
                   </tr>
                 );
@@ -248,7 +250,9 @@ const CreditContractsWindow = () => {
   const railNav = useMemo(() => toRailNav(CREDIT_CONTRACTS_MENU, t), [t]);
   const [activeKey, setActiveKey] = useRailKey('creditContracts', CREDIT_CONTRACTS_MENU);
   const active = railNav.find((item) => item.key === activeKey);
-  const pages: Record<string, ReactNode> = { applications: <ApplicationsPage />, contracts: <ContractsPage /> };
+  const pages: Record<string, ReactNode> = {
+    overview: <CreditOverview />, applications: <ApplicationsPage />, contracts: <ContractsPage />, collections: <CollectionsPage />,
+  };
   return (
     <AppPage title={active?.label ?? t('accountAppCreditContracts')} subtitle={t('accountAppCreditContracts')}
       railNav={railNav} railActiveKey={activeKey} onRailSelect={setActiveKey}

@@ -238,6 +238,70 @@ export type ApplicationDetail = Application & {
   loan: { _uuid: number; loan_code: string } | null;
 };
 
+/** ກຸ່ມອາຍຸໜີ້ (ມື້ກາຍກຳນົດ) — key ກົງກັບ AGING ຂອງ backend (creditPenalty) */
+export const AGING_BUCKETS = [
+  { key: 'current', label: 'crAgeCurrent', tone: 'is-current' },
+  { key: 'd1_30', label: 'crAge1', tone: 'is-a1' },
+  { key: 'd31_60', label: 'crAge31', tone: 'is-a2' },
+  { key: 'd61_90', label: 'crAge61', tone: 'is-a3' },
+  { key: 'd91_180', label: 'crAge91', tone: 'is-a4' },
+  { key: 'd180', label: 'crAge180', tone: 'is-a5' },
+] as const;
+export type AgingKey = (typeof AGING_BUCKETS)[number]['key'];
+export const agingTone = (key: string | undefined) => AGING_BUCKETS.find((b) => b.key === key)?.tone ?? 'is-current';
+/** ມື້ກາຍກຳນົດ → ກຸ່ມອາຍຸໜີ້ (ຄືກັບ agingOf ຂອງ backend) */
+export const agingOfDays = (days: number): AgingKey =>
+  days <= 0 ? 'current' : days <= 30 ? 'd1_30' : days <= 60 ? 'd31_60' : days <= 90 ? 'd61_90' : days <= 180 ? 'd91_180' : 'd180';
+
+/** tbl_loan_payment.payment_type */
+export const PAYMENT_TYPES: Record<number, { label: string; icon: string }> = {
+  1: { label: 'crPayRegular', icon: 'fa-calendar-check' },
+  2: { label: 'crPayPrepay', icon: 'fa-forward' },
+  3: { label: 'crPayOff', icon: 'fa-flag-checkered' },
+};
+
+/** tbl_loan_collection.method / result */
+export const FOLLOW_METHODS = [
+  { value: 1, label: 'crFmCall', icon: 'fa-phone' },
+  { value: 2, label: 'crFmSms', icon: 'fa-comment-sms' },
+  { value: 3, label: 'crFmVisit', icon: 'fa-person-walking' },
+  { value: 4, label: 'crFmLetter', icon: 'fa-envelope-open-text' },
+  { value: 5, label: 'crFmLegal', icon: 'fa-gavel' },
+];
+export const FOLLOW_RESULTS = [
+  { value: 1, label: 'crFrPromise', icon: 'fa-handshake', tone: 'is-promise' },
+  { value: 2, label: 'crFrNoAnswer', icon: 'fa-phone-slash', tone: 'is-noanswer' },
+  { value: 3, label: 'crFrRefused', icon: 'fa-hand', tone: 'is-refused' },
+  { value: 4, label: 'crFrPaid', icon: 'fa-circle-check', tone: 'is-paid' },
+];
+
+export type PenaltyRow = { no: number; due_date: string; days_late: number; base: number; accrued: number; paid: number; waived: number; due: number };
+export type PenaltyState = { rows: PenaltyRow[]; accrued: number; paid: number; waived: number; due: number; days_overdue: number };
+export type Waiver = { _uuid: number; installment_no: number; date: string; amount: number; reason: string | null; by: string | null };
+export type FollowUp = {
+  _uuid: number;
+  loan_id: number;
+  contact_date: string;
+  method: number;
+  result: number;
+  promise_date: string | null;
+  promise_amount: number;
+  note: string | null;
+  by: string | null;
+};
+export type Split = { penalty: number; interest: number; principal: number; fee: number; total: number; payment_type: number; outstanding_after: number };
+export type Quote = {
+  date: string;
+  penalty_due: number;
+  days_overdue: number;
+  outstanding: number;
+  presets: { next: number; due: number; payoff: number };
+  next: { no: number; due_date: string; interest: number; principal: number } | null;
+  due_count: number;
+  split: Split | null;
+  error: string | null;
+};
+
 /** ສັນຍາສິນເຊື່ອ = ເງິນໃຫ້ກູ້ (tbl_loan direction 2) ທີ່ມາຈາກຄຳຮ້ອງ — ໃຊ້ຕາຕະລາງຜ່ອນ / ການຊຳລະ ຂອງເງິນກູ້ */
 export type Contract = Loan & {
   customer_id: number;
@@ -245,6 +309,11 @@ export type Contract = Loan & {
   application_id: number | null;
   upfront_fee: number;
   frequency_days: number | null;
+  /** ຄ່າປັບຄ້າງ / ຈ່າຍແລ້ວ, ມື້ກາຍກຳນົດຂອງງວດເກົ່າສຸດ, ກຸ່ມອາຍຸໜີ້ (ຮອດມື້ນີ້) */
+  penalty_due: number;
+  paid_penalty: number;
+  days_overdue: number;
+  aging: AgingKey;
   customer: { _uuid: number; code: string; name: string; phone: string | null } | null;
   product: { _uuid: number; code: string; name: string } | null;
 };
@@ -256,10 +325,18 @@ export type ContractDetail = Omit<LoanDetail, 'payments'> & Omit<Contract, 'cust
   application: { _uuid: number; application_no: string } | null;
   collaterals: Collateral[];
   guarantors: Guarantor[];
-  payments: (LoanPayment & { penalty: number })[];
+  payments: ContractPayment[];
   penalty_rate: number;
   grace_days: number;
+  penalty: PenaltyState;
+  waivers: Waiver[];
+  collections: FollowUp[];
 };
+
+export type ContractPayment = LoanPayment & { penalty: number; payment_type: number; balance_after: number | null };
+
+/** ແຖວໃນໜ້າ ຕິດຕາມໜີ້ */
+export type CollectionRow = Contract & { last_contact: FollowUp | null; contacts: number };
 
 /** ດຶງລາຍການ (GET) + ລະຫັດຖັດໄປ */
 export const useCreditList = <T,>(path: string) => {

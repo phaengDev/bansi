@@ -350,13 +350,15 @@ export const LOAN_MENU: SidebarPopupGroup[] = [
   },
 ];
 
-/** ລະບົບສິນເຊື່ອ — ຄຳຮ້ອງ (ພິຈາລະນາ / ປ່ອຍກູ້) ແລະ ສັນຍາ (ຮັບຊຳລະ) */
+/** ລະບົບສິນເຊື່ອ — ພາບລວມ, ຄຳຮ້ອງ (ພິຈາລະນາ / ປ່ອຍກູ້), ສັນຍາ (ຮັບຊຳລະ) ແລະ ຕິດຕາມໜີ້ */
 export const CREDIT_CONTRACTS_MENU: SidebarPopupGroup[] = [
   {
     group: 'accountAppCreditContracts',
     items: [
+      { key: 'overview', icon: 'fa-solid fa-chart-pie', label: 'crOverviewMenu' },
       { key: 'applications', icon: 'fa-solid fa-file-pen', label: 'crApplicationsMenu' },
       { key: 'contracts', icon: 'fa-solid fa-file-signature', label: 'crContractsMenu' },
+      { key: 'collections', icon: 'fa-solid fa-phone-volume', label: 'crCollectionsMenu' },
     ],
   },
 ];

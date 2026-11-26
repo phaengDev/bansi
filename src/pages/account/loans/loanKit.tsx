@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { formatNumber } from '../../../utils/configApi';
 import { canDelete } from '../../../utils/localStorage';
 import { useT } from '../../../context/LanguageContext';
@@ -56,11 +57,16 @@ export const ScheduleTable = ({ rows, principal, nextNo, preview }: {
   );
 };
 
-/** ປະຫວັດການຈ່າຍ / ຮັບ — ຍົກເລີກໄດ້ (ກັບລາຍການບັນຊີ). ໃຊ້ຮ່ວມ: ລາຍລະອຽດເງິນກູ້ ແລະ ສັນຍາສິນເຊື່ອ */
-export const PaymentsTable = ({ payments, currency, onCancel }: {
-  payments: (LoanPayment & { penalty?: number })[];
+/**
+ * ປະຫວັດການຈ່າຍ / ຮັບ — ຍົກເລີກໄດ້ (ກັບລາຍການບັນຊີ). ໃຊ້ຮ່ວມ: ລາຍລະອຽດເງິນກູ້ ແລະ ສັນຍາສິນເຊື່ອ
+ * (onPrint = ພິມໃບຮັບເງິນ, badge = ປ້າຍທ້າຍເລກ ເຊັ່ນ ປິດບັນຊີກ່ອນກຳນົດ)
+ */
+export const PaymentsTable = <P extends LoanPayment & { penalty?: number }>({ payments, currency, onCancel, onPrint, badge }: {
+  payments: P[];
   currency: LoanCurrency;
-  onCancel: (payment: LoanPayment) => void;
+  onCancel: (payment: P) => void;
+  onPrint?: (payment: P) => void;
+  badge?: (payment: P) => ReactNode;
 }) => {
   const t = useT();
   if (!payments.length) return <div className="acc-class-empty"><i className="fa-solid fa-receipt" /><p>{t('lnNoPayments')}</p></div>;
@@ -76,7 +82,8 @@ export const PaymentsTable = ({ payments, currency, onCancel }: {
             <th>{t('lnPrincipalShort')}</th>
             <th>{t('lnInterestShort')}</th>
             {hasPenalty && <th>{t('crPenalty')}</th>}
-            <th>{t('lnFee')}</th>
+            {/* ມີຖັນຄ່າປັບແຍກ (ສັນຍາສິນເຊື່ອ) → ຖັນນີ້ແມ່ນຄ່າທຳນຽມຢ່າງດຽວ */}
+            <th>{t(hasPenalty ? 'crFees' : 'lnFee')}</th>
             <th>{t('total')}</th>
             <th />
           </tr>
@@ -88,7 +95,7 @@ export const PaymentsTable = ({ payments, currency, onCancel }: {
               <tr key={p._uuid} className={`is-line${cancelled ? ' is-cancelled' : ''}`}>
                 <td>{showDate(p.pay_date)}</td>
                 <td>
-                  <b>{p.number}</b>
+                  <b>{p.number}</b> {badge?.(p)}
                   <small className="acc-gl-ref">{[p.entry_number, p.reference].filter(Boolean).join(' · ')}</small>
                 </td>
                 <td>{p.treasury?.acountName ?? '—'}</td>
@@ -98,6 +105,11 @@ export const PaymentsTable = ({ payments, currency, onCancel }: {
                 <td>{p.fee ? formatNumber(p.fee) : '—'}</td>
                 <td><b>{money(p.total, currency)}</b></td>
                 <td className="acc-fa-actions">
+                  {onPrint && !cancelled && (
+                    <button type="button" onClick={() => onPrint(p)} title={t('crPrintReceipt')} aria-label={t('crPrintReceipt')}>
+                      <i className="fa-solid fa-print" />
+                    </button>
+                  )}
                   {cancelled ? <span className="acc-ln-state is-closed">{t('lnCancelled')}</span> : canDelete && (
                     <button type="button" className="is-danger" onClick={() => onCancel(p)} title={t('lnCancelPayment')} aria-label={t('lnCancelPayment')}>
                       <i className="fa-solid fa-rotate-left" />

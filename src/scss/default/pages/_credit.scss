@@ -388,6 +388,489 @@
   &.is-E { background: linear-gradient(145deg, #6a727c, #2d3540); }
 }
 
+// =================== ໄລຍະ 2: ຮັບຊຳລະ, ໃບຮັບເງິນ, ຄ່າປັບ, ຕິດຕາມໜີ້, ພາບລວມ ===================
+
+// ---- ຟອມຮັບຊຳລະ ----
+.cr-penalty-note { color: #9c2025; font-size: 12px; font-weight: 700; }
+.cr-split-box {
+  .acc-book-summary { margin: 0; }
+  .acc-book-summary .is-penalty dd { color: #9c2025; font-weight: 700; }
+}
+.cr-split-after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 2px 0;
+  color: #5d6f7e;
+  font-size: 12.5px;
+
+  b { color: #16324a; }
+}
+
+.cr-pay-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #2b6cb0;
+  background: #e8f1fb;
+
+  &.is-2 { color: #5b3fc4; background: #efeafe; }
+  &.is-3 { color: #17805c; background: #e4f6ee; }
+}
+
+// ---- ໃບຮັບເງິນ (A5) ----
+.cr-receipt-modal .rs-modal-body { background: #eef2f5; padding: 16px; border-radius: 10px; }
+.cr-receipt {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 22px 24px 18px;
+  color: #16324a;
+  font-size: 12.5px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(20, 40, 60, 0.12);
+
+  &.is-cancelled::after {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    padding: 4px 18px;
+    color: rgba(196, 52, 58, 0.55);
+    font-size: 34px;
+    font-weight: 800;
+    border: 4px solid rgba(196, 52, 58, 0.45);
+    border-radius: 8px;
+    transform: translate(-50%, -50%) rotate(-18deg);
+    content: 'VOID';
+  }
+}
+.cr-receipt-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #16324a;
+
+  img { width: 46px; height: 46px; object-fit: contain; }
+  b { display: block; font-size: 15px; }
+  em { display: block; color: #5d6f7e; font-size: 11.5px; font-style: normal; }
+  small { display: block; color: #5d6f7e; font-size: 11px; }
+}
+.cr-receipt-title {
+  margin: 12px 0 8px;
+  text-align: center;
+
+  h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 0.02em; }
+  span { color: #5d6f7e; font-size: 11px; letter-spacing: 0.2em; }
+  strong { display: block; margin-top: 4px; color: #c4343a; }
+}
+.cr-receipt-meta {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 10px;
+
+  > div { display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 8px; }
+  dt { color: #5d6f7e; font-weight: 600; }
+  dd { margin: 0; }
+  dd small { color: #5d6f7e; }
+  &.is-after { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cfd8df; }
+}
+.cr-receipt-lines {
+  width: 100%;
+  border-collapse: collapse;
+
+  td { padding: 6px 4px; border-bottom: 1px solid #e6edf2; }
+  td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-size: 14px; font-weight: 800; border-top: 2px solid #16324a; border-bottom: 0; }
+}
+.cr-receipt-words { margin: 6px 0 0; padding: 6px 8px; font-style: italic; background: #f6f8fa; border-radius: 6px; }
+.cr-receipt-signs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 26px;
+  text-align: center;
+
+  span { padding-top: 34px; color: #3d5266; font-weight: 700; border-bottom: 1px dotted #8a9aa8; }
+}
+.cr-receipt-foot { display: block; margin-top: 12px; color: #8a9aa8; font-size: 10.5px; text-align: right; }
+
+// ---- ມື້ກາຍກຳນົດ (ສີຕາມອາຍຸໜີ້) ----
+.cr-late {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.is-current, &.is-a1 { color: #a25a07; background: #fff1dc; }
+  &.is-a2 { color: #b5480b; background: #ffe6d6; }
+  &.is-a3 { color: #c4343a; background: #fdecec; }
+  &.is-a4, &.is-a5 { color: #fff; background: #c4343a; }
+}
+.cr-text-bad { color: #c4343a; }
+
+// ---- ຄ່າປັບ / ການຍົກເວັ້ນ ----
+.cr-penalty {
+  margin-top: 12px;
+
+  tfoot td { padding-top: 8px; font-weight: 700; border-top: 2px solid #dfe6ec; }
+}
+.cr-waivers {
+  margin-top: 14px;
+
+  h5 { margin: 0 0 8px; color: #3d5266; font-size: 13px; font-weight: 800; }
+}
+.cr-waiver {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: #f6fcf9;
+  border: 1px solid #cdeedd;
+  border-radius: 10px;
+
+  > i { color: #17805c; }
+  small { display: block; color: #7b8a97; font-size: 11.5px; }
+}
+
+// ---- ປະຫວັດການຕິດຕາມ ----
+.cr-follow {
+  .is-promise .cr-timeline-dot { background: linear-gradient(145deg, #5fd0f5, #0a8fc2); }
+  .is-noanswer .cr-timeline-dot { background: linear-gradient(145deg, #b5c0c9, #8a9aa8); }
+  .is-refused .cr-timeline-dot { background: linear-gradient(145deg, #ff8b7c, #c4343a); }
+  .is-paid .cr-timeline-dot { background: linear-gradient(145deg, #1fae7f, #0d8a63); }
+}
+.cr-result {
+  &.is-promise { color: #0a6f99; }
+  &.is-noanswer { color: #6c7a87; }
+  &.is-refused { color: #c4343a; }
+  &.is-paid { color: #17805c; }
+}
+
+// ---- ໜ້າຕິດຕາມໜີ້ ----
+.cr-aging-card {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e6edf2;
+  border-radius: 14px;
+}
+.cr-aging-title {
+  b { display: block; color: #16324a; font-size: 14px; }
+  small { color: #7b8a97; font-size: 12px; }
+}
+.cr-aging { position: relative; display: grid; gap: 2px; }
+.cr-aging-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 120px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 3px 6px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+
+  &:hover, &:focus-visible { background: #f4f7f9; outline: none; }
+  &.is-active { background: #e8f1fb; }
+}
+button.cr-aging-row { cursor: pointer; }
+.cr-aging-name { color: #3d5266; font-size: 12.5px; font-weight: 600; }
+.cr-aging-track {
+  height: 14px;
+
+  i { display: block; height: 14px; background: #257de0; border-radius: 0 4px 4px 0; }
+  i.is-current { background: #b5c0c9; }
+}
+.cr-aging-value {
+  text-align: right;
+
+  b { color: #16324a; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  small { margin-left: 6px; color: #7b8a97; font-size: 11px; }
+}
+.cr-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 3px 10px;
+  color: #1559c9;
+  font-size: 12px;
+  font-weight: 700;
+  background: #e8f1fb;
+  border: 0;
+  border-radius: 99px;
+}
+.cr-collect-list .acc-fa-actions {
+  a, button {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    margin-left: 4px;
+    place-items: center;
+    color: #3d5163;
+    background: #f4f7f9;
+    border: 1px solid #dfe6ec;
+    border-radius: 8px;
+  }
+  a:hover { color: #075c47; border-color: #9fd5c2; }
+  button.is-primary { color: #fff; background: #0b8a6a; border-color: #0b8a6a; }
+}
+.cr-last {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+
+  > i { color: #8a9aa8; }
+  b { display: block; font-size: 12.5px; }
+  small { color: #7b8a97; font-size: 11.5px; }
+}
+
+// ---- tooltip ຂອງກຣາບ ----
+.cr-tip {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 2px;
+  min-width: 130px;
+  padding: 8px 10px;
+  color: #191919;
+  font-size: 12px;
+  pointer-events: none;
+  background: #fff;
+  border: 1px solid rgba(11, 11, 11, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(20, 40, 60, 0.14);
+  transform: translate(-50%, calc(-100% - 6px));
+
+  > b { color: #666; font-size: 11.5px; font-weight: 600; }
+  span { display: flex; gap: 6px; align-items: center; color: #666; }
+  span i { width: 12px; height: 2px; border-radius: 2px; }
+  strong { color: #191919; font-variant-numeric: tabular-nums; }
+  &.is-chart { top: 4px; transform: translateX(-50%); }
+  &.is-chart.is-end { transform: translateX(calc(-100% - 8px)); }
+  &.is-chart.is-start { transform: translateX(8px); }
+}
+
+// ---- ພາບລວມ ----
+.cr-overview { transition: opacity 0.2s; }
+.cr-overview.is-loading { opacity: 0.6; }
+.cr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+
+  .acc-type-segment { margin: 0; }
+}
+.cr-kpis {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.cr-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e6edf2;
+  border-radius: 14px;
+
+  small { color: #666; font-size: 12px; font-weight: 600; }
+  small i { margin-right: 4px; color: #8a9aa8; }
+  b { overflow: hidden; color: #191919; font-size: 20px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  em { color: #7b8a97; font-size: 11.5px; font-style: normal; }
+
+  &.is-hero { color: #fff; background: linear-gradient(135deg, #16324a, #23557a); border-color: transparent; }
+  &.is-hero small, &.is-hero em { color: rgba(255, 255, 255, 0.78); }
+  &.is-hero b { color: #fff; font-size: 30px; }
+  &.is-good b { color: #006c10; }
+  &.is-bad b { color: #c4343a; }
+}
+.cr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cr-card, .cr-chart {
+  position: relative;
+  min-width: 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e6edf2;
+  border-radius: 14px;
+
+  > header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    margin-bottom: 10px;
+
+    b { color: #191919; font-size: 14px; }
+    small { color: #666; font-size: 12px; }
+    &.is-sub { margin-top: 14px; }
+  }
+}
+.cr-chart > header {
+  > span:first-child { display: flex; flex-direction: column; margin-right: auto; }
+}
+.cr-legend {
+  display: flex;
+  gap: 12px;
+  color: #666;
+  font-size: 12px;
+
+  span { display: inline-flex; gap: 5px; align-items: center; }
+  i { width: 10px; height: 10px; border-radius: 2px; }
+}
+.cr-chart-toggle {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 3px 10px;
+  color: #3d5266;
+  font-size: 12px;
+  background: #f4f7f9;
+  border: 1px solid #dfe6ec;
+  border-radius: 8px;
+}
+.cr-chart-plot {
+  position: relative;
+
+  svg { display: block; width: 100%; height: 220px; overflow: visible; }
+  .is-grid { stroke: #e7e7e7; stroke-width: 1; }
+  .is-base { stroke: #c2c2c2; stroke-width: 1; }
+  .is-tick { fill: #666; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+  .is-hit { fill: transparent; }
+  .cr-chart-month { cursor: default; outline: none; }
+  .cr-chart-month:hover .is-hit, .cr-chart-month:focus .is-hit { fill: rgba(37, 125, 224, 0.06); }
+}
+.cr-chart-table { font-variant-numeric: tabular-nums; }
+
+.cr-meters { display: grid; gap: 10px; }
+.cr-meter {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 110px 88px;
+  gap: 12px;
+  align-items: center;
+
+  .cr-meter-name b { display: block; font-size: 13px; }
+  .cr-meter-name small { color: #666; font-size: 11px; }
+  .cr-meter-track { height: 10px; background: #e6edf2; border-radius: 99px; overflow: hidden; }
+  .cr-meter-track i { display: block; height: 100%; border-radius: 99px; }
+  .cr-meter-value { text-align: right; }
+  .cr-meter-value b { display: block; font-size: 15px; }
+  .cr-meter-value small { color: #666; font-size: 11px; }
+  .cr-meter-state { font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+  &.is-good .cr-meter-track i { background: #0aac23; }
+  &.is-good .cr-meter-state { color: #006c10; }
+  &.is-warn .cr-meter-track i { background: #fbb315; }
+  &.is-warn .cr-meter-state { color: #8a5a00; }
+  &.is-bad .cr-meter-track i { background: #dc3c3d; }
+  &.is-bad .cr-meter-state { color: #b3262c; }
+}
+.cr-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #edf2f6;
+
+  dt { color: #666; font-size: 11.5px; font-weight: 600; }
+  dd { margin: 0; color: #191919; font-size: 13.5px; font-weight: 700; }
+}
+.cr-segwrap { position: relative; }
+.cr-segempty { margin: 0; padding: 10px 12px; color: #666; font-size: 12.5px; background: #f6f8fa; border-radius: 8px; }
+.cr-segbar {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+
+  span {
+    display: flex;
+    align-items: center;
+    min-width: 2px;
+    padding-left: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 4px;
+    outline: none;
+  }
+  span:hover, span:focus-visible { filter: brightness(1.08); }
+  &.is-empty { background: #edf1f4; border-radius: 4px; }
+}
+.cr-seglegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 10px 0 0;
+  padding: 0;
+  color: #666;
+  font-size: 12px;
+  list-style: none;
+
+  li { display: inline-flex; gap: 6px; align-items: center; }
+  i { width: 10px; height: 10px; border-radius: 2px; }
+  b { color: #191919; font-variant-numeric: tabular-nums; }
+}
+.cr-mini-table {
+  td:not(:first-child), th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+}
+.cr-top {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    text-align: left;
+    background: #fbfcfd;
+    border: 1px solid #edf2f6;
+    border-radius: 10px;
+
+    &:hover { border-color: #f6c9c9; background: #fff8f8; }
+  }
+  b { display: block; color: #16324a; font-size: 13px; }
+  small { display: block; color: #7b8a97; font-size: 11.5px; }
+  .cr-top-amount { text-align: right; }
+}
+
 @media (max-width: 767.98px) {
   .cr-split { grid-template-columns: minmax(0, 1fr); }
   .cr-collateral { grid-template-columns: 40px minmax(0, 1fr); }
@@ -396,4 +879,15 @@
   .cr-guarantor > label { grid-column: 2 !important; }
   .cr-guarantor > button { grid-column: 3; }
   .cr-rules-head { flex-direction: column; align-items: stretch; }
+  .cr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr-kpi.is-hero { grid-column: 1 / -1; }
+  .cr-grid { grid-template-columns: minmax(0, 1fr); }
+  .cr-aging-card { grid-template-columns: minmax(0, 1fr); }
+  .cr-aging-row { grid-template-columns: 80px minmax(0, 1fr) 90px; }
+  .cr-meter { grid-template-columns: 80px minmax(0, 1fr) 80px; }
+  .cr-meter-state { grid-column: 2 / -1; }
+}
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .cr-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cr-kpi.is-hero { grid-column: 1 / -1; }
 }
