@@ -1,26 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Form, Input, Loader } from 'rsuite';
-import { getApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { runSave } from '../account/setting/settingApi';
 import { ChoiceTiles, FormStep, SettingModal } from '../account/setting/settingKit';
 import { useT } from '../../context/LanguageContext';
-import type { RouteChoice, RouteOptions, RoutePerson } from './creditApi';
+import { formatNumber, getApi } from '../../utils/configApi';
+import type { RouteChoice, RouteContext, RouteOptions, RoutePerson } from './creditApi';
 
 /** ທາງເລືອກຂອງຜູ້ໃຊ້ທີ່ login (GET /credit/route-options) — applicationId ບໍ່ໃສ່ = ຄຳຮ້ອງໃໝ່ */
-export const useRouteOptions = (applicationId?: number | null, enabled = true) => {
+export const useRouteOptions = (applicationId?: number | null, enabled = true, ctx: RouteContext = {}) => {
   const [options, setOptions] = useState<RouteOptions | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
     if (!enabled) return undefined;
     let alive = true;
-    getApi(`/credit/route-options${applicationId ? `?application_id=${applicationId}` : ''}`)
+    const query = new URLSearchParams(Object.entries({
+      application_id: applicationId, level: ctx.level, product_id: ctx.productId, amount: ctx.amount,
+    }).filter(([, v]) => v !== undefined && v !== null && v !== 0).map(([k, v]) => [k, String(v)]));
+    getApi(`/credit/route-options${query.size ? `?${query}` : ''}`)
       .then((res) => alive && setOptions(res.data?.data ?? { auto: null, manual: [], lineManager: false }))
       .catch((err) => alive && setError(getErrorMessage(err)));
     return () => {
       alive = false;
     };
-  }, [applicationId, enabled]);
+  }, [applicationId, enabled, ctx.level, ctx.productId, ctx.amount]);
   return { options, error };
 };
 
@@ -40,7 +43,10 @@ const PersonRow = ({ p, badge, active, onClick }: { p: RoutePerson; badge?: stri
       <span className="cr-avatar is-pending"><i className="fa-solid fa-user-tie" /></span>
       <span className="cr-route-person-text">
         <b>{p.employee ?? p.name}</b>
-        <small>{[p.position, p.level !== null ? `Level ${p.level}` : t('crRouteNoPosition'), p.employee ? `@${p.name}` : null].filter(Boolean).join(' · ')}</small>
+        <small>
+          {[p.position, p.level !== null ? `Level ${p.level}` : t('crRouteNoPosition'), p.employee ? `@${p.name}` : null,
+            p.limit !== null && p.limit !== undefined ? `${t('crRouteLimit')} ≤ ₭ ${formatNumber(p.limit)}` : null].filter(Boolean).join(' · ')}
+        </small>
       </span>
       {badge && <em className="cr-route-badge">{badge}</em>}
       {onClick && <i className={`fa-solid ${active ? 'fa-circle-check' : 'fa-circle'} cr-route-check`} />}
@@ -86,6 +92,9 @@ export const RoutePicker = ({ options, value, onChange, level, allowOpen = true 
         <p className="acc-gl-hint"><i className="fa-solid fa-circle-info" /> {t(options.lineManager ? 'crRouteNoLineApprover' : 'crRouteNoLine')}</p>
       )}
       {value.mode === 'auto' && options.auto && <PersonRow p={options.auto} badge={t('crRouteLineManager')} />}
+      {!!options.final && !!options.over_limit && (
+        <p className="acc-gl-hint"><i className="fa-solid fa-scale-balanced" /> {t('crRouteOverLimit').replace('{n}', String(options.over_limit)).replace('{a}', formatNumber(options.amount_lak ?? 0))}</p>
+      )}
       {value.mode === 'manual' && (
         <div className="cr-route-list">
           {options.manual.map((p) => (
@@ -104,7 +113,7 @@ export const RoutePicker = ({ options, value, onChange, level, allowOpen = true 
  * ກ່ອງ "ສົ່ງໃຫ້ໃຜພິຈາລະນາ" — ສົ່ງພິຈາລະນາ, ປ່ຽນຜູ້ພິຈາລະນາ (ຜູ້ສົ່ງ) ຫຼື ສົ່ງຕໍ່ (ຜູ້ຖືກສົ່ງໃຫ້).
  * onConfirm ເຮັດວຽກຈິງ (ຄືນ true = ສຳເລັດ → ປິດ)
  */
-export const RouteModal = ({ applicationId, level, levels, title, hint, submitLabel, onClose, onConfirm, withComment, allowOpen = true }: {
+export const RouteModal = ({ applicationId, level, levels, title, hint, submitLabel, onClose, onConfirm, withComment, allowOpen = true, ctx }: {
   applicationId?: number | null;
   level: number;
   levels: number;
@@ -115,9 +124,11 @@ export const RouteModal = ({ applicationId, level, levels, title, hint, submitLa
   onConfirm: (route: RouteChoice, comment: string) => Promise<unknown>;
   withComment?: boolean;
   allowOpen?: boolean;
+  /** ຄຳຮ້ອງໃໝ່ (ຍັງບໍ່ບັນທຶກ): ຜະລິດຕະພັນ ແລະ ຍອດ — ໃຫ້ກວດວົງເງິນອະນຸມັດຂອງຂັ້ນສຸດທ້າຍ */
+  ctx?: RouteContext;
 }) => {
   const t = useT();
-  const { options, error } = useRouteOptions(applicationId);
+  const { options, error } = useRouteOptions(applicationId, true, { ...ctx, level });
   const [route, setRoute] = useState<RouteChoice | null>(null);
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);

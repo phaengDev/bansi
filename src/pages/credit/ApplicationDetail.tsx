@@ -154,7 +154,7 @@ const DecisionForm = ({ app, onClose, onSaved }: { app: Detail; onClose: () => v
   const approve = decision === 1;
   // ອະນຸມັດ ແລະ ຍັງມີຂັ້ນຕໍ່ໄປ → ເລືອກຜູ້ພິຈາລະນາຂັ້ນຕໍ່ໄປ (ອັດຕະໂນມັດ / ຄົນທີ່ຕຳແໜ່ງສູງກວ່າຂ້ອຍ)
   const forward = approve && level < levels;
-  const { options: routeOptions, error: routeError } = useRouteOptions(app._uuid, forward);
+  const { options: routeOptions, error: routeError } = useRouteOptions(app._uuid, forward, { level: level + 1 });
   const [route, setRoute] = useState<RouteChoice | null>(null);
   const routeValue = route ?? defaultRoute(routeOptions);
   const model = useMemo(() => Schema.Model<any>({
@@ -305,6 +305,8 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
   /** ເລືອກຜູ້ພິຈາລະນາ: ສົ່ງພິຈາລະນາ (ຮ່າງ) / ປ່ຽນ ຫຼື ສົ່ງຕໍ່ (ລໍຖ້າພິຈາລະນາ) */
   const [routing, setRouting] = useState<'submit' | 'route' | null>(null);
   const [contractId, setContractId] = useState<number | null>(null);
+  /** ຫາກໍ່ປ່ອຍກູ້ → ເປີດສັນຍາພ້ອມໃບຮັບເງິນກູ້ໃຫ້ລູກຄ້າເຊັນ */
+  const [justPaid, setJustPaid] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -567,11 +569,14 @@ const ApplicationDetail = ({ id, onClose, onChanged }: { id: number; onClose: ()
       {form === 'disburse' && (
         <DisburseForm app={app} onClose={() => setForm(null)} onSaved={(loanId) => {
           changed();
-          if (loanId) setContractId(loanId);
+          if (loanId) {
+            setJustPaid(true);
+            setContractId(loanId);
+          }
         }}
         />
       )}
-      {contractId && <ContractDetail id={contractId} onClose={() => setContractId(null)} onChanged={changed} />}
+      {contractId && <ContractDetail id={contractId} openVoucher={justPaid} onClose={() => { setContractId(null); setJustPaid(false); }} onChanged={changed} />}
     </Modal>
   );
 };

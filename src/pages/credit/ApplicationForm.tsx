@@ -27,7 +27,7 @@ type Preview = { rows: { no: number; due_date: string; principal: number; intere
 type CustomerFull = CreditCustomer & { collaterals: Collateral[]; applications: { _uuid: number; status: number }[]; loans: { _uuid: number; closed: boolean; outstanding: number }[] };
 type Check = { ok: boolean; label: string; hint?: string };
 
-const emptyGuarantor = (): Guarantor => ({ full_name: '', relationship: '', id_no: '', phone: '', address: '', occupation: '', monthly_income: 0 });
+const emptyGuarantor = (): Guarantor => ({ full_name: '', relationship: '', id_no: '', phone: '', address: '', occupation: '', monthly_income: 0, guarantee_amount: 0 });
 
 /**
  * ຄຳຮ້ອງຂໍສິນເຊື່ອ — ຊ້າຍ: ສະຫຼຸບ (ຍອດຜ່ອນ, ຄ່າທຳນຽມ, ເງິນທີ່ລູກຄ້າໄດ້ຮັບ, ຕາຕະລາງຕົວຢ່າງ) + ຜົນກວດເງື່ອນໄຂຂອງຜະລິດຕະພັນ;
@@ -392,6 +392,7 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
                     <label><small>{t('crIdNo')}</small><Input value={g.id_no ?? ''} onChange={(v) => setGuarantor(i, { id_no: v })} /></label>
                     <label><small>{t('crOccupation')}</small><Input value={g.occupation ?? ''} onChange={(v) => setGuarantor(i, { occupation: v })} /></label>
                     <label><small>{t('crMonthlyIncome')}</small><NumberInput value={g.monthly_income || ''} formatter={amountFormatter} controls={false} onChange={(v) => setGuarantor(i, { monthly_income: num(v) })} /></label>
+                    <label><small>{t('crGuaranteeAmount')}</small><NumberInput value={g.guarantee_amount || ''} formatter={amountFormatter} controls={false} placeholder={t('crGuaranteeAll')} onChange={(v) => setGuarantor(i, { guarantee_amount: num(v) })} /></label>
                     <button type="button" className="acc-class-edit is-danger" aria-label={t('delete')} title={t('delete')} onClick={() => setGuarantors((list) => list.filter((_, j) => j !== i))}>
                       <i className="fa-solid fa-trash" />
                     </button>
@@ -430,7 +431,7 @@ const ApplicationForm = ({ row, customerId, onClose, onSaved }: {
       {routing && (
         <RouteModal applicationId={row?._uuid} level={1} levels={product?.approval_levels ?? 1} title={t('crSubmit')} submitLabel={t('crSubmit')}
           hint={`${customer?.customer_code ?? ''} ${customer?.full_name ?? ''} · ₭ ${formatNumber(amount)} · ${t('crLevelOf').replace('{n}', '1').replace('{m}', String(product?.approval_levels ?? 1))}`}
-          onClose={() => setRouting(false)} onConfirm={submitTo}
+          onClose={() => setRouting(false)} onConfirm={submitTo} ctx={{ productId: product?._uuid, amount }}
         />
       )}
       {addingCollateral && customer && (

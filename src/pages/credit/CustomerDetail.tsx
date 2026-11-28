@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Loader, Modal } from 'rsuite';
-import { deleteApi, getApi, putApi } from '../../utils/configApi';
+import { deleteApi, getApi, postApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
@@ -13,7 +13,7 @@ import ApplicationDetail from './ApplicationDetail';
 import ContractDetail from './ContractDetail';
 import DocumentsPanel from './DocumentsPanel';
 import { ID_TYPES, customerAddress, type Application, type Collateral, type Contract, type CreditCustomer } from './creditApi';
-import { AppStatusChip, CollateralList, DetailTabs, InfoRows, RiskChip, creditTermText, useCreditProducts } from './creditKit';
+import { AppStatusChip, CollateralList, DetailTabs, InfoRows, RiskChip, creditTermText, useCreditImage, useCreditProducts } from './creditKit';
 
 type Full = CreditCustomer & { loans: Contract[]; applications: Application[]; collaterals: Collateral[]; guaranteeing: number };
 type Tab = 'info' | 'collateral' | 'applications' | 'contracts' | 'documents';
@@ -48,6 +48,26 @@ const CustomerDetail = ({ id, onClose, onChanged }: { id: number; onClose: () =>
   const changed = () => {
     load();
     onChanged();
+  };
+  const photo = useCreditImage(c?.photo);
+  const [uploading, setUploading] = useState(false);
+  const uploadPhoto = async (file?: File) => {
+    if (!file || !c) return;
+    const body = new FormData();
+    body.append('owner_type', 'customer');
+    body.append('owner_id', String(c._uuid));
+    body.append('doc_type', 'PHOTO');
+    body.append('files', file);
+    try {
+      setUploading(true);
+      await postApi('/credit/document', body);
+      Notific.success('saveSuccessDone');
+      changed();
+    } catch (err) {
+      Notific.error(getErrorMessage(err));
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!c) {
@@ -98,7 +118,18 @@ const CustomerDetail = ({ id, onClose, onChanged }: { id: number; onClose: () =>
     <Modal open onClose={onClose} size="lg" className="acc-ln-detail cr-detail">
       <Modal.Header>
         <div className="acc-ln-head">
-          <span className={`acc-ln-head-icon cr-person${blacklisted ? ' is-black' : ''}`}><i className={`fa-solid ${person ? 'fa-user' : 'fa-building'}`} /></span>
+          {/* ຮູບລູກຄ້າ (KYC): ກົດ = ເພີ່ມ / ປ່ຽນຮູບ (ເກັບເປັນເອກະສານ PHOTO) */}
+          <label className={`acc-ln-head-icon cr-person cr-photo${blacklisted ? ' is-black' : ''}${photo ? ' has-photo' : ''}${canEdit ? ' is-edit' : ''}`}
+            title={canEdit ? t(photo ? 'crPhotoChange' : 'crPhotoAdd') : undefined}
+          >
+            {photo ? <img src={photo} alt={c.full_name} /> : <i className={`fa-solid ${person ? 'fa-user' : 'fa-building'}`} />}
+            {canEdit && (
+              <>
+                <input type="file" accept="image/*" hidden disabled={uploading} onChange={(e) => uploadPhoto(e.target.files?.[0])} />
+                <em><i className={`fa-solid ${uploading ? 'fa-spinner fa-spin' : 'fa-camera'}`} /></em>
+              </>
+            )}
+          </label>
           <span className="acc-ln-head-text">
             <Modal.Title>{c.full_name}</Modal.Title>
             <small>
@@ -160,6 +191,7 @@ const CustomerDetail = ({ id, onClose, onChanged }: { id: number; onClose: () =>
               [t('crCustomerType'), t(person ? 'crBorrowerPerson' : 'crBorrowerCompany')],
               [t('crNameEn'), c.name_en],
               [t('crGender'), person && c.gender ? t(Number(c.gender) === 1 ? 'crMale' : 'crFemale') : ''],
+              [t('crNationality'), person ? c.nationality : ''],
               [t('crBirthDate'), c.birth_date ? showDate(c.birth_date) : ''],
               [t(ID_TYPES.find((x) => x.value === Number(c.id_type))?.label ?? 'crIdNo'), c.id_no && `${c.id_no}${c.id_expiry_date ? ` · ${t('crIdExpiry')} ${showDate(c.id_expiry_date)}` : ''}`],
               [t('crTaxNumber'), c.tax_number],

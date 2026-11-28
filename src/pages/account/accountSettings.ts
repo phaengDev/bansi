@@ -20,6 +20,8 @@ export type AccountSetting = {
   use_bank_reconciliation: number;
   /** ລະບົບສິນເຊື່ອ — 0 = ປິດ (ເມນູສິນເຊື່ອບໍ່ຂຶ້ນ) */
   use_credit?: number;
+  /** ສິນເຊື່ອ: ຍົກເວັ້ນຄ່າປັບຕ້ອງມີຄົນທີສອງອະນຸມັດ (1) */
+  credit_waiver_approval?: number;
   /** ປິດງວດຮອດວັນທີນີ້ (YYYY-MM-DD) — null = ຍັງບໍ່ປິດງວດໃດ */
   lock_date: string | null;
   profit_tax_rate: number | string;
@@ -52,6 +54,7 @@ export const DEFAULT_ACCOUNT_SETTING: AccountSetting = {
   use_fx_revaluation: 0,
   use_bank_reconciliation: 1,
   use_credit: 0,
+  credit_waiver_approval: 0,
   lock_date: null,
   profit_tax_rate: 20,
   policies: null,

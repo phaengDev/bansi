@@ -1,12 +1,15 @@
 import { useRef, useState } from 'react';
-import { Checkbox, Form, Schema, Toggle } from 'rsuite';
+import { Checkbox, Form, NumberInput, Schema, Toggle } from 'rsuite';
 import type { FormInstance } from 'rsuite';
 import { InputField, newPasswordProps, currentPasswordProps } from '../../utils/inputFields';
 import { deleteApi, putApi } from '../../utils/configApi';
 import { getErrorMessage } from '../../utils/useCRUD';
 import { Notific } from '../../utils/Notification';
 import { canCreate, canDelete, canEdit } from '../../utils/localStorage';
+import { formatNumber } from '../../utils/configApi';
 import { useT } from '../../context/LanguageContext';
+import { amountFormatter } from '../account/gl/glKit';
+import { featureOn, useAccountSetting } from '../account/accountSettings';
 import { useEmployees, useUserTypes, type EmployeeOption } from '../../utils/selectOption';
 import { ChoiceTiles, FormSection, ListState, PickerField, SettingModal, SettingToolbar } from '../account/setting/settingKit';
 import { runSave, saveSetting, useStatusToggle } from '../account/setting/settingApi';
@@ -131,7 +134,10 @@ const UserForm = ({ data, types, menus, onClose, onSaved }: {
     employee_id: data?.employee_id ?? null,
     password: '',
     confirm: '',
+    // ວົງເງິນອະນຸມັດສິນເຊື່ອ (ກີບ) — ຫວ່າງ = ບໍ່ຈຳກັດ
+    credit_approve_limit: data?.credit_approve_limit ?? null,
   });
+  const creditOn = featureOn(useAccountSetting(), 'use_credit');
 
   // ພະນັກງານທີ່ລາອອກແລ້ວບໍ່ຢູ່ໃນ option — ສະແດງຄົນທີ່ຜູກໄວ້ເດີມນຳ
   const employeeList: EmployeeOption[] = data?.employee && !employees.some((e) => e._uuid === data.employee_id)
@@ -190,6 +196,7 @@ const UserForm = ({ data, types, menus, onClose, onSaved }: {
       ...Object.fromEntries(APP_APPROVALS.map((a) => [a.key, inputs.employee_id && approvals[a.key] ? 1 : 0])),
       // ຕິກຄົບ = null (ທຸກເມນູ ລວມເມນູທີ່ເພີ່ມພາຍຫຼັງ); ລາຍການເມນູໂຫຼດບໍ່ໄດ້ = ບໍ່ສົ່ງ (ຄົງຄ່າເດີມ)
       ...(hasMenus ? { menu_access: menuIds.length >= menus!.filter((m) => m.menuId).length ? null : menuIds } : {}),
+      ...(creditOn ? { credit_approve_limit: inputs.credit_approve_limit === null || inputs.credit_approve_limit === '' ? null : Number(String(inputs.credit_approve_limit).replace(/,/g, '')) } : {}),
       ...(data ? {} : { password: inputs.password, status: 1 }),
     };
     if (await runSave(() => saveSetting('/user', data?.user_uuid, payload), setSaving)) {
@@ -279,6 +286,17 @@ const UserForm = ({ data, types, menus, onClose, onSaved }: {
             {t(inputs.employee_id ? 'hrAppApprovalsHint' : 'hrAppApprovalsNeedEmployee')}
           </p>
         </FormSection>
+        {/* ວົງເງິນອະນຸມັດສິນເຊື່ອ: ຜູ້ອະນຸມັດຂັ້ນສຸດທ້າຍຕ້ອງມີວົງເງິນ ≥ ຍອດກູ້ (ຫວ່າງ = ບໍ່ຈຳກັດ) */}
+        {creditOn && (
+          <FormSection title={t('hrCreditLimit')}>
+            <div className="acc-fa-money">
+              <InputField name="credit_approve_limit" label={t('hrCreditLimitField')} required={false} accepter={NumberInput} formatter={amountFormatter}
+                controls={false} prefix="₭" placeholder={t('hrCreditLimitNone')}
+              />
+            </div>
+            <p className="is-wide hr-app-hint"><i className="fa-solid fa-scale-balanced" /> {t('hrCreditLimitHint')}</p>
+          </FormSection>
+        )}
       </Form>
     </SettingModal>
   );
@@ -433,6 +451,13 @@ const UserCard = ({ user, menus, isSelf, toggling, onToggle, onEdit, onPassword,
       {!!menus?.length && <UserMenus access={user.menu_access} menus={menus} />}
 
       {/* ສິດອະນຸມັດຜ່ານແອັບ (ສະເພາະທີ່ໄດ້) */}
+      {user.credit_approve_limit !== null && user.credit_approve_limit !== undefined && (
+        <p className="hr-user-app" title={t('hrCreditLimitHint')}>
+          <i className="fa-solid fa-scale-balanced" />
+          <span>{t('hrCreditLimit')}:</span>
+          <b>≤ ₭ {formatNumber(Number(user.credit_approve_limit))}</b>
+        </p>
+      )}
       {!!employee && APP_APPROVALS.some((a) => Number(user[a.key]) === 1) && (
         <p className="hr-user-app" title={t('hrAppApprovalsHint')}>
           <i className="fa-solid fa-mobile-screen-button" />

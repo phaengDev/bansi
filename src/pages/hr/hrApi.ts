@@ -80,6 +80,8 @@ export type User = {
   approve_leave?: number;
   approve_correction?: number;
   approve_advance?: number;
+  /** ວົງເງິນອະນຸມັດສິນເຊື່ອ (ກີບ) — null = ບໍ່ຈຳກັດ */
+  credit_approve_limit?: number | string | null;
   /** ເມນູທີ່ໃຊ້ໄດ້ — tbl_main_menu._uuid; null = ທຸກເມນູ */
   menu_access?: number[] | null;
   typeuser?: UserType | null;

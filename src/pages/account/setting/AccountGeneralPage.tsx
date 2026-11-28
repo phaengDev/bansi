@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button, Form, Input, Loader, NumberInput, SelectPicker, Textarea, Toggle } from 'rsuite';
 import moment from 'moment';
 import { Notific } from '../../../utils/Notification';
@@ -185,14 +185,27 @@ const AccountGeneralPage = () => {
           <div className="pay-settings-col">
             <FormStep no={nextNo()} done title={t('acgFeatures')} hint={t('acgFeaturesHint')}>
               {features.map((f) => (
-                <label key={f.key} className={`is-wide pay-policy-row${on(f.key) ? ' is-on' : ''}`}>
-                  <Toggle checked={on(f.key)} onChange={(checked) => set(f.key, checked ? 1 : 0)} disabled={!canEdit} />
-                  <span>
-                    <b><i className={`fa-solid ${f.icon}`} /> {t(f.title)}</b>
-                    <small>{t(f.hint)}</small>
-                  </span>
-                  <em>{t(on(f.key) ? 'acgOn' : 'acgOff')}</em>
-                </label>
+                <Fragment key={f.key}>
+                  <label className={`is-wide pay-policy-row${on(f.key) ? ' is-on' : ''}`}>
+                    <Toggle checked={on(f.key)} onChange={(checked) => set(f.key, checked ? 1 : 0)} disabled={!canEdit} />
+                    <span>
+                      <b><i className={`fa-solid ${f.icon}`} /> {t(f.title)}</b>
+                      <small>{t(f.hint)}</small>
+                    </span>
+                    <em>{t(on(f.key) ? 'acgOn' : 'acgOff')}</em>
+                  </label>
+                  {/* ສິນເຊື່ອເປີດ → ການຍົກເວັ້ນຄ່າປັບຕ້ອງມີຄົນທີສອງອະນຸມັດບໍ */}
+                  {f.key === 'use_credit' && on('use_credit') && (
+                    <label className={`is-wide pay-policy-row is-sub${Number(values.credit_waiver_approval) === 1 ? ' is-on' : ''}`}>
+                      <Toggle checked={Number(values.credit_waiver_approval) === 1} onChange={(checked) => set('credit_waiver_approval', checked ? 1 : 0)} disabled={!canEdit} />
+                      <span>
+                        <b><i className="fa-solid fa-user-check" /> {t('acgWaiverApproval')}</b>
+                        <small>{t('acgWaiverApprovalHint')}</small>
+                      </span>
+                      <em>{t(Number(values.credit_waiver_approval) === 1 ? 'acgOn' : 'acgOff')}</em>
+                    </label>
+                  )}
+                </Fragment>
               ))}
             </FormStep>
 

@@ -6,11 +6,11 @@ import { formatNumber, postApi } from '../../utils/configApi';
 import { InputField } from '../../utils/inputFields';
 import { useT } from '../../context/LanguageContext';
 import { amountFormatter } from '../account/gl/glKit';
-import { FormStep, PickerField, SettingModal } from '../account/setting/settingKit';
+import { ChoiceTiles, FormStep, PickerField, SettingModal } from '../account/setting/settingKit';
 import { runSave } from '../account/setting/settingApi';
 import { ACCOUNT_POPUP_STYLE, accountOption, renderAccountOption } from '../account/ledger/accountOption';
-import { money, useTreasuryAccounts, type LoanCurrency } from '../account/loans/loanApi';
-import { PAYMENT_TYPES, type Quote } from './creditApi';
+import { money, showDate, useTreasuryAccounts, type LoanCurrency } from '../account/loans/loanApi';
+import { PAYMENT_TYPES, type PrepayMode, type Quote } from './creditApi';
 
 const { NumberType, DateType } = Schema.Types;
 const num = (value: unknown) => Number(String(value ?? '').replace(/,/g, '')) || 0;
@@ -33,6 +33,8 @@ const CollectForm = ({ contract, onClose, onSaved }: { contract: CollectTarget; 
   const [preset, setPreset] = useState<Preset | null>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [saving, setSaving] = useState(false);
+  /** ຈ່າຍຕົ້ນທຶນລ່ວງໜ້າ: ຫຼຸດຈຳນວນງວດ (ເງິນຜ່ອນເທົ່າເດີມ) ຫຼື ຫຼຸດເງິນຜ່ອນຕໍ່ງວດ (ງວດເທົ່າເດີມ) */
+  const [prepayMode, setPrepayMode] = useState<PrepayMode>('term');
   const date = moment(inputs.pay_date).format('YYYY-MM-DD');
   const amount = num(inputs.amount);
   const payoff = preset === 'payoff';
@@ -80,6 +82,7 @@ const CollectForm = ({ contract, onClose, onSaved }: { contract: CollectTarget; 
     const ok = await runSave(async () => {
       const res = await postApi(`/credit/contract/${contract._uuid}/collect`, {
         pay_date: date, treasury_account_id: inputs.treasury_account_id, amount, payoff, reference: inputs.reference, note: inputs.note,
+        ...(quote?.split?.prepay ? { prepay_mode: prepayMode } : {}),
       });
       paymentId = res.data?.data?._uuid ?? 0;
     }, setSaving);
@@ -137,6 +140,36 @@ const CollectForm = ({ contract, onClose, onSaved }: { contract: CollectTarget; 
                   {type && <span className={`cr-pay-type is-${split.payment_type}`}><i className={`fa-solid ${type.icon}`} /> {t(type.label)}</span>}
                   <span>{t('lnAfterPayment')} <b>{money(split.outstanding_after, cur)}</b></span>
                 </p>
+                {split.prepay && (() => {
+                  const p = split.prepay;
+                  const saved = (o: typeof p.term) => Math.max(0, p.before.interest - o.interest);
+                  return (
+                    <div className="cr-prepay">
+                      <p className="cr-prepay-head">
+                        <i className="fa-solid fa-forward" />
+                        <span>
+                          <b>{t('crPrepayHead').replace('{p}', money(p.principal, cur))}</b>
+                          <small>{t('crPrepayExplain').replace('{r}', money(p.regular_total, cur))}{p.fee > 0 ? ` · ${t('crPrepayFee')} ${money(p.fee, cur)}` : ''}</small>
+                        </span>
+                      </p>
+                      <ChoiceTiles<PrepayMode> label={t('crPrepayHow')} value={prepayMode} onChange={setPrepayMode} options={[
+                        {
+                          value: 'term', icon: 'fa-calendar-minus', label: t('crPrepayTerm'),
+                          hint: t('crPrepayOption').replace('{n}', String(p.term.count)).replace('{a}', money(p.term.payment, cur)).replace('{s}', money(saved(p.term), cur)),
+                        },
+                        {
+                          value: 'installment', icon: 'fa-arrow-down-short-wide', label: t('crPrepayInstallment'),
+                          hint: t('crPrepayOption').replace('{n}', String(p.installment.count)).replace('{a}', money(p.installment.payment, cur)).replace('{s}', money(saved(p.installment), cur)),
+                        },
+                      ]}
+                      />
+                      <p className="acc-gl-hint">
+                        <i className="fa-solid fa-circle-info" /> {t('crPrepayBefore').replace('{n}', String(p.before.count)).replace('{a}', money(p.before.payment, cur))}
+                        {' → '}{t('crPrepayEnds').replace('{d}', showDate(p[prepayMode].last_due))}
+                      </p>
+                    </div>
+                  );
+                })()}
               </>
             ) : <p className="acc-gl-hint"><i className="fa-solid fa-calculator" /> {t('crSplitHint')}</p>}
           </div>

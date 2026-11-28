@@ -11,6 +11,7 @@ import { ChoiceTiles, FormStep, SettingModal } from '../account/setting/settingK
 import { runSave } from '../account/setting/settingApi';
 import { money, showDate, type LoanCurrency } from '../account/loans/loanApi';
 import { FOLLOW_METHODS, FOLLOW_RESULTS, agingOfDays, agingTone, type FollowUp, type PenaltyState, type Waiver } from './creditApi';
+import { Notific } from '../../utils/Notification';
 
 const { StringType, NumberType, DateType } = Schema.Types;
 const num = (value: unknown) => Number(String(value ?? '').replace(/,/g, '')) || 0;
@@ -88,7 +89,13 @@ export const WaiveForm = ({ loanId, title, due, currency, onClose, onSaved }: {
   }), [due, t]);
   const submit = async () => {
     if (!formRef.current?.check()) return;
-    if (await runSave(() => postApi(`/credit/contract/${loanId}/waive`, { amount: num(inputs.amount), reason: inputs.reason }), setSaving)) {
+    let pending = false;
+    if (await runSave(async () => {
+      const res = await postApi(`/credit/contract/${loanId}/waive`, { amount: num(inputs.amount), reason: inputs.reason });
+      pending = !!res.data?.data?.pending;
+    }, setSaving)) {
+      // ຕ້ອງມີຄົນທີສອງອະນຸມັດ → ຍັງບໍ່ຫຼຸດຄ່າປັບ
+      if (pending) Notific.warning(t('crWaiveRequested'));
       onSaved();
       onClose();
     }

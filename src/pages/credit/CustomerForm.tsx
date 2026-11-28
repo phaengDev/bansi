@@ -44,6 +44,7 @@ const CustomerForm = ({ row, nextCode, onClose, onSaved }: {
   const [inputs, setInputs] = useState<Inputs>(() => ({
     full_name: row?.full_name ?? '',
     name_en: row?.name_en ?? '',
+    nationality: row?.nationality ?? 'ລາວ',
     birth_date: toDate(row?.birth_date),
     id_no: row?.id_no ?? '',
     id_issue_date: toDate(row?.id_issue_date),
@@ -131,6 +132,7 @@ const CustomerForm = ({ row, nextCode, onClose, onSaved }: {
             )}
           </div>
           <InputField name="name_en" label={t('crNameEn')} required={false} icon={<i className="fa-solid fa-language" />} />
+          {person && <InputField name="nationality" label={t('crNationality')} required={false} icon={<i className="fa-solid fa-flag" />} />}
           {person ? date('birth_date', t('crBirthDate'), { shouldDisableDate: (d: Date) => moment(d).isAfter(moment(), 'day') }) : (
             <InputField name="tax_number" label={t('crTaxNumber')} required={false} icon={<i className="fa-solid fa-receipt" />} />
           )}

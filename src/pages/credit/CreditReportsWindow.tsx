@@ -12,7 +12,7 @@ import { CREDIT_REPORTS_MENU, toRailNav } from '../account/config/SidebarPopup';
 import { useRailKey } from '../account/windowMemory';
 import { showDate } from '../account/loans/loanApi';
 import ContractDetail from './ContractDetail';
-import { AGING_BUCKETS, APP_STATUS, FOLLOW_METHODS, FOLLOW_RESULTS, PAYMENT_TYPES, agingOfDays } from './creditApi';
+import { AGING_BUCKETS, APP_STATUS, FOLLOW_METHODS, FOLLOW_RESULTS, PAYMENT_TYPES, agingOfDays, collateralTypeOf } from './creditApi';
 
 type Row = Record<string, any>;
 type Filter = 'asOf' | 'range' | 'future' | 'months' | 'none';
@@ -181,6 +181,44 @@ const CreditReportsWindow = () => {
       endpoint: 'writeoffs', filter: 'none',
       columns: [col.date('date', t('crWriteOffDate')), col.contract, col.money('principal', t('lnPrincipalShort')), col.money('interest', t('lnInterestShort')),
         col.money('penalty', t('crPenalty')), col.money('recovered', t('crRecovered')), col.money('remaining', t('crRecoverLeft')), col.text('reason', t('crReason')), col.text('by', t('crApprovedBy'))],
+    },
+    officers: {
+      endpoint: 'officers', filter: 'range',
+      columns: [
+        { key: 'officer', label: t('crOfficer'), render: (r) => r.officer ?? <span className="cr-muted">{t('crNoOfficer')}</span>, excel: (r) => r.officer ?? t('crNoOfficer') },
+        { key: 'customers', label: t('crCustomers'), num: true, total: true }, { key: 'contracts', label: t('crContracts'), num: true, total: true },
+        col.money('outstanding', t('lnOutstanding')),
+        { key: 'overdue_contracts', label: t('crOverdueContracts'), num: true, total: true },
+        { key: 'par30', label: 'PAR30', money: true, total: true, render: (r) => <>{formatNumber(r.par30)}<small className="acc-gl-ref">{r.par30_ratio}%</small></> },
+        { key: 'npl_ratio', label: 'NPL %', num: true, render: (r) => <span className={r.npl_ratio > 5 ? 'cr-text-bad' : ''}>{r.npl_ratio}%</span>, excel: (r) => r.npl_ratio },
+        col.money('provision', t('crProvision')),
+        { key: 'disbursed', label: t('crRepDisbursements'), money: true, total: true, render: (r) => <>{formatNumber(r.disbursed)}<small className="acc-gl-ref">{r.disbursed_count} {t('crContracts')}</small></> },
+        col.money('collected', t('crRepCollections')), col.money('collected_interest', t('crIncomePeriod')),
+        { key: 'new_customers', label: t('crNewCustomers'), num: true, total: true },
+      ],
+    },
+    collaterals: {
+      endpoint: 'collaterals', filter: 'none',
+      group: {
+        key: (r) => (r.to_return ? '0' : String(r.status)),
+        label: (k) => t(({ 0: 'crColToReturn', 1: 'crColHeld', 2: 'crColReturned', 3: 'crColSeized' } as Record<string, string>)[k] ?? 'crColHeld'),
+      },
+      columns: [
+        {
+          key: 'description', label: t('crCollateral'),
+          render: (r) => <><span className="acc-fs-code">{r.code ?? '—'}</span> {r.description}<small className="acc-gl-ref">{[t(collateralTypeOf(r.type).label), r.document_no, r.owner].filter(Boolean).join(' · ')}</small></>,
+          excel: (r) => `${r.code ?? ''} ${r.description}`,
+        },
+        { key: 'customer', label: t('crCustomer'), render: (r) => <>{r.customer ?? '—'}<small className="acc-gl-ref">{r.customer_code ?? ''}</small></>, excel: (r) => r.customer ?? '' },
+        col.money('appraised_value', t('crAppraisedValue')), col.money('market_value', t('crMarketShort'), false),
+        {
+          key: 'loan_code', label: t('crContract'),
+          render: (r) => (r.loan_code ? <>{r.loan_code}<small className="acc-gl-ref">{t(r.loan_state === 'active' ? 'lnFilterActive' : r.loan_state.startsWith('closed') ? 'lnFilterClosed' : 'crNoContract')}</small></> : '—'),
+          excel: (r) => r.loan_code ?? '',
+        },
+        { key: 'storage', label: t('crColStorage'), render: (r) => [r.storage, r.location].filter(Boolean).join(' · ') || '—', excel: (r) => [r.storage, r.location].filter(Boolean).join(' · ') },
+        col.date('received_date', t('crColReceived')), col.date('returned_date', t('crColReturnedOn')),
+      ],
     },
     followups: {
       endpoint: 'followups', filter: 'range',

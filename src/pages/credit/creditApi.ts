@@ -106,6 +106,9 @@ export type CreditCustomer = {
   customer_type: number;
   full_name: string;
   name_en: string | null;
+  nationality?: string | null;
+  /** ເລກເອກະສານຮູບປະຈຳຕົວ (tbl_loan_document) */
+  photo?: string | null;
   gender: number | null;
   birth_date: string | null;
   id_type: number;
@@ -176,6 +179,8 @@ export type Guarantor = {
   address: string | null;
   occupation: string | null;
   monthly_income: number;
+  /** ຈຳນວນທີ່ຄ້ຳປະກັນ (0 = ທັງໝົດ) */
+  guarantee_amount?: number;
 };
 
 export type Approval = {
@@ -234,8 +239,18 @@ export type Application = {
 /** ສົ່ງໃຫ້ຜູ້ພິຈາລະນາ: ອັດຕະໂນມັດ (ຫົວໜ້າສາຍງານ) / ເລືອກເອງ (ຕຳແໜ່ງສູງກວ່າ) / ເປີດໃຫ້ທຸກຄົນ (ເມື່ອບໍ່ມີໃຜສູງກວ່າ) */
 export type RouteMode = 'auto' | 'manual' | 'open';
 export type RouteChoice = { mode: RouteMode; to: number | null };
-export type RoutePerson = { _uuid: number; name: string; employee: string | null; position: string | null; level: number | null };
-export type RouteOptions = { auto: RoutePerson | null; manual: RoutePerson[]; lineManager: boolean };
+export type RoutePerson = { _uuid: number; name: string; employee: string | null; position: string | null; level: number | null; limit?: number | null };
+export type RouteOptions = {
+  auto: RoutePerson | null;
+  manual: RoutePerson[];
+  lineManager: boolean;
+  /** ຂັ້ນສຸດທ້າຍ: ຍອດ (ກີບ) ແລະ ຄົນທີ່ສູງກວ່າແຕ່ວົງເງິນອະນຸມັດບໍ່ພໍ (ບໍ່ຢູ່ໃນລາຍຊື່) */
+  final?: boolean;
+  amount_lak?: number;
+  over_limit?: number;
+};
+/** ຂັ້ນທີ່ຈະສົ່ງໄປ + ຜະລິດຕະພັນ / ຍອດ ສຳລັບຄຳຮ້ອງທີ່ຍັງບໍ່ບັນທຶກ */
+export type RouteContext = { level?: number; productId?: number | null; amount?: number };
 
 export type ApplicationDetail = Application & {
   customer: CreditCustomer | null;
@@ -306,7 +321,29 @@ export type FollowUp = {
   note: string | null;
   by: string | null;
 };
-export type Split = { penalty: number; interest: number; principal: number; fee: number; total: number; payment_type: number; outstanding_after: number };
+export type Split = {
+  penalty: number;
+  interest: number;
+  principal: number;
+  fee: number;
+  total: number;
+  payment_type: number;
+  outstanding_after: number;
+  /** ຈ່າຍຕົ້ນທຶນລ່ວງໜ້າ (ຮັບເກີນງວດຕໍ່ໄປ): ຕົ້ນທຶນ, ຄ່າທຳນຽມ, ຕາຕະລາງເດີມ ແລະ ທາງເລືອກ ຫຼຸດງວດ / ຫຼຸດເງິນຜ່ອນ */
+  prepay?: PrepayPlan | null;
+};
+export type PrepayOption = { count: number; payment: number; last_due: string | null; interest: number };
+export type PrepayPlan = {
+  principal: number;
+  fee: number;
+  balance: number;
+  regular_total: number;
+  before: { count: number; payment: number; interest: number };
+  term: PrepayOption;
+  installment: PrepayOption;
+};
+export type PrepayMode = 'term' | 'installment';
+
 export type Quote = {
   date: string;
   penalty_due: number;
@@ -317,6 +354,9 @@ export type Quote = {
   due_count: number;
   split: Split | null;
   error: string | null;
+  /** ຄ່າປັບ + ງວດທີ່ຄົບກຳນົດ + ງວດຕໍ່ໄປ — ຮັບເກີນນີ້ = ຈ່າຍຕົ້ນທຶນລ່ວງໜ້າ */
+  regular_total?: number;
+  prepayment_fee_rate?: number;
 };
 
 /** ສັນຍາສິນເຊື່ອ = ເງິນໃຫ້ກູ້ (tbl_loan direction 2) ທີ່ມາຈາກຄຳຮ້ອງ — ໃຊ້ຕາຕະລາງຜ່ອນ / ການຊຳລະ ຂອງເງິນກູ້ */
@@ -328,6 +368,8 @@ export type Contract = Loan & {
   frequency_days: number | null;
   /** ຄ່າປັບຄ້າງ / ຈ່າຍແລ້ວ, ມື້ກາຍກຳນົດຂອງງວດເກົ່າສຸດ, ກຸ່ມອາຍຸໜີ້ (ຮອດມື້ນີ້) */
   penalty_due: number;
+  /** ຄຳຂໍຍົກເວັ້ນຄ່າປັບທີ່ລໍອະນຸມັດ */
+  waive_pending?: number;
   paid_penalty: number;
   days_overdue: number;
   aging: AgingKey;
@@ -349,6 +391,8 @@ export type ContractDetail = Omit<LoanDetail, 'payments'> & Omit<Contract, 'cust
   grace_days: number;
   penalty: PenaltyState;
   waivers: Waiver[];
+  /** ຄຳຂໍຍົກເວັ້ນທີ່ລໍຄົນທີສອງອະນຸມັດ */
+  waive_pending: { amount: number; reason: string | null; requested_by: number | null; by: string | null; at: string } | null;
   collections: FollowUp[];
   notices: Notice[];
   closure: Closure;

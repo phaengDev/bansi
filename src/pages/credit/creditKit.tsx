@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useT } from '../../context/LanguageContext';
-import { formatNumber } from '../../utils/configApi';
+import { formatNumber, getApi } from '../../utils/configApi';
 import { useCurrency } from '../../utils/selectOption';
 import { LOAN_METHODS, money, showDate } from '../account/loans/loanApi';
 import { SearchBox } from '../account/setting/settingKit';
@@ -142,7 +142,7 @@ export const GuarantorList = ({ rows }: { rows: Guarantor[] }) => {
           <span className="cr-collateral-icon is-person"><i className="fa-solid fa-user-shield" /></span>
           <div className="cr-collateral-body">
             <b>{g.full_name}</b>
-            <small>{[g.relationship, g.phone, g.id_no, g.occupation].filter(Boolean).join(' · ')}</small>
+            <small>{[g.relationship, g.phone, g.id_no, g.occupation, g.guarantee_amount ? `${t('crGuaranteeAmount')} ₭ ${formatNumber(g.guarantee_amount)}` : null].filter(Boolean).join(' · ')}</small>
           </div>
           {g.monthly_income > 0 && (
             <div className="cr-collateral-value"><b>₭ {formatNumber(g.monthly_income)}</b><small>{t('crMonthlyIncome')}</small></div>
@@ -240,6 +240,31 @@ export const customerAvatar = (c: { customer_type?: number | null; gender?: numb
   icon: Number(c.customer_type) === 2 ? 'fa-building' : 'fa-user',
   tone: Number(c.blacklisted) === 1 ? 'is-black' : Number(c.customer_type) === 2 ? 'is-teal' : Number(c.gender) === 2 ? 'is-pink' : 'is-blue',
 });
+
+/** ຮູບຈາກເອກະສານສິນເຊື່ອ (ດາວໂຫຼດຜ່ານ token → blob URL; ລ້າງເມື່ອປ່ຽນ / ປິດ) — null = ບໍ່ມີ ຫຼື ກຳລັງໂຫຼດ */
+export const useCreditImage = (docId?: string | number | null) => {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!docId) {
+      setSrc(null);
+      return undefined;
+    }
+    let url: string | null = null;
+    let alive = true;
+    getApi(`/credit/document/download/${docId}`, { responseType: 'blob' })
+      .then((res) => {
+        if (!alive) return;
+        url = URL.createObjectURL(res.data as Blob);
+        setSrc(url);
+      })
+      .catch(() => alive && setSrc(null));
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [docId]);
+  return src;
+};
 
 /** ແຖບ (tab) ໃນລາຍລະອຽດ — ໄອຄອນ + ຊື່ + ຈຳນວນ */
 export const DetailTabs = <K extends string>({ tabs, value, onChange }: {

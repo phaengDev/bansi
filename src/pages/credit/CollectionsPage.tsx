@@ -137,6 +137,7 @@ const CollectionsPage = () => {
                           <b>{money(r.overdue_amount, r.currency)}</b>
                           <DaysLateChip days={r.days_overdue} aging={r.aging} />
                           {r.penalty_due > 0 && <small className="cr-text-bad">{t('crPenalty')} {formatNumber(r.penalty_due)}</small>}
+                          {!!r.waive_pending && <small className="cr-waiting-me"><i className="fa-solid fa-hourglass-half" /> {t('crWaiveWaiting')} {formatNumber(r.waive_pending)}</small>}
                         </>
                       ) : r.penalty_due > 0 ? <small className="cr-text-bad">{t('crPenalty')} {formatNumber(r.penalty_due)}</small> : <span className="cr-muted">—</span>}
                     </td>
